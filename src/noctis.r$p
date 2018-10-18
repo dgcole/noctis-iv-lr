@@ -1,0 +1,12 @@
+/Tde/x/l/v/c/k /V3.10 /LC:\BC5\LIB +
+-v+ C:\BC5\LIB\c0l.obj+
+-v+ noctis-1.obj+
+-v+ noctis-0.obj+
+-v+ noctis.obj
+noctis.exe
+
+-v+ C:\BC5\LIB\bidsl.lib+
+-v+ C:\BC5\LIB\fp87.lib+
+-v+ C:\BC5\LIB\mathl.lib+
+-v+ C:\BC5\LIB\cl.lib
+

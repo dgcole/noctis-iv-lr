@@ -1,0 +1,442 @@
+char   sync		  = 1;		// 0
+
+type of synchronization with planets' movements (as the planet moves
+along its orbit), can assume one of the following values:
+
+0 = tracking disabled
+1 = fixed-point chase
+2 = far chase
+3 = synchrone orbit (keeps looking at same spot over surface)
+4 = high-speed orbit
+5 = near chase
+_______________________________________________________________________
+
+char   anti_rad 	  = 1;		// 1
+
+high radiation protection (if set to 1, doesn't allow getting too
+near to stars)
+_______________________________________________________________________
+
+char   pl_search	  = 0;		// 2
+
+planet finder (if active, set to 1, drops a note about how many
+planets and moons are found in the nearest star system, you know)
+_______________________________________________________________________
+
+char   field_amplificator = 0;		// 3
+
+starfield amplificator flag: 1=active, 0=inactive
+_______________________________________________________________________
+
+char   ilight		  = 63; 	// 4
+
+internal light's current power, 63 is max, 0 is off.
+this is normally running from 0 to 63 after turning the
+light on, and 63 to 0 after turning it off, slowly changing
+the amount of light from the internal light.
+_______________________________________________________________________
+
+char   ilightv		  = 1;		// 5
+
+variation of internal light's power, either 1 or -1.
+when 1, the light is on and "ilight" tends to increment.
+when -1, the light is off and "ilight" tends to decrement.
+it cannot be zero.
+_______________________________________________________________________
+
+char   charge		  = 3;		// 6
+
+amount of lithium (in grams)... typical range is 0 to 120.
+when 0 you're usually in trouble ;)
+_______________________________________________________________________
+
+char   revcontrols	  = 0;		// 7
+
+reverse pitch controls (as in preferences' menu).
+it's a flag: 0 = normal, 1 = reversed.
+_______________________________________________________________________
+
+char   ap_targetting	  = 0;		// 8
+
+flag: explorer was selecting a remote target for the
+interstellar autopilot (active while crosshair shown)
+_______________________________________________________________________
+
+char   ap_targetted	  = 0;		// 9
+
+flag: explorer did fix a remote target, but can assume
+three values...
+
+0 = no remote target selected;
++1 = remote target is a star;
+-1 = remote target is a triplet of Parsis coordinates.
+_______________________________________________________________________
+
+char   ip_targetting	  = 0;		// 10
+
+flag: explorer was selecting a local target for the
+interplanetary autopilot (active while the local target's
+crosshair is shown)
+_______________________________________________________________________
+
+char   ip_targetted	  = -1; 	// 11
+
+flag: explorer did fix a local target, -1 means no
+target, while 0 to 79 is the normal range of possible
+planets and moons (0=P01, 79=P80).
+_______________________________________________________________________
+
+char   ip_reaching	  = 0;		// 12
+
+flag: set to 1 while ship is approching local target;
+_______________________________________________________________________
+
+char   ip_reached	  = 0;		// 13
+
+flag: set to 1 when ship arrived in vicinity of local target
+and tracking eventually begins (if tracking is active, see "sync");
+_______________________________________________________________________
+
+char   ap_target_spin	  = 0;		// 14
+
+rotation speed of targetted star... pulsars spin faster.
+_______________________________________________________________________
+
+char   ap_target_r	  = 0;		// 15
+
+red component of light of targetted star, 0 to 63.
+_______________________________________________________________________
+
+char   ap_target_g	  = 0;		// 16
+
+green component of light of targetted star, 0 to 63.
+_______________________________________________________________________
+
+char   ap_target_b	  = 0;		// 17
+
+blue component of light of targetted star, 0 to 63.
+_______________________________________________________________________
+
+char   nearstar_spin	  = 0;		// 18
+
+rotation speed of nearest star (typically the star whose
+system you're actually in);
+_______________________________________________________________________
+
+char   nearstar_r	  = 0;		// 19
+
+red component of the light of nearest star (typically the
+star whose system you're actually in);
+_______________________________________________________________________
+
+char   nearstar_g	  = 0;		// 20
+
+green component of the light of nearest star (typically the
+star whose system you're actually in);
+_______________________________________________________________________
+
+char   nearstar_b	  = 0;		// 21
+
+blue component of the light of nearest star (typically the
+star whose system you're actually in);
+_______________________________________________________________________
+
+char   gburst		  = 0;		// 22
+
+it's a counter used while sending out the help request...
+to animate the beacon placed on top of the capsule...
+uhm... goes from 1 to 63 while sending the request, it's 0
+if inactive, it's -1 if there's been an error while sending the
+help request (if you're not in emergency, it won't let you send it).
+_______________________________________________________________________
+
+char   menusalwayson	  = 1;		// 23
+
+set to 1 if the main window's menus are to be kept on even
+when the explorer is not facing them, otherwise they are
+turned off automatically to speed up graphics a bit...
+_______________________________________________________________________
+
+char   depolarize	  = 0;		// 24
+
+set to 1 while ship's hull is being depolarized...
+_______________________________________________________________________
+
+int    sys		  = 4;		// 25
+
+current subsystem selected from the main window's computer
+screen: goes from 1 to 4, where...
+
+1 = flight control
+2 = onboard devices
+3 = prefs
+4 = screen off
+_______________________________________________________________________
+
+int    pwr		  = 20000;	// 27
+
+current elapsed kilodyams before the next lithium gram
+is injected in the vimana engine. it's actually added a
+constant value of 15000, so it goes from 15000 to 20000
+and the displayed value is really (pwr - 15000): the constant
+had something to do with a bleeper effect in the early versions
+of Noctis, now it's useless but harmless, and mantained for
+compatibility with past current.bin files.
+_______________________________________________________________________
+
+int    dev_page 	  = 0;		// 29
+
+computer's subsystem page: the horizontal menu.
+its value doesn't count when sys is different from 1, but it's
+0 to 3 when sys=1. the values are as follows:
+
+dev_page	corresponding page
+0		it's the onboard devices' submenu
+1		navigation instruments
+2		miscellaneous
+3		galactic cartography
+4		emergency functions
+_______________________________________________________________________
+
+int    ap_target_class	  = 0;		// 31
+
+star class (0 to 11) of the currently selected remote target.
+_______________________________________________________________________
+
+int    f_ray_elapsed	  = 0;		// 33
+
+old variable relating the fationic cannon (distance
+from target at fire time), and now unused.
+_______________________________________________________________________
+
+int    nearstar_class	  = 0;		// 35
+
+star class (0 to 11) of the nearest star (of the system you're in).
+_______________________________________________________________________
+
+int    nearstar_nop	  = 0;		// 37
+
+number of planets (not including moons) of the system you're in.
+_______________________________________________________________________
+
+float  pos_x		  = 0;		// 39
+
+32-bit IEEE x coordinate of yourself inside the ship.
+range -3100 to +3100.
+_______________________________________________________________________
+
+float  pos_y		  = 0;		// 43
+
+32-bit IEEE y coordinate of yourself inside the ship.
+typically zero when not on the roof: while on the roof,
+its value drops below -500 (y axis is always reversed in
+fast 3D engines).
+_______________________________________________________________________
+
+float  pos_z		  = -500;	// 47
+
+32-bit IEEE z coordinate of yourself inside the ship,
+range -300 to -5800.
+-300 means nearest to the front window (window being at 0),
+-5800 means nearest to the back of the ship.
+_______________________________________________________________________
+
+float  user_alfa	  = 0;		// 51
+
+32-bit IEEE alpha angle of sight (yaw), espressed in degrees.
+forced (re-ranged by the code) to -45 to +45
+_______________________________________________________________________
+
+float  user_beta	  = 0;		// 55
+
+32-bit IEEE beta angle of sight (pitch), espressed in degrees.
+forced (re-ranged by the code) to -90 to +90
+_______________________________________________________________________
+
+float  navigation_beta	  = 0;		// 59
+
+32-bit IEEE beta angle where the ship points to, in degrees.
+forced 0 to 360 (always less than 360).
+0 is "north" of galaxy.
+180 is "south".
+_______________________________________________________________________
+
+float  ap_target_ray	  = 1000;	// 63
+
+32-bit IEEE ray in nanoparsis of the last targetted star.
+_______________________________________________________________________
+
+float  nearstar_ray	  = 1000;	// 67
+
+32-bit IEEE ray in nanoparsis of the nearest star.
+_______________________________________________________________________
+
+double dzat_x		  = +3797120;	// 71
+
+64-bit IEEE current x coordinate of the ship.
+0;0;0 is nearby Balastrackonastreya.
+the default value is the starting position, near Lyonesse.
+x axis runs west-to-east.
+_______________________________________________________________________
+
+double dzat_y		  = -4352112;	// 79
+
+64-bit IEEE current y coordinate of the ship.
+y axis runs top-to-down.
+it's displayed on the cartography screen as +4352112.
+(only integer parts of the coordinates are revealed)
+_______________________________________________________________________
+
+double dzat_z		  = -925018;	// 87
+
+64-bit IEEE current z coordinate of the ship.
+z axis runs south-to-north.
+_______________________________________________________________________
+
+double ap_target_x	  = 0;		// 95
+
+64-bit IEEE current x coordinate of last targetted star.
+_______________________________________________________________________
+
+double ap_target_y	  = 1E8;	// 103
+
+64-bit IEEE current y coordinate of last targetted star.
+default is a fake target to keep some elements from showing...
+_______________________________________________________________________
+
+double ap_target_z	  = 0;		// 111
+
+64-bit IEEE current z coordinate of last targetted star.
+_______________________________________________________________________
+
+double nearstar_x	  = 0;		// 119
+
+64-bit IEEE current x coordinate of nearest star (the system you're in).
+_______________________________________________________________________
+
+double nearstar_y	  = 1E8;	// 127
+
+64-bit IEEE current x coordinate of nearest star (the system you're in).
+default is a dummy star to keep some elements from showing...
+_______________________________________________________________________
+
+double nearstar_z	  = 0;		// 135
+
+64-bit IEEE current z coordinate of nearest star (the system you're in).
+_______________________________________________________________________
+
+double helptime 	  = 0;		// 143
+
+64-bit IEEE time (in seconds since a fixed epoch that is Jan 1, 1984)
+giving when your help request (if any) will be satisfied.
+_______________________________________________________________________
+
+double ip_target_initial_d= 1E8;	// 151
+
+64-bit IEEE initial distance from the local target (vimana anchor).
+_______________________________________________________________________
+
+double requested_approach_coefficient=1;// 159
+
+64-bit IEEE future vimana amplification... varies with phases.
+long to explain...
+_______________________________________________________________________
+
+double current_approach_coefficient = 1;// 167
+
+64-bit IEEE current vimana amplification... varies with phases.
+long to explain...
+_______________________________________________________________________
+
+double reaction_time	  = 0.01;	// 175
+
+64-bit IEEE vimana reaction time... varies with phases.
+long to explain...
+_______________________________________________________________________
+
+char   fcs_status[11]	  = "STANDBY";	// 183
+
+ten chars + a null terminator.
+it's the current readout of the HUD's bottom right display,
+giving the flight control system status, error message etc...
+_______________________________________________________________________
+
+int    fcs_status_delay   = 0;		// 194
+
+duration (in clock ticks) of last message displayed...
+some messages are temporary.
+_______________________________________________________________________
+
+int    psys		  = 4;		// 196
+
+previously selected subsystem of the onboard computer,
+is assigned to the value of "sys" at the beginning of each
+frame, and compared to see if the front window's screen is
+to be updated.
+_______________________________________________________________________
+
+double ap_target_initial_d= 1E8;	// 198
+
+64-bit IEEE initial distance from the remote target (vimana anchor).
+_______________________________________________________________________
+
+double requested_vimana_coefficient = 1;// 206
+double current_vimana_coefficient = 1;	// 214
+double vimana_reaction_time = 0.01;	// 222
+
+as above, long to explain...
+_______________________________________________________________________
+
+char   lithium_collector  = 0;		// 230
+
+self-explanatory flag: if 1, you're scoping some lithium.
+_______________________________________________________________________
+
+char   autoscreenoff	  = 0;		// 231
+
+flag: if 1, the front window's screen turns off automatically
+after a few seconds that you're not using any of the computer's
+functions, to clean the view from the front window... set in the
+preferences menu.
+_______________________________________________________________________
+
+char   ap_reached	  = 0;		// 232
+
+flag: arrived in vicinity of remote target (also determines
+wether you can or cannot target its planets...)
+_______________________________________________________________________
+
+int    lifter		  = 0;		// 233
+
+it's a delta animating your y position (y_pos) in the ship,
+while jumping on the roof, or down the roof...
+_______________________________________________________________________
+
+double secs		  = 0;		// 235
+
+current seconds from epoch (from January 1st, 1984).
+that's the game's internal epoch, nothing to do with
+felisian EPOCS... although the EPOC is calculated basing
+on this value...
+_______________________________________________________________________
+
+char   data		  = 0;		// 243
+
+huh? what was that? lemme see... AH! here it is...
+it's the kind of information requested from the misc. data
+screen reporting star masses, planets' rotation periods etc...
+works as follows:
+
+0 = no data window displayed;
+1 = displaying remote target data;
+2 = displaying local target data;
+3 = displaying external environment data;
+_______________________________________________________________________
+
+char   surlight 	  = 16; 	// 244
+
+oh, the brightness of the HUD's outer rim (border of screen).
+this can be adjusted using the plus and minus keys of the numeric keypad.
+_______________________________________________________________________
+
+total size of current.bin = 245 bytes, always.

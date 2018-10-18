@@ -1,0 +1,58 @@
+well...
+
+so here you go, YOU asked for it. Use BC++3.1 for DOS, to compile without having
+to change a real lot of the code. NIV is about 70% 16-bit Intel assembly, the rest
+being crappy 16-bit C++. If I left C++ behind, and worked for months to the Linoleum
+environment, and after 18 years of programming with several imperfect environments
+(only Lino is perfect for me) there IS a reason. There is a reason why today's PCs
+crash, and applications... bah, nevermind... nevermind... I'm terminally delusioned,
+I don't want to think anymore to those infernal things I've left behind. *shakes head*
+
+This might be every file needed for recompiling NIV and all of its auxiliary parts.
+Being not sure, I quickly copied here several files I remembered to have something
+to do with it, I hope I included something more (and useless) rather than something
+less. The files are given in chaotic organization, here's what may be needed to be
+separated: uhm... just some includes. Except for noctis-0.h the other includes should
+be placed in your environmental include directory (by default \borlandc\include).
+
+The PRJ file may or may not work, depending on how BC++ guys decided relative paths
+to be ported and maybe on my own settings, can't remember if they include the drive
+path or not... maybe not. I think not, they might start from the root (\). Did I
+mention that in my opinion computers should forget the concept of folders and sub-
+folders, or directories, or the way you want to call them...? nevermind, again.
+In case the PRJ doesn't work, you might build a PRJ file including noctis-0.cpp,
+noctis-1.cpp and noctis.cpp. The program was split in 3 files because their code
+segments, or maybe their code+static data segments, kept exceeding 64Kb, an evident
+limit of 16-bit code. So this way they were compiled in separate segments, and then
+imported with great effort and pain (there is a reason, there is a reason) in the
+main source file (noctis.cpp). Have fun dealing with 16-bit CPP. But have fun dealing
+with 32-bit anyway. Remember that "int" in this CPP means 16-bit value, not 32, it's
+so portable, it's so cross-platform. HEH! why not? it is cross-platform. Of course.
+If you're in your first 15 years of programming experience, you'll be proud of
+understanding C/C++ because it's well known by the other <=15years exp programmers
+to be cool and... and means you're intelligent. uhm... it's a personal opinion and I
+disclaim all responsibility and I didn't say it and if I said it I was sleeping.
+Or maybe after 15 years (I've got 20 of them) you get a bit bored... and make your
+own perfect environment the way you like. And normally you like it to be simple.
+
+Oh, when you've managed, after having began to smoke to counterbalance stress, to
+obtain a Noctis.EXE that correctly reports "load error" when launched, merge it with
+"supports.nct". Yes link the file "supports.nct" to "noctis.exe". No, not with a
+linker, just add the file to the EXE, append it, as it is, that's it. There was that
+COPY /b thing I did never remember so I made my merge.exe which is included as part
+of the Lino source code. Launch it again, that should make it work.
+
+POLYVERT is used to edit/manage the NCC files (NCC = Number of polys-Coords-Colors).
+"vehicle.ncc" is the shape of the stardrifter. Some animals are used, some other NCC
+files come from NI and are no longer used but there for curiosity. The Creative VOC
+files with sound FX were used by NII... there for curiosity. There is the source to
+POLYVERT, it's hard to use and make eveything with keyb shortcuts... comments here
+and there may be in italian, with rare or non-existing cases of english comments.
+Sorry, this code is here for curiosity, no real sense. Didn't want to show it for
+long, 'cos it may ruin the magic of the program...
+
+oh, it's under WTOF Public License (read WPL.HTM). THE WPL IS NOT THE GPL.
+Basically, you may make experiments with it on your own, but if you want to distribute
+mods and changed versions you need authorization. If your mod is cool, and doesn't
+cause troubles, I dont' see why I shouldn't authorize it... if you don't ask, you're
+making a significant copyright violation...

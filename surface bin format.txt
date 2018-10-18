@@ -1,0 +1,71 @@
+longitude of landing point, 2 bytes
+
+0 to 359.
+_______________________________________________________________________
+
+latitude of landing point, 2 bytes
+
+1 to 119, 60 being the equator.
+_______________________________________________________________________
+
+capsule x, 4 bytes integer
+
+range is 0 to 3276800, aligned to boundaries of 16384 (sub-quadrants)
+_______________________________________________________________________
+
+capsule z, 4 bytes integer
+
+range is 0 to 3276800, aligned to boundaries of 16384 (sub-quadrants)
+_______________________________________________________________________
+
+capsule x within sub-quadrant, 4 bytes integer
+
+range is actually 0 to 16384.
+_______________________________________________________________________
+
+capsule z within sub-quadrant, 4 bytes integer
+
+range is actually 0 to 16384.
+_______________________________________________________________________
+
+x position of yourself, 4 bytes IEEE (floating-point)
+
+range is 0 to 3276800.
+_______________________________________________________________________
+
+y position of yourself, 4 bytes IEEE (floating-point)
+
+range is (about) -260000 to zero (zero = sea level).
+_______________________________________________________________________
+
+z position of yourself, 4 bytes IEEE (floating-point)
+
+range is 0 to 3276800.
+_______________________________________________________________________
+
+alpha angle of sight, 4 bytes IEEE (floating-point)
+
+yaw, in degree, range -45 to +45.
+_______________________________________________________________________
+
+beta angle of sight, 4 bytes IEEE (floating-point)
+
+pitch, in degree, range -180 to +180.
+_______________________________________________________________________
+
+radiation visor animation delta, 2 bytes
+
+can be -5, 0 or +5... doesn't really matter...
+_______________________________________________________________________
+
+radiation visor animation count, 2 bytes
+
+0 to 170 or so... doesn't matter...
+_______________________________________________________________________
+
+radiation visor flag, 1 byte
+
+0 = opened, 1 = closed...
+_______________________________________________________________________
+
+total size of surface.bin = 45 bytes, always.
