@@ -88,9 +88,9 @@ void reach_your_dir() {
 	else
 		d = _argv[0][0] - 'A';
 
-   union REGS regs;
+	union REGS regs;
 
-   regs.h.ah = 0x0e;
+	regs.h.ah = 0x0e;
    regs.h.dl = d;
    intdos(&regs, &regs);
 

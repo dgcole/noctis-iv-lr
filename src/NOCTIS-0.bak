@@ -88,20 +88,19 @@ void reach_your_dir() {
 	else
 		d = _argv[0][0] - 'A';
 
-	asm {
-		pusha
-		mov dl, d
-		mov ah, 0x0e
-		int 0x21
-		mov ah, 0x3b
-		lea dx, tmppal
-		int 0x21
-		popa
-	}
+   union REGS regs;
+
+   regs.h.ah = 0x0e;
+   regs.h.dl = d;
+   intdos(&regs, &regs);
+
+   regs.h.ah = 0x3b;
+   regs.x.dx = *tmppal;
+   intdos(&regs, &regs);
 }
 
-void _320_200_256 () // inizializza grafica a 320x200x256 colori.
-{
+// Initialize the 320x200x256 graphics mode.
+void _320_200_256 () {
 	asm {
 		push ax
 		mov ax, 0x13
