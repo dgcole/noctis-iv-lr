@@ -338,34 +338,36 @@ byter:	asm {	cmp byte ptr [si], 0
 endline:asm 	pop ds
 }
 
-/* Scrive il titolo di un comando. */
+// Writes the title of a command.
 
-void command (int nr, char *text)
-{
-	asm {   push ds
-		push ds
-		pop es
-		lea di, ctb
-		add di, 20
-		dec nr
-		mov ax, nr
-		mov dx, 27
-		mul dx
-		add di, ax
-		mov ax, 27
-		lds si, dword ptr text }
-byter:	asm {	cmp byte ptr [si], 0
-		je endline
-		movsb
-		dec ax
-		jnz byter }
-endline:asm {	test ax, ax
-		jz endwork
-		mov byte ptr es:[di], 32
-		inc di
-		dec ax
-		jnz endline }
-endwork:asm  	pop ds
+void command (int nr, char *text) {
+   strcpy(&ctb+20,text);
+   ctb[20 + strlen(text)] = ' ';
+   /*
+    asm {   push ds //DS onto stack [DS1]
+        push ds //DS onto stack [DS2]
+        pop es //es = DS from stack [DS2]
+        lea di, ctb //di = &ctb
+        add di, 20 //di += 20
+        dec nr // ++nr
+        mov ax, nr //ax = nr  ax is 16-bit accumulator
+        mov dx, 27 //dx = 27
+        mul dx //dx, ax = dx * ax (Because word) ????
+        add di, ax //di += ax
+        mov ax, 27 //ax = 27
+        lds si, dword ptr text }  //si = text ?
+byter:    asm {    cmp byte ptr [si], 0 //Compare ptr si and 0
+        je endline  //If equal, go to endline; If nothing left in si
+        movsb //Move a byte of si to location (specified by di), si & di increment
+        dec ax //--ax
+        jnz byter } //If ax is not 0, back to the top of byter
+endline:asm {    test ax, ax
+        jz endwork
+        mov byte ptr es:[di], 32
+        inc di
+        dec ax
+        jnz endline }
+endwork:asm      pop ds */
 }
 
 

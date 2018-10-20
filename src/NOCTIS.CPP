@@ -341,8 +341,13 @@ endline:asm 	pop ds
 // Writes the title of a command.
 
 void command (int nr, char *text) {
-   strcpy(&ctb+20,text);
+   char* ctbPtr = &ctb[20];
+
+	if (text != NULL) {
+   	strcpy(ctbPtr,text);
+   }
    ctb[20 + strlen(text)] = ' ';
+
    /*
     asm {   push ds //DS onto stack [DS1]
         push ds //DS onto stack [DS2]
