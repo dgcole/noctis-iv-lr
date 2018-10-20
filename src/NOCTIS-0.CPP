@@ -194,78 +194,64 @@ void tavola_colori (unsigned char *new_palette,
 }
 
 // Variables to hold mouse readings.
-
 int mdltx = 0, mdlty = 0, mx = 0, my = 0, mpul = 0;
 
+// Read mouse input.
 void mouse_input () {
-	asm {
-		push ax
-		push bx
-		push cx
-		push dx
-		mov ax, 0xb
-		int 0x33
-		push cx
-		push dx
-		mov ax, 5
-		int 0x33
-		pop dx
-		pop cx
-		mov mdltx, cx
-		mov mdlty, dx
-		add mx, cx
-		add my, dx
-		cmp ax, 0
-		je  non_imp
-		mov mpul, ax
-	}
-non_imp:asm {
-		pop dx
-		pop cx
-		pop bx
-		pop ax
-	}
+	union REGS regs;
+
+   regs.x.ax = MOUSE_READ_MOTION;
+   int86(INTERRUPT_MOUSE, &regs, &regs);
+   mdltx = regs.x.cx;
+   mdlty = regs.x.dx;
+   mx += mdltx;
+   my += mdlty;
+
+   regs.x.ax = MOUSE_READ_PRESS;
+   int86(INTERRUPT_MOUSE, &regs, &regs);
+	if (regs.x.ax != 0) {
+   	mpul = regs.x.ax;
+   }
 }
 
-// Verifica della presenza del mouse (o del supporto per esso).
-// Ed inizializzazione del driver (svuotamento del buffer dei movimenti).
+// Check the presence of the mouse (or the support for it).
+// And initialize the driver (empty the movement buffer).
 
-char test_and_init_mouse ()
-{
-	asm {
-		xor ax, ax
-		int 33h
-		cmp ax, 0
-		jne ok
-	}
+char test_and_init_mouse () {
+	union REGS regs;
 
-	return (0);
+   regs.x.ax = MOUSE_READ_STATUS;
+   int86(INTERRUPT_MOUSE, &regs, &regs);
 
-ok:	asm {
-		pusha
-		mov ax, 0xb
-		int 0x33
-		mov ax, 5
-		int 0x33
-		popa
-	}
+   if (regs.x.ax == 0) {
+       return 0;
+   } else {
+      // Here we read inthe mouse data to get a clean slate.
+   	regs.x.ax = MOUSE_READ_MOTION;
+      int86(INTERRUPT_MOUSE, &regs, &regs);
 
-	return (1);
+      regs.x.ax = MOUSE_READ_PRESS;
+      int86(INTERRUPT_MOUSE, &regs, &regs);
+
+      return 1;
+   }
 }
 
-// Ultraveloce copia di pagina grafica.
+// Ultra fast copy of graphics page.
 
-void pcopy (unsigned char far *dest, unsigned char far *sorg)
-{
-	asm {
+void pcopy (unsigned char far *dest, unsigned char far *source) {
+   for (int i = 0; i < 32000; i++) {
+   	dest[i] = source[i];
+   }
+	/*asm {
 		push si
 		push di
 		push ds
 		push es
 		push cx
-		cld
-		mov cx, QUADWORDS
-		lds si, dword ptr sorg
+		cld	// Reverse direction of some operations?
+		mov cx, QUADWORDS // Move 16000 into cx
+		lds si, dword ptr source
 		les di, dword ptr dest
 		db 0xf3 // macro: rep movsd
 		db 0x66
@@ -275,7 +261,7 @@ void pcopy (unsigned char far *dest, unsigned char far *sorg)
 		pop ds
 		pop di
 		pop si
-	}
+	}*/
 }
 
 // Ultraveloce cancella pagina grafica.

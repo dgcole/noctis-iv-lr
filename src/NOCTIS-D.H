@@ -15,72 +15,63 @@
 /*
 
 	Definitions for Noctis.
-	Many?
+	Many.
 
 */
 
-// area dati: 	lunghezza:	puntatore:	descrizione:
+// Data Area: 	Length:		Pointer:		Description:
 
-#define om_bytes      7340 // 	n_offsets_map	contiene "offsets.map",
-			   //			(sfera concava in QT-VR).
-#define gl_bytes     22586 //   n_globes_map	contiene "globes.map"
-			   //			(sfera convessa in QT-VR).
-			   //			texture superficie del mare.
-#define gl_brest     10182 //   (indicativo)	resto dei bytes allocati per
-			   //			n_globes_map in quanto questo
-			   //			buffer viene usato anche per
-			   //			la superficie del mare di 32K,
-			   //			o altrimenti per il font 32x36
-			   //			che serve al gestore di bordo.
-#define st_bytes     64800 //	s_background    mappa superficie stelle;
-			   //			mappa superficie satelliti;
-			   //			mappa del cielo in superficie;
-			   //			buffer di shading superficie.
-#define pl_bytes     65552 // 	p_background	mappa planetaria dall'orbita;
-			   // 			texture per il suolo.
-#define ps_bytes     40000 //   p_surfacemap	piantina altimetrica superf.;
-			   //			buffer temporaneo di lettura;
-			   //			buffer aggiornamento schermi.
-#define oc_bytes     40000 //   objectschart	mappa oggetti in superficie;
-			   //			overlay per l'atmosfera.
-#define sc_bytes     65540 //	adapted	      	la pagina video nascosta, pi—
-			   //		        2 bytes (supporto per polymap)
-			   //			darebbe 64002. Ma l'ho estesa
-			   //			a 64Kb+4bytes per evitare lo
-			   //			sconfinamento di "poly3d", una
-			   //			funzione difettosa che non ho
-			   //			n‚ tempo n‚ voglia di modifi-
-			   //			care, al momento.
-#define pv_bytes     20480 //   pvfile		data bank dinamica dei files
-			   //			di grafica poligonale.
-// ------------------------//
-// totale bytes     334941 //	(memoria allocata dinamicamente)
-// ------------------------//
-// + 		    222099 //	(lunghezza max permessa programma NOCTIS.EXE)
-// +		      6160 //	(stack)
-// ------------------------//
-// =	     (550K) 563200 //	(memoria richiesta in totale, come massimo)
-//                 ========//                                               */
+#define om_bytes      7340 // 	n_offsets_map contains "offsets.map",
+			   //			(concave sphere in QT-VR).
+#define gl_bytes     22586 //   n_globes_map	contains "globes.map"
+			   //			(convex sphere in QT-VR).
+			   //			sea surface texture.
+#define gl_brest     10182 //   remainder of the bytes allocated for:
+			   //			n_globes_map as this?
+			   //			buffer is also used for:
+			   //			the sea surface of 32K,
+			   //			or otherwise for the font 32x36
+			   //			which serves the pilot.
+#define st_bytes     64800 //	s_background    star surface map;
+			   //			satellite surface map;
+			   //			surface sky map;
+			   //			surface shading buffer.
+#define pl_bytes     65552 // 	p_background	planetary map from orbit;
+			   // 		texture for the ground.
+#define ps_bytes     40000 //   p_surfacemap	elevation map;
+			   //			temporary reading of buffer;
+			   //			screen update buffer.
+#define oc_bytes     40000 //   objectschart	map objects on the surface;
+			   //			atmospheric overlay.
+#define sc_bytes     65540 //	adapted	      	the hidden video page?—
+			   //		   2 bytes (support for polymap)
+			   //			would give 64002. But I extended
+            //			it to 64Kb + 4 bytes to avoid it
+            //			breaking "poly3d", as there is one
+            //			faulty function I have neither the
+            //			time nor the care to change currently.
+#define pv_bytes     20480 //   pvfile		dynamic data bank of files
+			   //			of polygonal graphics.
+// -------------------------//
+// totale bytes     	334941 //	(Dynamically allocated memory)
+// -------------------------//
+// + 		    222099 //	(Maximum length of Noctis.exe)
+// +		      6160 //	(Stack)
+// -------------------------//
+// =	     (550K) 563200 //	(Maximum memory required)
+//                 =========//
 
-// Note a quei 550K: in teoria possono essere di pi—,
-// ma se ne usasse effettivamente di pi— su molti sistemi
-// potrebbe non trovare abbastanza memoria. E' un limite che
-// pressappoco coincide con la massima estensione dei tre moduli
-// di cui si compone l'eseguibile, e non dovrebbe essere superato.
+// Notes about the 550k: It is a limit that is roughly equivalent to the
+//	maximum length of the three modules that the executable is made up of,
+// and should not be exceeded.
 
-// mappa del file stand-alone NOCTIS.EXE,
+// Noctis.exe stand-alone file map:
 // --------------------------------------
-// cui dev'essere aggiunto, dopo ogni compilazione, il file SUPPORTS.NCT
-// contenente i seguenti files, nell'ordine riportato sotto (il punto tra
-// nome ed estensione Š stato rimpiazzato da un sottolinea). i seguenti
-// valori devono essere calcolati relativamente alla fine del file
-// "SUPPORTS.NCT". il primo valore, quindi, riporta la lunghezza di
-// tale file. Š consigliabile aggiungere files all'inizio del file,
-// cosicch‚ per aggiungere la definizione qui sotto basta riportare
-// l'opposto della lunghezza di SUPPORTS.NCT
+// The supports.nct file must be added to the compiled executable,
+//	and must contain the following files in the order shown below:
 
 #define off_digimap2	-60776
-#define dm2_bytes	  9360
+#define dm2_bytes	  	9360
 
 #define mammal_ncc	-51416
 
@@ -88,21 +79,21 @@
 #define os_goescomm	-44704
 #define os_logogoes	-40744
 
-#define birdy_ncc	-36784
+#define birdy_ncc		-36784
 #define vehicle_ncc	-35782
 
 #define header_bmp	-29980
 #define offsets_map	-29926
 #define globes_map	-22586
 
-// Limiti, relativi al centro dello schermo, per i bastoncini 3D.
+// Limits, relative to the center of the screen, for 3D sticks.
 
 #define stk_lbx       -150
 #define stk_lby        -90
 #define stk_ubx        160
 #define stk_uby         90
 
-// Parametri di lavoro per "tdpolygs.h", la libreria 3D poligonale.
+// Working parameters for "tdpolygs.h", the polygonal 3D library.
 
 #define VERTICI_PER_POLIGONO 4
 
@@ -112,46 +103,46 @@
 #define y_centro  100
 
 #define lbx -larghezza/2 + x_centro
-#define ubx larghezza/2 + x_centro
-#define lby -altezza/2 + y_centro
-#define uby altezza/2 + y_centro
+#define ubx larghezza/2  + x_centro
+#define lby -altezza/2   + y_centro
+#define uby altezza/2    + y_centro
 
-// Quattro terzi di pigreco.
+// Four thirds of PI.
 
 #define qt_M_PI   4*M_PI/3
 
-// Tipi di pianeta e numero di classi stellari.
+// Number of star classes and planet types.
 
 #define star_classes    12
 #define planet_types    10
 #define avgmoons        4
-#define log2avgmoons	2
-#define maxbodies	20 * avgmoons
+#define log2avgmoons		2
+#define maxbodies			20 * avgmoons
 
-// Codici identificativi degli oggetti sulla superficie dei pianeti.
+// Identification codes for planetary objects.
 
-#define ROCKS	0
-#define VEGET	1
-#define TREES	2
-#define NOTHING 3
+#define ROCKS		0
+#define VEGET		1
+#define TREES		2
+#define NOTHING 	3
 
-// Codici identificativi delle rovine (in tre stili di texture).
+// Identification codes of the ruins (in three texture styles).
 
 #define AF1     0x40
 #define AF2     0x80
 #define AF3     0xC0
 
-// Assegnazione handles per i files PV.
+// Hand assignment for PV files.
 
 #define vehicle_handle	0
 
-#define bird_base	0
+#define bird_base		0
 #define bird_result	1
 
-#define mamm_base	2
+#define mamm_base		2
 #define mamm_result	3
 
-// Struttura di un byte nella mappa oggetti di superficie (objectschart).
+// Structure of a byte in the surface object map (objectschart).
 
 struct quadrant {
 	unsigned nr_of_objects : 2;
@@ -160,7 +151,7 @@ struct quadrant {
 	unsigned object2_class : 2;
 };
 
-// Struttura che identifica un poligono e i suoi vertici per le funzioni PV.
+// Structure that identifies a polygon and its vertices for the PV functions.
 
 struct pvlist {
 	unsigned polygon_id : 12;
@@ -174,6 +165,7 @@ struct pvlist {
 
 #define INTERRUPT_VIDEO_MODE	0x10
 #define INTERRUPT_DOS_API 		0x21
+#define INTERRUPT_MOUSE			0x33
 
 // Definitions for DOS API calls.
 
@@ -184,6 +176,12 @@ struct pvlist {
 
 // Definitions for video modes.
 
-#define VIDEO_MODE_TEXT 0x03
-#define VIDEO_MODE_VGA 0x13
+#define VIDEO_MODE_TEXT 	0x03
+#define VIDEO_MODE_VGA 		0x13
+
+// Definitions for mouse interrupt codes.
+#define MOUSE_READ_STATUS	0x00
+#define MOUSE_READ_PRESS 	0x05
+#define MOUSE_READ_MOTION 	0x0b
+
 

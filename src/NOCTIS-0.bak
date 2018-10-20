@@ -146,120 +146,100 @@ unsigned char range8088[64*3] = {
 48, 48, 48, 49, 49, 49, 50, 50, 50, 51, 51, 51, 52, 52, 52, 53, 53, 53,
 54, 54, 54, 55, 55, 55, 56, 56, 56, 57, 57, 57, 58, 58, 58, 59, 59, 59,
 60, 60, 60, 61, 61, 61, 62, 62, 62, 63, 63, 63 };
+
 // This sets up the vga color palette.
-void tavola_colori (unsigned char *nuova_tavolozza,
-		    unsigned colore_di_partenza, unsigned nr_colori,
-		    char filtro_rosso, char filtro_verde, char filtro_blu) {
+void tavola_colori (unsigned char *new_palette,
+		    unsigned starting_color, unsigned num_colors,
+		    char red_filter, char green_filter, char blue_filter) {
 	int c, cc = 0;
 	unsigned temp;
-	nr_colori *= 3;
-	colore_di_partenza *= 3;
+	num_colors *= 3;
+	starting_color *= 3;
 
-	c = colore_di_partenza;
-	while (cc<nr_colori) {
-		tmppal[c] = nuova_tavolozza[cc];
+	c = starting_color;
+	while (cc < num_colors) {
+		tmppal[c] = new_palette[cc];
 		cc++;
 		c++;
 	}
 
-	c = colore_di_partenza;
-	while (c<nr_colori+colore_di_partenza) {
+	c = starting_color;
+	while (c < num_colors + starting_color) {
 		temp = tmppal[c];
-		temp *= filtro_rosso;
+		temp *= red_filter;
 		temp /= 63;
 		if (temp > 63) temp = 63;
 		tmppal[c] = temp;
 		c++;
 		temp = tmppal[c];
-		temp *= filtro_verde;
+		temp *= green_filter;
 		temp /= 63;
 		if (temp > 63) temp = 63;
 		tmppal[c] = temp;
 		c++;
 		temp = tmppal[c];
-		temp *= filtro_blu;
+		temp *= blue_filter;
 		temp /= 63;
 		if (temp > 63) temp = 63;
 		tmppal[c] = temp;
 		c++;
 	}
 
-   int temp2 = colore_di_partenza;
-   temp2 += nr_colori;
-
    // Port 0x3c8 takes the index of the first color.
    outp(0x3c8, 0);
-   for (int i = 0; i < temp2; i++) {
+   for (int i = 0; i < starting_color + num_colors; i++) {
    	// Port 0x3c9 takes up to 255 consecutive r, g, b, colors.
    	outp(0x3c9, tmppal[i]);
    }
 }
 
-/* Lettura del mouse e ritorno nelle variabili indicate. */
-
+// Variables to hold mouse readings.
 int mdltx = 0, mdlty = 0, mx = 0, my = 0, mpul = 0;
 
-void mouse_input ()
-{
-	asm {
-		push ax
-		push bx
-		push cx
-		push dx
-		mov ax, 0xb
-		int 0x33
-		push cx
-		push dx
-		mov ax, 5
-		int 0x33
-		pop dx
-		pop cx
-		mov mdltx, cx
-		mov mdlty, dx
-		add mx, cx
-		add my, dx
-		cmp ax, 0
-		je  non_imp
-		mov mpul, ax
-	}
-non_imp:asm {
-		pop dx
-		pop cx
-		pop bx
-		pop ax
-	}
+// Read mouse input.
+void mouse_input () {
+	union REGS regs;
+
+   regs.x.ax = MOUSE_READ_MOTION;
+   int86(INTERRUPT_MOUSE, &regs, &regs);
+   mdltx = regs.x.cx;
+   mdlty = regs.x.dx;
+   mx += mdltx;
+   my += mdlty;
+
+   regs.x.ax = MOUSE_READ_PRESS;
+   int86(INTERRUPT_MOUSE, &regs, &regs);
+	if (regs.x.ax != 0) {
+   	mpul = regs.x.ax;
+   }
 }
 
-// Verifica della presenza del mouse (o del supporto per esso).
-// Ed inizializzazione del driver (svuotamento del buffer dei movimenti).
+// Check the presence of the mouse (or the support for it).
+// And initialize the driver (empty the movement buffer).
 
-char test_and_init_mouse ()
-{
-	asm {
-		xor ax, ax
-		int 33h
-		cmp ax, 0
-		jne ok
-	}
+char test_and_init_mouse () {
+	union REGS regs;
 
-	return (0);
+   regs.x.ax = MOUSE_READ_STATUS;
+   int86(INTERRUPT_MOUSE, &regs, &regs);
 
-ok:	asm {
-		pusha
-		mov ax, 0xb
-		int 0x33
-		mov ax, 5
-		int 0x33
-		popa
-	}
+   if (regs.x.ax == 0) {
+       return 0;
+   } else {
+      // Here we read inthe mouse data to get a clean slate.
+   	regs.x.ax = MOUSE_READ_MOTION;
+      int86(INTERRUPT_MOUSE, &regs, &regs);
 
-	return (1);
+      regs.x.ax = MOUSE_READ_PRESS;
+      int86(INTERRUPT_MOUSE, &regs, &regs);
+
+      return 1;
+   }
 }
 
-// Ultraveloce copia di pagina grafica.
+// Ultra fast copy of graphics page.
 
-void pcopy (unsigned char far *dest, unsigned char far *sorg)
-{
+void pcopy (unsigned char far *dest, unsigned char far *source) {
 	asm {
 		push si
 		push di
@@ -268,7 +248,7 @@ void pcopy (unsigned char far *dest, unsigned char far *sorg)
 		push cx
 		cld
 		mov cx, QUADWORDS
-		lds si, dword ptr sorg
+		lds si, dword ptr source
 		les di, dword ptr dest
 		db 0xf3 // macro: rep movsd
 		db 0x66
