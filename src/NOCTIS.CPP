@@ -321,7 +321,7 @@ void other (char *text)
 {
    if (!text) return;
 
-	char* linePtr = point;
+	char* linePtr = (char*)point; //TODO: Make sure this works
    unsigned char len = strlen(text);
 
    strcpy(linePtr, text);
