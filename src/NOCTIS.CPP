@@ -288,13 +288,12 @@ void pointer_cross_for (double xlight, double ylight, double zlight)
 
 void cline (int line, char *text)
 {
+	if (!text) return;
+
 	char* linePtr = &ctb[20 + (line * 128)]; //Shift left by 7 is 2^7, right?
-   int len = strlen(text);
+   unsigned char len = strlen(text);
 
-	if (text != NULL) {
-   	strcpy(linePtr, text);
-   }
-
+   strcpy(linePtr, text);
    point = (int)linePtr[len];
 
    /*
@@ -320,6 +319,15 @@ endline:asm {   mov point, di
 
 void other (char *text)
 {
+   if (!text) return;
+
+	char* linePtr = point;
+   unsigned char len = strlen(text);
+
+   strcpy(linePtr, text);
+   point = (int)linePtr[len];
+
+   /*
 	asm {   push ds
 		push ds
 		pop es
@@ -330,7 +338,7 @@ byter:	asm {	cmp byte ptr [si], 0
 		movsb
 		jmp byter }
 endline:asm {   mov point, di
-		pop ds }
+		pop ds }*/
 }
 
 /* Scrive il titolo di un controllo di sistema (sono 4 in tutto).
@@ -339,6 +347,14 @@ endline:asm {   mov point, di
 
 void control (int line, char *text)
 {
+	if (!text) return;
+
+	char* linePtr = &ctb[(line-1) * 128];
+   unsigned char len = strlen(text);
+
+   strcpy(linePtr, text);
+
+   /*
 	asm {   push ds
 		push ds
 		pop es
@@ -351,7 +367,7 @@ byter:	asm {	cmp byte ptr [si], 0
 		je endline
 		movsb
 		jmp byter }
-endline:asm 	pop ds
+endline:asm 	pop ds */
 }
 
 // Writes the title of a command.
