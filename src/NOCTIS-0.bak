@@ -237,61 +237,22 @@ char test_and_init_mouse () {
    }
 }
 
-// Ultra fast copy of graphics page.
-
+// Copy the graphics page.
+// TODO; Just remove this... Replace it with single memcpy calls.
 void pcopy (unsigned char far *dest, unsigned char far *source) {
-	asm {
-		push si
-		push di
-		push ds
-		push es
-		push cx
-		cld
-		mov cx, QUADWORDS
-		lds si, dword ptr source
-		les di, dword ptr dest
-		db 0xf3 // macro: rep movsd
-		db 0x66
-		db 0xa5
-		pop cx
-		pop es
-		pop ds
-		pop di
-		pop si
-	}
+   // 65535 is hardcoded here because it is the size of the 320x200
+   // VGA buffer, 64KB.
+   memcpy(dest, source, 65535);
 }
 
-// Ultraveloce cancella pagina grafica.
-
-void pclear (unsigned char far *target, unsigned char pattern)
-{
-	asm {
-		push di
-		push es
-		push cx
-		push ax
-		cld
-		les di, dword ptr target
-		mov cx, QUADWORDS
-		mov al, pattern
-		mov ah, pattern
-		db 0x66 // macro: shl eax, 16
-		db 0xc1
-		db 0xe0
-		db 0x10
-		mov al, pattern
-		mov ah, pattern
-		db 0xf3 // macro: rep stosd
-		db 0x66
-		db 0xab
-		pop ax
-		pop cx
-		pop es
-		pop di
-	}
+// Clear the graphis page.
+// TODO; Also remove this.
+void pclear (unsigned char far *target, unsigned char pattern) {
+	// Once again, hardcoded vga buffer size.
+	memset(target, pattern, 65535)
 }
 
-// Copia un'area rettangolare.
+// Copy a rectangular area.
 
 void areacopy (unsigned char far *dest, unsigned char far *sorg,
 	       int x, int y, int l, int h)
