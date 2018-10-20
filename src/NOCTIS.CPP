@@ -282,27 +282,41 @@ void pointer_cross_for (double xlight, double ylight, double zlight)
 	}
 }
 
-/* Scrive sullo schermo del computer di bordo: una linea. */
+/* Scrive sullo schermo del computer di bordo: una linea.
+  Google Translate:
+  	He writes on the on-board computer screen: a line. */
 
 void cline (int line, char *text)
 {
+	char* linePtr = &ctb[20 + (line * 128)]; //Shift left by 7 is 2^7, right?
+   int len = strlen(text);
+
+	if (text != NULL) {
+   	strcpy(linePtr, text);
+   }
+
+   point = (int)linePtr[len];
+
+   /*
 	asm {   push ds
 		push ds
-		pop es
-		lea di, ctb
-		shl line, 7
-		add di, line
-		add di, 20
+		pop es //es = ds
+		lea di, ctb //di = &ctb
+		shl line, 7 //line = line << 7 (Each line has a length of 128???)
+		add di, line //di += line
+		add di, 20 //di += 20
 		lds si, dword ptr text }
 byter:	asm {	cmp byte ptr [si], 0
 		je endline
 		movsb
 		jmp byter }
 endline:asm {   mov point, di
-		pop ds }
+		pop ds } */
 }
 
-/* Prosegue la linea suddetta. */
+/* Prosegue la linea suddetta.
+  Google Translate:
+  	The aforementioned line continues. */
 
 void other (char *text)
 {
@@ -319,7 +333,9 @@ endline:asm {   mov point, di
 		pop ds }
 }
 
-/* Scrive il titolo di un controllo di sistema (sono 4 in tutto). */
+/* Scrive il titolo di un controllo di sistema (sono 4 in tutto).
+  Google Translate:
+  	He writes the title of a system check (there are 4 in all). */
 
 void control (int line, char *text)
 {
