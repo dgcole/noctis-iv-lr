@@ -68,7 +68,7 @@ void reach_your_dir() {
 	/*
 		NOTE: There was a comment here saying something about this being
 		used to reach beyond the current directory.
-   */
+	*/
 
 	int c;
 	char d;
@@ -90,65 +90,48 @@ void reach_your_dir() {
 
 	union REGS regs;
 
-	regs.h.ah = 0x0e;
-   regs.h.dl = d;
-   intdos(&regs, &regs);
+	regs.h.ah = DOS_SELECT_DRIVE;
+	regs.h.dl = d;
+	intdos(&regs, &regs);
 
-   regs.h.ah = 0x3b;
-   regs.x.dx = *tmppal;
-   intdos(&regs, &regs);
+	regs.h.ah = DOS_SET_WORKING_DIR;
+	regs.x.dx = *tmppal;
+	intdos(&regs, &regs);
 }
 
 // Initialize the 320x200x256 graphics mode.
 void _320_200_256 () {
-	asm {
-		push ax
-		mov ax, 0x13
-		int 0x10
-		pop ax
-	}
+	union REGS regs;
+   regs.x.ax = VIDEO_MODE_VGA;
+
+	int86(INTERRUPT_VIDEO_MODE, &regs, &regs);
 }
 
-void _80_25_C () // modo grafico 80x25 testo a colori.
-{
-	asm {
-		push ax
-		mov ax, 3
-		int 0x10
-		pop ax
-	}
+// Initialize the 80x25 text mode.
+void _80_25_C () {
+	union REGS regs;
+   regs.x.ax = VIDEO_MODE_TEXT;
+
+   int86(INTERRUPT_VIDEO_MODE, &regs, &regs);
 }
 
-int attendi_pressione_tasto () // aspetta un tasto e dç qual'ä.
-{
-	unsigned char ritorno;
+// Wait for a key?
+int attendi_pressione_tasto () {
+   union REGS regs;
+   regs.h.ah = DOS_CHAR_READ_NO_ECHO;
+   intdos(&regs, &regs);
 
-	asm {
-		push ax
-		mov ah, 8
-		int 0x21
-		mov ritorno, al
-		pop ax
-	}
-
-	return (ritorno);
+	return regs.h.al;
 }
 
-int tasto_premuto () // torna 1 se c'ä un tasto premuto da estrarre.
-{
-	asm {
-		push ax
-		mov ah, 0xb
-		int 0x21
-		cmp al, 0xff
-		pop ax
-		jne Stop
-	}
+// Return 1 if there is a key press to be processed.
+int tasto_premuto () {
+	union REGS regs;
+	regs.h.ah = DOS_GET_STDIN_STATUS;
+   intdos(&regs, &regs);
 
-	return (1);
-
-	Stop:
-	return (0);
+	if (regs.h.al == 0xff) return 1;
+   else return 0;
 }
 
 unsigned char range8088[64*3] = {
@@ -163,11 +146,10 @@ unsigned char range8088[64*3] = {
 48, 48, 48, 49, 49, 49, 50, 50, 50, 51, 51, 51, 52, 52, 52, 53, 53, 53,
 54, 54, 54, 55, 55, 55, 56, 56, 56, 57, 57, 57, 58, 58, 58, 59, 59, 59,
 60, 60, 60, 61, 61, 61, 62, 62, 62, 63, 63, 63 };
-
+// This sets up the vga color palette.
 void tavola_colori (unsigned char *nuova_tavolozza,
 		    unsigned colore_di_partenza, unsigned nr_colori,
-		    char filtro_rosso, char filtro_verde, char filtro_blu)
-{
+		    char filtro_rosso, char filtro_verde, char filtro_blu) {
 	int c, cc = 0;
 	unsigned temp;
 	nr_colori *= 3;
@@ -202,31 +184,15 @@ void tavola_colori (unsigned char *nuova_tavolozza,
 		c++;
 	}
 
-	asm {
-		push si
-		push ax
-		push cx
-		push dx
-		mov cx, colore_di_partenza
-		add cx, nr_colori
-		lea si, tmppal
-		mov ax, seg tmppal
-		mov ds, ax
-		mov dx, 0x3c8
-		mov al, 0
-		out dx, al
-		inc dx
-	}
-dzap:	asm {
-		mov al, [si]
-		out dx, al
-		inc si
-		loop dzap
-		pop dx
-		pop cx
-		pop ax
-		pop si
-	}
+   int temp2 = colore_di_partenza;
+   temp2 += nr_colori;
+
+   // Port 0x3c8 takes the index of the first color.
+   outp(0x3c8, 0);
+   for (int i = 0; i < temp2; i++) {
+   	// Port 0x3c9 takes up to 255 consecutive r, g, b, colors.
+   	outp(0x3c9, tmppal[i]);
+   }
 }
 
 /* Lettura del mouse e ritorno nelle variabili indicate. */

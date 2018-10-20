@@ -1,10 +1,9 @@
-/*
+// C++ Includes
 
-	Inclusioni del c++
-
-*/
-
+#include <graphics.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <conio.h>
 #include <string.h>
 #include <alloc.h>
 #include <stdio.h>
@@ -15,8 +14,8 @@
 
 /*
 
-	Definizioni per NOCTIS.
-	Tante.
+	Definitions for Noctis.
+	Many?
 
 */
 
@@ -170,3 +169,21 @@ struct pvlist {
 	unsigned vtxflag_2  : 1;
 	unsigned vtxflag_3  : 1;
 };
+
+// Definitions for software interrupts.
+
+#define INTERRUPT_VIDEO_MODE	0x10
+#define INTERRUPT_DOS_API 		0x21
+
+// Definitions for DOS API calls.
+
+#define DOS_CHAR_READ_NO_ECHO	0x08
+#define DOS_GET_STDIN_STATUS	0x0b
+#define DOS_SELECT_DRIVE 		0x0e
+#define DOS_SET_WORKING_DIR 	0x3b
+
+// Definitions for video modes.
+
+#define VIDEO_MODE_TEXT 0x03
+#define VIDEO_MODE_VGA 0x13
+
