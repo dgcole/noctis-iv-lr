@@ -368,19 +368,28 @@ endline:asm {	test ax, ax
 endwork:asm  	pop ds
 }
 
-/* Cancella tutto lo schermo del computer di bordo. */
 
-void clear_onboard_screen ()
-{
-	asm {
-		push ds
-		pop es
-		lea di, ctb
-		mov cx, 256
-		xor ax, ax
-		cld
-	    rep stosw
-	}
+// Clear the whole on-board computer screen.
+void clear_onboard_screen () {
+    memset(ctb, 0, 256);
+
+   /* In-case you don't trust memset, pussy
+   int i
+   for (i = 0; i < 256; ++i) {
+       ctb[i] = 0;
+   }
+   */
+
+    /* Italy-man's assembly, RIP
+   asm {
+        push ds
+        pop es //es = ds
+        lea di, ctb //di = &ctb   ctb is char ctb[512]
+        mov cx, 256 //cx = 256
+        xor ax, ax //Clearing ax?
+        cld //DF or Direction Flag set to 0; reverse, reverse!
+        rep stosw //Repeat while CX not zero, put 0 into
+    }*/
 }
 
 /* Gruppo di gestione del sistema operativo di bordo. */

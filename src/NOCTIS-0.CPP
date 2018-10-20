@@ -146,61 +146,58 @@ unsigned char range8088[64*3] = {
 48, 48, 48, 49, 49, 49, 50, 50, 50, 51, 51, 51, 52, 52, 52, 53, 53, 53,
 54, 54, 54, 55, 55, 55, 56, 56, 56, 57, 57, 57, 58, 58, 58, 59, 59, 59,
 60, 60, 60, 61, 61, 61, 62, 62, 62, 63, 63, 63 };
+
 // This sets up the vga color palette.
-void tavola_colori (unsigned char *nuova_tavolozza,
-		    unsigned colore_di_partenza, unsigned nr_colori,
-		    char filtro_rosso, char filtro_verde, char filtro_blu) {
+void tavola_colori (unsigned char *new_palette,
+		    unsigned starting_color, unsigned num_colors,
+		    char red_filter, char green_filter, char blue_filter) {
 	int c, cc = 0;
 	unsigned temp;
-	nr_colori *= 3;
-	colore_di_partenza *= 3;
+	num_colors *= 3;
+	starting_color *= 3;
 
-	c = colore_di_partenza;
-	while (cc<nr_colori) {
-		tmppal[c] = nuova_tavolozza[cc];
+	c = starting_color;
+	while (cc < num_colors) {
+		tmppal[c] = new_palette[cc];
 		cc++;
 		c++;
 	}
 
-	c = colore_di_partenza;
-	while (c<nr_colori+colore_di_partenza) {
+	c = starting_color;
+	while (c < num_colors + starting_color) {
 		temp = tmppal[c];
-		temp *= filtro_rosso;
+		temp *= red_filter;
 		temp /= 63;
 		if (temp > 63) temp = 63;
 		tmppal[c] = temp;
 		c++;
 		temp = tmppal[c];
-		temp *= filtro_verde;
+		temp *= green_filter;
 		temp /= 63;
 		if (temp > 63) temp = 63;
 		tmppal[c] = temp;
 		c++;
 		temp = tmppal[c];
-		temp *= filtro_blu;
+		temp *= blue_filter;
 		temp /= 63;
 		if (temp > 63) temp = 63;
 		tmppal[c] = temp;
 		c++;
 	}
 
-   int temp2 = colore_di_partenza;
-   temp2 += nr_colori;
-
    // Port 0x3c8 takes the index of the first color.
    outp(0x3c8, 0);
-   for (int i = 0; i < temp2; i++) {
+   for (int i = 0; i < starting_color + num_colors; i++) {
    	// Port 0x3c9 takes up to 255 consecutive r, g, b, colors.
    	outp(0x3c9, tmppal[i]);
    }
 }
 
-/* Lettura del mouse e ritorno nelle variabili indicate. */
+// Variables to hold mouse readings.
 
 int mdltx = 0, mdlty = 0, mx = 0, my = 0, mpul = 0;
 
-void mouse_input ()
-{
+void mouse_input () {
 	asm {
 		push ax
 		push bx

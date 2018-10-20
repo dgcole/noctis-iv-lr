@@ -184,39 +184,15 @@ void tavola_colori (unsigned char *nuova_tavolozza,
 		c++;
 	}
 
-   // The following would work if we were using solely the borland graphics api.
-   /*int temp2 = colore_di_partenza;
+   int temp2 = colore_di_partenza;
    temp2 += nr_colori;
 
+   // Port 0x3c8 takes the index of the first color.
+   outp(0x3c8, 0);
    for (int i = 0; i < temp2; i++) {
-   	setrgbpalette(i, tmppal[i*3], tmppal[i*3 + 1], tmppal[i*3 + 2]);
-   }*/
-
-	asm {
-		push si
-		push ax
-		push cx
-		push dx
-		mov cx, colore_di_partenza
-      add cx, nr_colori
-		lea si, tmppal // Load memory address of tmppal into si.
-		mov ax, seg tmppal // Copy first 2 bytes of tmppal into ax.
-		mov ds, ax // Move first byte of ax into ds.
-		mov dx, 0x3c8 // Move 0x3c8 into dx. This is the vga color port.
-		mov al, 0 // Set al to 0.
-		out dx, al // Outputs 0 to port 0x3c8.
-		inc dx // Increment dx by 1.
-	}
-dzap:	asm {
-		mov al, [si] // Stores the value at si in al.
-		out dx, al   // Outputs al to port 0x3c8.
-		inc si
-		loop dzap
-		pop dx
-		pop cx
-		pop ax
-		pop si
-	}
+   	// Port 0x3c9 takes up to 255 consecutive r, g, b, colors.
+   	outp(0x3c9, tmppal[i]);
+   }
 }
 
 /* Lettura del mouse e ritorno nelle variabili indicate. */
