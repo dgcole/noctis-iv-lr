@@ -9,7 +9,7 @@ float	sp_x, sp_y, sp_z;
 
 /* Funzioni e variabili globali di tracciamento e gestione
    delle superfici planetarie, in poligonale (h! ce la far•?)
-
+                         
 	Si, ce l'ho fatta, ahem... dunque...
 	per tracciare in tempo utile una superficie di 40000 quadranti,
 	ovvero 80000 triangoli, su una matrice di 200x200 (un po' tantino

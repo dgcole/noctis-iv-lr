@@ -39,7 +39,9 @@
 
 int QUADWORDS = 16000;
 
+// Adaptor points to the main video memory, which should be 64kb.
 unsigned char far * adaptor    = (unsigned char far *) 0xA0000000;
+// Adapted points to some other vga memory. I think it's used as a back buffer.
 unsigned char far * adapted    = (unsigned char far *) 0xB0000000;
 
 unsigned char	tmppal[768];
@@ -237,23 +239,7 @@ char test_and_init_mouse () {
    }
 }
 
-// Copy the graphics page.
-// TODO; Just remove this... Replace it with single memcpy calls.
-void pcopy (unsigned char far *dest, unsigned char far *source) {
-   // 65535 is hardcoded here because it is the size of the 320x200
-   // VGA buffer, 64KB.
-   memcpy(dest, source, 65535);
-}
-
-// Clear the graphis page.
-// TODO; Also remove this.
-void pclear (unsigned char far *target, unsigned char pattern) {
-	// Once again, hardcoded vga buffer size.
-	memset(target, pattern, 65535);
-}
-
 // Copy a rectangular area.
-
 void areacopy (unsigned char far *dest, unsigned char far *sorg,
 	       int x, int y, int l, int h)
 {
@@ -291,6 +277,17 @@ ac_endl:  asm { pop di
 		pop es
 		pop ds }
 }
+
+// Copies QUADWORDS * 4 bytes from the source to the destination.
+void pcopy (unsigned char far *dest, unsigned char far *source) {
+	memcpy(dest, source, QUADWORDS * 4);
+}
+
+// Clears QUADWORDS * 4 bytes starting at the target.
+void pclear (unsigned char far *target, unsigned char pattern) {
+	memset(target, pattern, QUADWORDS * 4);
+}
+
 
 // Cancella un'area rettangolare.
 // Esegue tutti i clipping necessari per l'MCGA.

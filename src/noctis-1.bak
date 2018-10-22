@@ -58,7 +58,7 @@ float hpoint (long px, long pz)
 	long cpos;
 
 	float h1, h2, h3, h4, icx, icz, py;
-#pragma warning( disable : 4800 )
+   
 	cpos   = m200[pz>>14] + (px>>14);
 
 	h1     = - ((long)(p_surfacemap[cpos])     << 11);
