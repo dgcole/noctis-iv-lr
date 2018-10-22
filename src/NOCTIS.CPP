@@ -241,8 +241,7 @@ void frame (float x, float y, float l, float h,
 
 /* Croce di puntamento delle stelle. */
 
-void pointer_cross_for (double xlight, double ylight, double zlight)
-{
+void pointer_cross_for (double xlight, double ylight, double zlight) {
 	double xx, yy, zz, z2, rx, ry, rz;
 
 	xx = xlight - dzat_x;
@@ -282,105 +281,44 @@ void pointer_cross_for (double xlight, double ylight, double zlight)
 	}
 }
 
-/* Scrive sullo schermo del computer di bordo: una linea.
-  Google Translate:
-  	He writes on the on-board computer screen: a line. */
-
-void cline (int line, char *text)
-{
-	if (!text) return;
-
-	char* linePtr = &ctb[20 + (line * 128)]; //Shift left by 7 is 2^7, right?
-   unsigned char len = strlen(text);
-
-   strcpy(linePtr, text);
-   point = (int)linePtr[len];
-
-   /*
-	asm {   push ds
-		push ds
-		pop es //es = ds
-		lea di, ctb //di = &ctb
-		shl line, 7 //line = line << 7 (Each line has a length of 128???)
-		add di, line //di += line
-		add di, 20 //di += 20
-		lds si, dword ptr text }
-byter:	asm {	cmp byte ptr [si], 0
-		je endline
-		movsb
-		jmp byter }
-endline:asm {   mov point, di
-		pop ds } */
+// Write a line on the onboard computer screen.
+void cline(int line, char *text) {
+	// Multiply the line index by 128 b/c there are 128 characters per line. 
+	line *= 128;
+	// The non-control section starts 20 characters into the line.
+	unsigned int start = line + 20;
+	
+	strcpy(&ctb[start], text);
+	
+	// The current index, used for the other() function.
+	point = start + strlen(text);
 }
 
-/* Prosegue la linea suddetta.
-  Google Translate:
-  	The aforementioned line continues. */
-
-void other (char *text)
-{
-   if (!text) return;
-
-	char* linePtr = (char*)point; //TODO: Make sure this works
-   unsigned char len = strlen(text);
-
-   strcpy(linePtr, text);
-   point = (int)linePtr[len];
-
-   /*
-	asm {   push ds
-		push ds
-		pop es
-		mov di, point
-		lds si, dword ptr text }
-byter:	asm {	cmp byte ptr [si], 0
-		je endline
-		movsb
-		jmp byter }
-endline:asm {   mov point, di
-		pop ds }*/
+// Write text following what was just written with cline().
+void other(char *text) {
+	strcpy(&ctb[point], text);
+	
+	// Increment the current character index by the length of what was just added.
+	point += strlen(text);
 }
 
-/* Scrive il titolo di un controllo di sistema (sono 4 in tutto).
-  Google Translate:
-  	He writes the title of a system check (there are 4 in all). */
-
-void control (int line, char *text)
-{
-	if (!text) return;
-
-	char* linePtr = &ctb[(line-1) * 128];
-   unsigned char len = strlen(text);
-
-   strcpy(linePtr, text);
-
-   /*
-	asm {   push ds
-		push ds
-		pop es
-		lea di, ctb
-		dec line
-		shl line, 7
-		add di, line
-		lds si, dword ptr text }
-byter:	asm {	cmp byte ptr [si], 0
-		je endline
-		movsb
-		jmp byter }
-endline:asm 	pop ds */
+// Write the title of a system check (there are 4 in all).
+void control (int line, char *text) {
+	// Multiply the line index by 128 b/c there are 128 characters per line.
+	unsigned int start = line * 128;
+	
+	strcpy(&ctb[start], text);
 }
 
-// Writes the title of a command.
-
+// Writes the title of a command on the main display.
 void command (int nr, char *text) {
-   char* ctbPtr = &ctb[20];
+   /*char* ctbPtr = &ctb[20];
 
 	if (text != NULL) {
    	strcpy(ctbPtr,text);
    }
-   ctb[20 + strlen(text)] = ' ';
+   ctb[20 + strlen(text)] = ' ';*/
 
-   /*
     asm {   push ds //DS onto stack [DS1]
         push ds //DS onto stack [DS2]
         pop es //es = DS from stack [DS2]
@@ -404,13 +342,13 @@ endline:asm {    test ax, ax
         inc di
         dec ax
         jnz endline }
-endwork:asm      pop ds */
+endwork:asm      pop ds
 }
 
 
 // Clear the whole on-board computer screen.
 void clear_onboard_screen () {
-    memset(ctb, 0, 256);
+    //memset(ctb, 0, 256);
 
    /* In-case you don't trust memset, pussy
    int i
@@ -419,7 +357,7 @@ void clear_onboard_screen () {
    }
    */
 
-    /* Italy-man's assembly, RIP
+    // Italy-man's assembly, RIP
    asm {
         push ds
         pop es //es = ds
@@ -428,7 +366,7 @@ void clear_onboard_screen () {
         xor ax, ax //Clearing ax?
         cld //DF or Direction Flag set to 0; reverse, reverse!
         rep stosw //Repeat while CX not zero, put 0 into
-    }*/
+    }
 }
 
 /* Gruppo di gestione del sistema operativo di bordo. */
@@ -1298,10 +1236,8 @@ void update_planet_label ()
 			}
 }
 
-/* Controllo di volo (Flight Control System). */
-
-void fcs ()
-{
+// Control the flight (Flight Control System).
+void fcs() {
 	int n;
 
 	if (ip_targetted != -1) {
@@ -2744,21 +2680,21 @@ void main () {
 		if (!opencapcount) reflexes ();
 		if (!(clock()%10)) {
 			clear_onboard_screen ();
-			control (1, "flight control drive");
-			control (2, "onboard devices");
-			control (3, "preferences");
-			control (4, "disable display");
+			control (0, "flight control drive");
+			control (1, "onboard devices");
+			control (2, "preferences");
+			control (3, "disable display");
 			switch (sys) {
-				case 1: control (1, "FLIGHT CONTROL DRIVE");
+				case 1: control (0, "FLIGHT CONTROL DRIVE");
 					if (sys!=psys) status ("FCS MENU", 50);
 					fcs (); break;
-				case 2:	control (2, "ONBOARD DEVICES");
+				case 2:	control (1, "ONBOARD DEVICES");
 					if (sys!=psys) status ("SELECT SUB", 50);
 					devices (); break;
-				case 3:	control (3, "PREFERENCES");
+				case 3:	control (2, "PREFERENCES");
 					if (sys!=psys) status ("PREFS MENU", 50);
 					prefs (); break;
-				case 4:	control (4, "DISABLE DISPLAY");
+				case 4:	control (3, "DISABLE DISPLAY");
 					if (sys!=psys) status ("SCREEN OFF", 50);
 			}
 			psys = sys;
