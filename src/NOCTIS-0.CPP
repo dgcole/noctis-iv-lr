@@ -239,45 +239,6 @@ char test_and_init_mouse () {
    }
 }
 
-// Copy a rectangular area.
-void areacopy (unsigned char far *dest, unsigned char far *sorg,
-	       int x, int y, int l, int h)
-{
-	unsigned p;
-
-	p = 320 * y + x;
-
-	asm {	push ds
-		push es
-		pusha
-		cld
-		lds si, dword ptr sorg
-		les di, dword ptr dest
-		add si, p
-		add di, p }
-ac_nextl: asm {	push si
-		push di
-		mov cx, l
-		shr cx, 2
-		jcxz ac_bytes
-		db 0xf3 // rep movsd
-		db 0x66
-		db 0xa5 }
-ac_bytes: asm { mov cx, l
-		and cx, 3
-		jcxz ac_endl
-		rep movsb }
-ac_endl:  asm { pop di
-		pop si
-		add si, 320
-		add di, 320
-		dec h
-		jnz ac_nextl
-		popa
-		pop es
-		pop ds }
-}
-
 // Copies QUADWORDS * 4 bytes from the source to the destination.
 void pcopy (unsigned char far *dest, unsigned char far *source) {
 	memcpy(dest, source, QUADWORDS * 4);
@@ -288,64 +249,21 @@ void pclear (unsigned char far *target, unsigned char pattern) {
 	memset(target, pattern, QUADWORDS * 4);
 }
 
-
-// Cancella un'area rettangolare.
-// Esegue tutti i clipping necessari per l'MCGA.
-// O si specificano X2 ed Y2, o si specificano L ed H:
-// in ogni modo, i valori non usati vanno lasciati a zero.
-
+// Clears a rectangular region of the video memory.
+// Either x2 & y2 OR l and h must be specified.
+// This may or may not work.
 void areaclear (unsigned char far *dest, int x, int y,
-		int x2, int y2, int l, int h, unsigned char pattern)
-{
-	unsigned p;
-
-	if (x<0) x = 0;
-	if (y<0) y = 0;
-
-	if (x2>=320) x2 = 319;
-	if (y2>=200) y2 = 199;
-
-	if (x2>0) l = x2 - x;
-	if (y2>0) h = y2 - y;
-
-	if (x+l>=320) l = 320 - x;
-	if (y+h>=200) h = 200 - y;
-
-	if (l<1 || h<1) return;
-
-	p = 320 * y + x;
-
-	asm {	push es
-		pusha
-		pushf
-		cld
-		les di, dword ptr dest
-		add di, p
-		mov al, pattern
-		db 0x66; shl ax, 8
-		mov al, pattern
-		db 0x66; shl ax, 8
-		mov al, pattern
-		db 0x66; shl ax, 8
-		mov al, pattern }
-ac_nextl: asm {	push di
-		mov cx, l
-		shr cx, 2
-		jcxz ac_bytes
-		db 0xf3 // rep stosd
-		db 0x66
-		db 0xab }
-ac_bytes: asm { mov cx, l
-		and cx, 3
-		jcxz ac_endl
-		rep stosb }
-ac_endl:  asm { pop di
-		add di, 320
-		dec h
-		jnz ac_nextl
-		popf
-		popa
-		pop es }
+		int x2, int y2, int l, int h, unsigned char pattern) {
+	if (l == 0 || h == 0) {
+			l = x2 - x;
+			h = y2 - y;
+	}
+	for (int xPos = x; xPos < x + l; xPos++) {
+		for (int yPos = y; yPos < y + h; yPos++) {
+			unsigned int netIndex = (yPos * 320) + xPos;
+			dest[netIndex] = pattern;
+		}
+	}
 }
 
 /*
