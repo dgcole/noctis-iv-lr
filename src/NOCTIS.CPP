@@ -2874,8 +2874,8 @@ void main () {
 		// Š poco risolutivo, sia fisicamente che cromaticamente.
 		//
 		QUADWORDS -= 240;
-		psmooth_64 (adapted, 200);
-		psmooth_64 (adapted, 200);
+		psmooth_64(adapted, 200);
+		psmooth_64(adapted, 200);
 		QUADWORDS += 240;
 		//
 		// Tracciamento di tutte le stelle visibili.

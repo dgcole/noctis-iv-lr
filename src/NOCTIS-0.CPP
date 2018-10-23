@@ -268,28 +268,28 @@ void areaclear (unsigned char far *dest, int x, int y,
 
 /*
 
-	Altro gioiellino: smussa lo schermo, attenuando il contrasto dei
-	bordi con un procedimento di media su 4 x 4 pixels.
-	Occhio al trucco: normalmente ci sarebbero 16 addizioni e una
-	divisione (per 16) da fare, per ogni punto.
-	Col trucco, invece, bastano quattro addizioni a 32 bit,
-	altre quattro a 8 bit, pi— un paio di shifts ed un and logico su edx.
+	Another gem: smooth the screen, softening the contrast of the edges by 
+	averaging 4 x 4 groups of pixels. Pay attention to the trick: Normally there
+	would be 16 additions and one division (for 16) to do, for each point. With
+	the trick, however, only four 32-bit additions are needed, and another four
+	with 8 bits, plus a pair of shifts.
 
-	Normale: 16 + 42 = 58 cicli.
-	Truccato: 8 + 4 = 12 cicli.
+	Normal: 16 + 42 = 58 Cycles.
+	Now: 8 + 4 = 12 Cycles.
 
-	Piuttosto ovvio: la tavola dei colori dev'essere una sfumatura unica
-	e compatta, da far rientrare nei primi 64 registri del video DAC;
-	il colore zero Š il pi— tenue, il 63 quello pi— brillante.
+	Quite obvious: The color table must be unique and compact, to be included in
+	the first 64 registers of the video DAC; the color zero is the smallest, 63
+	the brightest.
 
-	Nota: la procedura pu• essere reiterata per ottenere
-	      una maggiore attenuazione.
+	Note: This procedure can be repeated to obtain greater attenuation.
+	Note 2: This procedure is only used to smoooth the background, and that
+	isn't even being rendered at the moment for some reason.
 
 */
 
-void psmooth_grays (unsigned char far *target)
-{
-	asm {	pusha
+void psmooth_grays (unsigned char far *target) {
+	asm {	
+		pusha
 		push ds
 		mov cx, QUADWORDS
 		shl cx, 2
@@ -297,12 +297,14 @@ void psmooth_grays (unsigned char far *target)
 		shl ax, 2
 		sub cx, ax
 		lds di, dword ptr target
-		add di, 320 }
-smooth: asm {	db 0x66; mov dx, [di-320]
+		add di, 320 
+		}
+	smooth: 
+	asm {	
+		db 0x66; mov dx, [di-320]
 		db 0x66; add dx, [di]
 		db 0x66; add dx, [di+320]
 		db 0x66; add dx, [di+640]
-		/* and edx, 11111100111111001111110011111100b */
 		db 0x66, 0x81, 0xE2, 0xFC, 0xFC, 0xFC, 0xFC
 		db 0x66; shr dx, 2
 		mov al, dl
@@ -311,19 +313,22 @@ smooth: asm {	db 0x66; mov dx, [di-320]
 		add al, dl
 		add al, dh
 		shr al, 2
-		mov [di], al }
-next:   asm {	inc di
+		mov [di], al 
+	}
+	next:   
+	asm {	
+		inc di
 		dec cx
 		jnz smooth
 		pop ds
-		popa }
+		popa 
+	}
 }
 
-/* Produce un effetto di dissolvenza al nero, molto rapido. */
-
-void pfade (unsigned char far *target, unsigned segshift, unsigned char speed)
-{
-	asm {   pusha
+// Produce a rapid black fade effect.
+void pfade (unsigned char far *target, unsigned segshift, unsigned char speed) {
+	asm {   
+		pusha
 		push 	ds
 		mov 	cx, QUADWORDS
 		sub 	cx, 80
@@ -333,25 +338,31 @@ void pfade (unsigned char far *target, unsigned segshift, unsigned char speed)
 		add 	ax, segshift
 		mov 	ds, ax
 		mov	ah, speed
-		xor 	di, di }
-fader:  asm {	mov	al, [di]
+		xor 	di, di 
+	}
+	fader:  
+	asm {	
+		mov	al, [di]
 		and	al, 0x3F
 		sub	al, ah
 		jnc	store
-		xor	al, al }
-store:	asm {	mov	[di], al
+		xor	al, al 
+	}
+	store:	
+	asm {	
+		mov	[di], al
 		inc	di
 		dec 	cx
 		jnz 	fader
 		pop 	ds
-		popa }
+		popa 
+	}
 }
 
-/* Versione a colori: 4 sfumature di 64 intensit… ciascuna. */
-
-/*void psmooth_64 (unsigned char far *target, unsigned segshift)
-{
-	asm {   pusha
+// Color version: 4 shades of 64 intensity each.
+void psmooth_64 (unsigned char far *target, unsigned segshift) {
+	asm {   
+		pusha
 		push 	ds
 		mov 	si, QUADWORDS
 		sub 	si, 80
@@ -360,40 +371,11 @@ store:	asm {	mov	[di], al
 		mov 	ax, ds
 		add 	ax, segshift
 		mov 	ds, ax
-		xor 	di, di }
-smooth: asm {	mov	al, [di+320]
-		mov	cl, [di+640]
-		mov	ah, [di+960]
-		mov	bl, [di+639]
-		and	ax, 0x3F3F
-		mov	bh, [di+641]
-		and	bx, 0x3F3F
-		add	ax, bx
-		and	cl, 0xC0
-		add	al, ah
-		shr	al, 2
-		inc 	di
-		or	al, cl
-		dec 	si
-		mov 	[di-1], al
-		jnz 	smooth
-		pop 	ds
-		popa }
-}*/
-
-void psmooth_64 (unsigned char far *target, unsigned segshift)
-{
-	asm {   pusha
-		push 	ds
-		mov 	si, QUADWORDS
-		sub 	si, 80
-		shl 	si, 2
-		lds 	ax, dword ptr target
-		mov 	ax, ds
-		add 	ax, segshift
-		mov 	ds, ax
-		xor 	di, di }
-smooth: asm {	mov	ax, [di+320]
+		xor 	di, di 
+		}
+	smooth: 
+	asm {	
+		mov	ax, [di+320]
 		mov	bx, [di+640]
 		and	ax, 0x3F3F
 		and	bx, 0x3F3F
@@ -408,7 +390,8 @@ smooth: asm {	mov	ax, [di+320]
 		mov 	[di-1], al
 		jnz 	smooth
 		pop 	ds
-		popa }
+		popa 
+	}
 }
 
 
