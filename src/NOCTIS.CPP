@@ -239,8 +239,7 @@ void frame (float x, float y, float l, float h,
 	resetfx ();
 }
 
-/* Croce di puntamento delle stelle. */
-
+// Draw star targeting cross.
 void pointer_cross_for (double xlight, double ylight, double zlight) {
 	double xx, yy, zz, z2, rx, ry, rz;
 
@@ -257,26 +256,14 @@ void pointer_cross_for (double xlight, double ylight, double zlight) {
 		rx /= rz; rx += x_centro;
 		ry /= rz; ry += y_centro - 2;
 		if (rx>10&&ry>10&&rx<310&&ry<190) {
-			_SI = 320*(int)ry + rx;
-			asm {	les di, dword ptr adapted
-				add di, si
-				mov al, 126
-				mov es:[di-320*7-7], al
-				mov es:[di-320*6-6], al
-				mov es:[di-320*5-5], al
-				mov es:[di-320*4-4], al
-				mov es:[di+320*4+4], al
-				mov es:[di+320*5+5], al
-				mov es:[di+320*6+6], al
-				mov es:[di+320*7+7], al
-				mov es:[di-320*7+7], al
-				mov es:[di-320*6+6], al
-				mov es:[di-320*5+5], al
-				mov es:[di-320*4+4], al
-				mov es:[di+320*4-4], al
-				mov es:[di+320*5-5], al
-				mov es:[di+320*6-6], al
-				mov es:[di+320*7-7], al }
+			unsigned int offsetmaybe = 320 * (int) ry + rx;
+			for (int i = 0; i < 4; i++) {
+				int mod1 = (i == 1 || i == 3) ? 1 : -1;
+				int mod2 = (i == 1 || i == 2) ? 1 : -1;
+				for (int j = 7; j > 3; j--) {
+					adapted[offsetmaybe + mod1 * 320 * j + mod2 * j] = 126;
+				}
+			}
 		}
 	}
 }
@@ -1504,15 +1491,11 @@ void devices ()
 			lsecs = secs; lsecs %= 1000;
 			other (alphavalue(lsecs));
 			cline (2, "parsis universal coordinates: ");
-			asm {	fld dzat_x
-				frndint
-				fstp parsis_x
-				fld dzat_y
-				frndint
-				fstp parsis_y
-				fld dzat_z
-				frndint
-				fstp parsis_z }
+			
+			parsis_x = floor(dzat_x + 0.5);
+			parsis_y = floor(dzat_y + 0.5);
+			parsis_z = floor(dzat_z + 0.5);
+
 			other (alphavalue(parsis_x));
 			other (";");
 			other (alphavalue(-parsis_y));
