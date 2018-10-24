@@ -311,62 +311,19 @@ void control (int line, char *text) {
 }
 
 // Writes the title of a command on the main display.
+// These are split up into 4 blocks of 27 characters.
 void command (int nr, char *text) {
-   /*char* ctbPtr = &ctb[20];
-
-	if (text != NULL) {
-   	strcpy(ctbPtr,text);
-   }
-   ctb[20 + strlen(text)] = ' ';*/
-
-    asm {   push ds //DS onto stack [DS1]
-        push ds //DS onto stack [DS2]
-        pop es //es = DS from stack [DS2]
-        lea di, ctb //di = &ctb
-        add di, 20 //di += 20
-        dec nr // ++nr
-        mov ax, nr //ax = nr  ax is 16-bit accumulator
-        mov dx, 27 //dx = 27
-        mul dx //dx, ax = dx * ax (Because word) ????
-        add di, ax //di += ax
-        mov ax, 27 //ax = 27
-        lds si, dword ptr text }  //si = text ?
-byter:    asm {    cmp byte ptr [si], 0 //Compare ptr si and 0
-        je endline  //If equal, go to endline; If nothing left in si
-        movsb //Move a byte of si to location (specified by di), si & di increment
-        dec ax //--ax
-        jnz byter } //If ax is not 0, back to the top of byter
-endline:asm {    test ax, ax
-        jz endwork
-        mov byte ptr es:[di], 32
-        inc di
-        dec ax
-        jnz endline }
-endwork:asm      pop ds
+   unsigned int length = strlen(text);
+   if (length > 27) return;
+   
+   int index = 20 + 27 * nr;
+   strcpy(&ctb[index], text);
 }
 
 
 // Clear the whole on-board computer screen.
 void clear_onboard_screen () {
-    //memset(ctb, 0, 256);
-
-   /* In-case you don't trust memset, pussy
-   int i
-   for (i = 0; i < 256; ++i) {
-       ctb[i] = 0;
-   }
-   */
-
-    // Italy-man's assembly, RIP
-   asm {
-        push ds
-        pop es //es = ds
-        lea di, ctb //di = &ctb   ctb is char ctb[512]
-        mov cx, 256 //cx = 256
-        xor ax, ax //Clearing ax?
-        cld //DF or Direction Flag set to 0; reverse, reverse!
-        rep stosw //Repeat while CX not zero, put 0 into
-    }
+    memset(ctb, 0, 512);
 }
 
 /* Gruppo di gestione del sistema operativo di bordo. */
@@ -1275,26 +1232,26 @@ void fcs() {
 	other (alphavalue(charge));
 	other (" grams.");
 
-	command (1, "set remote target");
+	command (0, "set remote target");
 
 	if (stspeed)
-		command (2, "stop vimana flight");
+		command (1, "stop vimana flight");
 	else
-		command (2, "start vimana flight");
+		command (1, "start vimana flight");
 
 	if (landing_point)
-		command (4, "cancel landing request");
+		command (3, "cancel landing request");
 	else
-		command (4, "deploy surface capsule");
+		command (3, "deploy surface capsule");
 
 	if (ip_targetted==-1||ip_reached)
-		command (3, "set local target");
+		command (2, "set local target");
 	else {
 		if (ip_reaching)
-			command (3, "stop fine approach");
+			command (2, "stop fine approach");
 		else {
-			command (3, "start fine approach");
-			command (4, "clear local target");
+			command (2, "start fine approach");
+			command (3, "clear local target");
 		}
 	}
 }
@@ -1398,27 +1355,27 @@ void devices ()
 
 	switch (dev_page) {
 		case 0: // sub menu
-			command (1, "navigation instruments");
-			command (2, "miscellaneous");
-			command (3, "galactic cartography");
-			command (4, "emergency functions");
+			command (0, "navigation instruments");
+			command (1, "miscellaneous");
+			command (2, "galactic cartography");
+			command (3, "emergency functions");
 			cline (3, "SELECT ARGUMENT");
 			break;
 		case 1: // navigation status
 			if (field_amplificator) {
-				command (1, "STARFIELD AMPLIFICATOR");
+				command (0, "STARFIELD AMPLIFICATOR");
 				cline (1, "starfield amplification active, ");
 			}
 			else {
-				command (1, "starfield amplificator");
+				command (0, "starfield amplificator");
 				cline (1, "starfield amplification disabled, ");
 			}
 			if (anti_rad) {
-				command (4, "FORCE RADIATIONS LIMIT");
+				command (3, "FORCE RADIATIONS LIMIT");
 				other ("high-radiation fields are avoided.");
 			}
 			else {
-				command (4, "force radiations limit");
+				command (3, "force radiations limit");
 				other ("high-radiation fields are ignored.");
 			}
 			if (sync) {
@@ -1428,48 +1385,48 @@ void devices ()
 						if (nearstar_p_type[n] != -1)
 							sp++;
 					}
-					cline (2, "tracking status: performing ");
+					cline (1, "tracking status: performing ");
 					if (sync==1) {
 						other ("fixed-point chase.");
-						command (3, "fixed-point chase");
+						command (2, "fixed-point chase");
 					}
 					if (sync==2) {
 						other ("far chase.");
-						command (3, "far chase");
+						command (2, "far chase");
 					}
 					if (sync==3) {
 						other ("syncrone orbit.");
-						command (3, "syncrone orbit");
+						command (2, "syncrone orbit");
 					}
 					if (sync==4) {
 						other ("high-speed orbit.");
-						command (3, "high-speed orbit");
+						command (2, "high-speed orbit");
 					}
 					if (sync==5) {
 						other ("near chase.");
-						command (3, "near chase");
+						command (2, "near chase");
 					}
 				}
 				else {
 					cline (2, "tracking status: disconnected.");
 					if (sync==1)
-						command (3, "fixed-point chase");
+						command (2, "fixed-point chase");
 					if (sync==2)
-						command (3, "far chase");
+						command (2, "far chase");
 					if (sync==3)
-						command (3, "syncrone orbit");
+						command (2, "syncrone orbit");
 					if (sync==4)
-						command (3, "high-speed orbit");
+						command (2, "high-speed orbit");
 					if (sync==5)
-						command (3, "near chase");
+						command (2, "near chase");
 				}
 			}
 			else {
 				cline (2, "tracking status: inactive.");
-				command (3, "drive tracking mode");
+				command (2, "drive tracking mode");
 			}
 			if (pl_search) {
-				command (2, "LOCAL PLANETS FINDER");
+				command (1, "LOCAL PLANETS FINDER");
 				xx = nearstar_x - dzat_x;
 				yy = nearstar_y - dzat_y;
 				zz = nearstar_z - dzat_z;
@@ -1499,45 +1456,45 @@ void devices ()
 					cline (3, "planet finder report: no stellar systems within remote sensors range.");
 			}
 			else
-				command (2, "local planets finder");
+				command (1, "local planets finder");
 			break;
 		case 2: // miscellaneous devices status
 			if (ilightv==1)
-				command (1, "internal light on");
+				command (0, "internal light on");
 			else
-				command (1, "internal light off");
-			command (2, "remote target data");
-			command (3, "local target data");
-			command (4, "environment data");
-			if (data == 1) command (2, "REMOTE TARGET DATA");
-			if (data == 2) command (3, "LOCAL TARGET DATA");
-			if (data == 3) command (4, "ENVIRONMENT DATA");
+				command (0, "internal light off");
+			command (1, "remote target data");
+			command (2, "local target data");
+			command (3, "environment data");
+			if (data == 1) command (1, "REMOTE TARGET DATA");
+			if (data == 2) command (2, "LOCAL TARGET DATA");
+			if (data == 3) command (3, "ENVIRONMENT DATA");
 			break;
 		case 3: // galactic cartography status
 			if (labstar)
-				command (1, "assign star label");
+				command (0, "assign star label");
 			else {
 				if (star_label_pos > -1)
-					command (1, "remove star label");
+					command (0, "remove star label");
 				else
-					command (1, "label star as...");
+					command (0, "label star as...");
 			}
 			if (labplanet)
-				command (2, "assign planet label");
+				command (1, "assign planet label");
 			else {
 				if (planet_label_pos > -1)
-					command (2, "remove planet label");
+					command (1, "remove planet label");
 				else
-					command (2, "label planet as...");
+					command (1, "label planet as...");
 			}
 			if (targets_in_range)
-				command (3, "quit targets in range");
+				command (2, "quit targets in range");
 			else
-				command (3, "show targets in range");
+				command (2, "show targets in range");
 			if (manual_target)
-				command (4, "(enter coordinates)");
+				command (3, "(enter coordinates)");
 			else
-				command (4, "set target to parsis");
+				command (3, "set target to parsis");
 			cline (1, "epoc ");
 			other (alphavalue((long)epoc)); other (" triads ");
 			lsecs = secs; lsecs -= lsecs % 1000000L; lsecs /= 1000000L;
@@ -1567,13 +1524,13 @@ void devices ()
 			other (alphavalue((int)(cos(deg*navigation_beta)*-100)));
 			break;
 		case 4: // emergency functions status
-			command (1, "reset onboard system");
-			command (2, "send help request");
+			command (0, "reset onboard system");
+			command (1, "send help request");
 			if (lithium_collector)
-				command (3, "stop scoping lithium");
+				command (2, "stop scoping lithium");
 			else
-				command (3, "scope for lithium");
-			command (4, "clear status");
+				command (2, "scope for lithium");
+			command (3, "clear status");
 			if (gburst == -1) {
 				cline (1, "NOTE: there are no emergencies at the moment.");
 				cline (2, "help request not sent.");
@@ -1863,24 +1820,24 @@ void dev_commands ()
 void prefs ()
 {
 	if (autoscreenoff)
-		command (1, "auto screen sleep on");
+		command (0, "auto screen sleep on");
 	else
-		command (1, "auto screen sleep off");
+		command (0, "auto screen sleep off");
 
 	if (revcontrols)
-		command (2, "reverse pitch controls");
+		command (1, "reverse pitch controls");
 	else
-		command (2, "normal pitch controls");
+		command (1, "normal pitch controls");
 
 	if (menusalwayson)
-		command (3, "menus always onscreen");
+		command (2, "menus always onscreen");
 	else
-		command (3, "auto-hidden menus");
+		command (2, "auto-hidden menus");
 
 	if (depolarize)
-		command (4, "polarize");
+		command (3, "polarize");
 	else
-		command (4, "depolarize");
+		command (3, "depolarize");
 }
 
 /* Comandi di impostazione delle opzioni preferenziali. */
