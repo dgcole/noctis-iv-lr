@@ -563,8 +563,7 @@ void digit_at (char digit, float x, float y, float size, unsigned char color, ch
 	}
 }
 
-void screen ()
-{
+void screen() {
 	float x, y;
 	int   c, p, t = 0;
 
@@ -2253,38 +2252,36 @@ void main () {
 				reset_signal = 200;
 			}
 		}
-		//
-		// Input del mouse per gli spostamenti dell'utente.
-		//
-		p_mpul = mpul; mpul = 0;
-		mouse_input ();
-		if (mpul&2) {
-			shift += 3*mdltx;
+		// Mouse input for user movements.
+		p_mpul = mpul; 
+		mpul = 0;
+		mouse_input();
+		if (mpul & 2) {
+			shift += 3 * mdltx;
 			dlt_alfa -= (float) mdlty / 8;
 		}
 		else {
-			step -= 3*mdlty;
-			if (abs(mdlty)>7) dlt_alfa = -user_alfa / 6;
+			step -= 3 * mdlty;
+			if (abs(mdlty) > 7) dlt_alfa = -user_alfa / 6;
 			dlt_beta -= (float) mdltx / 3;
 		}
-		//
-		// Input del mouse per il doppio click sinistro e destro.
-		//
+		// Mouse input for double left and right click.
 		if (ontheroof) goto nop;
-		if ((mpul&1)&&!(p_mpul&1))
+		if ((mpul & 1) && !(p_mpul & 1))
 			select = 1;
 		else
 			select = 0;
-		if ((mpul&2)&&!(p_mpul&2)&&!right_dblclick) {
+		if ((mpul & 2) && !(p_mpul & 2) && !right_dblclick) {
 			if (!right_dblclick_timing)
 				right_dblclick_timing = clock();
 			else {
-				if (clock()-right_dblclick_timing<9) {
+				if (clock() - right_dblclick_timing < DBL_CLICK_CUTOFF) {
 					right_dblclick = 1;
 					right_dblclick_dir = user_beta;
 				}
-				else
+				else {
 					right_dblclick_timing = clock();
+				}
 			}
 		}
 		if (right_dblclick) {

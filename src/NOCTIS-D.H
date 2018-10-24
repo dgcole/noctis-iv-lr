@@ -184,4 +184,5 @@ struct pvlist {
 #define MOUSE_READ_PRESS 	0x05
 #define MOUSE_READ_MOTION 	0x0b
 
-
+// Processor time cutoff for double left and right clicks.
+#define DBL_CLICK_CUTOFF 500

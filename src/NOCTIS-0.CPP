@@ -5626,11 +5626,13 @@ void polycupola (float y_or, char textured)
 
 clock_t gtime;
 
-void sync_start ()
-{ gtime = clock(); }
+void sync_start () { 
+	gtime = clock(); 
+}
 
-void sync_stop ()
-{ while (clock() == gtime); }
+void sync_stop () { 
+	while (clock() == gtime); 
+}
 
 long   global_surface_seed;
 float  ppos_x, ppos_y, ppos_z;
