@@ -2975,32 +2975,18 @@ void main () {
 			datasheetscroll = 0;
 			data = 0;
 		}
-		//
-		// Croce di puntamento planetaria.
-		//
+		// Draw planetary targeting cross.
 		if ((ip_targetted != -1 && !ip_reached) || ip_targetting) {
 			planet_xyz (ip_targetted);
 			if (far_pixel_at (plx, ply, plz, 0, 1)) {
-				asm {   les di, dword ptr adapted
-					add di, vptr
-					sub di, 640
-					mov al, 126
-					mov es:[di-7], al
-					mov es:[di-6], al
-					mov es:[di-5], al
-					mov es:[di-4], al
-					mov es:[di+4], al
-					mov es:[di+5], al
-					mov es:[di+6], al
-					mov es:[di+7], al
-					mov es:[di-320*7], al
-					mov es:[di-320*6], al
-					mov es:[di-320*5], al
-					mov es:[di-320*4], al
-					mov es:[di+320*4], al
-					mov es:[di+320*5], al
-					mov es:[di+320*6], al
-					mov es:[di+320*7], al }
+				unsigned int index = vptr - 640;
+				for (int i = 0; i < 4; i++) {
+					int voffset = (i > 1) ? 320 : 1;
+					int signmod = (i % 2 == 0) ?  -1 : 1;
+					for (int j = 4; j < 8; j++) {
+						adapted[index + signmod * voffset * j] = 126;
+					}
+				}
 			}
 		}
 		//
