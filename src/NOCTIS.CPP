@@ -1968,23 +1968,23 @@ int caught_somewhere_in_time (int errval, int ax, int bp, int si)
 /* Programma principale. */
 
 float starmass_correction[star_classes] = {
-       1.886, // classe 0
-	1.50, // classe 1
-     8000.40, // classe 2
-	0.05, // classe 3
-	2.44, // classe 4
-	3.10, // classe 5
-	9.30, // classe 6
-       48.00, // classe 7
-	1.00, // classe 8
-	1.00, // classe 9
-	0.07, // classe 10
-    15000.00  // classe 11
+	1.886, // Class 0
+	1.50, // Class 1
+    8000.40, // Class 2
+	0.05, // Class 3
+	2.44, // Class 4
+	3.10, // Class 5
+	9.30, // Class 6
+	48.00, // Class 7
+	1.00, // Class 8
+	1.00, // Class 9
+	0.07, // Class 10
+    15000.00  // Class 11
 };
 
 extern unsigned _stklen = 0x1800;
 
-void main () {
+void main() {
 	float satur, DfCoS;
      //	float user_drawing_range;
 
