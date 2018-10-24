@@ -11,17 +11,17 @@ extern unsigned char tmppal[768];
 extern char return_palette[768];
 extern char surface_palette[768];
 extern void tavola_colori (unsigned char *nuova_tavolozza,
-		    unsigned colore_di_partenza, unsigned nr_colori,
-		    char filtro_rosso, char filtro_verde, char filtro_blu);
+            unsigned colore_di_partenza, unsigned nr_colori,
+            char filtro_rosso, char filtro_verde, char filtro_blu);
 extern int mdltx, mdlty, mx, my, mpul;
 extern void mouse_input (void);
 extern char test_and_init_mouse (void);
 extern void pcopy (unsigned char far *dest, unsigned char far *sorg);
 extern void pclear (unsigned char far *target, unsigned char pattern);
 extern void areacopy (unsigned char far *dest, unsigned char far *sorg,
-		      int x, int y, int l, int h);
+              int x, int y, int l, int h);
 extern void areaclear (unsigned char far *dest, int x, int y,
-		       int x2, int y2, int l, int h, unsigned char pattern);
+               int x2, int y2, int l, int h, unsigned char pattern);
 extern void psmooth_grays (unsigned char far *target);
 extern void pfade (unsigned char far *target, unsigned segshift, unsigned char speed);
 extern void psmooth_64 (unsigned char far *target, unsigned segshift);
@@ -68,7 +68,7 @@ extern void change_camera_lens (void);
 extern void change_txm_repeating_mode (void);
 extern unsigned char entity;
 extern void poly3d (float *x, float *y, float *z,
-	     unsigned nrv, unsigned char colore);
+         unsigned nrv, unsigned char colore);
 extern void Forward (float delta);
 extern float pnx, pny, pnz;
 extern void pnorm (float *x, float *y, float *z);
@@ -166,10 +166,10 @@ extern char seconds[3], minutes[3], hours[3], day[3], month[3], year[5];
 extern int  epoc;
 extern unsigned char cyclon[384];
 extern char          ctb[512];
-extern char	      _delay;
+extern char       _delay;
 extern char          stspeed;
 extern char          bright;
-extern char   	     elight;
+extern char          elight;
 extern unsigned      gl_start;
 extern unsigned      point;
 extern unsigned      vptr;
@@ -177,25 +177,25 @@ extern int           infoarea;
 extern int           s_control;
 extern int           s_command;
 extern int           isecs, p_isecs;
-extern double	     fsecs;
-extern int	     gl_fps;
-extern int	     fps;
+extern double        fsecs;
+extern int       gl_fps;
+extern int       fps;
 extern float         dlt_alfa;
-extern float	     dlt_beta;
-extern float	     dlt_nav_beta;
-extern float	     step;
-extern float	     shift;
+extern float         dlt_beta;
+extern float         dlt_nav_beta;
+extern float         step;
+extern float         shift;
 extern double        s_m;
-extern double	     plx, ply, plz;
+extern double        plx, ply, plz;
 extern double        pxx, pyy;
 extern double        delta_x, delta_y;
-extern double 	     nearstar_identity;
-extern int	     nearstar_nob;
-extern int	     nearstar_labeled;
-extern int 	     npcs;
-extern char   	     ontheroof;
-extern int	     datasheetscroll;
-extern int	     datasheetdelta;
+extern double        nearstar_identity;
+extern int       nearstar_nob;
+extern int       nearstar_labeled;
+extern int       npcs;
+extern char          ontheroof;
+extern int       datasheetscroll;
+extern int       datasheetdelta;
 
 extern char *ord[21];
 extern char *star_description[12];
@@ -205,7 +205,7 @@ extern int class_rayvar[star_classes];
 extern int class_act[star_classes];
 extern char class_planets[star_classes];
 extern char   nearstar_p_type       [maxbodies];
-extern int    nearstar_p_owner	    [maxbodies];
+extern int    nearstar_p_owner      [maxbodies];
 extern char   nearstar_p_moonid     [maxbodies];
 extern char   nearstar_p_mapped     [maxbodies];
 extern double nearstar_p_ring       [maxbodies];
@@ -233,7 +233,7 @@ extern unsigned char far  *ruinschart; // come objectschart, ma dichiarato in by
 extern unsigned char far  *pvfile;
 extern unsigned char far  *n_offsets_map;
 extern char far           *n_globes_map;
-extern unsigned	    seg_adapted;
+extern unsigned     seg_adapted;
 extern char sky_red_filter;
 extern char sky_grn_filter;
 extern char sky_blu_filter;
@@ -247,7 +247,7 @@ extern unsigned char sky_brightness;
 extern unsigned char horiz_brt;
 extern unsigned m200[200];
 extern unsigned wtl;
-extern float	rwp;
+extern float    rwp;
 extern float    iwp;
 extern float    wp;
 extern float    wdir;
@@ -275,9 +275,9 @@ extern long fast_random (long mask);
 extern int ranged_fast_random (int range);
 extern int sa_open (long offset_of_virtual_file);
 extern void shade (unsigned char far *palette_buffer,
-		   int first_color, int number_of_colors,
-		   float start_r,  float start_g,  float start_b,
-		   float finish_r, float finish_g, float finish_b);
+           int first_color, int number_of_colors,
+           float start_r,  float start_g,  float start_b,
+           float finish_r, float finish_g, float finish_b);
 extern char snapfilename[24];
 extern void snapshot (int forcenumber, char showdata);
 extern char helpfile_hlp[13];
@@ -286,95 +286,95 @@ extern void readline (int tfh);
 extern void from_vehicle (void);
 extern void from_user (void);
 extern void watch (double cam_x, double cam_y, double cam_z,
-	    double see_x, double see_y, double see_z);
+        double see_x, double see_y, double see_z);
 extern char xy (double cam_x, double cam_y, double cam_z,
-	 double point_x, double point_y, double point_z);
+     double point_x, double point_y, double point_z);
 extern void p_Forward (float delta);
 extern void copia (unsigned char far *dest, unsigned char far *sorg, unsigned x, unsigned y, int l, int a);
 extern void setfx (char fx);
 extern void chgfx (char fx);
 extern void resetfx (void);
 extern void Stick (unsigned long xp, unsigned long yp,
-	    unsigned long xa, unsigned long ya);
+        unsigned long xa, unsigned long ya);
 extern long fpx;
 extern long fpy;
 extern float p_rx, p_ry, p_rz;
 extern float stick_uneg;
 extern void stick3d (float p_x, float p_y, float p_z,
-	      float x, float y, float z);
+          float x, float y, float z);
 extern void link3d (float x, float y, float z);
 extern void fline (long fx, long fy,
-	    long lx, long ly);
+        long lx, long ly);
 //--------------------------------------------------------------------------//
 extern unsigned char map_color_a;
 extern unsigned char map_color_b;
 extern unsigned char map_color_c;
 extern unsigned char map_color_d;
 extern void randomic_mapper (float x0,
-		      float y0,
-		      float z0,
-		      float x1,
-		      float y1,
-		      float z1,
-		      float x2,
-		      float y2,
-		      float z2,
-		      char divisions);
+              float y0,
+              float z0,
+              float x1,
+              float y1,
+              float z1,
+              float x2,
+              float y2,
+              float z2,
+              char divisions);
 extern void unloadpv (int handle);
 extern void unloadallpv (void);
 extern char loadpv (int   handle, long virtual_file_position,
-		    float xscale, float yscale, float zscale,
-		    float xmove,  float ymove,  float zmove,
-		    unsigned char base_color,   char depth_sort);
+            float xscale, float yscale, float zscale,
+            float xmove,  float ymove,  float zmove,
+            unsigned char base_color,   char depth_sort);
 extern void QuickSort (int far *index, float far *mdist, int start, int end);
 extern void drawpv (int handle, int mode, int rm_iterations,
-		    float center_x, float center_y, float center_z,
-		    char use_depth_sort);
+            float center_x, float center_y, float center_z,
+            char use_depth_sort);
 extern void copypv (int dest_handle, int src_handle);
 extern void modpv (int handle, int polygon_id, int vertex_id,
-		   float x_scale, float y_scale, float z_scale,
-		   float x_angle, float y_angle, float z_angle,
-		   pvlist *vertexs_to_affect);
+           float x_scale, float y_scale, float z_scale,
+           float x_angle, float y_angle, float z_angle,
+           pvlist *vertexs_to_affect);
 //--------------------------------------------------------------------------//
 extern char *alphavalue (double value);
 extern void background (unsigned start,
-		 unsigned char far *target,
-		 unsigned char far *background,
-		 unsigned char far *offsetsmap,
-		 unsigned total_map_bytes,
-		 unsigned screenshift);
+         unsigned char far *target,
+         unsigned char far *background,
+         unsigned char far *offsetsmap,
+         unsigned total_map_bytes,
+         unsigned screenshift);
 extern void sky (unsigned limits);
 extern double laststar_x, laststar_y, laststar_z;
 extern char isthere (double star_id);
 extern char glass_bubble;
 extern void globe (unsigned start,
-	    unsigned char far *target,
-	    unsigned char far *tapestry,
-	    unsigned char far *offsetsmap,
-	    unsigned total_map_bytes,
-	    double x, double y, double z,
-	    float mag_factor, char colormask,
-	    char globe_saturation);
+        unsigned char far *target,
+        unsigned char far *tapestry,
+        unsigned char far *offsetsmap,
+        unsigned total_map_bytes,
+        double x, double y, double z,
+        float mag_factor, char colormask,
+        char globe_saturation);
 extern void glowinglobe (int start,
-	    unsigned char far *target,
-	    unsigned char far *offsetsmap,
-	    unsigned total_map_bytes,
-	    double x, double y, double z, float mag_factor,
-	    int terminator_start, int terminator_end, unsigned char color);
+        unsigned char far *target,
+        unsigned char far *offsetsmap,
+        unsigned total_map_bytes,
+        double x, double y, double z, float mag_factor,
+        int terminator_start, int terminator_end, unsigned char color);
 extern void whiteglobe (unsigned char far *target,
-	    double x, double y, double z,
-	    float mag_factor, float fgm_factor);
+        double x, double y, double z,
+        float mag_factor, float fgm_factor);
 extern double xsun_onscreen;
 extern void whitesun (unsigned char far *target,
-	    double x, double y, double z,
-	    float mag_factor, float fgm_factor);
+        double x, double y, double z,
+        float mag_factor, float fgm_factor);
 extern float far lft_sin[361];
 extern float far lft_cos[361];
 extern char lens_flares_init (void);
 extern void lens_flares_for (double cam_x, double cam_y, double cam_z,
-		      double xlight, double ylight, double zlight,
-		      double step, int added, char on_hud, char condition,
-		      int xshift, int yshift);
+              double xlight, double ylight, double zlight,
+              double step, int added, char on_hud, char condition,
+              int xshift, int yshift);
 extern void single_pixel_at_ptr (unsigned ptr, unsigned char pixel_color);
 extern char far_pixel_at (double xlight, double ylight, double zlight, double radii, unsigned char unconditioned_color);
 extern unsigned long far *digimap2;
@@ -476,9 +476,9 @@ extern char outhudbuffer[81];
 extern void wrouthud (unsigned x, unsigned y, unsigned l, char *text);
 extern void surrounding (char compass_on, int openhudcount);
 
-extern float	pp_gravity;
-extern float	pp_temp;
-extern float	pp_pressure;
+extern float    pp_gravity;
+extern float    pp_temp;
+extern float    pp_pressure;
 extern float    pp_pulse;
 
 extern void additional_consumes (void);
