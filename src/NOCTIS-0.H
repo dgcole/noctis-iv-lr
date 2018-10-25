@@ -1,6 +1,6 @@
 extern int QUADWORDS;
-extern unsigned char far *adaptor;
-extern unsigned char far *adapted;
+extern unsigned char  *adaptor;
+extern unsigned char  *adapted;
 extern void reach_your_dir (void);
 extern void _320_200_256 (void);
 extern void _80_25_C (void);
@@ -16,17 +16,17 @@ extern void tavola_colori (unsigned char *nuova_tavolozza,
 extern int mdltx, mdlty, mx, my, mpul;
 extern void mouse_input (void);
 extern char test_and_init_mouse (void);
-extern void pcopy (unsigned char far *dest, unsigned char far *sorg);
-extern void pclear (unsigned char far *target, unsigned char pattern);
-extern void areacopy (unsigned char far *dest, unsigned char far *sorg,
+extern void pcopy (unsigned char  *dest, unsigned char  *sorg);
+extern void pclear (unsigned char  *target, unsigned char pattern);
+extern void areacopy (unsigned char  *dest, unsigned char  *sorg,
               int x, int y, int l, int h);
-extern void areaclear (unsigned char far *dest, int x, int y,
+extern void areaclear (unsigned char  *dest, int x, int y,
                int x2, int y2, int l, int h, unsigned char pattern);
-extern void psmooth_grays (unsigned char far *target);
-extern void pfade (unsigned char far *target, unsigned segshift, unsigned char speed);
-extern void psmooth_64 (unsigned char far *target, unsigned segshift);
-extern void smootharound_64 (unsigned char far *target, long cx, long cy, long r, char diffuse);
-extern void mask_pixels (unsigned char far *target, unsigned char mask);
+extern void psmooth_grays (unsigned char  *target);
+extern void pfade (unsigned char  *target, unsigned segshift, unsigned char speed);
+extern void psmooth_64 (unsigned char  *target, unsigned segshift);
+extern void smootharound_64 (unsigned char  *target, long cx, long cy, long r, char diffuse);
+extern void mask_pixels (unsigned char  *target, unsigned char mask);
 
 const TEXTURE_XSIZE = 256; // Larghezza delle BMP.
 const TEXTURE_YSIZE = 256; // Altezza delle BMP.
@@ -225,14 +225,14 @@ extern char *planet_description[10];
 extern unsigned char planet_rgb_and_var[40];
 extern int planet_possiblemoons[10];
 extern float mindiff;
-extern unsigned char far  *p_background;
-extern unsigned char far  *s_background;
+extern unsigned char   *p_background;
+extern unsigned char   *s_background;
 extern unsigned char huge *p_surfacemap;
-extern quadrant      far  *objectschart;
-extern unsigned char far  *ruinschart; // come objectschart, ma dichiarato in bytes
-extern unsigned char far  *pvfile;
-extern unsigned char far  *n_offsets_map;
-extern char far           *n_globes_map;
+extern quadrant        *objectschart;
+extern unsigned char   *ruinschart; // come objectschart, ma dichiarato in bytes
+extern unsigned char   *pvfile;
+extern unsigned char   *n_offsets_map;
+extern char            *n_globes_map;
 extern unsigned     seg_adapted;
 extern char sky_red_filter;
 extern char sky_grn_filter;
@@ -257,24 +257,24 @@ extern char landed;
 extern long atl_x, atl_z, atl_x2, atl_z2;
 extern double qid;
 extern int fn;
-extern unsigned char far *fnv, *fcolor;
-extern float far *fx, *inv_fx, *fy, *fz;
+extern unsigned char  *fnv, *fcolor;
+extern float  *fx, *inv_fx, *fy, *fz;
 extern int vhn;
-extern float far *vhx, *vhy, *vhz;
-extern float far *vhxm, *vhym, *vhzm, *vh_mdq;
-extern unsigned char far *vhnv, *vhcolor, *vhindex;
+extern float  *vhx, *vhy, *vhz;
+extern float  *vhxm, *vhym, *vhzm, *vh_mdq;
+extern unsigned char  *vhnv, *vhcolor, *vhindex;
 extern int in;
-extern float far *ix, *iy, *iz;
-extern unsigned char far *inv, *icolor;
+extern float  *ix, *iy, *iz;
+extern unsigned char  *inv, *icolor;
 extern int alpha_n;
-extern unsigned char far *alpha_nv;
-extern float far *alpha_x, *alpha_y, *alpha_z;
+extern unsigned char  *alpha_nv;
+extern float  *alpha_x, *alpha_y, *alpha_z;
 extern long flat_rnd_seed;
 extern void fast_srand (long seed);
 extern long fast_random (long mask);
 extern int ranged_fast_random (int range);
 extern int sa_open (long offset_of_virtual_file);
-extern void shade (unsigned char far *palette_buffer,
+extern void shade (unsigned char  *palette_buffer,
            int first_color, int number_of_colors,
            float start_r,  float start_g,  float start_b,
            float finish_r, float finish_g, float finish_b);
@@ -290,7 +290,7 @@ extern void watch (double cam_x, double cam_y, double cam_z,
 extern char xy (double cam_x, double cam_y, double cam_z,
      double point_x, double point_y, double point_z);
 extern void p_Forward (float delta);
-extern void copia (unsigned char far *dest, unsigned char far *sorg, unsigned x, unsigned y, int l, int a);
+extern void copia (unsigned char  *dest, unsigned char  *sorg, unsigned x, unsigned y, int l, int a);
 extern void setfx (char fx);
 extern void chgfx (char fx);
 extern void resetfx (void);
@@ -326,7 +326,7 @@ extern char loadpv (int   handle, long virtual_file_position,
             float xscale, float yscale, float zscale,
             float xmove,  float ymove,  float zmove,
             unsigned char base_color,   char depth_sort);
-extern void QuickSort (int far *index, float far *mdist, int start, int end);
+extern void QuickSort (int  *index, float  *mdist, int start, int end);
 extern void drawpv (int handle, int mode, int rm_iterations,
             float center_x, float center_y, float center_z,
             char use_depth_sort);
@@ -338,9 +338,9 @@ extern void modpv (int handle, int polygon_id, int vertex_id,
 //--------------------------------------------------------------------------//
 extern char *alphavalue (double value);
 extern void background (unsigned start,
-         unsigned char far *target,
-         unsigned char far *background,
-         unsigned char far *offsetsmap,
+         unsigned char  *target,
+         unsigned char  *background,
+         unsigned char  *offsetsmap,
          unsigned total_map_bytes,
          unsigned screenshift);
 extern void sky (unsigned limits);
@@ -348,36 +348,36 @@ extern double laststar_x, laststar_y, laststar_z;
 extern char isthere (double star_id);
 extern char glass_bubble;
 extern void globe (unsigned start,
-        unsigned char far *target,
-        unsigned char far *tapestry,
-        unsigned char far *offsetsmap,
+        unsigned char  *target,
+        unsigned char  *tapestry,
+        unsigned char  *offsetsmap,
         unsigned total_map_bytes,
         double x, double y, double z,
         float mag_factor, char colormask,
         char globe_saturation);
 extern void glowinglobe (int start,
-        unsigned char far *target,
-        unsigned char far *offsetsmap,
+        unsigned char  *target,
+        unsigned char  *offsetsmap,
         unsigned total_map_bytes,
         double x, double y, double z, float mag_factor,
         int terminator_start, int terminator_end, unsigned char color);
-extern void whiteglobe (unsigned char far *target,
+extern void whiteglobe (unsigned char  *target,
         double x, double y, double z,
         float mag_factor, float fgm_factor);
 extern double xsun_onscreen;
-extern void whitesun (unsigned char far *target,
+extern void whitesun (unsigned char  *target,
         double x, double y, double z,
         float mag_factor, float fgm_factor);
-extern float far lft_sin[361];
-extern float far lft_cos[361];
+extern float  lft_sin[361];
+extern float  lft_cos[361];
 extern char lens_flares_init (void);
 extern void lens_flares_for (double cam_x, double cam_y, double cam_z,
               double xlight, double ylight, double zlight,
               double step, int added, char on_hud, char condition,
               int xshift, int yshift);
 extern void single_pixel_at_ptr (unsigned ptr, unsigned char pixel_color);
-extern char far_pixel_at (double xlight, double ylight, double zlight, double radii, unsigned char unconditioned_color);
-extern unsigned long far *digimap2;
+extern char _pixel_at (double xlight, double ylight, double zlight, double radii, unsigned char unconditioned_color);
+extern unsigned long  *digimap2;
 extern void cupola (float y_or, float brk);
 extern void polycupola (float y_or, char textured);
 //extern void alogena (void);
@@ -410,8 +410,8 @@ extern void extract_ap_target_infos (void);
 extern float zrandom (int range);
 extern int starnop (double star_x, double star_y, double star_z);
 extern void prepare_nearstar (void);
-extern void ssmooth (unsigned char far *target);
-extern void lssmooth (unsigned char far *target);
+extern void ssmooth (unsigned char  *target);
+extern void lssmooth (unsigned char  *target);
 extern int      c, gr, r, g, b, cr, cx, cy;
 extern char     lave, crays;
 extern float    kfract;
@@ -422,7 +422,7 @@ extern void permanent_storm (void);
 extern void crater (void);
 extern void band (void);
 extern void wave (void);
-extern void fracture (unsigned char far *target, float max_latitude);
+extern void fracture (unsigned char  *target, float max_latitude);
 extern void volcano (void);
 extern void contrast (float kt, float kq, float thrshld);
 extern void randoface (int range, int upon);

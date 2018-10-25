@@ -8,7 +8,7 @@ float   refx, refy, refz;
 float   sp_x, sp_y, sp_z;
 
 /* Funzioni e variabili globali di tracciamento e gestione
-   delle superfici planetarie, in poligonale (h! ce la far•?)
+   delle superfici planetarie, in poligonale (h! ce la •?)
                          
     Si, ce l'ho fatta, ahem... dunque...
     per tracciare in tempo utile una superficie di 40000 quadranti,
@@ -688,19 +688,19 @@ void live_animal (int n)
             fast_srand (n + (tick / 50));
             pitch   += 5 * fast_flandom() - 2.5;
             quote   += 1000 * fast_flandom() - 500;
-            goto end_far;
+            goto end_;
         }
         if (quote > 750) {
             velocity = 400;
             quote   *= 0.5;
             fast_srand (n + (tick / 15));
             pitch   += 10 * fast_flandom() - 5;
-            goto end_far;
+            goto end_;
         }
         if (quote > 250) {
             velocity = 0;
             quote    = 0;
-            goto end_far;
+            goto end_;
         }
         fast_srand (n + (tick / 10));
         if (quote < 50)
@@ -741,7 +741,7 @@ void live_animal (int n)
         quote = 0;
     }
 
-    end_far:
+    end_:
     if (quote < 0) quote = 0;
 
     tgt_speed[n] = velocity;
@@ -919,7 +919,7 @@ void live_animal (int n)
             if (ani_speed[n] < 50) {
                 // se sono fermi possono comunque
                 // scondinzolare, mentre pensano
-                // a cosa fare...
+                // a cosa e...
                 fast_srand (4*n);
                 if (fast_random(1)) {
                     period = fabs (fsecs - 0.5);
@@ -1075,7 +1075,7 @@ void fragment (long x, long z)
     float hpdep = sqrt (dx*dx + dz*dz);
     long  depth = (long)(hpdep) >> 14;
 
-    // limita la visibilit… in diagonale, pi— che altro per fare
+    // limita la visibilit… in diagonale, pi— che altro per e
     // uno sfondo su pianta rotonda, invece che quadrata, perch‚ cos
     // si ottiene una sorta di curvatura dell'orizzonte, ormai alla
     // Terra piatta non ci crede pi— nessuno...
@@ -1133,7 +1133,7 @@ void fragment (long x, long z)
     // Nei deserti, c'Š in genere sabbia, e questo costituisce
     // una piccola eccezione al culling: i granelli pi— lontani
     // dovrebbero apparire con grana pi— fine di quelli vicini,
-    // e il culling ha l'effetto collaterale di fare andare le
+    // e il culling ha l'effetto collaterale di e andare le
     // cose esattamente al contrario.
     if (sctype == DESERT) {
         if (depth >= 4)
@@ -2772,7 +2772,7 @@ void create_sky (char atmosphere)
     }
 
     // calcola il fattore di saturazione (influenza i pianeti abitabili
-    // quando piove, tende a far scivolare le sfumature verso il grigio)
+    // quando piove, tende a  scivolare le sfumature verso il grigio)
 
     float saturation = 1 - (0.15 * rainy);
     int shade_nr;
@@ -3454,7 +3454,7 @@ void planetary_main ()
     // i due terminatori sono calcolati a partire da +35 e +165 gradi
     // dal punto che rappresenta il punto al bordo destro del disco
     // planetario visto dalla stella. Il range di 230 gradi Š per•
-    // normalizzato in modo da far coincidere i terminatori con zero
+    // normalizzato in modo da  coincidere i terminatori con zero
     // e il sole a perpendicolo con la sua met…, quindi con 115 gradi.
     // Normalmente il range diurno come quello notturno dovrebbero
     // occupare entrambi 180 gradi. Per•, per via delle funzioni che
@@ -3912,7 +3912,7 @@ void planetary_main ()
                 ptr--;
             }
         }
-        // disegna le stelle, se Š il caso di farlo.
+        // disegna le stelle, se Š il caso di lo.
         // il punto di vista Š dell'astrozattera,
         // ma gli angoli sono quelli del protagonista.
         if (sky_brightness < 32 && rainy < 2.0) {
@@ -3973,7 +3973,7 @@ void planetary_main ()
         // si guarda verso l'alto o verso il basso.
         // inoltre, le coordinate X/Z dell'utente non
         // influiscono sull'aspetto dell'orizzonte,
-        // mentre la y Š amplificata per far coincidere
+        // mentre la y Š amplificata per  coincidere
         // l'orizzonte con il bordo del landscape (che
         // in realt… Š pi— vicino perch‚ altrimenti sarebbe
         // problematico disegnare qualcosa di pi— lontano).
@@ -4513,7 +4513,7 @@ void planetary_main ()
             }
         }
         // consumi supplementari della navicella
-        // (ovviamente continua a fare il suo lavoro anche
+        // (ovviamente continua a e il suo lavoro anche
         // mentre si esplora la superficie, per cui consuma)
         additional_consumes ();
         // aggiornamento coordinate di stepping.
