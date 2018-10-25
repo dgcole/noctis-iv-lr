@@ -375,14 +375,14 @@ char *comm = "..\\DATA\\COMM.BIN";  // File di comunicazione dei moduli.
 
 void freeze ()
 {
-    int fh = _creat (situation_file, 0);
+    int fh = _rtl_creat(situation_file, 0);
     if (fh==-1) return;
 
-    _write (fh, &sync, 245);
-    _write (fh, &gnc_pos, 1);
-    _write (fh, &goesfile_pos, 4);
-    _write (fh, goesnet_command, 120);
-    _close (fh);
+    _rtl_write (fh, &sync, 245);
+    _rtl_write (fh, &gnc_pos, 1);
+    _rtl_write (fh, &goesfile_pos, 4);
+    _rtl_write (fh, goesnet_command, 120);
+    _rtl_close (fh);
 }
 
 void run_goesnet_module ()
@@ -403,10 +403,10 @@ void run_goesnet_module ()
         goto solong;
     }
 
-    ch = _creat (goesoutputfile, 0);
+    ch = _rtl_creat (goesoutputfile, 0);
     if (ch > -1) {
-        _write (ch, "(UNKNOWN MODULE)", 16);
-        _close (ch);
+        _rtl_write (ch, "(UNKNOWN MODULE)", 16);
+        _rtl_close (ch);
     }
 
     // Cancella l'ultimo carattere (che Š il _ cursore) dalla command
@@ -433,12 +433,12 @@ solong: adapted = (unsigned char far  *) farmalloc (sc_bytes);
         pcopy (adapted + 2*320, adaptor);
         QUADWORDS = bqw;
         // Reagisce alla presenza di dati nel file di comunicazione.
-        ch = _open (comm, 0);
+        ch = _rtl_open (comm, 0);
         if (ch > -1) {
             if (filelength(ch) == 2) {
                 if (ap_reached) {
                     if (pwr > 15000) {
-                        if (_read (ch, &ip_targetted, 2) == 2) {
+                        if (_rtl_read (ch, &ip_targetted, 2) == 2) {
                             ip_targetted--;
                             fix_local_target ();
                             ip_targetting = 0;
@@ -451,9 +451,9 @@ solong: adapted = (unsigned char far  *) farmalloc (sc_bytes);
                     status ("NEED RECAL", 75);
             }
             if (filelength(ch) == 24) {
-                _read (ch, &ap_target_x, 8);
-                _read (ch, &ap_target_y, 8);
-                if (_read (ch, &ap_target_z, 8) == 8) {
+                _rtl_read (ch, &ap_target_x, 8);
+                _rtl_read (ch, &ap_target_y, 8);
+                if (_rtl_read (ch, &ap_target_z, 8) == 8) {
                     ap_targetting = 0;
                     extract_ap_target_infos ();
                     fix_remote_target ();
@@ -469,7 +469,7 @@ solong: adapted = (unsigned char far  *) farmalloc (sc_bytes);
                     }
                 }
             }
-            _close (ch);
+            _rtl_close (ch);
             remove (comm);
         }
     }
@@ -807,11 +807,11 @@ void vehicle (float opencapcount)
                 switch (c) {
                      case 0x4F:
                      case 0x76:
-                     case 0x91: screenfile = _open (goesoutputfile, 0);
+                     case 0x91: screenfile = _rtl_open (goesoutputfile, 0);
                         if (screenfile > -1) {
                             goesfile_pos = filelength(screenfile) - 7*21;
                             if (goesfile_pos < 0) goesfile_pos = 0;
-                            _close (screenfile);
+                            _rtl_close (screenfile);
                         }
                         goesk_e = -1;
                         break;
@@ -839,12 +839,12 @@ void vehicle (float opencapcount)
             if (tasto_premuto()) goto krep1;
         }
         _fmemset (osscreen[1], 0, 21*7);
-        screenfile = _open (goesoutputfile, 0);
+        screenfile = _rtl_open (goesoutputfile, 0);
         if (screenfile > -1) {
             lseek (screenfile, goesfile_pos, SEEK_SET);
-            n = _read (screenfile, osscreen[1], 7*21);
+            n = _rtl_read (screenfile, osscreen[1], 7*21);
             osscreen[1][n] = 0;
-            _close (screenfile);
+            _rtl_close (screenfile);
         }
     }
 
@@ -1140,10 +1140,10 @@ void update_star_label ()
                     ap_target_previd = ap_target_id;
                     star_label_pos = search_id_code (ap_target_id, 'S');
                     if (star_label_pos != -1) {
-                        smh = _open (starmap_file, 0);
+                        smh = _rtl_open (starmap_file, 0);
                         lseek (smh, star_label_pos, SEEK_SET);
-                        _read (smh, &star_id, 32);
-                        _close (smh);
+                        _rtl_read (smh, &star_id, 32);
+                        _rtl_close (smh);
                     }
                     else
                         memcpy (star_label, star_no_label, 24);
@@ -1159,10 +1159,10 @@ void update_planet_label ()
                 prev_planet_id = current_planet_id;
                 planet_label_pos = search_id_code (current_planet_id, 'P');
                 if (planet_label_pos != -1) {
-                    smh = _open (starmap_file, 0);
+                    smh = _rtl_open (starmap_file, 0);
                     lseek (smh, planet_label_pos, SEEK_SET);
-                    _read (smh, &planet_id, 32);
-                    _close (smh);
+                    _rtl_read (smh, &planet_id, 32);
+                    _rtl_close (smh);
                 }
                 else {
                     if (nearstar_p_owner[ip_targetted] == -1)
@@ -1613,11 +1613,11 @@ void dev_commands ()
                             if (star_label_pos > -1) {
                                 labstar = 0;
                                 if (star_label_pos >= sm_consolidated) {
-                                    smh = _open (starmap_file, 4);
+                                    smh = _rtl_open (starmap_file, 4);
                                     if (smh > -1) {
                                         lseek (smh, star_label_pos, SEEK_SET);
-                                        _write (smh, &dummy_identity[0], 8);
-                                        _close (smh);
+                                        _rtl_write (smh, &dummy_identity[0], 8);
+                                        _rtl_close (smh);
                                         ap_target_previd = 12345;
                                         status ("REMOVED", 50);
                                         star_label_pos = -1;
@@ -1638,26 +1638,26 @@ void dev_commands ()
                             }
                         }
                         else {
-                            smh = _open (starmap_file, 4);
+                            smh = _rtl_open (starmap_file, 4);
                             if (smh == -1) {
-                                smh = _creat (starmap_file, 0);
-                                sm_consolidated = 4; _write (smh, &sm_consolidated, 4);
+                                smh = _rtl_creat (starmap_file, 0);
+                                sm_consolidated = 4; _rtl_write (smh, &sm_consolidated, 4);
                             }
                             if (smh > -1) {
                                 lseek (smh, 4, SEEK_SET);
-                                while (_read (smh, comp_data, 32) == 32)
+                                while (_rtl_read (smh, comp_data, 32) == 32)
                                     if (memcmp (comp_data, dummy_identity, 8)) {
                                     if (!memicmp (comp_data+8, star_label, 20)) {
                                         status ("EXTANT", 50);
                                         ap_target_previd = 12345;
                                         star_label_pos = -1;
-                                        _close (smh);
+                                        _rtl_close (smh);
                                         return;
                                     }}
                                 lseek (smh, 0, SEEK_END);
                                 star_label_pos = tell(smh);
-                                _write (smh, &star_id, 32);
-                                _close (smh);
+                                _rtl_write (smh, &star_id, 32);
+                                _rtl_close (smh);
                                 status ("ASSIGNED", 50);
                                 nearstar_labeled++;
                             }
@@ -1674,11 +1674,11 @@ void dev_commands ()
                             if (planet_label_pos > -1) {
                                 labplanet = 0;
                                 if (planet_label_pos >= sm_consolidated) {
-                                    smh = _open (starmap_file, 4);
+                                    smh = _rtl_open (starmap_file, 4);
                                     if (smh > -1) {
                                         lseek (smh, planet_label_pos, SEEK_SET);
-                                        _write (smh, &dummy_identity[0], 8);
-                                        _close (smh);
+                                        _rtl_write (smh, &dummy_identity[0], 8);
+                                        _rtl_close (smh);
                                         prev_planet_id = 12345;
                                         status ("REMOVED", 50);
                                         planet_label_pos = -1;
@@ -1699,26 +1699,26 @@ void dev_commands ()
                             }
                         }
                         else {
-                            smh = _open (starmap_file, 4);
+                            smh = _rtl_open (starmap_file, 4);
                             if (smh == -1) {
-                                smh = _creat (starmap_file, 0);
-                                sm_consolidated = 4; _write (smh, &sm_consolidated, 4);
+                                smh = _rtl_creat (starmap_file, 0);
+                                sm_consolidated = 4; _rtl_write (smh, &sm_consolidated, 4);
                             }
                             if (smh > -1) {
                                 lseek (smh, 4, SEEK_SET);
-                                while (_read (smh, comp_data, 32) == 32)
+                                while (_rtl_read (smh, comp_data, 32) == 32)
                                     if (memcmp (comp_data, dummy_identity, 8)) {
                                     if (!memicmp (comp_data+8, planet_label, 20)) {
                                         status ("EXTANT", 50);
                                         prev_planet_id = 12345;
                                         planet_label_pos = -1;
-                                        _close (smh);
+                                        _rtl_close (smh);
                                         return;
                                     }}
                                 lseek (smh, 0, SEEK_END);
                                 planet_label_pos = tell(smh);
-                                _write (smh, &planet_id, 32);
-                                _close (smh);
+                                _rtl_write (smh, &planet_id, 32);
+                                _rtl_close (smh);
                                 status ("ASSIGNED", 50);
                                 nearstar_labeled++;
                             }
@@ -1865,28 +1865,28 @@ void unfreeze ()
 
     /* Lettura della mappa stellare consolidata. */
 
-    smh = _open (starmap_file, 4);
+    smh = _rtl_open (starmap_file, 4);
     if (smh > -1) {
-        _read (smh, &sm_consolidated, 4);
+        _rtl_read (smh, &sm_consolidated, 4);
         if (!sm_consolidated) {
             lseek (smh, 0, SEEK_SET);
             sm_consolidated = filelength(smh);
-            _write (smh, &sm_consolidated, 4);
+            _rtl_write (smh, &sm_consolidated, 4);
         }
-        _close (smh);
+        _rtl_close (smh);
     }
     else
         sm_consolidated = 0;
 
     /* Lettura della situazione precedente. */
 
-    fh = _open (situation_file, 0);
+    fh = _rtl_open (situation_file, 0);
     if (fh>-1) {
-        _read (fh, &sync, 245);
-        _read (fh, &gnc_pos, 1);
-        _read (fh, &goesfile_pos, 4);
-        _read (fh, goesnet_command, 120);
-        _close (fh);
+        _rtl_read (fh, &sync, 245);
+        _rtl_read (fh, &gnc_pos, 1);
+        _rtl_read (fh, &goesfile_pos, 4);
+        _rtl_read (fh, goesnet_command, 120);
+        _rtl_close (fh);
     }
     else
         return;
@@ -2091,12 +2091,12 @@ void main() {
     force_update = 1;
 
     // recupero della situazione di superficie
-    sfh = _open (surface_file, 0);
+    sfh = _rtl_open (surface_file, 0);
     if (sfh > -1) {
         // lettura precedenti coordinate di sbarco
-        _read (sfh, &landing_pt_lon, 2);
-        _read (sfh, &landing_pt_lat, 2);
-        _close (sfh);
+        _rtl_read (sfh, &landing_pt_lon, 2);
+        _rtl_read (sfh, &landing_pt_lat, 2);
+        _rtl_close (sfh);
         // recupero labels del pianeta e della stella-bersaglio
         update_star_label ();
         update_planet_label ();
@@ -2776,11 +2776,11 @@ void main() {
                 while (targets && c < targets && tgts_in_show < 3) {
                     tgt_label_pos = search_id_code (targets_table_id[c], 'S');
                     if (tgt_label_pos > -1) {
-                        smh = _open (starmap_file, 0);
+                        smh = _rtl_open (starmap_file, 0);
                         if (smh > -1) {
                             lseek (smh, tgt_label_pos + 8, SEEK_SET);
-                            _read (smh, &target_name[tgts_in_show], 24);
-                            _close (smh);
+                            _rtl_read (smh, &target_name[tgts_in_show], 24);
+                            _rtl_close (smh);
                             tgts_in_show++;
                         }
                     }

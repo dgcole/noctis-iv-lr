@@ -892,20 +892,18 @@ float flandom ()
 float fast_flandom ()
 { return ((float)fast_random(32767) * 0.000030518); }
 
-/* Effettua l'apertura di un file "virtuale", inserito nell'applicazione
-   stand-alone NOCTIS.EXE - il nome non deve essere cambiato. */
-
-int sa_open (long offset_of_virtual_file)
-{
+// Opens a "virtual file" inserted at the end of "Noctis.EXE"
+// Used for opening SUPPORTS.NCT.
+int sa_open (long offset_of_virtual_file) {
     int fh;
 
-    fh = _open ("Noctis.EXE", 0);
+    fh = _rtl_open ("res/supports.nct", 0);
     if (fh==-1) return (-1);
 
     if (lseek (fh, offset_of_virtual_file, SEEK_END) > -1)
         return (fh);
     else {
-        _close (fh);
+        _rtl_close (fh);
         return (-1);
     }
 }
@@ -2085,7 +2083,7 @@ char loadpv (int   handle, long virtual_file_position,
     pvfile_dataptr[handle] = pvfile_datatop;
 
     // lettura numero poligoni.
-    _read (fh, &pvfile_npolygs[handle], 2);
+    _rtl_read (fh, &pvfile_npolygs[handle], 2);
 
     // preparazione puntatori.
     pv_n_vtx[handle] = (char far *)  (pvfile + pvfile_datatop);
@@ -2107,16 +2105,16 @@ char loadpv (int   handle, long virtual_file_position,
     // verifica disponibilit… memoria prima di leggere i dati.
     if (pvfile_datatop > pv_bytes) {
         pvfile_datatop = pvfile_dataptr[handle];
-        _close (fh);
+        _rtl_close (fh);
         return (0);
     }
 
     // lettura di tutti i dati sui poligoni, in un unico blocco.
-    _read (fh, pvfile + pvfile_dataptr[handle],
+    _rtl_read (fh, pvfile + pvfile_dataptr[handle],
            pvfile_datatop - pvfile_dataptr[handle]);
 
     // dopodich‚ si pu• anche richiudere il file...
-    _close (fh);
+    _rtl_close (fh);
 
     // azzeramento dati sui vertici non usati (per i triangoli)
     for (p=0; p<pvfile_npolygs[handle]; p++)
@@ -3636,10 +3634,10 @@ long search_id_code (double id_code, char type)
     double      id_low = id_code - idscale;
     double      id_high = id_code + idscale;
 
-    smh = _open (starmap_file, 0);
+    smh = _rtl_open (starmap_file, 0);
     if (smh > -1) {
         lseek (smh, 4, SEEK_SET);
-        while ((n = _read (smh, buffer_ascii, ps_bytes)) > 0) {
+        while ((n = _rtl_read (smh, buffer_ascii, ps_bytes)) > 0) {
             ptr = 0;
             index = 0;
             while (ptr < n) {
@@ -3656,7 +3654,7 @@ long search_id_code (double id_code, char type)
             }
         }
         stop:
-        _close (smh);
+        _rtl_close (smh);
     }
 
     if (found)
@@ -5376,12 +5374,12 @@ void collect_targets ()
     char far    *buffer_ascii = (char far *)p_surfacemap;
     double far  *buffer_double = (double far *)p_surfacemap;
 
-    local_smh = _open (starmap_file, 0);
+    local_smh = _rtl_open (starmap_file, 0);
     if (local_smh > -1) {
         toread = tgt_bytes_per_scan;
         while (toread) {
             lseek (local_smh, tgt_collect_lastpos, SEEK_SET);
-            n = _read (local_smh, buffer_ascii, toread);
+            n = _rtl_read (local_smh, buffer_ascii, toread);
             if (!n) {
                 collecting_targets = 0;
                 goto stop;
@@ -5417,7 +5415,7 @@ void collect_targets ()
                 tgt_collect_lastpos += 32;
             }
         }
-      stop: _close (local_smh);
+      stop: _rtl_close (local_smh);
     }
 }
 
@@ -5678,14 +5676,14 @@ void load_QVRmaps ()
 
     fh = sa_open (offsets_map);
     if (fh>-1) {
-        _read (fh, n_offsets_map, om_bytes);
-        _close (fh);
+        _rtl_read (fh, n_offsets_map, om_bytes);
+        _rtl_close (fh);
     }
 
     fh = sa_open (globes_map);
     if (fh>-1) {
-        _read (fh, n_globes_map, gl_bytes);
-        _close (fh);
+        _rtl_read (fh, n_globes_map, gl_bytes);
+        _rtl_close (fh);
     }
 }
 
@@ -5695,8 +5693,8 @@ void load_digimap2 ()
 
     fh = sa_open (off_digimap2);
     if (fh>-1) {
-        _read (fh, digimap2, dm2_bytes);
-        _close (fh);
+        _rtl_read (fh, digimap2, dm2_bytes);
+        _rtl_close (fh);
     }
 }
 
@@ -5839,8 +5837,8 @@ void snapshot (int forcenumber, char showdata)
 
     int ih = sa_open (header_bmp);
     if (ih==-1) return;
-    _read (ih, t, 54);
-    _close (ih);
+    _rtl_read (ih, t, 54);
+    _rtl_close (ih);
 
     pqw = QUADWORDS;
     QUADWORDS = 16000;
@@ -5852,8 +5850,8 @@ void snapshot (int forcenumber, char showdata)
         do {
             prog++; if (prog == 9999) return;
             sprintf (snapfilename, "..\\GALLERY\\SNAP%04d.BMP", prog);
-            ih = _open (snapfilename, 0);
-            if (ih != -1) _close (ih);
+            ih = _rtl_open (snapfilename, 0);
+            if (ih != -1) _rtl_close (ih);
         } while (ih != -1);
     }
     else
@@ -5903,18 +5901,18 @@ void snapshot (int forcenumber, char showdata)
     }
     }
 
-    ih = _creat (snapfilename, 0);
+    ih = _rtl_creat (snapfilename, 0);
     if (ih>-1) {
         a = 0;
-        _write (ih, t, 54);
+        _rtl_write (ih, t, 54);
         for (c=0; c<768; c+=3) {
-            b = tmppal[c+2]*4; _write (ih, &b, 1);
-            b = tmppal[c+1]*4; _write (ih, &b, 1);
-            b = tmppal[c+0]*4; _write (ih, &b, 1);
-            _write (ih, &a, 1);
+            b = tmppal[c+2]*4; _rtl_write (ih, &b, 1);
+            b = tmppal[c+1]*4; _rtl_write (ih, &b, 1);
+            b = tmppal[c+0]*4; _rtl_write (ih, &b, 1);
+            _rtl_write (ih, &a, 1);
         }
-        for (ptr=63680; ptr<64000; ptr-=320) _write (ih, adapted+ptr, 320);
-        _close (ih);
+        for (ptr=63680; ptr<64000; ptr-=320) _rtl_write (ih, adapted+ptr, 320);
+        _rtl_close (ih);
     }
 }
 

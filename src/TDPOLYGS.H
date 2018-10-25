@@ -1796,7 +1796,7 @@ char load_texture (char *fname, long offset)
     int fh, sl;
     unsigned long p;
 
-    fh = _open (fname, 0);
+    fh = _rtl_open (fname, 0);
 
     if (fh>-1) {
         if (offset>=0)
@@ -1806,11 +1806,11 @@ char load_texture (char *fname, long offset)
         sl = 0;
         p  = 12;
         while (sl<TEXTURE_YSIZE&&!eof(fh)) {
-            _read (fh, &txtr[p], TEXTURE_XSIZE);
+            _rtl_read (fh, &txtr[p], TEXTURE_XSIZE);
             p += 256;
             sl++;
         }
-        _close (fh);
+        _rtl_close (fh);
         if (sl==TEXTURE_YSIZE)
             return (OK);
         else
@@ -1825,14 +1825,14 @@ char fast_load_texture (char *fname) /* Solo per bitmaps 256 x 256. */
     int fh;
     unsigned long p;
 
-    fh = _open (fname, 0);
+    fh = _rtl_open (fname, 0);
 
     if (fh>-1) {
         p  = 12;
-        _read (fh, &txtr[p], 32768);
+        _rtl_read (fh, &txtr[p], 32768);
         p += 32768;
-        _read (fh, &txtr[p], 32768);
-        _close (fh);
+        _rtl_read (fh, &txtr[p], 32768);
+        _rtl_close (fh);
         return (OK);
     }
     else

@@ -3313,7 +3313,7 @@ void planetary_main ()
     int  opencapdelta = 0;
     int  openhudcount = 180;
     int  openhuddelta = 0;
-    char     hud_closed   = 1;
+    char     hud_rtl_closed   = 1;
     char     widesnapping = 0;
 
     int      w, lw = 10, now = 25, waveratio = 5, waveblur = 0;
@@ -3693,23 +3693,23 @@ void planetary_main ()
     exitflag = 0;
 
     if (entryflag) {
-        sfh = _open (surface_file, 0);
+        sfh = _rtl_open (surface_file, 0);
         if (sfh != -1) {
-            _read (sfh, &landing_pt_lon, 2);
-            _read (sfh, &landing_pt_lat, 2);
-            _read (sfh, &atl_x, 4);
-            _read (sfh, &atl_z, 4);
-            _read (sfh, &atl_x2, 4);
-            _read (sfh, &atl_z2, 4);
-            _read (sfh, &pos_x, 4);
-            _read (sfh, &pos_y, 4);
-            _read (sfh, &pos_z, 4);
-            _read (sfh, &user_alfa, 4);
-            _read (sfh, &user_beta, 4);
-            _read (sfh, &openhuddelta, 2);
-            _read (sfh, &openhudcount, 2);
-            _read (sfh, &hud_closed, 1);
-            _close (sfh);
+            _rtl_read (sfh, &landing_pt_lon, 2);
+            _rtl_read (sfh, &landing_pt_lat, 2);
+            _rtl_read (sfh, &atl_x, 4);
+            _rtl_read (sfh, &atl_z, 4);
+            _rtl_read (sfh, &atl_x2, 4);
+            _rtl_read (sfh, &atl_z2, 4);
+            _rtl_read (sfh, &pos_x, 4);
+            _rtl_read (sfh, &pos_y, 4);
+            _rtl_read (sfh, &pos_z, 4);
+            _rtl_read (sfh, &user_alfa, 4);
+            _rtl_read (sfh, &user_beta, 4);
+            _rtl_read (sfh, &openhuddelta, 2);
+            _rtl_read (sfh, &openhudcount, 2);
+            _rtl_read (sfh, &hud_rtl_closed, 1);
+            _rtl_close (sfh);
             landed = 1;
             opencapdelta = 0;
             opencapcount = 0;
@@ -4367,7 +4367,7 @@ void planetary_main ()
                         beta = user_beta;
                         change_angle_of_view();
                         lens_flares_for (0, 0, 0, sun_x, sun_y, sun_z,
-                                 (10 * nray1) / dsd1, 1 + (0.002 * dsd1), hud_closed, 2, 1, 1);
+                                 (10 * nray1) / dsd1, 1 + (0.002 * dsd1), hud_rtl_closed, 2, 1, 1);
                     }
                 }
             }
@@ -4380,7 +4380,7 @@ void planetary_main ()
                 beta = user_beta;
                 change_angle_of_view();
                 lens_flares_for (0, 0, 0, pri_x, pri_y, pri_z,
-                         (10 * nray2) / dsd2, 1 + (0.002 * dsd2), hud_closed, 2, 1, 1);
+                         (10 * nray2) / dsd2, 1 + (0.002 * dsd2), hud_rtl_closed, 2, 1, 1);
             }
         }}
         // Variazioni ambientali.
@@ -4509,7 +4509,7 @@ void planetary_main ()
             if (openhudcount >= 180) {
                 openhuddelta = 0;
                 openhudcount = 180;
-                hud_closed = 1;
+                hud_rtl_closed = 1;
             }
         }
         // consumi supplementari della navicella
@@ -4540,59 +4540,59 @@ void planetary_main ()
                 //
                 ih = sa_open (header_bmp);
                 if (ih==-1) goto wserror;
-                _read (ih, t, 54);
+                _rtl_read (ih, t, 54);
                 t[18] = 0x94;
                 t[19] = 0x03;
-                _close (ih);
+                _rtl_close (ih);
                 //
                 prog = -1;
                 do {
                     prog++; if (prog == 9999) goto wserror;
                     sprintf (snapfilename, "..\\GALLERY\\SNAP%04d.BMP", prog);
-                    ih = _open (snapfilename, 0);
-                    if (ih != -1) _close (ih);
+                    ih = _rtl_open (snapfilename, 0);
+                    if (ih != -1) _rtl_close (ih);
                 } while (ih != -1);
                 //
-                i9997 = _open ("..\\GALLERY\\SNAP9997.BMP", 0);
-                i9998 = _open ("..\\GALLERY\\SNAP9998.BMP", 0);
-                i9999 = _open ("..\\GALLERY\\SNAP9999.BMP", 0);
+                i9997 = _rtl_open ("..\\GALLERY\\SNAP9997.BMP", 0);
+                i9998 = _rtl_open ("..\\GALLERY\\SNAP9998.BMP", 0);
+                i9999 = _rtl_open ("..\\GALLERY\\SNAP9999.BMP", 0);
                 if (i9997 == -1 || i9998 == -1 || i9999 == -1) {
-                    if (i9997 != -1) _close (i9997);
-                    if (i9998 != -1) _close (i9998);
-                    if (i9999 != -1) _close (i9999);
+                    if (i9997 != -1) _rtl_close (i9997);
+                    if (i9998 != -1) _rtl_close (i9998);
+                    if (i9999 != -1) _rtl_close (i9999);
                     goto wserror;
                 }
                 //
-                oh = _creat (snapfilename, 0);
+                oh = _rtl_creat (snapfilename, 0);
                 if (oh==-1) goto wserror;
-                _write (oh, t, 54);
+                _rtl_write (oh, t, 54);
                 //
                 lseek (i9997, 54L, SEEK_SET);
-                _read (i9997, adapted, 1024);
-                _write (oh, adapted, 1024);
+                _rtl_read (i9997, adapted, 1024);
+                _rtl_write (oh, adapted, 1024);
                 //
                 lseek (i9997, 1078L, SEEK_SET);
                 for (line = 0; line < 200; line++) {
-                    _read (i9997, adapted, 320);
+                    _rtl_read (i9997, adapted, 320);
                     lseek (oh, line*916L + 1078L + 309L, SEEK_SET);
-                    _write (oh, adapted + 10, 299);
+                    _rtl_write (oh, adapted + 10, 299);
                 }
                 //
                 lseek (i9998, 1078L, SEEK_SET);
                 for (line = 0; line < 200; line++) {
-                    _read (i9998, adapted, 320);
+                    _rtl_read (i9998, adapted, 320);
                     lseek (oh, line*916L + 1078L, SEEK_SET);
-                    _write (oh, adapted, 309);
+                    _rtl_write (oh, adapted, 309);
                 }
                 //
                 lseek (i9999, 1078L, SEEK_SET);
                 for (line = 0; line < 200; line++) {
-                    _read (i9999, adapted, 320);
+                    _rtl_read (i9999, adapted, 320);
                     lseek (oh, line*916L + 1078L + 608L, SEEK_SET);
-                    _write (oh, adapted + 10, 308);
+                    _rtl_write (oh, adapted + 10, 308);
                 }
                 //
-                _close (oh);
+                _rtl_close (oh);
                 //
                 wserror:
                 remove ("..\\GALLERY\\SNAP9997.BMP");
@@ -4607,7 +4607,7 @@ void planetary_main ()
                 w = attendi_pressione_tasto();
                 if (w == 0x49) {
                     openhuddelta = -5;
-                    hud_closed = 0;
+                    hud_rtl_closed = 0;
                 }
                 if (w == 0x51)
                     openhuddelta = +5;
@@ -4711,23 +4711,23 @@ void planetary_main ()
                 if (w == '0')
                     fixed_step = 0;
                 if (w == 27 && landed) {
-                    sfh = _creat (surface_file, 0);
+                    sfh = _rtl_creat (surface_file, 0);
                     if (sfh != -1) {
-                        _write (sfh, &landing_pt_lon, 2);
-                        _write (sfh, &landing_pt_lat, 2);
-                        _write (sfh, &atl_x, 4);
-                        _write (sfh, &atl_z, 4);
-                        _write (sfh, &atl_x2, 4);
-                        _write (sfh, &atl_z2, 4);
-                        _write (sfh, &pos_x, 4);
-                        _write (sfh, &pos_y, 4);
-                        _write (sfh, &pos_z, 4);
-                        _write (sfh, &user_alfa, 4);
-                        _write (sfh, &user_beta, 4);
-                        _write (sfh, &openhuddelta, 2);
-                        _write (sfh, &openhudcount, 2);
-                        _write (sfh, &hud_closed, 1);
-                        _close (sfh);
+                        _rtl_write (sfh, &landing_pt_lon, 2);
+                        _rtl_write (sfh, &landing_pt_lat, 2);
+                        _rtl_write (sfh, &atl_x, 4);
+                        _rtl_write (sfh, &atl_z, 4);
+                        _rtl_write (sfh, &atl_x2, 4);
+                        _rtl_write (sfh, &atl_z2, 4);
+                        _rtl_write (sfh, &pos_x, 4);
+                        _rtl_write (sfh, &pos_y, 4);
+                        _rtl_write (sfh, &pos_z, 4);
+                        _rtl_write (sfh, &user_alfa, 4);
+                        _rtl_write (sfh, &user_beta, 4);
+                        _rtl_write (sfh, &openhuddelta, 2);
+                        _rtl_write (sfh, &openhudcount, 2);
+                        _rtl_write (sfh, &hud_rtl_closed, 1);
+                        _rtl_close (sfh);
                         exitflag = 1;
                         goto nodissolve;
                     }
