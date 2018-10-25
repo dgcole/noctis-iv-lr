@@ -40,9 +40,9 @@
 int QUADWORDS = 16000;
 
 // Adaptor points to the main video memory, which should be 64kb.
-unsigned char  * adaptor    = (unsigned char  *) 0xA0000000;
+unsigned char far * adaptor    = (unsigned char far *) 0xA0000000;
 // Adapted points to some other vga memory. I think it's used as a back buffer.
-unsigned char  * adapted    = (unsigned char  *) 0xB0000000;
+unsigned char far * adapted    = (unsigned char far *) 0xB0000000;
 
 unsigned char   tmppal[768];
 char        return_palette[768];
@@ -240,19 +240,19 @@ char test_and_init_mouse () {
 }
 
 // Copies QUADWORDS * 4 bytes from the source to the destination.
-void pcopy (unsigned char  *dest, unsigned char  *source) {
+void pcopy (unsigned char far *dest, unsigned char far *source) {
     memcpy(dest, source, QUADWORDS * 4);
 }
 
 // Clears QUADWORDS * 4 bytes starting at the target.
-void pclear (unsigned char  *target, unsigned char pattern) {
+void pclear (unsigned char far *target, unsigned char pattern) {
     memset(target, pattern, QUADWORDS * 4);
 }
 
 // Clears a rectangular region of the video memory.
 // Either x2 & y2 OR l and h must be specified.
 // This may or may not work.
-void areaclear (unsigned char  *dest, int x, int y,
+void areaclear (unsigned char far *dest, int x, int y,
         int x2, int y2, int l, int h, unsigned char pattern) {
     if (l == 0 || h == 0) {
             l = x2 - x;
@@ -287,7 +287,7 @@ void areaclear (unsigned char  *dest, int x, int y,
 
 */
 
-void psmooth_grays (unsigned char  *target) {
+void psmooth_grays (unsigned char far *target) {
     asm {   
         pusha
         push ds
@@ -326,7 +326,7 @@ void psmooth_grays (unsigned char  *target) {
 }
 
 // Produce a rapid black fade effect.
-void pfade (unsigned char  *target, unsigned segshift, unsigned char speed) {
+void pfade (unsigned char far *target, unsigned segshift, unsigned char speed) {
     asm {   
         pusha
         push    ds
@@ -360,27 +360,18 @@ void pfade (unsigned char  *target, unsigned segshift, unsigned char speed) {
 }
 
 // Color version: 4 shades of 64 intensity each.
-// Note: Shifting the offset won't do, the segment must be changed.
-void psmooth_64 (unsigned char  *target, unsigned segshift) {
-    unsigned int offsetmaybe = (QUADWORDS - 80) << 2;
-    /*unsigned char  * shifted = target;
-    shifted += segshift * 16;
-    
-    printf("Original: %Fp", target);
-    printf("Shifted: %Fp", shifted);
-    getch();
-    exit(0);*/
+void psmooth_64 (unsigned char far *target, unsigned segshift) {
     asm {   
         pusha
         push    ds
-        
-        lds     ax, dword ptr target // Load segment of target into ds, and offset into ax.
-        mov     ax, ds // Copy ds over to ax.
-        add     ax, segshift // Add segshift to ax.
-        mov     ds, ax // Move the shifted segment address back over.*/
-        
-        mov     si, offsetmaybe
-        mov     di, 0
+        mov     si, QUADWORDS
+        sub     si, 80
+        shl     si, 2
+        lds     ax, dword ptr target
+        mov     ax, ds
+        add     ax, segshift
+        mov     ds, ax
+        xor     di, di 
         }
     smooth: 
     asm {   
@@ -406,7 +397,7 @@ void psmooth_64 (unsigned char  *target, unsigned segshift) {
 
 /* Versione circolare del procedimento di smoothing */
 
-void smootharound_64 (unsigned char  *target, long cx, long cy, long r, char diffuse)
+void smootharound_64 (unsigned char far *target, long cx, long cy, long r, char diffuse)
 {
     long x1 = cx - r, y1 = cy - r;
     long x2 = cx + r, y2 = cy + r;
@@ -490,7 +481,7 @@ void smootharound_64 (unsigned char  *target, long cx, long cy, long r, char dif
 
 // Usando 64 livelli in 4 sfumature, porta lo schermo ad una sola sfumatura.
 
-void mask_pixels (unsigned char  *target, unsigned char mask)
+void mask_pixels (unsigned char far *target, unsigned char mask)
 {
     asm {   pusha
         push ds
@@ -783,15 +774,15 @@ float mindiff = 0.01;
 
 */
 
-unsigned char   *s_background;
-unsigned char   *p_background;
+unsigned char far  *s_background;
+unsigned char far  *p_background;
 unsigned char huge *p_surfacemap;
-quadrant        *objectschart;
-unsigned char   *ruinschart; // come objectschart, ma dichiarato in bytes
-unsigned char   *pvfile;
+quadrant      far  *objectschart;
+unsigned char far  *ruinschart; // come objectschart, ma dichiarato in bytes
+unsigned char far  *pvfile;
 
-unsigned char   *n_offsets_map;
-char            *n_globes_map;
+unsigned char far  *n_offsets_map;
+char far           *n_globes_map;
 
 unsigned        seg_adapted;
 
@@ -846,16 +837,16 @@ unsigned pvfile_dataptr[handles] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 unsigned pvfile_datalen[handles] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 unsigned pvfile_npolygs[handles] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
-char   *pv_n_vtx[handles]; // numero vertici per ogni poligono (3 o 4).
-float  *pvfile_x[handles]; // coord. X (quattro vertici) di ogni poligono.
-float  *pvfile_y[handles]; // coord. Y (quattro vertici) di ogni poligono.
-float  *pvfile_z[handles]; // coord. Z (quattro vertici) di ogni poligono.
-char   *pvfile_c[handles]; // intensit… del colore di ogni poligono (0..63).
-float  *pv_mid_x[handles]; // coordinate X dei punti medi di ogni poligono.
-float  *pv_mid_y[handles]; // coordinate Y dei punti medi di ogni poligono.
-float  *pv_mid_z[handles]; // coordinate Z dei punti medi di ogni poligono.
-float  *pv_mid_d[handles]; // buffer distanza di punti medi dall'osservatore.
-int    *pv_dep_i[handles]; // indice distanza (ordinamento poligoni).
+char  far *pv_n_vtx[handles]; // numero vertici per ogni poligono (3 o 4).
+float far *pvfile_x[handles]; // coord. X (quattro vertici) di ogni poligono.
+float far *pvfile_y[handles]; // coord. Y (quattro vertici) di ogni poligono.
+float far *pvfile_z[handles]; // coord. Z (quattro vertici) di ogni poligono.
+char  far *pvfile_c[handles]; // intensit… del colore di ogni poligono (0..63).
+float far *pv_mid_x[handles]; // coordinate X dei punti medi di ogni poligono.
+float far *pv_mid_y[handles]; // coordinate Y dei punti medi di ogni poligono.
+float far *pv_mid_z[handles]; // coordinate Z dei punti medi di ogni poligono.
+float far *pv_mid_d[handles]; // buffer distanza di punti medi dall'osservatore.
+int   far *pv_dep_i[handles]; // indice distanza (ordinamento poligoni).
 
 /* Procedimenti d'estrazione di numeri pseudo-casuali. */
 
@@ -922,7 +913,7 @@ int sa_open (long offset_of_virtual_file)
 /* Definisce una parte della tavola colori in modo che una sfumatura graduale
    vada da una tinta ad un'altra, entro un certo numero di tinte intermedie */
 
-void shade (unsigned char  *palette_buffer,
+void shade (unsigned char far *palette_buffer,
         int first_color, int number_of_colors,
         float start_r,  float start_g,  float start_b,
         float finish_r, float finish_g, float finish_b)
@@ -975,7 +966,7 @@ void shade (unsigned char  *palette_buffer,
 
 /* Copia aree video pi— grandi di 4 per 1 pixels. */
 
-void copia (unsigned char  *dest, unsigned char  *sorg, unsigned x, unsigned y, int l, int a)
+void copia (unsigned char far *dest, unsigned char far *sorg, unsigned x, unsigned y, int l, int a)
 {
     if (l<4) return;
     if (a<1) return;
@@ -1060,7 +1051,7 @@ void from_user ()
 }
 
 /* Orienta la videocamera virtuale verso un certo punto dato da see_x;y;z,
-   frattalizzando l'angolo giro per e pi— in fretta. */
+   frattalizzando l'angolo giro per fare pi— in fretta. */
 
 void watch (double cam_x, double cam_y, double cam_z,
         double see_x, double see_y, double see_z)
@@ -2013,17 +2004,17 @@ void unloadpv (int handle)
     // definito l'ANSI cos lo faccio nero.
     for (h = 0; h < handles; h++)
         if (pvfile_dataptr[h] > pvfile_dataptr[handle]) {
-            (char *)pv_n_vtx[h] -= pvfile_datalen[handle];
-            (char *)pvfile_x[h] -= pvfile_datalen[handle];
-            (char *)pvfile_y[h] -= pvfile_datalen[handle];
-            (char *)pvfile_z[h] -= pvfile_datalen[handle];
-            (char *)pvfile_c[h] -= pvfile_datalen[handle];
+            (char far*)pv_n_vtx[h] -= pvfile_datalen[handle];
+            (char far*)pvfile_x[h] -= pvfile_datalen[handle];
+            (char far*)pvfile_y[h] -= pvfile_datalen[handle];
+            (char far*)pvfile_z[h] -= pvfile_datalen[handle];
+            (char far*)pvfile_c[h] -= pvfile_datalen[handle];
             if (pv_mid_x[h]) {
-                (char *)pv_mid_x[h] -= pvfile_datalen[handle];
-                (char *)pv_mid_y[h] -= pvfile_datalen[handle];
-                (char *)pv_mid_z[h] -= pvfile_datalen[handle];
-                (char *)pv_mid_d[h] -= pvfile_datalen[handle];
-                (char *)pv_dep_i[h] -= pvfile_datalen[handle];
+                (char far*)pv_mid_x[h] -= pvfile_datalen[handle];
+                (char far*)pv_mid_y[h] -= pvfile_datalen[handle];
+                (char far*)pv_mid_z[h] -= pvfile_datalen[handle];
+                (char far*)pv_mid_d[h] -= pvfile_datalen[handle];
+                (char far*)pv_dep_i[h] -= pvfile_datalen[handle];
             }
             pvfile_dataptr[h] -= pvfile_datalen[handle];
         }
@@ -2097,15 +2088,15 @@ char loadpv (int   handle, long virtual_file_position,
     _read (fh, &pvfile_npolygs[handle], 2);
 
     // preparazione puntatori.
-    pv_n_vtx[handle] = (char  *)  (pvfile + pvfile_datatop);
+    pv_n_vtx[handle] = (char far *)  (pvfile + pvfile_datatop);
     pvfile_datatop  +=  1 * pvfile_npolygs[handle];
-    pvfile_x[handle] = (float  *) (pvfile + pvfile_datatop);
+    pvfile_x[handle] = (float far *) (pvfile + pvfile_datatop);
     pvfile_datatop  += 16 * pvfile_npolygs[handle];
-    pvfile_y[handle] = (float  *) (pvfile + pvfile_datatop);
+    pvfile_y[handle] = (float far *) (pvfile + pvfile_datatop);
     pvfile_datatop  += 16 * pvfile_npolygs[handle];
-    pvfile_z[handle] = (float  *) (pvfile + pvfile_datatop);
+    pvfile_z[handle] = (float far *) (pvfile + pvfile_datatop);
     pvfile_datatop  += 16 * pvfile_npolygs[handle];
-    pvfile_c[handle] = (char  *)  (pvfile + pvfile_datatop);
+    pvfile_c[handle] = (char far *)  (pvfile + pvfile_datatop);
     pvfile_datatop  +=  1 * pvfile_npolygs[handle];
 
     // azzera il primo puntatore dei dati per il depth sort
@@ -2137,15 +2128,15 @@ char loadpv (int   handle, long virtual_file_position,
 
     // preparazione puntatori per la gestione del depth sorting.
     if (depth_sort) {
-        pv_mid_x[handle] = (float  *) (pvfile + pvfile_datatop);
+        pv_mid_x[handle] = (float far *) (pvfile + pvfile_datatop);
         pvfile_datatop  += 4 * pvfile_npolygs[handle];
-        pv_mid_y[handle] = (float  *) (pvfile + pvfile_datatop);
+        pv_mid_y[handle] = (float far *) (pvfile + pvfile_datatop);
         pvfile_datatop  += 4 * pvfile_npolygs[handle];
-        pv_mid_z[handle] = (float  *) (pvfile + pvfile_datatop);
+        pv_mid_z[handle] = (float far *) (pvfile + pvfile_datatop);
         pvfile_datatop  += 4 * pvfile_npolygs[handle];
-        pv_mid_d[handle] = (float  *) (pvfile + pvfile_datatop);
+        pv_mid_d[handle] = (float far *) (pvfile + pvfile_datatop);
         pvfile_datatop  += 4 * pvfile_npolygs[handle];
-        pv_dep_i[handle] = (int  *)   (pvfile + pvfile_datatop);
+        pv_dep_i[handle] = (int far *)   (pvfile + pvfile_datatop);
         pvfile_datatop  += 2 * pvfile_npolygs[handle];
         // verifica disponibilit… memoria per i dati appena aggiunti.
         if (pvfile_datatop > pv_bytes) {
@@ -2195,7 +2186,7 @@ char loadpv (int   handle, long virtual_file_position,
    Si occupa anche di altri ordinamenti per distanza... per esempio ordina
    i pianeti e le lune... */
 
-void QuickSort (int  *index, float  *mdist, int start, int end)
+void QuickSort (int far *index, float far *mdist, int start, int end)
 {
     int   tq;
 
@@ -2462,9 +2453,9 @@ char *alphavalue (double value)
 /* Background, con la mappa offsets.map, in quicktime vr. */
 
 void background (unsigned start,
-         unsigned char  *target,
-         unsigned char  *background,
-         unsigned char  *offsetsmap,
+         unsigned char far *target,
+         unsigned char far *background,
+         unsigned char far *offsetsmap,
          unsigned total_map_bytes,
          unsigned screenshift)
 {
@@ -2808,9 +2799,9 @@ void gman4x4 ()
 }
 
 void globe (unsigned start,
-        unsigned char  *target,
-        unsigned char  *tapestry,
-        unsigned char  *offsetsmap,
+        unsigned char far *target,
+        unsigned char far *tapestry,
+        unsigned char far *offsetsmap,
         unsigned total_map_bytes,
         double x, double y, double z,
         float mag_factor, char colormask, char globe_saturation)
@@ -2933,13 +2924,13 @@ fine:   asm {   pop ds
     }
 }
 
-/* Come precedente, modificata per e globi luminosi, senza dettagli
+/* Come precedente, modificata per fare globi luminosi, senza dettagli
    ma con un evidente demarcazione fra emisfero illuminato e buio.
    Viene usata per i pianeti in media distanza. */
 
 void glowinglobe (int start,
-          unsigned char  *target,
-          unsigned char  *offsetsmap,
+          unsigned char far *target,
+          unsigned char far *offsetsmap,
           unsigned total_map_bytes,
           double x, double y, double z, float mag_factor,
           int terminator_start, int terminator_arc,
@@ -3057,12 +3048,12 @@ fine:   asm {   pop ds
         popa }
 }
 
-/* Modificata per e globi bianchi.
+/* Modificata per fare globi bianchi.
    Viene usata per le stelle viste da lontano, e per la corona stellare.
    Non ha bisogno della mappa dei globi. Color compreso fra 0 e 0x3F,
    perch‚ per maggior velocit… funziona sulla prima sfumatura. */
 
-void whiteglobe (unsigned char  *target,
+void whiteglobe (unsigned char far *target,
          double x, double y, double z,
          float mag_factor, float fgm_factor)
 {
@@ -3168,7 +3159,7 @@ void whiteglobe (unsigned char  *target,
 
 double xsun_onscreen;
 
-void whitesun (unsigned char  *target,
+void whitesun (unsigned char far *target,
            double x, double y, double z,
            float mag_factor, float fgm_factor)
 {
@@ -3249,11 +3240,11 @@ void whitesun (unsigned char  *target,
 
 /* Bagliori attorno alle luci pi— intense. */
 
-/*float  *lft_sin = (float  *) malloc (361*4);
-float  *lft_cos = (float  *) malloc (361*4);*/
+/*float far *lft_sin = (float far *) farmalloc (361*4);
+float far *lft_cos = (float far *) farmalloc (361*4);*/
 
-float  lft_sin[361];
-float  lft_cos[361];
+float far lft_sin[361];
+float far lft_cos[361];
 
 char lens_flares_init ()
 {
@@ -3342,7 +3333,7 @@ void lens_flares_for (double cam_x, double cam_y, double cam_z,
 /* Puntini lontani, per esempio pianeti e lune.
    Le due funzioni si integrano: viene disegnato un puntino se la distanza
    Š grande. Man mano che ci si avvicina, il puntino diventa un dischetto,
-   del diametro massimo di 5 pixels. Ovviamente, per e dischi pi— grandi,
+   del diametro massimo di 5 pixels. Ovviamente, per fare dischi pi— grandi,
    bisogna passare il controllo a un'altra funzione (sul tipo di globe). */
 
 const double  pix_dst_scale = 0.384;
@@ -3407,7 +3398,7 @@ void single_pixel_at_ptr (unsigned ptr, unsigned char pixel_color)
     }
 }
 
-char _pixel_at (double xlight, double ylight, double zlight,
+char far_pixel_at (double xlight, double ylight, double zlight,
            double radii, unsigned char unconditioned_color)
 {
     double  xx, yy, zz, z2, rz;
@@ -3639,8 +3630,8 @@ long search_id_code (double id_code, char type)
     char        found = 0;
     unsigned    n, ptr, index;
 
-    char     *buffer_ascii = (char  *)p_surfacemap;
-    double   *buffer_double = (double  *)p_surfacemap;
+    char far    *buffer_ascii = (char far *)p_surfacemap;
+    double far  *buffer_double = (double far *)p_surfacemap;
 
     double      id_low = id_code - idscale;
     double      id_high = id_code + idscale;
@@ -4011,7 +4002,7 @@ no_moons:
 
 /* Smussa la superficie di un pianeta: media 4x4 rapida. */
 
-void ssmooth (unsigned char  *target)
+void ssmooth (unsigned char far *target)
 {
     asm {
         pusha
@@ -4047,7 +4038,7 @@ smooth: asm {   db 0x66; mov dx, es:[di-360]
 
 /* Smussa leggermente la superficie di un pianeta: media 2x2. */
 
-void lssmooth (unsigned char  *target)
+void lssmooth (unsigned char far *target)
 {
     asm {   pusha
         push es
@@ -4087,7 +4078,7 @@ unsigned px, py;
     crays, px, py, ed a.
 
     kfract Š la densit… delle fratture sui pianeti.
-    viene posta a 1 per e i fulmini nel cielo.
+    viene posta a 1 per fare i fulmini nel cielo.
 
     Alcune ne chiamano altre, dello stesso gruppo, per risparmiare sui
     ritornelli di codice ripetuto. I pianeti particolarissimi non le
@@ -4225,7 +4216,7 @@ nvrain: asm {   fild px
         jnz nvrain }
 }
 
-void fracture (unsigned char  *target, float max_latitude)
+void fracture (unsigned char far *target, float max_latitude)
 { // solco scuro: tipo le linee su Europa.
   // ha dei parametri perch‚ viene usata anche per simulare i fulmini
   // quando piove sulla superficie dei pianeti abitabili.
@@ -4405,7 +4396,7 @@ void surface (int logical_id, int type,
     char            knot1 = 0, brt;
     int             QW = QUADWORDS;
     float           r1, r2, r3, g1, g2, g3, b1, b2, b3;
-    unsigned char    *overlay = (unsigned char  *)objectschart;
+    unsigned char far   *overlay = (unsigned char far *)objectschart;
 
     if (type == 10) return; // stella compagna: ha superficie stellare...
 
@@ -4865,7 +4856,7 @@ void ring (int planet_id, double ox, double oy, double oz, int start, int layers
             while (partn) {
                 sz += step - (fast_flandom() * step);
                 sx += step - (fast_flandom() * step);
-                _pixel_at (sx, sy, sz, -0.042, 0);
+                far_pixel_at (sx, sy, sz, -0.042, 0);
                 partn--;
             }
         }
@@ -4886,8 +4877,8 @@ void ring (int planet_id, double ox, double oy, double oz, int start, int layers
 
 void planets ()
 {
-    char  *atmosphere = (char  *) objectschart;
-    unsigned char  *surface_backup = (unsigned char *)p_background;
+    char far *atmosphere = (char far *) objectschart;
+    unsigned char far *surface_backup = (unsigned char far*)p_background;
 
     char is_moon;
     long poffs;
@@ -4980,7 +4971,7 @@ void planets ()
         }
         //
         if (ip_targetting || !showdisc) {
-            _pixel_at (plx, ply, plz, nearstar_p_ray[n], 0);
+            far_pixel_at (plx, ply, plz, nearstar_p_ray[n], 0);
             if (ip_targetting) {
                 pxx -= x_centro;
                 pyy -= y_centro;
@@ -5230,7 +5221,7 @@ void planets ()
         if (showrings) {
             if (nearstar_p_ring[n]) {
                 ring (n, plx, ply, plz, plwp, ringlayers);
-                if (!showdisc) _pixel_at (plx, ply, plz, nearstar_p_ray[n], 0);
+                if (!showdisc) far_pixel_at (plx, ply, plz, nearstar_p_ray[n], 0);
             }
         }
         notaplanet:
@@ -5382,8 +5373,8 @@ void collect_targets ()
     int     local_smh;
     unsigned    n, ptr, index, toread;
 
-    char     *buffer_ascii = (char  *)p_surfacemap;
-    double   *buffer_double = (double  *)p_surfacemap;
+    char far    *buffer_ascii = (char far *)p_surfacemap;
+    double far  *buffer_double = (double far *)p_surfacemap;
 
     local_smh = _open (starmap_file, 0);
     if (local_smh > -1) {
@@ -5518,7 +5509,7 @@ char digimap[65*5] = {
    dell'area n_globes_map che di per s‚, contenendo una semi-texture
    di 32Kb per la superficie dei mari, Š stata estesa da 22586 a 32768. */
 
-unsigned long  *digimap2; // verr… assegnato a n_globes_map + gl_bytes
+unsigned long far *digimap2; // verr… assegnato a n_globes_map + gl_bytes
 
 /* Cupola panoramica. */
 
@@ -5949,7 +5940,7 @@ void additional_consumes()
         if (ip_reached && sync) {
             if (sync==1) // fixed-point chase
                 if (!(iqsecs % 29)) { pwr--; iqsecs++; }
-            if (sync==2) //  chase
+            if (sync==2) // far chase
                 if (!(iqsecs % 18)) { pwr--; iqsecs++; }
             if (sync==3) // syncrone orbit
                 if (!(iqsecs % 58)) { pwr--; iqsecs++; }

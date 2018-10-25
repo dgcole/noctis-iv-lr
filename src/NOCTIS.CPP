@@ -395,7 +395,7 @@ void run_goesnet_module ()
     freeze ();
 
     // Libera circa 60 kilobytes per il lancio del modulo eseguibile.
-    free (adapted);
+    farfree (adapted);
 
     // Verifica comandi residenti.
     if (!memcmp (goesnet_command, "CLR", 3)) {
@@ -417,7 +417,7 @@ void run_goesnet_module ()
     system (goesnet_command);
 
     // Ri-alloca l'area temporaneamente liberata.
-solong: adapted = (unsigned char   *) malloc (sc_bytes);
+solong: adapted = (unsigned char far  *) farmalloc (sc_bytes);
 
     if (!adapted) {
         _80_25_C ();
@@ -906,7 +906,7 @@ void vehicle (float opencapcount)
                     goesk_a = -1;
                 }
                 /* Unit… di debugging dell'albedo
-                unsigned char  *ov=(unsigned char *)objectschart;
+                unsigned char far *ov=(unsigned char far*)objectschart;
                 if (c == 'b') {
                     ov[(18 + 60*360) / 2] += 4;
                     p_background[18 + 60*360] ++;
@@ -1096,7 +1096,7 @@ void other_vehicle_at (double ovhx, double ovhy, double ovhz)
 
 /* Variabili globali di uso generico. */
 
-unsigned char  * ctrlkeys     = (unsigned char  *) 0x00000417;
+unsigned char far * ctrlkeys     = (unsigned char far *) 0x00000417;
 
 char   aso_countdown = 100; // contatore per la funzione "autoscreenoff"
 long   tgt_label_pos = -1;  // posizione etichetta target selezionato
@@ -1377,8 +1377,8 @@ void devices ()
                         command (2, "fixed-point chase");
                     }
                     if (sync==2) {
-                        other (" chase.");
-                        command (2, " chase");
+                        other ("far chase.");
+                        command (2, "far chase");
                     }
                     if (sync==3) {
                         other ("syncrone orbit.");
@@ -1398,7 +1398,7 @@ void devices ()
                     if (sync==1)
                         command (2, "fixed-point chase");
                     if (sync==2)
-                        command (2, " chase");
+                        command (2, "far chase");
                     if (sync==3)
                         command (2, "syncrone orbit");
                     if (sync==4)
@@ -1933,7 +1933,7 @@ void unfreeze ()
     if (ip_targetted != -1 && ip_reached) {
         if (sync==1) // fixed-point chase
             dpwr -= elapsed / 29;
-        if (sync==2) //  chase
+        if (sync==2) // far chase
             dpwr -= elapsed / 18;
         if (sync==3) // syncrone orbit
             dpwr -= elapsed / 58;
@@ -2004,7 +2004,7 @@ void main() {
     int opencapdelta = 0;
     int holdtomiddle = 0;
 
-    char leftturn, rightturn, arrowcolor, star = 0;
+    char leftturn, rightturn, arrowcolor, farstar = 0;
 
     char temp_distance_buffer[16];
 
@@ -2023,17 +2023,17 @@ void main() {
         return;
     }
 
-    n_offsets_map = (unsigned char   *) malloc (om_bytes);
-    n_globes_map  = (char   *) malloc ((unsigned)gl_bytes+(unsigned)gl_brest);
-    s_background  = (unsigned char   *) malloc (st_bytes);
-    p_background  = (unsigned char   *) malloc (pl_bytes);
-    p_surfacemap  = (unsigned char huge *) malloc (ps_bytes);
-    objectschart  = (quadrant        *) malloc (oc_bytes);
-    ruinschart    = (unsigned char   *) objectschart; // oc alias
-    pvfile        = (unsigned char   *) malloc (pv_bytes);
-    adapted       = (unsigned char   *) malloc (sc_bytes);
+    n_offsets_map = (unsigned char far  *) farmalloc (om_bytes);
+    n_globes_map  = (char far  *) farmalloc ((unsigned)gl_bytes+(unsigned)gl_brest);
+    s_background  = (unsigned char far  *) farmalloc (st_bytes);
+    p_background  = (unsigned char far  *) farmalloc (pl_bytes);
+    p_surfacemap  = (unsigned char huge *) farmalloc (ps_bytes);
+    objectschart  = (quadrant far       *) farmalloc (oc_bytes);
+    ruinschart    = (unsigned char far  *) objectschart; // oc alias
+    pvfile        = (unsigned char far  *) farmalloc (pv_bytes);
+    adapted       = (unsigned char far  *) farmalloc (sc_bytes);
     txtr          = (unsigned char huge *) p_background; // txtr alias
-    digimap2      = (unsigned long  *) &n_globes_map[gl_bytes]; // font alias
+    digimap2      = (unsigned long far *) &n_globes_map[gl_bytes]; // font alias
 
     reach_your_dir ();
 
@@ -2425,8 +2425,8 @@ void main() {
         mask_pixels (adapted+2880, 64);
         //
         if (l_dsd < 8 * nearstar_ray) {
-            if (star) {
-                star = 0;
+            if (farstar) {
+                farstar = 0;
                 load_starface ();
             }
             glass_bubble = 0;
@@ -2443,17 +2443,17 @@ void main() {
             }
         }
         else
-            star = 1;
+            farstar = 1;
         //
         if (l_dsd > 100 * nearstar_ray && l_dsd < 1550 * nearstar_ray) {
             ir = ((1600 * nearstar_ray) - l_dsd) / (100 * nearstar_ray);
             if (ir < 0) ir = 0;
             ir += 0x30;
-            _pixel_at (nearstar_x, nearstar_y,
+            far_pixel_at (nearstar_x, nearstar_y,
                       nearstar_z, 0, ir);
-            _pixel_at (nearstar_x, nearstar_y,
+            far_pixel_at (nearstar_x, nearstar_y,
                       nearstar_z, 0, ir);
-            _pixel_at (nearstar_x, nearstar_y,
+            far_pixel_at (nearstar_x, nearstar_y,
                       nearstar_z, 0, ir);
         }
         //
@@ -2885,11 +2885,11 @@ void main() {
                                         wrouthud (14, 103, c, "NOT RESOLVABLE");
                                 }
                                 else
-                                    wrouthud (14, 103, c, "TOO  TO ESTIMATE");
+                                    wrouthud (14, 103, c, "TOO FAR TO ESTIMATE");
                             }
                         }
                         else
-                            wrouthud (14, 103, c, "TOO  TO ESTIMATE");
+                            wrouthud (14, 103, c, "TOO FAR TO ESTIMATE");
                         wrouthud (14, 113, c, "PERIOD OF REVOLUTION:");
                         tmp_float = rtp (ip_targetted);
                         p1 = tmp_float * 1e-9;
@@ -2975,7 +2975,7 @@ void main() {
         // Draw planetary targeting cross.
         if ((ip_targetted != -1 && !ip_reached) || ip_targetting) {
             planet_xyz (ip_targetted);
-            if (_pixel_at (plx, ply, plz, 0, 1)) {
+            if (far_pixel_at (plx, ply, plz, 0, 1)) {
                 unsigned int index = vptr - 640;
                 for (int i = 0; i < 4; i++) {
                     int voffset = (i > 1) ? 320 : 1;
@@ -3079,7 +3079,7 @@ void main() {
                     ang = (double)deg * (double)navigation_beta;
                     hold_z = 1.8;
                 }
-                if (sync==2) { //  chase
+                if (sync==2) { // far chase
                     ang = (double)deg * (double)navigation_beta;
                     hold_z = 5.4;
                 }
@@ -3550,7 +3550,7 @@ void main() {
             shade (tmppal, 64+40, 24, ire, ige, ibe, 64, 70, 76);
             tavola_colori (tmppal + 3*64, 64, 64, 63, 63, 63);
         }
-        if (!star) {
+        if (!farstar) {
             for (ir = 0; ir < 64800; ir++) {
                 ig = (s_background[ir] + 1) % 64;
                 ib = (s_background[ir] >> 6) << 6;

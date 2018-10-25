@@ -1780,7 +1780,7 @@ char init_texture_mapping ()
     _control87 (MCW_EM, MCW_EM); // disattiva i Floating Point Errors.
 
     txtr = (unsigned char huge *)
-           malloc ((long)TEXTURE_YSIZE * 256 + 16);
+           farmalloc ((long)TEXTURE_YSIZE * 256 + 16);
 
     if (txtr)
         return (OK);
