@@ -361,34 +361,41 @@ void pfade (unsigned char far *target, unsigned segshift, unsigned char speed) {
 
 // Color version: 4 shades of 64 intensity each.
 void psmooth_64 (unsigned char far *target, unsigned segshift) {
+    // Idk why this is offset as so.
+    unsigned int offsetmaybe = (QUADWORDS - 80) << 2;
+    unsigned long address = (unsigned long) target;
+    // Add segshift to the segment portion of the address by shifting up 16 bits.
+    address += ((unsigned long) segshift) << 16;
+    // Clear offset of address.
+    address -= address % 0x00010000;
+    unsigned char far * shifted = (unsigned char far *) address;
+    
     asm {   
         pusha
         push    ds
-        mov     si, QUADWORDS
-        sub     si, 80
-        shl     si, 2
-        lds     ax, dword ptr target
-        mov     ax, ds
-        add     ax, segshift
-        mov     ds, ax
-        xor     di, di 
+        
+        lds     ax, dword ptr shifted
+        
+        mov     di, 0
+    }   
+    
+    for (unsigned int i = 0; i < offsetmaybe; i++) { 
+        asm {         
+            mov     ax, [di + 320]
+            mov     bx, [di + 640] 
+            and     ax, 0x3F3F
+            and     bx, 0x3F3F
+            mov     cl, [di + 320]
+            add     ax, bx
+            and     cl, 0xC0
+            add     al, ah
+            inc     di
+            shr     al, 2
+            or      al, cl
+            mov     [di-1], al
         }
-    smooth: 
-    asm {   
-        mov ax, [di+320]
-        mov bx, [di+640]
-        and ax, 0x3F3F
-        and bx, 0x3F3F
-        mov cl, [di+320]
-        add ax, bx
-        and cl, 0xC0
-        add al, ah
-        inc     di
-        shr al, 2
-        or  al, cl
-        dec     si
-        mov     [di-1], al
-        jnz     smooth
+    }
+    asm {
         pop     ds
         popa 
     }
@@ -892,8 +899,7 @@ float flandom ()
 float fast_flandom ()
 { return ((float)fast_random(32767) * 0.000030518); }
 
-// Opens a "virtual file" inserted at the end of "Noctis.EXE"
-// Used for opening SUPPORTS.NCT.
+// Loads virtual file handles from supports.nct
 int sa_open (long offset_of_virtual_file) {
     int fh;
 
