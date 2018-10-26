@@ -287,75 +287,69 @@ void areaclear (unsigned char far *dest, int x, int y,
 
 */
 
-void psmooth_grays (unsigned char far *target) {
+void psmooth_grays(unsigned char far *target) {
+    unsigned int count = (QUADWORDS << 2) - (320 << 2);
     asm {   
         pusha
-        push ds
-        mov cx, QUADWORDS
-        shl cx, 2
-        mov ax, 320
-        shl ax, 2
-        sub cx, ax
-        lds di, dword ptr target
-        add di, 320 
+        push    ds
+        mov     cx, count
+        lds     di, dword ptr target
+        add     di, 320 
         }
     smooth: 
     asm {   
-        db 0x66; mov dx, [di-320]
-        db 0x66; add dx, [di]
-        db 0x66; add dx, [di+320]
-        db 0x66; add dx, [di+640]
-        db 0x66, 0x81, 0xE2, 0xFC, 0xFC, 0xFC, 0xFC
-        db 0x66; shr dx, 2
-        mov al, dl
-        add al, dh
-        db 0x66; shr dx, 16
-        add al, dl
-        add al, dh
-        shr al, 2
-        mov [di], al 
+        db      0x66
+        mov     dx, [di-320]
+        db      0x66
+        add     dx, [di]
+        db      0x66 
+        add     dx, [di+320]
+        db      0x66
+        add     dx, [di+640]
+        db      0x66, 0x81, 0xE2, 0xFC, 0xFC, 0xFC, 0xFC
+        db      0x66 
+        shr     dx, 2
+        mov     al, dl
+        add     al, dh
+        db      0x66; shr dx, 16
+        add     al, dl
+        add     al, dh
+        shr     al, 2
+        mov     [di], al 
     }
     next:   
     asm {   
-        inc di
-        dec cx
-        jnz smooth
-        pop ds
+        inc     di
+        dec     cx
+        jnz     smooth
+        pop     ds
         popa 
     }
 }
 
-// Produce a rapid black fade effect.
+// Produces the fading effect seen during vimana flight.
 void pfade (unsigned char far *target, unsigned segshift, unsigned char speed) {
-    asm {   
-        pusha
-        push    ds
-        mov     cx, QUADWORDS
-        sub     cx, 80
-        shl     cx, 2
-        lds     ax, dword ptr target
-        mov     ax, ds
-        add     ax, segshift
-        mov     ds, ax
-        mov ah, speed
-        xor     di, di 
-    }
-    fader:  
-    asm {   
-        mov al, [di]
-        and al, 0x3F
-        sub al, ah
-        jnc store
-        xor al, al 
-    }
-    store:  
-    asm {   
-        mov [di], al
-        inc di
-        dec     cx
-        jnz     fader
-        pop     ds
-        popa 
+    // ?
+    unsigned int count = (QUADWORDS - 80) << 2;
+    
+    unsigned long address = (unsigned long) target;
+    address += ((unsigned long) segshift) << 16;
+    // Clear offset of address.
+    address &= 0xFFFF0000;
+    
+    unsigned char far * shifted = (unsigned char far *) address;
+    
+    for (int i = 0; i < count; i++) {
+        unsigned char color = shifted[i];
+        color &= 0x3F;
+        
+        if (speed < color) {
+            color -= speed;
+        } else {
+            color = 0;
+        }
+        
+        shifted[i] = color;
     }
 }
 
@@ -400,10 +394,8 @@ void psmooth_64(unsigned char far *target, unsigned segshift) {
 }
 
 
-/* Versione circolare del procedimento di smoothing */
-
-void smootharound_64 (unsigned char far *target, long cx, long cy, long r, char diffuse)
-{
+// Circular version of the smoothing process.
+void smootharound_64(unsigned char far *target, long cx, long cy, long r, char diffuse) {
     long x1 = cx - r, y1 = cy - r;
     long x2 = cx + r, y2 = cy + r;
     long px, py, rs = r*r;
@@ -4723,7 +4715,7 @@ rndpat: asm {   add ax, cx
 
     if (type==2) {
         if (!random(3)) {
-            psmooth_grays (p_background);
+            psmooth_grays(p_background);
             knot1 = 1;
         }
     }
