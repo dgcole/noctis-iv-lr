@@ -476,29 +476,16 @@ void smootharound_64(unsigned char far *target, long cx, long cy, long r, char d
     }
 }
 
-// Usando 64 livelli in 4 sfumature, porta lo schermo ad una sola sfumatura.
-
-void mask_pixels (unsigned char far *target, unsigned char mask)
-{
-    asm {   pusha
-        push ds
-        mov bl, mask
-        mov bh, mask
-        db 0x66; shl bx, 16
-        mov bl, mask
-        mov bh, mask
-        mov ax, 0x3F3F
-        db 0x66; shl ax, 16
-        mov ax, 0x3F3F
-        mov cx, QUADWORDS
-        lds di, target }
-mloop:  asm {   db 0x66; and word ptr [di], ax
-        db 0x66; add word ptr [di], bx
-        add di, 4
-        dec cx
-        jnz mloop
-        pop ds
-        popa }
+// Using 64 levels in 4 shades, bring the screen to a single gradient.
+void mask_pixels(unsigned char far *target, unsigned char mask) {
+    unsigned char cap = 0x3F;
+    // If QUADWORDS is not cast to a long here it overflows and the loop hangs.
+    for (unsigned long i = 0; i < ((unsigned long) QUADWORDS) * 4; i++) {
+        unsigned char color = target[i];
+        color &= cap;
+        color += mask;
+        target[i] = color;
+    }
 }
 
 /*
@@ -4448,17 +4435,21 @@ rndpat: asm {   add ax, cx
         dec cx
         jnz rndpat }
 
-    /* preparazione dell'overlay per la mappatura delle evoluzioni
+    /* 
+        preparazione dell'overlay per la mappatura delle evoluzioni
        dell'atmosfera: viene inizialmente azzerato, in quanto deve
        essere successivamente rielaborato a seconda del tipo di
        pianeta. ovviamente non viene rielaborato se il pianeta
-       non ha un atmosfera. */
+       non ha un atmosfera. 
+    */
 
     _fmemset (overlay, 0, 32400);
 
-    /* elaborazione della superficie specifica.
+    /* 
+        elaborazione della superficie specifica.
        l'elaborazione dell'overlay per l'atmosfera,
-       nel caso ce ne sia bisogno, Š contemporanea. */
+       nel caso ce ne sia bisogno, Š contemporanea. 
+    */
 
     srand (seed);
     QUADWORDS = 16200;

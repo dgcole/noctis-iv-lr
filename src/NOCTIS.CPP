@@ -2356,9 +2356,7 @@ void main() {
         dlt_beta /= 1.5; if (fabs(dlt_beta)<0.25) dlt_beta = 0;
         if (user_beta>180) user_beta -= 360;
         if (user_beta<-180) user_beta += 360;
-        //
-        // Variazione della posizione dell'utente nella navicella.
-        //
+        // Variation of the user's position in the spacecraft.
         alfa = user_alfa;
         beta = user_beta - 90;
         change_angle_of_view ();
@@ -2372,16 +2370,12 @@ void main() {
         if (pos_x>+3100) pos_x = +3100;
         if (pos_z>- 300) pos_z = - 300;
         if (pos_z<-5800) pos_z = -5800;
-        //
-        // Background nero, che verr… reso nebuloso...
-        //
+        // Black background, which will be made hazy.
         if (!stspeed)
             pclear (adapted + 2880, 0);
         else
             pfade (adapted, 180, 8);
-        //
-        // gestione stella vicina
-        //
+        // Close star management
         from_vehicle ();
         dxx   = dzat_x - nearstar_x;
         dyy   = dzat_y - nearstar_y;
@@ -2421,9 +2415,7 @@ void main() {
             }
             psmooth_grays (adapted+2880);
         }
-        //
         mask_pixels (adapted+2880, 64);
-        //
         if (l_dsd < 8 * nearstar_ray) {
             if (farstar) {
                 farstar = 0;
