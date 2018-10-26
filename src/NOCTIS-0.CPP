@@ -360,44 +360,42 @@ void pfade (unsigned char far *target, unsigned segshift, unsigned char speed) {
 }
 
 // Color version: 4 shades of 64 intensity each.
-void psmooth_64 (unsigned char far *target, unsigned segshift) {
-    // Idk why this is offset as so.
-    unsigned int offsetmaybe = (QUADWORDS - 80) << 2;
+void psmooth_64(unsigned char far *target, unsigned segshift) {
+    // Who knows why this is offset as it is... Definitely not me.
+    unsigned int count = (QUADWORDS - 80) << 2;
+    
     unsigned long address = (unsigned long) target;
     // Add segshift to the segment portion of the address by shifting up 16 bits.
     address += ((unsigned long) segshift) << 16;
     // Clear offset of address.
-    address -= address % 0x00010000;
+    address &= 0xFFFF0000;
+    
     unsigned char far * shifted = (unsigned char far *) address;
     
-    asm {   
-        pusha
-        push    ds
+    for (unsigned int i = 0; i < count; i++) {
+        unsigned char ahigh = shifted[i + 320];
+        unsigned char alow = shifted[i + 321];
+        unsigned char blow = shifted[i + 640];
+        unsigned char bhigh = shifted[i + 641];
+        unsigned char clow = alow;
         
-        lds     ax, dword ptr shifted
+        // Bitwise AND with 63 for some reason...
+        ahigh &= 0x3F;
+        alow &= 0x3F;
+        bhigh &= 0x3F;
+        blow &= 0x3F;
+        // Ideally these shouldn't overflow.
+        ahigh += bhigh;
+        alow += blow;
+        // No idea why we do this.
+        clow &= 0xC0;
+        alow += ahigh;
+        // This will drop the low 2 bits of alow.
+        alow >>= 2;
+        // Who knows why italy man does this...
+        alow |= clow;
         
-        mov     di, 0
-    }   
-    
-    for (unsigned int i = 0; i < offsetmaybe; i++) { 
-        asm {         
-            mov     ax, [di + 320]
-            mov     bx, [di + 640] 
-            and     ax, 0x3F3F
-            and     bx, 0x3F3F
-            mov     cl, [di + 320]
-            add     ax, bx
-            and     cl, 0xC0
-            add     al, ah
-            inc     di
-            shr     al, 2
-            or      al, cl
-            mov     [di-1], al
-        }
-    }
-    asm {
-        pop     ds
-        popa 
+        shifted[i] = alow;
     }
 }
 
