@@ -44,9 +44,9 @@ uint8_t far* adaptor    = (uint8_t far*) 0xA0000000;
 // Adapted points to some other vga memory. I think it's used as a back buffer.
 uint8_t far* adapted    = (uint8_t far*) 0xB0000000;
 
-uint8_t   tmppal[768];
-int8_t        return_palette[768];
-int8_t        surface_palette[768];
+uint8_t     tmppal[768];
+int8_t      return_palette[768];
+int8_t      surface_palette[768];
 
 int16_t lstri(int8_t* stri) {
     // Measure a string and copy it to tmppal.
@@ -95,13 +95,11 @@ void reach_your_dir() {
     union REGS regs;
 
     regs.h.ah = DOS_SELECT_DRIVE;
-
     regs.h.dl = d;
 
     intdos(&regs, &regs);
 
     regs.h.ah = DOS_SET_WORKING_DIR;
-
     regs.x.dx = *tmppal;
 
     intdos(&regs, &regs);
@@ -348,7 +346,7 @@ next:
 
 // Produces the fading effect seen during vimana flight.
 void pfade (uint8_t far* target, uint16_t segshift, uint8_t speed) {
-    // ?
+    // Don't know why count is set as it is.
     uint16_t count = (QUADWORDS - 80) << 2;
     uint32_t address = (uint32_t) target;
     address += ((uint32_t) segshift) << 16;
@@ -415,15 +413,7 @@ void smootharound_64(uint8_t far* target, int32_t cx, int32_t cy, int32_t r,
     int32_t px, py, rs = r * r;
     uint16_t cp;
 
-    if (r <= 0) {
-        return;
-    }
-
-    if (x1 > 318) {
-        return;
-    }
-
-    if (y1 > 198) {
+    if (r <= 0 || x1 > 318 || y1 > 198 || x2 < 0 || y2 < 0) {
         return;
     }
 
@@ -431,16 +421,8 @@ void smootharound_64(uint8_t far* target, int32_t cx, int32_t cy, int32_t r,
         y1 = 0;
     }
 
-    if (x2 < 0) {
-        return;
-    }
-
     if (x2 > 318) {
         x2 = 318;
-    }
-
-    if (y2 < 0) {
-        return;
     }
 
     if (y2 > 198) {
@@ -463,25 +445,27 @@ void smootharound_64(uint8_t far* target, int32_t cx, int32_t cy, int32_t r,
         if (diffuse) {
             while (x1 <= x2) {
                 if (px * px + py * py < rs) {
-                    asm {   les     di, dword ptr target
-                            add di, cp
-                            mov ax, es:[di]
-                            mov cx, ax
-                            mov bx, es:[di+320]
-                            mov dx, bx
-                            and ax, 0x3F3F
-                            and bx, 0x3F3F
-                            add ax, bx
-                            and cx, 0xC0C0
-                            add al, ah
-                            and dx, 0xC0C0
-                            shr al, 2
-                            mov     ah, al
-                            mov bx, ax
-                            or  ax, cx
-                            or  bx, dx
-                            mov     es:[di], ax
-                            mov     es:[di+320], bx }
+                    asm {   
+                        les     di, dword ptr target
+                        add di, cp
+                        mov ax, es:[di]
+                        mov cx, ax
+                        mov bx, es:[di+320]
+                        mov dx, bx
+                        and ax, 0x3F3F
+                        and bx, 0x3F3F
+                        add ax, bx
+                        and cx, 0xC0C0
+                        add al, ah
+                        and dx, 0xC0C0
+                        shr al, 2
+                        mov     ah, al
+                        mov bx, ax
+                        or  ax, cx
+                        or  bx, dx
+                        mov     es:[di], ax
+                        mov     es:[di+320], bx 
+                    }
                 }
 
                 cp++;
@@ -491,19 +475,20 @@ void smootharound_64(uint8_t far* target, int32_t cx, int32_t cy, int32_t r,
         } else {
             while (x1 <= x2) {
                 if (px * px + py * py < rs) {
-                    asm {   les     di, dword ptr target
-                            add di, cp
-                            mov ax, es:[di]
-                            mov bx, es:[di+320]
-                            mov cl, al
-                            and ax, 0x3F3F
-                            and bx, 0x3F3F
-                            and cl, 0xC0
-                            add ax, bx
-                            add al, ah
-                            shr al, 2
-                            or      al, cl
-                            mov     es:[di], al }
+                    asm {   
+                        les     di, dword ptr target
+                        add di, cp
+                        mov ax, es:[di]
+                        mov bx, es:[di+320]
+                        mov cl, al
+                        and ax, 0x3F3F
+                        and bx, 0x3F3F
+                        and cl, 0xC0
+                        add ax, bx
+                        add al, ah
+                        shr al, 2
+                        or      al, cl
+                        mov     es:[di], al }
                 }
 
                 cp++;
@@ -861,45 +846,40 @@ double qid = 1.0 / 16384; // Constant to find the x / z id of a quadrant.
 uint32_t pvfile_datatop = 0; // Top of the data.
 
 // Note: dataptr is a relative pointer that can go from 0 to "pvbytes".
-uint16_t pvfile_dataptr[handles] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-uint16_t pvfile_datalen[handles] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-uint16_t pvfile_npolygs[handles] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+uint16_t    pvfile_dataptr[handles] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+uint16_t    pvfile_datalen[handles] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+uint16_t    pvfile_npolygs[handles] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-int8_t  far* pv_n_vtx[handles]; // numero vertici per ogni poligono (3 o 4).
-float far* pvfile_x[handles]; // coord. X (quattro vertici) di ogni poligono.
-float far* pvfile_y[handles]; // coord. Y (quattro vertici) di ogni poligono.
-float far* pvfile_z[handles]; // coord. Z (quattro vertici) di ogni poligono.
-int8_t  far*
-pvfile_c[handles]; // intensit… del colore di ogni poligono (0..63).
-float far* pv_mid_x[handles]; // coordinate X dei punti medi di ogni poligono.
-float far* pv_mid_y[handles]; // coordinate Y dei punti medi di ogni poligono.
-float far* pv_mid_z[handles]; // coordinate Z dei punti medi di ogni poligono.
-float far* pv_mid_d[handles]; // buffer distanza di punti medi dall'osservatore.
-int16_t   far* pv_dep_i[handles]; // indice distanza (ordinamento poligoni).
+int8_t      far* pv_n_vtx[handles]; // Number of vertices for each polygon (3 or 4).
+float       far* pvfile_x[handles]; // X coordinate (four vertices) of each polygon.
+float       far* pvfile_y[handles]; // Y coordinate (four vertices) of each polygon.
+float       far* pvfile_z[handles]; // Z coordinate (four vertices) of each polygon.
+int8_t      far* pvfile_c[handles]; // Intensity of the color of each polygon (0 to 63).
+float       far* pv_mid_x[handles]; // X coordinate of the midpoint of each polygon.
+float       far* pv_mid_y[handles]; // Y coordinate of the midpoint of each polygon.
+float       far* pv_mid_z[handles]; // Z coordinate of the midpoint of each polygon.
+float       far* pv_mid_d[handles]; // Buffer distance of average points from the observer.
+int16_t     far* pv_dep_i[handles]; // Distance index (sorting of polygons).
 
-/* Procedimenti d'estrazione di numeri pseudo-casuali. */
+// Pseudo-random number generation procedures.
 
 int32_t flat_rnd_seed;
 
-void fast_srand (int32_t seed) // selezione tabella pseudo.
-// 4.294.967.295 tabelle possibili.
-// (ca. 20000 elementi diversi per tabella)
-{
-    asm {
-        or word ptr seed, 3
-        db 0x66;
-        mov ax, word ptr seed
-        db 0x66;
-        mov word ptr flat_rnd_seed, ax
-    }
+// Pseudo table selection.
+// There are 4,294,967,295 possible tables, and about 20000 elements per table.
+void fast_srand (int32_t seed) {
+    flat_rnd_seed = seed | 3;
 }
 
-int32_t fast_random (int32_t
-                     mask) { // estrazione di un numero: "mask" attiva i bits.
+// Extraction of a number: "mask" activates the bits.
+// TODO; Can only move to C++ with support for 64-bit integers.
+// because the multiplication overflow is added back to ax, and we can't
+// get that easily from C++.
+int32_t fast_random (int32_t mask) { 
     int32_t num;
     asm {
         db 0x66;
-        mov ax, word ptr flat_rnd_seed
+        mov ax, word ptr flat_rnd_seed;
         db 0x66;
         mov dx, word ptr flat_rnd_seed
         db 0x66;
@@ -912,6 +892,7 @@ int32_t fast_random (int32_t
         db 0x66;
         mov word ptr num, ax
     }
+
     return (num);
 }
 
@@ -924,11 +905,11 @@ int16_t ranged_fast_random (int16_t range) {
 }
 
 float flandom () {
-    return ((float)random(32767) * 0.000030518);
+    return ((float) random(32767) * 0.000030518);
 }
 
 float fast_flandom () {
-    return ((float)fast_random(32767) * 0.000030518);
+    return ((float) fast_random(32767) * 0.000030518);
 }
 
 // Loads virtual file handles from supports.nct
@@ -948,9 +929,8 @@ int16_t sa_open (int32_t offset_of_virtual_file) {
     }
 }
 
-/*  Definisce una parte della tavola colori in modo che una sfumatura graduale
-    vada da una tinta ad un'altra, entro un certo numero di tinte intermedie */
-
+// Defines a part of the color table so that a gradual gradient goes from one
+// color to another, within a certain number of intermediate colors.
 void shade (uint8_t far* palette_buffer,
             int16_t first_color, int16_t number_of_colors,
             float start_r,  float start_g,  float start_b,
@@ -973,7 +953,6 @@ void shade (uint8_t far* palette_buffer,
             }
         }
 
-        //
         if (start_g >= 0 && start_g < 64) {
             palette_buffer[first_color + 1] = start_g;
         } else {
@@ -984,7 +963,6 @@ void shade (uint8_t far* palette_buffer,
             }
         }
 
-        //
         if (start_b >= 0 && start_b < 64) {
             palette_buffer[first_color + 2] = start_b;
         } else {
@@ -995,89 +973,18 @@ void shade (uint8_t far* palette_buffer,
             }
         }
 
-        //
         start_r += delta_r;
         start_g += delta_g;
         start_b += delta_b;
-        //
+
         first_color += 3;
         count--;
     }
 }
 
-/* Copia aree video pi— grandi di 4 per 1 pixels. */
+// Display control
 
-void copia (uint8_t far* dest, uint8_t far* sorg, uint16_t x, uint16_t y,
-            int16_t l, int16_t a) {
-    if (l < 4) {
-        return;
-    }
-
-    if (a < 1) {
-        return;
-    }
-
-    asm {
-        push ax
-        push bx
-        push cx
-        push dx
-        push es
-        push ds
-        push si
-        push di
-        cld
-    }
-    x = 320 * y + x;
-    _BX = x + 320 * a;
-    _AX = x;
-    _DX = l;
-    asm {
-        lds si, dword ptr sorg
-        les di, dword ptr dest
-        add bx, si
-        add si, ax
-        add di, ax
-        mov ax, 320
-        sub ax, dx
-    }
-chiclo:
-    asm {
-        cmp si, bx
-        jnb fine
-        mov cx, dx
-        shr cx, 2
-        db 0xf3 // macro: rep movsd
-        db 0x66
-        db 0xa5
-        mov cx, dx
-        and cx, 3
-        rep movsb
-        add si, ax
-        add di, ax
-        jmp chiclo
-    }
-fine:
-    asm {
-        pop di
-        pop si
-        pop ds
-        pop es
-        pop dx
-        pop cx
-        pop bx
-        pop ax
-    }
-}
-
-/*
-
-    Controllo visualizzazione.
-
-*/
-
-/* Imposta le proiezioni 3d dal punto di vista dell'astrozattera. */
-
+// Sets the 3d projection from a still viewpoint.
 void from_vehicle () {
     cam_x = dzat_x;
     cam_y = dzat_y;
@@ -1092,8 +999,7 @@ void from_vehicle () {
     change_angle_of_view ();
 }
 
-/* Imposta le proiezioni 3d dal punto di vista del protagonista. */
-
+// Sets the 3d projection from the user's point of view.
 void from_user () {
     cam_x = pos_x;
     cam_y = pos_y;
@@ -1103,9 +1009,8 @@ void from_user () {
     change_angle_of_view ();
 }
 
-/*  Orienta la videocamera virtuale verso un certo punto dato da see_x;y;z,
-    frattalizzando l'angolo giro per fare pi— in fretta. */
-
+// Orients the virtual video camera to a certain point given by see_x;y;z, 
+// fractalizing the lap corner to do it more quickly.
 void watch (double cam_x, double cam_y, double cam_z,
             double see_x, double see_y, double see_z) {
     double rx, ry, rz, w, ww, k, q, f1, f2, f3;
@@ -1165,9 +1070,8 @@ void watch (double cam_x, double cam_y, double cam_z,
     beta /= deg;
 }
 
-/*  Calcola lo scostamento x-y dal centro del video di un certo punto
-    dato da point_x;y;z. Restituisce i valori in delta_x;y. */
-
+// Calculates the x-y offset from the center of the display by the point given
+// by point_x;y;z, returns the values in delta_x;y.
 int8_t xy (double cam_x, double cam_y, double cam_z,
            double point_x, double point_y, double point_z) {
     double xx, yy, zz, z2, rz;
@@ -1188,18 +1092,15 @@ int8_t xy (double cam_x, double cam_y, double cam_z,
     return (0);
 }
 
-/* Sposta il protagonista all'interno dell'astrozattera. */
-
+// Move the user inside the stardrifter.
 void p_Forward (float delta) {
     pos_x -= delta * opt_tsinbeta * opt_tcosalfa;
     pos_z += delta * opt_tcosbeta * opt_tcosalfa;
 }
 
-/*  Calcola la posizione di un certo pianeta in orbita attorno ad una certa
-    stella (quella vicina), sulla base dei parametri orbitali (inclinazione,
-    eccentricit…, raggio ed orientamento dell'asse maggiore) e ritorna i
-    valori in plx, ply, plz. */
-
+// Calculate the position of a certain planet in orbit around a star (the 
+// neighbouring one) based on orbital parameters (inclination, eccentricity,
+// radius and orientation of major axis), and returns i values in plx, ply, plz.
 double mox, moy, moz;
 void   moonorigin (int16_t n) {
     double xx;
@@ -1253,12 +1154,10 @@ void planet_xyz (int16_t n) {
     }
 }
 
-/*  Calcola il periodo di rivoluzione di un corpo, in secondi:
-    per i pianeti, attorno alla stella;
-    per le lune, attorno al pianeta...
-    0.01e-7 Š l'equivalente, nel cosmo virtuale di Noctis,
-    della costante gravitazionale. */
-
+// Calculate the revolution period of a body, in seconds.
+// For planets: Around the star.
+// For moons: Around the planet.
+// .01e-7 is the equivalent, in the virtual cosmos of Noctis.
 float rtp (int16_t n) {
     double p_m, p_riv, ors, xx;
     ors = nearstar_p_orb_ray[n] * nearstar_p_orb_ray[n];
@@ -1274,10 +1173,9 @@ float rtp (int16_t n) {
     return (360 / p_riv);
 }
 
-/*  Calcola la longitudine d'incidenza dello sguardo sulla superficie
-    di un certo pianeta dato da (plx, ply, plz). L'osservatore Š posto
-    nel punto (obs_x; obs_z) dato che la sua Y Š ininfluente... */
-
+// Calculates the longitude of the point on a planet that the user is looking
+// at, given by (plx, ply, plz). The observed is placed at (obs_x, obs_z), 
+// its y is irrelevant.
 int16_t planet_viewpoint (double obs_x, double obs_z) {
     uint16_t a;
     int16_t plwp = 0;
@@ -1321,7 +1219,7 @@ int16_t cplx_planet_viewpoint (int16_t logical_id) {
     }
 }
 
-/* Selezione effetti tramite variabile di controllo "flares". */
+// Effect selection via "flares" control variable.
 
 int8_t previous_flares_value = 0;
 void setfx (int8_t fx) {
@@ -1335,9 +1233,8 @@ void resetfx (void)  {
     flares = previous_flares_value;
 }
 
-/* Tracciamento bastoncini (parte 2d). */
-
-void Stick (uint32_t xp, uint32_t yp,
+// Tracing sticks (2D)
+void stick (uint32_t xp, uint32_t yp,
             uint32_t xa, uint32_t ya) {
     int32_t a, b, L;
     uint16_t pi, pf;
@@ -1351,259 +1248,291 @@ void Stick (uint32_t xp, uint32_t yp,
             pf = riga[yp + 1];
         }
 
-        asm {   les si, dword ptr adapted
-                add pi, si
-                add pf, si
-                mov si, pi }
+        asm {   
+            les si, dword ptr adapted
+            add pi, si
+            add pf, si
+            mov si, pi 
+        }
 
         switch (flares) {
         case 0:
-clu:
-            asm {   cmp si, pf
-                    jnb _ret
-                    mov word ptr es:[si], 0x3E00
-                    add si, 320
-                    jmp clu }
+            clu:
+            asm {   
+                cmp si, pf
+                jnb _ret
+                mov word ptr es:[si], 0x3E00
+                add si, 320
+                jmp clu 
+            }
             break;
-
         case 1:
-                _clu:
-                asm {   cmp si, pf
-                        jnb _ret
-                        mov cl, es:[si]
-                        and cl, 0x3F
-                        and byte ptr es:[si], 0xC0
-                        add cl, 0x08
-                        cmp cl, 0x3E
-                        jb _cl_ok
-                        mov cl, 0x3E }
-                _cl_ok:
-                asm {   add es:[si], cl
-                        add si, 320
-                        jmp _clu }
-                break;
-
+            _clu:
+            asm {   
+                cmp si, pf
+                jnb _ret
+                mov cl, es:[si]
+                and cl, 0x3F
+                and byte ptr es:[si], 0xC0
+                add cl, 0x08
+                cmp cl, 0x3E
+                jb _cl_ok
+                mov cl, 0x3E 
+            }
+            _cl_ok:
+            asm {   
+                add es:[si], cl
+                add si, 320
+                jmp _clu 
+            }
+            break;
         case 2:
-                __clu:
-                asm {   cmp si, pf
-                        jnb _ret
-                        mov cl, es:[si]
-                        and cl, 0x3F
-                        and byte ptr es:[si], 0xC0
-                        shr cl, 1
-                        add es:[si], cl
-                        add si, 320
-                        jmp __clu }
-                break;
-
+            __clu:
+            asm {   
+                cmp si, pf
+                jnb _ret
+                mov cl, es:[si]
+                and cl, 0x3F
+                and byte ptr es:[si], 0xC0
+                shr cl, 1
+                add es:[si], cl
+                add si, 320
+                jmp __clu 
+            }
+            break;
         case 3:
                 ___clu:
-                asm {   cmp si, pf
-                        jnb _ret
-                        db 0x66, 0x26, 0xC7, 0x04, 0x0E, 0x13, 0x1E, 0x2E // mov dword ptr es:[si], 0x2E1E130E
-                        add si, 320
-                        jmp ___clu }
-            }
-
+                asm {   
+                    cmp si, pf
+                    jnb _ret
+                    db 0x66, 0x26, 0xC7, 0x04, 0x0E, 0x13, 0x1E, 0x2E // mov dword ptr es:[si], 0x2E1E130E
+                    add si, 320
+                    jmp ___clu 
+                }
+        }
         _ret:
         return;
     }
 
-    asm {   db 0x66;
-            mov si, word ptr xa
-            db 0x66;
-            sub si, word ptr xp
-            jnc a_posit
-            db 0x66;
-            mov ax, word ptr xp
-            db 0x66;
-            mov bx, word ptr xa
-            db 0x66;
-            mov cx, word ptr yp
-            db 0x66;
-            mov dx, word ptr ya
-            db 0x66;
-            mov word ptr xa, ax
-            db 0x66;
-            mov word ptr xp, bx
-            db 0x66;
-            mov word ptr ya, cx
-            db 0x66;
-            mov word ptr yp, dx
-            db 0x66;
-            neg si }
+    asm {   
+        db 0x66;
+        mov si, word ptr xa
+        db 0x66;
+        sub si, word ptr xp
+        jnc a_posit
+        db 0x66;
+        mov ax, word ptr xp
+        db 0x66;
+        mov bx, word ptr xa
+        db 0x66;
+        mov cx, word ptr yp
+        db 0x66;
+        mov dx, word ptr ya
+        db 0x66;
+        mov word ptr xa, ax
+        db 0x66;
+        mov word ptr xp, bx
+        db 0x66;
+        mov word ptr ya, cx
+        db 0x66;
+        mov word ptr yp, dx
+        db 0x66;
+        neg si 
+    }
     a_posit:
-    asm {   db 0x66;
-            mov word ptr a, si
-            db 0x66;
-            mov word ptr L, si
-            xor ch, ch
-            db 0x66;
-            mov ax, word ptr ya
-            db 0x66;
-            sub ax, word ptr yp
-            jnc b_posit
-            not ch
-            db 0x66;
-            neg ax }
+    asm {   
+        db 0x66;
+        mov word ptr a, si
+        db 0x66;
+        mov word ptr L, si
+        xor ch, ch
+        db 0x66;
+        mov ax, word ptr ya
+        db 0x66;
+        sub ax, word ptr yp
+        jnc b_posit
+        not ch
+        db 0x66;
+        neg ax 
+    }
     b_posit:
-    asm {   db 0x66;
-            mov word ptr b, ax
-            db 0x66;
-            cmp ax, word ptr L
-            jb b_lower
-            db 0x66;
-            mov word ptr L, ax }
+    asm {   
+        db 0x66;
+        mov word ptr b, ax
+        db 0x66;
+        cmp ax, word ptr L
+        jb b_lower
+        db 0x66;
+        mov word ptr L, ax 
+    }
     b_lower:
-    asm {   db 0x66;
-            inc word ptr L
-            db 0x66;
-            shl word ptr xa, 16
-            db 0x66;
-            mov ax, word ptr xp
-            db 0x66;
-            mov bx, word ptr yp
-            db 0x66;
-            shl ax, 16
-            db 0x66;
-            shl bx, 16
-            db 0x66;
-            mov word ptr global_x, ax
-            db 0x66;
-            mov word ptr global_y, bx
-            db 0x66;
-            shl word ptr a, 16 // a *= 65536, unsigned
-            db 0x66;
-            sal word ptr b, 16 // b *= 65536, signed
-            mov dx, word ptr a[2]
-            mov ax, word ptr a
-            div word ptr L     // a /= L, 16bit - unsigned
-            mov word ptr a, ax
-            mov word ptr a[2], 0
-            mov dx, word ptr b[2]
-            mov ax, word ptr b
-            div word ptr L     // b /= L, 16bit - false unsigned
-            mov word ptr b, ax
-            mov word ptr b[2], 0
-            test ch, ch
-            jz trace
-            db 0x66;
-            neg word ptr b }
+    asm {   
+        db 0x66;
+        inc word ptr L
+        db 0x66;
+        shl word ptr xa, 16
+        db 0x66;
+        mov ax, word ptr xp
+        db 0x66;
+        mov bx, word ptr yp
+        db 0x66;
+        shl ax, 16
+        db 0x66;
+        shl bx, 16
+        db 0x66;
+        mov word ptr global_x, ax
+        db 0x66;
+        mov word ptr global_y, bx
+        db 0x66;
+        shl word ptr a, 16 // a *= 65536, unsigned
+        db 0x66;
+        sal word ptr b, 16 // b *= 65536, signed
+        mov dx, word ptr a[2]
+        mov ax, word ptr a
+        div word ptr L     // a /= L, 16bit - unsigned
+        mov word ptr a, ax
+        mov word ptr a[2], 0
+        mov dx, word ptr b[2]
+        mov ax, word ptr b
+        div word ptr L     // b /= L, 16bit - false unsigned
+        mov word ptr b, ax
+        mov word ptr b[2], 0
+        test ch, ch
+        jz trace
+        db 0x66;
+        neg word ptr b 
+    }
     trace:
     asm mov es, seg_adapted;
 
     switch (flares) {
     case 0: // bastoncini solidi che "riflettono" luce.
-        asm {   db 0x66;
-                mov ax, word ptr a    // passa in eax il delta_x (ovvero a).
-                db 0x66;
-                mov dx, word ptr b    // passa in edx il delta_y (ovvero b).
-                db 0x66;
-                mov cx, word ptr xa } // passa in ecx il limite superiore del ciclo (come coordinata x d'arrivo).
+        asm {   
+            db 0x66;
+            mov ax, word ptr a    // passa in eax il delta_x (ovvero a).
+            db 0x66;
+            mov dx, word ptr b    // passa in edx il delta_y (ovvero b).
+            db 0x66;
+            mov cx, word ptr xa 
+        } // passa in ecx il limite superiore del ciclo (come coordinata x d'arrivo).
         _do:
-        asm {   mov bx, word ptr global_y[2]
-                mov di, word ptr global_x[2]
-                add bx, bx
-                db 0x66;
-                add word ptr global_x, ax
-                add di, word ptr riga[bx]
-                db 0x66;
-                add word ptr global_y, dx
-                db 0x66;
-                cmp word ptr global_x, cx
-                mov word ptr es:[di+4], 0x3E00
-                jb  _do }
+        asm {   
+            mov bx, word ptr global_y[2]
+            mov di, word ptr global_x[2]
+            add bx, bx
+            db 0x66;
+            add word ptr global_x, ax
+            add di, word ptr riga[bx]
+            db 0x66;
+            add word ptr global_y, dx
+            db 0x66;
+            cmp word ptr global_x, cx
+            mov word ptr es:[di+4], 0x3E00
+            jb  _do 
+        }
+        break;
+    case 1: // bastoncini intrinsecamente luminosi.
+        asm {   
+            db 0x66;
+            mov ax, word ptr a    // passa in eax il delta_x (ovvero a).
+            db 0x66;
+            mov dx, word ptr b    // passa in edx il delta_y (ovvero b).
+
+            db 0x66;
+            shl ax, 1         // moltiplica i delta per 2:
+            db 0x66;
+            shl dx, 1         // un punto s, uno no.
+
+            push bp                // salva bp sullo stack
+            db 0x66;
+            mov bp, word ptr xa 
+        } // passa in ebp il limite superiore del ciclo (come coordinata x d'arrivo).
+        __do:
+        asm {   
+            mov bx, word ptr global_y[2]
+            mov di, word ptr global_x[2]
+            add bx, bx
+            db 0x66;
+            add word ptr global_x, ax
+            add di, word ptr riga[bx]
+            db 0x66;
+            add word ptr global_y, dx
+            mov cl, es:[di+4]
+            shl cx, 2
+            add cl, 32
+            jnc cl_ok
+            mov cl, 0xFB 
+        }
+        cl_ok:
+        asm {   
+            shr cx, 2
+            db 0x66;
+            cmp word ptr global_x, bp
+            mov es:[di+4], cl
+            jb __do 
+        }
+        asm pop bp                 // riprende bp
+        break;
+    case 2: // bastoncini che assorbono luce ("affumicati").
+        asm {   
+            db 0x66;
+            mov ax, word ptr a    // passa in eax il delta_x (ovvero a).
+            db 0x66;
+            mov dx, word ptr b    // passa in edx il delta_y (ovvero b).
+
+            push bp                // salva bp sullo stack
+            db 0x66;
+            mov bp, word ptr xa  // passa in ebp il limite superiore del ciclo (come coordinata x d'arrivo).
+        } 
+        ___do:
+        asm {   
+            mov bx, word ptr global_y[2]
+            mov di, word ptr global_x[2]
+            add bx, bx
+            db 0x66;
+            add word ptr global_x, ax
+            add di, word ptr riga[bx]
+            db 0x66;
+            add word ptr global_y, dx
+            mov cl, es:[di+4]
+            and cl, 0x3F
+            and byte ptr es:[di+4], 0xC0
+            shr cl, 1
+            add es:[di+4], cl
+            db 0x66;
+            cmp word ptr global_x, bp
+            jb ___do 
+        }
+        asm pop bp                 // riprende bp
         break;
 
-    case 1: // bastoncini intrinsecamente luminosi.
-            asm {   db 0x66;
-                    mov ax, word ptr a    // passa in eax il delta_x (ovvero a).
-                    db 0x66;
-                    mov dx, word ptr b    // passa in edx il delta_y (ovvero b).
-
-                    db 0x66;
-                    shl ax, 1         // moltiplica i delta per 2:
-                    db 0x66;
-                    shl dx, 1         // un punto s, uno no.
-
-                    push bp                // salva bp sullo stack
-                    db 0x66;
-                    mov bp, word ptr xa } // passa in ebp il limite superiore del ciclo (come coordinata x d'arrivo).
-            __do:
-            asm {   mov bx, word ptr global_y[2]
-                    mov di, word ptr global_x[2]
-                    add bx, bx
-                    db 0x66;
-                    add word ptr global_x, ax
-                    add di, word ptr riga[bx]
-                    db 0x66;
-                    add word ptr global_y, dx
-                    mov cl, es:[di+4]
-                    shl cx, 2
-                    add cl, 32
-                    jnc cl_ok
-                    mov cl, 0xFB }
-            cl_ok:
-            asm {   shr cx, 2
-                    db 0x66;
-                    cmp word ptr global_x, bp
-                    mov es:[di+4], cl
-                    jb __do }
-            asm pop bp                 // riprende bp
-            break;
-
-    case 2: // bastoncini che assorbono luce ("affumicati").
-            asm {   db 0x66;
-                    mov ax, word ptr a    // passa in eax il delta_x (ovvero a).
-                    db 0x66;
-                    mov dx, word ptr b    // passa in edx il delta_y (ovvero b).
-
-                    push bp                // salva bp sullo stack
-                    db 0x66;
-                    mov bp, word ptr xa } // passa in ebp il limite superiore del ciclo (come coordinata x d'arrivo).
-            ___do:
-            asm {   mov bx, word ptr global_y[2]
-                    mov di, word ptr global_x[2]
-                    add bx, bx
-                    db 0x66;
-                    add word ptr global_x, ax
-                    add di, word ptr riga[bx]
-                    db 0x66;
-                    add word ptr global_y, dx
-                    mov cl, es:[di+4]
-                    and cl, 0x3F
-                    and byte ptr es:[di+4], 0xC0
-                    shr cl, 1
-                    add es:[di+4], cl
-                    db 0x66;
-                    cmp word ptr global_x, bp
-                    jb ___do }
-            asm pop bp                 // riprende bp
-            break;
-
     case 3: // come tipo 0, ma pi— larghi.
-            asm {   db 0x66;
-                    mov ax, word ptr a    // passa in eax il delta_x (ovvero a).
-                    db 0x66;
-                    mov dx, word ptr b    // passa in edx il delta_y (ovvero b).
-                    db 0x66;
-                    mov cx, word ptr xa } // passa in ecx il limite superiore del ciclo (come coordinata x d'arrivo).
-            ____do:
-            asm {   mov bx, word ptr global_y[2]
-                    mov di, word ptr global_x[2]
-                    add bx, bx
-                    db 0x66;
-                    add word ptr global_x, ax
-                    add di, word ptr riga[bx]
-                    db 0x66;
-                    add word ptr global_y, dx
-                    db 0x66;
-                    cmp word ptr global_x, cx
-                    db 0x66, 0x26, 0xC7, 0x45, 0x04 // mov dword ptr es:[di+4],
-//         db 0x0E, 0x13, 0x1E, 0x2E       // 0x2E1E130E
-                    db 0xCE, 0xD3, 0xDE, 0xEE       // 0x2E1E130E
-                    jb  ____do }
+        asm {   
+            db 0x66;
+            mov ax, word ptr a    // passa in eax il delta_x (ovvero a).
+            db 0x66;
+            mov dx, word ptr b    // passa in edx il delta_y (ovvero b).
+            db 0x66;
+            mov cx, word ptr xa // passa in ecx il limite superiore del ciclo (come coordinata x d'arrivo).
+        } 
+        ____do:
+        asm {   
+            mov bx, word ptr global_y[2]
+            mov di, word ptr global_x[2]
+            add bx, bx
+            db 0x66;
+            add word ptr global_x, ax
+            add di, word ptr riga[bx]
+            db 0x66;
+            add word ptr global_y, dx
+            db 0x66;
+            cmp word ptr global_x, cx
+            db 0x66, 0x26, 0xC7, 0x45, 0x04 // mov dword ptr es:[di+4],
+//          db 0x0E, 0x13, 0x1E, 0x2E       // 0x2E1E130E
+            db 0xCE, 0xD3, 0xDE, 0xEE       // 0x2E1E130E
+            jb  ____do 
         }
+    }
 }
 
 /* Tracciamento bastoncini (parte 3d). */
@@ -1620,11 +1549,6 @@ void stick3d (float p_x, float p_y, float p_z,
     float p_z2, diff;
     float rx, ry, rz, z2, kk;
     fpx = -1;
-//  p_x -= cam_x;
-//  p_y -= cam_y;
-//  p_z -= cam_z;
-//  p_z2 = p_z * opt_tcosbeta - p_x * opt_tsinbeta;
-//  p_rz = p_z2 * opt_tcosalfa + p_y * opt_tsinalfa;
     asm {   fld p_x
             fsub cam_x
             fst p_x
@@ -1642,11 +1566,6 @@ void stick3d (float p_x, float p_y, float p_z,
             fmul opt_tsinalfa
             faddp
             fstp p_rz }
-//  x -= cam_x;
-//  y -= cam_y;
-//  z -= cam_z;
-//  z2 = z * opt_tcosbeta - x * opt_tsinbeta;
-//  rz = z2 * opt_tcosalfa + y * opt_tsinalfa;
     asm {   fld x
             fsub cam_x
             fst x
@@ -1668,9 +1587,6 @@ void stick3d (float p_x, float p_y, float p_z,
     if (rz < stick_uneg && p_rz < stick_uneg) {
         return;
     }
-
-//  p_rx = p_x * opt_pcosbeta + p_z * opt_psinbeta;
-//  p_ry = p_y * opt_pcosalfa - p_z2 * opt_psinalfa;
     asm {   fld p_x
             fmul opt_pcosbeta
             fld p_z
@@ -1683,8 +1599,6 @@ void stick3d (float p_x, float p_y, float p_z,
             fmul opt_psinalfa
             fsubp
             fstp p_ry }
-//  rx = x * opt_pcosbeta + z * opt_psinbeta;
-//  ry = y * opt_pcosalfa - z2 * opt_psinalfa;
     asm {   fld x
             fmul opt_pcosbeta
             fld z
@@ -1698,8 +1612,7 @@ void stick3d (float p_x, float p_y, float p_z,
             fsubp
             fstp ry }
 
-    /*  Conversione punti alle spalle dell'osservatore rispetto al piano
-        dello schermo. */
+    // Conversion of points behind the observer with respect to the screen plane.
 
     if (rz < stick_uneg) {
         diff = rz - p_rz;
@@ -1849,7 +1762,7 @@ void stick3d (float p_x, float p_y, float p_z,
         return;    // Esclude le linee costituite da un punto solo.
     }
 
-    Stick (fpx + x_centro, fpy + y_centro, lx + x_centro, ly + y_centro);
+    stick (fpx + x_centro, fpy + y_centro, lx + x_centro, ly + y_centro);
 }
 
 /*  Se uno "stick" Š un "bastoncino" tridimensionale delimitato da due
@@ -1960,7 +1873,7 @@ void link3d (float x, float y, float z) {
         return;
     }
 
-    Stick (fpx + x_centro, fpy + y_centro, lx + x_centro, ly + y_centro);
+    stick (fpx + x_centro, fpy + y_centro, lx + x_centro, ly + y_centro);
 }
 
 /*  Tracciamento bastoncini luminosi (in 2d, per i bagliori,
@@ -2076,7 +1989,7 @@ void fline (int32_t fx, int32_t fy,
         return;
     }
 
-    Stick (fx + x_centro, fy + y_centro, lx + x_centro, ly + y_centro);
+    stick (fx + x_centro, fy + y_centro, lx + x_centro, ly + y_centro);
 }
 
 /*  Funzione ricorsiva che suddivide poligoni triangolari in quattro parti
@@ -2698,15 +2611,14 @@ next:
     }
 }
 
-/* Ritorna il corrispondente alfabetico di numeri interi e/o reali. */
+// Returns the alphabetic correspondent of integers and / or real numbers.
 
 int8_t* alphavalue (double value) {
     gcvt (value, 15, dec);
     return (dec);
 }
 
-/* Background, con la mappa offsets.map, in quicktime vr. */
-
+// Draws the background, with the map offsets.map.
 void background (uint16_t start,
                  uint8_t far* target,
                  uint8_t far* background,
@@ -3408,11 +3320,12 @@ clipout:asm {   add dx, 1
             popa }
 }
 
-/*  Modificata per fare globi bianchi.
-    Viene usata per le stelle viste da lontano, e per la corona stellare.
-    Non ha bisogno della mappa dei globi. Color compreso fra 0 e 0x3F,
-    perch‚ per maggior velocit… funziona sulla prima sfumatura. */
 
+/*
+    Modified to make white globes. It is used for stars seen from afar, and for
+    the corona. It does not need a globe map. Takes a color from between 0 and
+    0x3F, b/c it should only work on the first shade for speed.
+*/
 void whiteglobe (uint8_t far* target,
                  double x, double y, double z,
                  float mag_factor, float fgm_factor) {
@@ -3421,9 +3334,11 @@ void whiteglobe (uint8_t far* target,
     double magsq, fgmsq;
     uint16_t pixptr;
     int8_t pix;
+    
     xx = x - dzat_x;
     yy = y - dzat_y;
     zz = z - dzat_z;
+    
     rx = xx * (double)opt_pcosbeta + zz * (double)opt_psinbeta;
     z2 = zz * (double)opt_tcosbeta - xx * (double)opt_tsinbeta;
     rz = z2 * (double)opt_tcosalfa + yy * (double)opt_tsinalfa;
@@ -3470,11 +3385,13 @@ void whiteglobe (uint8_t far* target,
     ise = 0x3F / shade_ext;
     magsq = mag * mag;
     fgmsq = fgm * fgm;
-    asm les dx, dword ptr target
-    asm mov ax, es
-    asm shr dx, 4
-    asm add ax, dx
-    asm db 0x8e, 0xe0 // mov fs, ax
+    asm {
+        les     dx, dword ptr target
+        mov     ax, es
+        shr     dx, 4
+        add     ax, dx
+        db      0x8E, 0xe0 // mov fs, ax
+    }
     ya = - mag * 1.2;
     yb = center_y + mag;
     yy = center_y - mag;
@@ -5013,15 +4930,17 @@ void surface (int16_t logical_id, int16_t type,
         return;    // stella compagna: ha superficie stellare...
     }
 
-    /*  impostazione del periodo di rotazione
-        "rotation" marca un punto ideale che rappresenta
-        l'attuale rotazione del pianeta, in gradi, fra 0 e 359.
-        il periodo di rotazione Š estratto in un range molto ampio,
-        con risoluzione di 1 secondo. */
+    /*  
+        Setting of the rotation period. "rotation" represents the current rotation
+        of the planet, in degrees, from 0 to 359. The rotation period is extracted
+        in a very wide range, with 1 second resolution.
+    */
     fast_srand (seedval + 4112);
-    /*  "rtperiod" Š il tempo, in secondi, che il pianeta impiega a
-        ruotare di un grado sul proprio asse. Il tempo impiegato per
-        una rotazione completa Š quindi, in secondi, 360 * rtperiod. */
+    /*  
+        "rtperiod" is the time, in seconds, that it takes the planet to rotate
+        one degree on its axis. The time taken for a complete rotation is
+        therefore 360 * rtperiod.
+    */
     nearstar_p_rtperiod[logical_id] = 10 * (ranged_fast_random(50) + 1)
                                       + 10 * ranged_fast_random(25)
                                       + ranged_fast_random (250)
@@ -6357,87 +6276,86 @@ void status (int8_t* status_description, int16_t message_delay) {
     }
 }
 
-/*  Mappa caratteri per l'HUD:
-    font iper-compatto (3 x 5 pixels). */
-
+// Character map for the hud, 3x5 pixels.
 int8_t digimap[65 * 5] = {
-    0, 0, 0, 0, 0, // 32. spazio vuoto
-    2, 2, 2, 0, 2, // 33. punto esclamativo
-    5, 0, 0, 0, 0, // 34. virgolette
-    0, 0, 3, 5, 5, // 35. cancelletto (rappresentato da una piccola n.)
+    0, 0, 0, 0, 0, // 32. ' '
+    2, 2, 2, 0, 2, // 33. '!'
+    5, 0, 0, 0, 0, // 34. '"'
+    0, 0, 3, 5, 5, // 35. '#'
     2, 2, 6, 2, 2, // 36. sistro
-    1, 4, 2, 1, 4, // 37. percento
+    1, 4, 2, 1, 4, // 37. '%'
     0, 0, 2, 0, 0, // 38. e commericale (non Š possibile visualizzarla)
     0, 2, 2, 0, 0, // 39. apice
-    4, 2, 2, 2, 4, // 40. parentesi tonda aperta
-    1, 2, 2, 2, 1, // 41. parentesi tonda chiusa
-    0, 0, 7, 2, 2, // 42. asterisco
+    4, 2, 2, 2, 4, // 40. '('
+    1, 2, 2, 2, 1, // 41. ')'
+    0, 0, 7, 2, 2, // 42. '*'
     0, 2, 7, 2, 0, // 43. segno pi—
-    0, 0, 0, 2, 1, // 44. virgola
-    0, 0, 7, 0, 0, // 45. segno meno
-    0, 0, 0, 0, 2, // 46. punto
+    0, 0, 0, 2, 1, // 44. ','
+    0, 0, 7, 0, 0, // 45. '-'
+    0, 0, 0, 0, 2, // 46. '.'
     0, 4, 2, 1, 0, // 47. barra destrorsa
-    7, 5, 5, 5, 7, // 48. 0
-    3, 2, 2, 2, 7, // 49. 1
-    7, 4, 7, 1, 7, // 50. 2
-    7, 4, 6, 4, 7, // 51. 3
-    4, 6, 5, 7, 4, // 52. 4
-    7, 1, 7, 4, 7, // 53. 5
-    7, 1, 7, 5, 7, // 54. 6
-    7, 4, 4, 4, 4, // 55. 7
-    7, 5, 7, 5, 7, // 56. 8
-    7, 5, 7, 4, 4, // 57. 9
+    7, 5, 5, 5, 7, // 48. '0'
+    3, 2, 2, 2, 7, // 49. '1'
+    7, 4, 7, 1, 7, // 50. '2'
+    7, 4, 6, 4, 7, // 51. '3'
+    4, 6, 5, 7, 4, // 52. '4'
+    7, 1, 7, 4, 7, // 53. '5'
+    7, 1, 7, 5, 7, // 54. '6'
+    7, 4, 4, 4, 4, // 55. '7'
+    7, 5, 7, 5, 7, // 56. '8'
+    7, 5, 7, 4, 4, // 57. '9'
     0, 2, 0, 2, 0, // 58. duepunti
-    0, 2, 0, 2, 1, // 59. punto e virgola
-    4, 2, 1, 2, 4, // 60. minore
-    0, 7, 0, 7, 0, // 61. uguale
-    1, 2, 4, 2, 1, // 62. maggiore
-    7, 4, 6, 0, 2, // 63. punto interrogativo
+    0, 2, 0, 2, 1, // 59. ';'
+    4, 2, 1, 2, 4, // 60. '<'
+    0, 7, 0, 7, 0, // 61. '='
+    1, 2, 4, 2, 1, // 62. '>'
+    7, 4, 6, 0, 2, // 63. '?'
     0, 2, 0, 0, 0, // 64. a commerciale (non visualizzabile)
-    7, 5, 7, 5, 5, // 65. A
-    7, 5, 3, 5, 7, // 66. B
-    7, 1, 1, 1, 7, // 67. C
-    3, 5, 5, 5, 3, // 68. D
-    7, 1, 3, 1, 7, // 69. E
-    7, 1, 3, 1, 1, // 70. F
-    7, 1, 5, 5, 7, // 71. G
-    5, 5, 7, 5, 5, // 72. H
-    2, 2, 2, 2, 2, // 73. I
-    4, 4, 4, 5, 7, // 74. J
-    5, 5, 3, 5, 5, // 75. K
-    1, 1, 1, 1, 7, // 76. L
-    7, 7, 5, 5, 5, // 77. M
-    5, 7, 7, 5, 5, // 78. N
-    7, 5, 5, 5, 7, // 79. O
-    7, 5, 7, 1, 1, // 80. P
-    7, 5, 5, 1, 5, // 81. Q
-    7, 5, 3, 5, 5, // 82. R
-    7, 1, 7, 4, 7, // 83. S
-    7, 2, 2, 2, 2, // 84. T
-    5, 5, 5, 5, 7, // 85. U
-    5, 5, 5, 5, 2, // 86. V
-    5, 5, 7, 7, 5, // 87. W
-    5, 5, 2, 5, 5, // 88. X
-    5, 5, 7, 2, 2, // 89. Y
-    7, 4, 2, 1, 7, // 90. Z
-    0, 0, 6, 2, 2, // 91. parentesi quadra aperta
+    7, 5, 7, 5, 5, // 65. 'A'
+    7, 5, 3, 5, 7, // 66. 'B'
+    7, 1, 1, 1, 7, // 67. 'C'
+    3, 5, 5, 5, 3, // 68. 'D'
+    7, 1, 3, 1, 7, // 69. 'E'
+    7, 1, 3, 1, 1, // 70. 'F'
+    7, 1, 5, 5, 7, // 71. 'G'
+    5, 5, 7, 5, 5, // 72. 'H'
+    2, 2, 2, 2, 2, // 73. 'I'
+    4, 4, 4, 5, 7, // 74. 'J'
+    5, 5, 3, 5, 5, // 75. 'K'
+    1, 1, 1, 1, 7, // 76. 'L'
+    7, 7, 5, 5, 5, // 77. 'M'
+    5, 7, 7, 5, 5, // 78. 'N'
+    7, 5, 5, 5, 7, // 79. 'O'
+    7, 5, 7, 1, 1, // 80. 'P'
+    7, 5, 5, 1, 5, // 81. 'Q'
+    7, 5, 3, 5, 5, // 82. 'R'
+    7, 1, 7, 4, 7, // 83. 'S'
+    7, 2, 2, 2, 2, // 84. 'T'
+    5, 5, 5, 5, 7, // 85. 'U'
+    5, 5, 5, 5, 2, // 86. 'V'
+    5, 5, 7, 7, 5, // 87. 'W'
+    5, 5, 2, 5, 5, // 88. 'X'
+    5, 5, 7, 2, 2, // 89. 'Y'
+    7, 4, 2, 1, 7, // 90. 'Z'
+    0, 0, 6, 2, 2, // 91. '['
     1, 3, 7, 3, 1, // 92. barra sinistrorsa
-    2, 2, 6, 0, 0, // 93. parentesi quadra chiusa
+    2, 2, 6, 0, 0, // 93. ']'
     2, 2, 2, 2, 2, // 94. ordinale femminile
     0, 0, 0, 0, 7, // 95. sottolinea
     1, 2, 0, 0, 0  // 96. accento
 };
 
-/*  Mappa caratteri per il computer ed il sistema operativo:
-    font a pi— alta risoluzione (32 x 36 pixels).
-    Viene caricato in n_globes_map + gl_bytes ed occupa 10800 bytes.
-    Questi 10182 bytes (gl_brest) sono praticamente una minuscola estensione
-    dell'area n_globes_map che di per s‚, contenendo una semi-texture
-    di 32Kb per la superficie dei mari, Š stata estesa da 22586 a 32768. */
+/*  
+    Character map for the computer and operating system. The resolution is 
+    32x36 pixels. It is loaded in n_globes_map + gl_bytes and occupies 10800 
+    bytes. These 10182 bytes (gl_brest) are practically a tiny extension of
+    the n_globes_map area which by itself, containing a semi-texture of 32Kb
+    for the sea, has been extended from 22586 to 32768.
+*/
 
-uint32_t far* digimap2; // verr… assegnato a n_globes_map + gl_bytes
+uint32_t far* digimap2; // Will be assigned to n_globes_map + gl_bytes.
 
-/* Cupola panoramica. */
+// Panoramic dome.
 
 const float cupsize = 1800;
 const float cupheight = 1667;
@@ -6575,7 +6493,7 @@ void polycupola (float y_or, int8_t textured) {
     resetfx ();
 }
 
-/* Sincronizzatore: su qualsiasi PC un massimo di 18 fotogrammi al secondo. */
+// Synchronizer: up to 18 frames per second on any PC.
 
 clock_t gtime;
 
@@ -6589,10 +6507,9 @@ void sync_stop () {
 
 int32_t   global_surface_seed;
 float  ppos_x, ppos_y, ppos_z;
-double dsd;         // per misurare distanze
+double dsd;         // To measure distances.
 
-/* Carica la bitmap per la superficie stellare. */
-
+// Load the bitmap for the star surface.
 void load_starface () {
     uint16_t seed = nearstar_identity * 12345;
     asm {   les di, dword ptr s_background

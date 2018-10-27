@@ -1202,8 +1202,8 @@ krep2:
         n++;
     }
 
-    // Tracciamento della mappa planetaria.
-    // Dopo gli schermi di GOES.
+    // Tracing the planetary map.
+    // After the GOES screen.
     H_MATRIXS = 3;
     V_MATRIXS = 2;
     change_txm_repeating_mode ();
