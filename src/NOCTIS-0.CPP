@@ -380,10 +380,10 @@ void psmooth_64(uint8_t far* target, uint16_t segshift) {
     uint8_t far* shifted = (uint8_t far*) address;
 
     for (uint16_t i = 0; i < count; i++) {
-        uint8_t ahigh = shifted[i + 320];
-        uint8_t alow = shifted[i + 321];
-        uint8_t blow = shifted[i + 640];
-        uint8_t bhigh = shifted[i + 641];
+        uint8_t alow = shifted[i + 320];
+        uint8_t ahigh = shifted[i + 321];
+        uint8_t bhigh = shifted[i + 640];
+        uint8_t blow = shifted[i + 641];
         uint8_t clow = alow;
         // Bitwise AND with 63 for some reason...
         ahigh &= 0x3F;
@@ -610,8 +610,6 @@ int16_t     nightzone;
 int16_t sun_x_factor;
 
 // Global data that isn't saved.
-
-int8_t seconds[3], minutes[3], hours[3], day[3], month[3], year[5];
 int16_t  epoc = 6011;
 
 int8_t        ctb[512];
@@ -3677,22 +3675,18 @@ int8_t          pixel_spreads = 1;
 uint8_t multicolourmask = 0xC0;
 
 void single_pixel_at_ptr (uint16_t ptr, uint8_t pixel_color) {
-    // Set dx register to ptr.
-    _DX = ptr;
-    // Set cl to the color.
-    _CL = pixel_color;
     // Add ptr shift to the offset.
     uint8_t far* shifted = adapted + ptr;
-    uint8_t alow, ahigh;
+    uint8_t alow = shifted[0];
+    alow &= 0x3F;
+    alow += pixel_color;
     
+    uint8_t ahigh;
     switch (pixilating_effect) {
     case LIGHT_EMITTING:
         if (shifted[0] > 63) {
-            alow = shifted[0];
             ahigh = shifted[0];
-            alow &= 0x3F;
             ahigh &= 0xC0;
-            alow += pixel_color;
             if (alow > 0x3E) {
                 alow = 0x3E;
             }
@@ -3702,11 +3696,8 @@ void single_pixel_at_ptr (uint16_t ptr, uint8_t pixel_color) {
         break;
     case LIGHT_ABSORBING:
         if (shifted[0] > 63) {
-            alow = shifted[0];
             ahigh = shifted[0];
-            alow &= 0x3F;
             ahigh &= 0xC0;
-            alow += pixel_color;
             alow >>= 1;
             alow |= ahigh;
             shifted[0] = alow;
@@ -3714,11 +3705,8 @@ void single_pixel_at_ptr (uint16_t ptr, uint8_t pixel_color) {
         break;
     case MULTICOLOUR:
         if (shifted[0] > 63) {
-            alow = shifted[0];
             ahigh = multicolourmask;
-            alow &= 0x3F;
             ahigh &= 0xC0;
-            alow += pixel_color;
             alow >>= 1;
             alow |= ahigh;
             shifted[0] = alow;
@@ -3829,90 +3817,35 @@ int8_t far_pixel_at (double xlight, double ylight, double zlight,
 
 */
 
-/*  Misura il tempo trascorso dal 1-1-1984 ad oggi, con la precisione di
-    un fotogramma (in media, 1/25 di secondo). */
 
+// Measure the time elapsed from 1-1-1984 to today, accurate to one frame,
+// which is 1/25 of a second on average.
 void getsecs () {
-    int16_t m;
-    int8_t dfm[13] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-    asm {   mov ah, 4
-            int 0x1a
-            lea bx, year
-            mov ah, ch
-            shr ah, 4
-            mov al, ch
-            and al, 0xF
-            add ax, '00'
-            xchg al, ah
-            mov [bx], ax
-            mov ah, cl
-            shr ah, 4
-            mov al, cl
-            and al, 0xF
-            add ax, '00'
-            xchg al, ah
-            mov [bx+2], ax
-            lea bx, month
-            mov ah, dh
-            shr ah, 4
-            mov al, dh
-            and al, 0xF
-            add ax, '00'
-            xchg al, ah
-            mov [bx], ax
-            lea bx, day
-            mov ah, dl
-            shr ah, 4
-            mov al, dl
-            and al, 0xF
-            add ax, '00'
-            xchg al, ah
-            mov [bx], ax
-            mov ah, 2
-            int 0x1a
-            lea bx, hours
-            mov ah, ch
-            shr ah, 4
-            mov al, ch
-            and al, 0xF
-            add ax, '00'
-            xchg al, ah
-            mov [bx], ax
-            lea bx, minutes
-            mov ah, cl
-            shr ah, 4
-            mov al, cl
-            and al, 0xF
-            add ax, '00'
-            xchg al, ah
-            mov [bx], ax
-            lea bx, seconds
-            mov ah, dh
-            shr ah, 4
-            mov al, dh
-            and al, 0xF
-            add ax, '00'
-            xchg al, ah
-            mov [bx], ax }
-    secs = atol (year) - 1984;            // anni dal 1984
-    secs = secs * 365 + (int32_t)(secs / 4);         // anni * 365 + anni / 4
-
-    for (m = 1; m < atoi(month); m++) {
-        secs += dfm[m];    // giorni per mese
-    }
-
-    if (atoi(month) > 2 && !(atol(year) % 4)) {
-        secs++;    // se l'anno Š bisestile
-    }
-
-    secs += atoi(day) - 1;                // + giorni mese attuale
-    secs *= 86400;                                // secondi in un giorno
-    secs += 3600 * atol(hours);           // ora corrente in sec.
-    secs += 60 * atoi(minutes);           // minuti corr. in sec.
-    isecs = atoi(seconds);                // secondi correnti.
-    secs += isecs;
-
-    if (p_isecs != isecs) {               // timing dei fotogrammi
+    // January 1, 1984
+    struct tm nepoch = {0};
+    nepoch.tm_sec = 0;
+    nepoch.tm_min = 0;
+    nepoch.tm_hour = 0;
+    nepoch.tm_mday = 1;
+    nepoch.tm_mon = 0;
+    nepoch.tm_year = 84;
+    
+    time_t rawtime;
+    time(&rawtime);
+    struct tm * timeinfo;
+    timeinfo = localtime(&rawtime);
+    // Have to extract info from timeinfo before doing difftime, or else
+    // timeinfo will point to nepoch, for some reason...
+    uint8_t currSecond = timeinfo->tm_sec;
+    
+    secs = difftime(rawtime, mktime(&nepoch));
+    // This offset should make it match up with GOESXNET and vanilla Noctis IV.
+    // I don't know why it's needed. A day is 86,400 seconds so this offset
+    // doesn't line up nicely with anything.
+    secs -= 82801;
+    isecs = currSecond;    
+    
+    if (p_isecs != isecs) { // Frame timing.
         if (_delay >= 10) {
             _delay--;
         }
@@ -3920,7 +3853,7 @@ void getsecs () {
         p_isecs = isecs;
         gl_fps = fps;
         fps = 1;
-    } else {                      // frazioni di secondo
+    } else { // Fractions of a second
         if (gl_fps) {
             secs += (double)fps / (double)gl_fps;
         }
@@ -6648,21 +6581,22 @@ void surrounding (int8_t compass_on, int16_t openhudcount) {
     smootharound_64 (adapted, 9, 188, 5, 1);
     areaclear (adapted, 308, 188, 0, 0, 4, 4, lptr);
     smootharound_64 (adapted, 308, 188, 5, 1);
+    // Print time on outer HUD.
     sprintf (outhudbuffer, "EPOC %d & ", epoc);
-    lsecs = secs;
-    lsecs -= lsecs % 1000000L;
-    lsecs /= 1000000L;
-    strcat (outhudbuffer, alphavalue(lsecs));
+    
+    uint16_t sinisters = fmod(secs, 1e9) / 1e6;
+    if (sinisters < 100) {
+        strcat(outhudbuffer, "0");
+    }
+    strcat (outhudbuffer, alphavalue(sinisters));
     strcat (outhudbuffer, ".");
-    lsecs = secs;
-    lsecs %= 1000000L;
-    lsecs -= lsecs % 1000;
-    lsecs /= 1000;
-    strcat (outhudbuffer, alphavalue(lsecs));
+    
+    uint16_t medii = fmod(secs, 1e6) / 1e3;
+    strcat (outhudbuffer, alphavalue(medii));
     strcat (outhudbuffer, ".");
-    lsecs = secs;
-    lsecs %= 1000;
-    strcat (outhudbuffer, alphavalue(lsecs));
+    
+    uint16_t dexters = fmod(secs, 1e3);
+    strcat (outhudbuffer, alphavalue(dexters));
 
     if (compass_on) {
         strcat (outhudbuffer, " & SQC ");

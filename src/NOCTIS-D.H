@@ -176,6 +176,7 @@ struct pvlist {
 // Definitions for software interrupts.
 
 #define INTERRUPT_VIDEO_MODE    0x10
+#define INTERRUPT_TIME      0x1A
 #define INTERRUPT_DOS_API       0x21
 #define INTERRUPT_MOUSE         0x33
 
@@ -195,6 +196,10 @@ struct pvlist {
 #define MOUSE_READ_STATUS   0x00
 #define MOUSE_READ_PRESS    0x05
 #define MOUSE_READ_MOTION   0x0b
+
+// Definitions for time interrupt codes.
+#define TIME_GET_TIME       0x02
+#define TIME_GET_DATE       0x04
 
 // Processor time cutoff for double left and right clicks.
 #define DBL_CLICK_CUTOFF 500

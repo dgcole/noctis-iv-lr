@@ -163,7 +163,6 @@ extern int8_t   landing_point;
 extern int16_t    landing_pt_lon;
 extern int16_t    landing_pt_lat;
 extern int16_t    rotation;
-extern int8_t seconds[3], minutes[3], hours[3], day[3], month[3], year[5];
 extern int16_t  epoc;
 extern uint8_t cyclon[384];
 extern int8_t          ctb[512];

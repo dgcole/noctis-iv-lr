@@ -3658,7 +3658,7 @@ ext_1:   //
                         }
 
                         wrouthud (14, 113, c, "PERIOD OF REVOLUTION:");
-                        tmp_float = rtp (ip_targetted);
+                        tmp_float = rtp(ip_targetted);
                         p1 = tmp_float * 1e-9;
                         p2 = tmp_float * 1e-6;
                         p2 %= 1000;
