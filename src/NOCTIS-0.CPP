@@ -37,22 +37,22 @@
 
 // Date and specific functions imported from ASSEMBLY.H
 
-int QUADWORDS = 16000;
+int16_t QUADWORDS = 16000;
 
 // Adaptor points to the main video memory, which should be 64kb.
-unsigned char far * adaptor    = (unsigned char far *) 0xA0000000;
+uint8_t far * adaptor    = (uint8_t far *) 0xA0000000;
 // Adapted points to some other vga memory. I think it's used as a back buffer.
-unsigned char far * adapted    = (unsigned char far *) 0xB0000000;
+uint8_t far * adapted    = (uint8_t far *) 0xB0000000;
 
-unsigned char   tmppal[768];
-char        return_palette[768];
-char        surface_palette[768];
+uint8_t   tmppal[768];
+int8_t        return_palette[768];
+int8_t        surface_palette[768];
 
-int lstri(char *stri) {
+int16_t lstri(int8_t *stri) {
     // Measure a string and copy it to tmppal.
     // This is a support function for reach_your_dir()
 
-    int c;
+    int16_t c;
 
     for (c=0; c<768; c++) {
         if (stri[c])
@@ -72,8 +72,8 @@ void reach_your_dir() {
         used to reach beyond the current directory.
     */
 
-    int c;
-    char d;
+    int16_t c;
+    int8_t d;
 
     c = lstri(_argv[0]) - 1;
     while (c>=0&&tmppal[c]!='\\') c--;
@@ -118,7 +118,7 @@ void _80_25_C () {
 }
 
 // Wait for a key?
-int attendi_pressione_tasto () {
+int16_t attendi_pressione_tasto () {
    union REGS regs;
    regs.h.ah = DOS_CHAR_READ_NO_ECHO;
    intdos(&regs, &regs);
@@ -127,7 +127,7 @@ int attendi_pressione_tasto () {
 }
 
 // Return 1 if there is a key press to be processed.
-int tasto_premuto () {
+int16_t tasto_premuto () {
     union REGS regs;
     regs.h.ah = DOS_GET_STDIN_STATUS;
    intdos(&regs, &regs);
@@ -136,7 +136,7 @@ int tasto_premuto () {
    else return 0;
 }
 
-unsigned char range8088[64*3] = {
+uint8_t range8088[64*3] = {
  0,  0,  0,  1,  1,  1,  2,  2,  2,  3,  3,  3,  4,  4,  4,  5,  5,  5,
  6,  6,  6,  7,  7,  7,  8,  8,  8,  9,  9,  9, 10, 10, 10, 11, 11, 11,
 12, 12, 12, 13, 13, 13, 14, 14, 14, 15, 15, 15, 16, 16, 16, 17, 17, 17,
@@ -150,11 +150,11 @@ unsigned char range8088[64*3] = {
 60, 60, 60, 61, 61, 61, 62, 62, 62, 63, 63, 63 };
 
 // This sets up the vga color palette.
-void tavola_colori (unsigned char *new_palette,
-            unsigned starting_color, unsigned num_colors,
-            char red_filter, char green_filter, char blue_filter) {
-    int c, cc = 0;
-    unsigned temp;
+void tavola_colori (uint8_t *new_palette,
+            uint16_t starting_color, uint16_t num_colors,
+            int8_t red_filter, int8_t green_filter, int8_t blue_filter) {
+    int16_t c, cc = 0;
+    uint16_t temp;
     num_colors *= 3;
     starting_color *= 3;
 
@@ -189,14 +189,14 @@ void tavola_colori (unsigned char *new_palette,
 
    // Port 0x3c8 takes the index of the first color.
    outp(0x3c8, 0);
-   for (int i = 0; i < starting_color + num_colors; i++) {
+   for (int16_t i = 0; i < starting_color + num_colors; i++) {
     // Port 0x3c9 takes up to 255 consecutive r, g, b, colors.
     outp(0x3c9, tmppal[i]);
    }
 }
 
 // Variables to hold mouse readings.
-int mdltx = 0, mdlty = 0, mx = 0, my = 0, mpul = 0;
+int16_t mdltx = 0, mdlty = 0, mx = 0, my = 0, mpul = 0;
 
 // Read mouse input.
 void mouse_input () {
@@ -219,7 +219,7 @@ void mouse_input () {
 // Check the presence of the mouse (or the support for it).
 // And initialize the driver (empty the movement buffer).
 
-char test_and_init_mouse () {
+int8_t test_and_init_mouse () {
     union REGS regs;
 
    regs.x.ax = MOUSE_READ_STATUS;
@@ -240,27 +240,27 @@ char test_and_init_mouse () {
 }
 
 // Copies QUADWORDS * 4 bytes from the source to the destination.
-void pcopy (unsigned char far *dest, unsigned char far *source) {
+void pcopy (uint8_t far *dest, uint8_t far *source) {
     memcpy(dest, source, QUADWORDS * 4);
 }
 
 // Clears QUADWORDS * 4 bytes starting at the target.
-void pclear (unsigned char far *target, unsigned char pattern) {
+void pclear (uint8_t far *target, uint8_t pattern) {
     memset(target, pattern, QUADWORDS * 4);
 }
 
 // Clears a rectangular region of the video memory.
 // Either x2 & y2 OR l and h must be specified.
 // This may or may not work.
-void areaclear (unsigned char far *dest, int x, int y,
-        int x2, int y2, int l, int h, unsigned char pattern) {
+void areaclear (uint8_t far *dest, int16_t x, int16_t y,
+        int16_t x2, int16_t y2, int16_t l, int16_t h, uint8_t pattern) {
     if (l == 0 || h == 0) {
             l = x2 - x;
             h = y2 - y;
     }
-    for (int xPos = x; xPos < x + l; xPos++) {
-        for (int yPos = y; yPos < y + h; yPos++) {
-            unsigned int netIndex = (yPos * 320) + xPos;
+    for (int16_t xPos = x; xPos < x + l; xPos++) {
+        for (int16_t yPos = y; yPos < y + h; yPos++) {
+            uint16_t netIndex = (yPos * 320) + xPos;
             dest[netIndex] = pattern;
         }
     }
@@ -287,8 +287,8 @@ void areaclear (unsigned char far *dest, int x, int y,
 
 */
 
-void psmooth_grays(unsigned char far *target) {
-    unsigned int count = (QUADWORDS << 2) - (320 << 2);
+void psmooth_grays(uint8_t far *target) {
+    uint16_t count = (QUADWORDS << 2) - (320 << 2);
     asm {   
         pusha
         push    ds
@@ -328,19 +328,19 @@ void psmooth_grays(unsigned char far *target) {
 }
 
 // Produces the fading effect seen during vimana flight.
-void pfade (unsigned char far *target, unsigned segshift, unsigned char speed) {
+void pfade (uint8_t far *target, uint16_t segshift, uint8_t speed) {
     // ?
-    unsigned int count = (QUADWORDS - 80) << 2;
+    uint16_t count = (QUADWORDS - 80) << 2;
     
-    unsigned long address = (unsigned long) target;
-    address += ((unsigned long) segshift) << 16;
+    uint32_t address = (uint32_t) target;
+    address += ((uint32_t) segshift) << 16;
     // Clear offset of address.
     address &= 0xFFFF0000;
     
-    unsigned char far * shifted = (unsigned char far *) address;
+    uint8_t far * shifted = (uint8_t far *) address;
     
-    for (int i = 0; i < count; i++) {
-        unsigned char color = shifted[i];
+    for (int16_t i = 0; i < count; i++) {
+        uint8_t color = shifted[i];
         color &= 0x3F;
         
         if (speed < color) {
@@ -354,24 +354,24 @@ void pfade (unsigned char far *target, unsigned segshift, unsigned char speed) {
 }
 
 // Color version: 4 shades of 64 intensity each.
-void psmooth_64(unsigned char far *target, unsigned segshift) {
+void psmooth_64(uint8_t far *target, uint16_t segshift) {
     // Who knows why this is offset as it is... Definitely not me.
-    unsigned int count = (QUADWORDS - 80) << 2;
+    uint16_t count = (QUADWORDS - 80) << 2;
     
-    unsigned long address = (unsigned long) target;
+    uint32_t address = (uint32_t) target;
     // Add segshift to the segment portion of the address by shifting up 16 bits.
-    address += ((unsigned long) segshift) << 16;
+    address += ((uint32_t) segshift) << 16;
     // Clear offset of address.
     address &= 0xFFFF0000;
     
-    unsigned char far * shifted = (unsigned char far *) address;
+    uint8_t far * shifted = (uint8_t far *) address;
     
-    for (unsigned int i = 0; i < count; i++) {
-        unsigned char ahigh = shifted[i + 320];
-        unsigned char alow = shifted[i + 321];
-        unsigned char blow = shifted[i + 640];
-        unsigned char bhigh = shifted[i + 641];
-        unsigned char clow = alow;
+    for (uint16_t i = 0; i < count; i++) {
+        uint8_t ahigh = shifted[i + 320];
+        uint8_t alow = shifted[i + 321];
+        uint8_t blow = shifted[i + 640];
+        uint8_t bhigh = shifted[i + 641];
+        uint8_t clow = alow;
         
         // Bitwise AND with 63 for some reason...
         ahigh &= 0x3F;
@@ -395,11 +395,11 @@ void psmooth_64(unsigned char far *target, unsigned segshift) {
 
 
 // Circular version of the smoothing process.
-void smootharound_64(unsigned char far *target, long cx, long cy, long r, char diffuse) {
-    long x1 = cx - r, y1 = cy - r;
-    long x2 = cx + r, y2 = cy + r;
-    long px, py, rs = r*r;
-    unsigned cp;
+void smootharound_64(uint8_t far *target, int32_t cx, int32_t cy, int32_t r, int8_t diffuse) {
+    int32_t x1 = cx - r, y1 = cy - r;
+    int32_t x2 = cx + r, y2 = cy + r;
+    int32_t px, py, rs = r*r;
+    uint16_t cp;
 
     if (r <= 0) return;
 
@@ -477,11 +477,11 @@ void smootharound_64(unsigned char far *target, long cx, long cy, long r, char d
 }
 
 // Using 64 levels in 4 shades, bring the screen to a single gradient.
-void mask_pixels(unsigned char far *target, unsigned char mask) {
-    unsigned char cap = 0x3F;
+void mask_pixels(uint8_t far *target, uint8_t mask) {
+    uint8_t cap = 0x3F;
     // If QUADWORDS is not cast to a long here it overflows and the loop hangs.
-    for (unsigned long i = 0; i < ((unsigned long) QUADWORDS) * 4; i++) {
-        unsigned char color = target[i];
+    for (uint32_t i = 0; i < ((uint32_t) QUADWORDS) * 4; i++) {
+        uint8_t color = target[i];
         color &= cap;
         color += mask;
         target[i] = color;
@@ -494,46 +494,46 @@ void mask_pixels(unsigned char far *target, unsigned char mask) {
 
 // Support files
 
-char   *situation_file  = "data\\Current.BIN";
-char   *starmap_file    = "data\\StarMap.BIN";
-char   *goesoutputfile  = "data\\GOESfile.TXT";
-char   *surface_file    = "data\\Surface.BIN";
-int     sfh; // Surface situation file handle.
+int8_t   *situation_file  = "data\\Current.BIN";
+int8_t   *starmap_file    = "data\\StarMap.BIN";
+int8_t   *goesoutputfile  = "data\\GOESfile.TXT";
+int8_t   *surface_file    = "data\\Surface.BIN";
+int16_t     sfh; // Surface situation file handle.
 
 // Global variables that are saved.
 
-char   sync               = 1;      // 0
-char   anti_rad           = 1;          // 1
-char   pl_search          = 0;          // 2
-char   field_amplificator = 0;          // 3
-char   ilight             = 63;         // 4
-char   ilightv            = 1;          // 5
-char   charge             = 3;          // 6
-char   revcontrols        = 0;          // 7
-char   ap_targetting      = 0;          // 8
-char   ap_targetted       = 0;          // 9
-char   ip_targetting      = 0;          // 10
-char   ip_targetted       = -1;     // 11
-char   ip_reaching        = 0;          // 12
-char   ip_reached         = 0;          // 13
-char   ap_target_spin     = 0;          // 14
-char   ap_target_r        = 0;          // 15
-char   ap_target_g        = 0;          // 16
-char   ap_target_b        = 0;          // 17
-char   nearstar_spin      = 0;          // 18
-char   nearstar_r         = 0;          // 19
-char   nearstar_g         = 0;          // 20
-char   nearstar_b         = 0;          // 21
-char   gburst             = 0;          // 22
-char   menusalwayson      = 1;      // 23
-char   depolarize     = 0;          // 24
-int    sys                = 4;      // 25
-int    pwr                = 20000;  // 27
-int    dev_page           = 0;      // 29
-int    ap_target_class    = 0;      // 31
-int    f_ray_elapsed      = 0;      // 33
-int    nearstar_class     = 0;      // 35
-int    nearstar_nop       = 0;      // 37
+int8_t   sync               = 1;      // 0
+int8_t   anti_rad           = 1;          // 1
+int8_t   pl_search          = 0;          // 2
+int8_t   field_amplificator = 0;          // 3
+int8_t   ilight             = 63;         // 4
+int8_t   ilightv            = 1;          // 5
+int8_t   charge             = 3;          // 6
+int8_t   revcontrols        = 0;          // 7
+int8_t   ap_targetting      = 0;          // 8
+int8_t   ap_targetted       = 0;          // 9
+int8_t   ip_targetting      = 0;          // 10
+int8_t   ip_targetted       = -1;     // 11
+int8_t   ip_reaching        = 0;          // 12
+int8_t   ip_reached         = 0;          // 13
+int8_t   ap_target_spin     = 0;          // 14
+int8_t   ap_target_r        = 0;          // 15
+int8_t   ap_target_g        = 0;          // 16
+int8_t   ap_target_b        = 0;          // 17
+int8_t   nearstar_spin      = 0;          // 18
+int8_t   nearstar_r         = 0;          // 19
+int8_t   nearstar_g         = 0;          // 20
+int8_t   nearstar_b         = 0;          // 21
+int8_t   gburst             = 0;          // 22
+int8_t   menusalwayson      = 1;      // 23
+int8_t   depolarize     = 0;          // 24
+int16_t    sys                = 4;      // 25
+int16_t    pwr                = 20000;  // 27
+int16_t    dev_page           = 0;      // 29
+int16_t    ap_target_class    = 0;      // 31
+int16_t    f_ray_elapsed      = 0;      // 33
+int16_t    nearstar_class     = 0;      // 35
+int16_t    nearstar_nop       = 0;      // 37
 float  pos_x              = 0;      // 39
 float  pos_y              = 0;      // 43
 float  pos_z              = -500;   // 47
@@ -556,54 +556,54 @@ double ip_target_initial_d= 1E8;    // 151
 double requested_approach_coefficient=1;// 159
 double current_approach_coefficient = 1;// 167
 double reaction_time      = 0.01;   // 175
-char   fcs_status[11]     = "STANDBY";  // 183
-int    fcs_status_delay   = 0;      // 194
-int    psys               = 4;      // 196
+int8_t   fcs_status[11]     = "STANDBY";  // 183
+int16_t    fcs_status_delay   = 0;      // 194
+int16_t    psys               = 4;      // 196
 double ap_target_initial_d= 1E8;    // 198
 double requested_vimana_coefficient = 1;// 206
 double current_vimana_coefficient = 1;  // 214
 double vimana_reaction_time = 0.01; // 222
-char   lithium_collector  = 0;      // 230
-char   autoscreenoff      = 0;      // 231
-char   ap_reached         = 0;      // 232
-int    lifter         = 0;      // 233
+int8_t   lithium_collector  = 0;      // 230
+int8_t   autoscreenoff      = 0;      // 231
+int8_t   ap_reached         = 0;      // 232
+int16_t    lifter         = 0;      // 233
 double secs       = 0;      // 235
-char   data       = 0;      // 243
-char   surlight       = 16;     // 244
+int8_t   data       = 0;      // 243
+int8_t   surlight       = 16;     // 244
 
 // Surface landing control data.
 
-char   land_now       = 0;
-char   landing_point      = 0;
-int    landing_pt_lon     = 0;
-int    landing_pt_lat     = 60;
+int8_t   land_now       = 0;
+int8_t   landing_point      = 0;
+int16_t    landing_pt_lon     = 0;
+int16_t    landing_pt_lat     = 60;
 
-int     crepzone;
-int     nightzone;
-int sun_x_factor;
+int16_t     crepzone;
+int16_t     nightzone;
+int16_t sun_x_factor;
 
 // Global data that isn't saved.
 
-char seconds[3], minutes[3], hours[3], day[3], month[3], year[5];
-int  epoc = 6011;
+int8_t seconds[3], minutes[3], hours[3], day[3], month[3], year[5];
+int16_t  epoc = 6011;
 
-char        ctb[512];
-char        dec[20];
+int8_t        ctb[512];
+int8_t        dec[20];
 
-char        _delay          = 12;
-char        stspeed         = 0;
-char        bright;
-char        elight          = 0;
-unsigned    gl_start        = 0;
-unsigned    point;
-unsigned    vptr;
-int         infoarea        = 0;
-int         s_control       = 1;
-int         s_command       = 0;
-int         isecs, p_isecs;
+int8_t        _delay          = 12;
+int8_t        stspeed         = 0;
+int8_t        bright;
+int8_t        elight          = 0;
+uint16_t    gl_start        = 0;
+uint16_t    point;
+uint16_t    vptr;
+int16_t         infoarea        = 0;
+int16_t         s_control       = 1;
+int16_t         s_command       = 0;
+int16_t         isecs, p_isecs;
 double      fsecs;
-int         gl_fps          = 1;
-int         fps             = 1;
+int16_t         gl_fps          = 1;
+int16_t         fps             = 1;
 float       dlt_alfa        = 0;
 float       dlt_beta        = 0;
 float       dlt_nav_beta    = 0;
@@ -614,24 +614,24 @@ double      plx, ply, plz;
 double      pxx, pyy;
 double      delta_x, delta_y;
 double      nearstar_identity;
-int         nearstar_labeled;
-int         nearstar_nob    = 0;
-int         npcs, resident_map1, resident_map2;
-char        ontheroof;
-int         datasheetscroll = 0;
-int         datasheetdelta  = 0;
+int16_t         nearstar_labeled;
+int16_t         nearstar_nob    = 0;
+int16_t         npcs, resident_map1, resident_map2;
+int8_t        ontheroof;
+int16_t         datasheetscroll = 0;
+int16_t         datasheetdelta  = 0;
 
 // Constant data in the global segment.
 
 // Some ordinals (from 0 to 20) for certain representations.
 
-char *ord[21] = { "zeroth", "first", "second", "third", "fourth", "fifth",
+int8_t *ord[21] = { "zeroth", "first", "second", "third", "fourth", "fifth",
           "sixth", "seventh", "eight", "nineth", "tenth", "eleventh",
           "twelveth", "thiteenth", "fourteenth",
           "fifteenth", "sixteenth", "seventeenth",
           "eighteenth", "nineteenth", "twentyth" };
 
-char *star_description[star_classes] = {
+int8_t *star_description[star_classes] = {
     "medium size, yellow star, suitable for planets having indigenous lifeforms.",
     "very large, blue giant star, high energy radiations around.",
     "white dwarf star, possible harmful radiations.",
@@ -645,7 +645,7 @@ char *star_description[star_classes] = {
     "very large and ancient runaway star, unsuitable for planets.",
     "tiny pulsar object, unsafe, high radiation, strong gravity." };
 
-char class_rgb[3 * star_classes] = {
+int8_t class_rgb[3 * star_classes] = {
     63, 58, 40,
     30, 50, 63,
     63, 63, 63,
@@ -660,7 +660,7 @@ char class_rgb[3 * star_classes] = {
     00, 63, 63
 };
 
-int class_ray[star_classes] = { 
+int16_t class_ray[star_classes] = { 
     5000, 15000, 
     300, 20000, 
     15000, 1000, 
@@ -669,7 +669,7 @@ int class_ray[star_classes] = {
     30000, 250 
 };
 
-int class_rayvar[star_classes] = {
+int16_t class_rayvar[star_classes] = {
     2000, 10000, 
     200, 15000, 
     5000, 1000, 
@@ -678,23 +678,23 @@ int class_rayvar[star_classes] = {
     1000, 10 
 };
 
-int class_act[star_classes] = { 
+int16_t class_act[star_classes] = { 
     2, 4, 1, 
     6, 5, 10, 
     100, 1, 2, 
     1, 10, 1 
 };
 
-char class_planets[star_classes] = { 
+int8_t class_planets[star_classes] = { 
     12, 18, 8, 
     15, 20, 3, 
     0, 1, 7, 
     20, 2, 5 
 };
 
-char   nearstar_p_type       [maxbodies];
-int    nearstar_p_owner      [maxbodies];
-char   nearstar_p_moonid     [maxbodies];
+int8_t   nearstar_p_type       [maxbodies];
+int16_t    nearstar_p_owner      [maxbodies];
+int8_t   nearstar_p_moonid     [maxbodies];
 double nearstar_p_ring       [maxbodies];
 double nearstar_p_tilt       [maxbodies];
 double nearstar_p_ray        [maxbodies];
@@ -704,15 +704,15 @@ double nearstar_p_orb_tilt   [maxbodies];
 double nearstar_p_orb_orient [maxbodies];
 double nearstar_p_orb_ecc    [maxbodies];
 
-int    nearstar_p_rtperiod   [maxbodies];
-int    nearstar_p_rotation   [maxbodies];
-int    nearstar_p_term_start [maxbodies];
-int    nearstar_p_term_end   [maxbodies];
+int16_t    nearstar_p_rtperiod   [maxbodies];
+int16_t    nearstar_p_rotation   [maxbodies];
+int16_t    nearstar_p_term_start [maxbodies];
+int16_t    nearstar_p_term_end   [maxbodies];
 
-int    nearstar_p_qsortindex [maxbodies];
+int16_t    nearstar_p_qsortindex [maxbodies];
 float  nearstar_p_qsortdist  [maxbodies];
 
-char *planet_description[] = { 
+int8_t *planet_description[] = { 
     "medium size, internally hot, unstable surface, no atmosphere.",
     "small, solid, dusty, craterized, no atmosphere.",
     "medium size, solid, thick atmosphere, fully covered by clouds.",
@@ -726,7 +726,7 @@ char *planet_description[] = {
     "companion star - not a planet" 
 };
 
-unsigned char planet_rgb_and_var[] = { 
+uint8_t planet_rgb_and_var[] = { 
     60, 30, 15, 20,
     40, 50, 40, 25,
     32, 32, 32, 32,
@@ -740,7 +740,7 @@ unsigned char planet_rgb_and_var[] = {
     40, 40, 40, 40 
 };
 
-int planet_possiblemoons[] = { 
+int16_t planet_possiblemoons[] = { 
     1, 1, 
     2, 3, 
     2, 2, 
@@ -766,35 +766,35 @@ float mindiff = 0.01;
 
 // Physical and logical video matrices, cartography, and other memory blocks.
 
-unsigned char far  *s_background;
-unsigned char far  *p_background;
-unsigned char huge *p_surfacemap;
+uint8_t far  *s_background;
+uint8_t far  *p_background;
+uint8_t huge *p_surfacemap;
 quadrant      far  *objectschart;
-unsigned char far  *ruinschart; // As objectschart, but declared in bytes.
-unsigned char far  *pvfile;
+uint8_t far  *ruinschart; // As objectschart, but declared in bytes.
+uint8_t far  *pvfile;
 
-unsigned char far  *n_offsets_map;
-char far           *n_globes_map;
+uint8_t far  *n_offsets_map;
+int8_t far           *n_globes_map;
 
-unsigned            seg_adapted;
+uint16_t            seg_adapted;
 
 // Planetary surface adjustment data.
 
-char sky_red_filter = 63; // Filters for the sky.
-char sky_grn_filter = 63;
-char sky_blu_filter = 63;
-char gnd_red_filter = 63; // Filters for the ground.
-char gnd_grn_filter = 63;
-char gnd_blu_filter = 63;
+int8_t sky_red_filter = 63; // Filters for the sky.
+int8_t sky_grn_filter = 63;
+int8_t sky_blu_filter = 63;
+int8_t gnd_red_filter = 63; // Filters for the ground.
+int8_t gnd_grn_filter = 63;
+int8_t gnd_blu_filter = 63;
 
 float planet_grav   = 150; // Corresponds to the planetary gravity.
 float rainy         = 0; // Raininess, based on cloud albedo. [0,5]
-int   albedo        = 0; // Albedo average of the landing surface. [0,62]
+int16_t   albedo        = 0; // Albedo average of the landing surface. [0,62]
 
-unsigned char sky_brightness = 32; // Sky luminosity. [0,48]
-unsigned char horiz_brt      = 20; // Brightness of the low horizon. [0,48]
+uint8_t sky_brightness = 32; // Sky luminosity. [0,48]
+uint8_t horiz_brt      = 20; // Brightness of the low horizon. [0,48]
 
-unsigned m200[200]; // Numbers from 0 to 199, multipled by 200 (Lookup table)
+uint16_t m200[200]; // Numbers from 0 to 199, multipled by 200 (Lookup table)
 
 float   rwp        = 15; // Required wind power (in knots).
 float   iwp        = 0; // Ideal wind power (from 0 to 1).
@@ -803,9 +803,9 @@ float   wdir       = 0; // Wind origin direction.
 float   wdirsin    = 0; // Optimization value.
 float   wdircos    = 1; // Optimization value.
 
-char    landed; // Flag set at the time of landing.
+int8_t    landed; // Flag set at the time of landing.
 // Coded position quotiento of the lander (quotient:remainder).
-long    atl_x, atl_z, 
+int32_t    atl_x, atl_z, 
         atl_x2, atl_z2;
 
 double qid = 1.0 / 16384; // Constant to find the x / z id of a quadrant.
@@ -814,29 +814,29 @@ double qid = 1.0 / 16384; // Constant to find the x / z id of a quadrant.
 
 #define handles 16 // 16 handles in this case.
 
-unsigned long pvfile_datatop = 0; // Top of the data.
+uint32_t pvfile_datatop = 0; // Top of the data.
 
 // Note: dataptr is a relative pointer that can go from 0 to "pvbytes".
-unsigned pvfile_dataptr[handles] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
-unsigned pvfile_datalen[handles] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
-unsigned pvfile_npolygs[handles] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+uint16_t pvfile_dataptr[handles] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+uint16_t pvfile_datalen[handles] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+uint16_t pvfile_npolygs[handles] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
-char  far *pv_n_vtx[handles]; // numero vertici per ogni poligono (3 o 4).
+int8_t  far *pv_n_vtx[handles]; // numero vertici per ogni poligono (3 o 4).
 float far *pvfile_x[handles]; // coord. X (quattro vertici) di ogni poligono.
 float far *pvfile_y[handles]; // coord. Y (quattro vertici) di ogni poligono.
 float far *pvfile_z[handles]; // coord. Z (quattro vertici) di ogni poligono.
-char  far *pvfile_c[handles]; // intensitÖ del colore di ogni poligono (0..63).
+int8_t  far *pvfile_c[handles]; // intensitÖ del colore di ogni poligono (0..63).
 float far *pv_mid_x[handles]; // coordinate X dei punti medi di ogni poligono.
 float far *pv_mid_y[handles]; // coordinate Y dei punti medi di ogni poligono.
 float far *pv_mid_z[handles]; // coordinate Z dei punti medi di ogni poligono.
 float far *pv_mid_d[handles]; // buffer distanza di punti medi dall'osservatore.
-int   far *pv_dep_i[handles]; // indice distanza (ordinamento poligoni).
+int16_t   far *pv_dep_i[handles]; // indice distanza (ordinamento poligoni).
 
 /* Procedimenti d'estrazione di numeri pseudo-casuali. */
 
-long flat_rnd_seed;
+int32_t flat_rnd_seed;
 
-void fast_srand (long seed) // selezione tabella pseudo.
+void fast_srand (int32_t seed) // selezione tabella pseudo.
                 // 4.294.967.295 tabelle possibili.
                 // (ca. 20000 elementi diversi per tabella)
 {
@@ -847,9 +847,9 @@ void fast_srand (long seed) // selezione tabella pseudo.
     }
 }
 
-long fast_random (long mask) // estrazione di un numero: "mask" attiva i bits.
+int32_t fast_random (int32_t mask) // estrazione di un numero: "mask" attiva i bits.
 {
-    long num;
+    int32_t num;
 
     asm {
         db 0x66; mov ax, word ptr flat_rnd_seed
@@ -864,7 +864,7 @@ long fast_random (long mask) // estrazione di un numero: "mask" attiva i bits.
     return (num);
 }
 
-int ranged_fast_random (int range)
+int16_t ranged_fast_random (int16_t range)
 {
     if (range<=0) range = 1;
     return (fast_random(0x7FFF) % range);
@@ -877,8 +877,8 @@ float fast_flandom ()
 { return ((float)fast_random(32767) * 0.000030518); }
 
 // Loads virtual file handles from supports.nct
-int sa_open (long offset_of_virtual_file) {
-    int fh;
+int16_t sa_open (int32_t offset_of_virtual_file) {
+    int16_t fh;
 
     fh = _rtl_open ("res/supports.nct", 0);
     if (fh==-1) return (-1);
@@ -894,12 +894,12 @@ int sa_open (long offset_of_virtual_file) {
 /* Definisce una parte della tavola colori in modo che una sfumatura graduale
    vada da una tinta ad un'altra, entro un certo numero di tinte intermedie */
 
-void shade (unsigned char far *palette_buffer,
-        int first_color, int number_of_colors,
+void shade (uint8_t far *palette_buffer,
+        int16_t first_color, int16_t number_of_colors,
         float start_r,  float start_g,  float start_b,
         float finish_r, float finish_g, float finish_b)
 {
-    int   count = number_of_colors;
+    int16_t   count = number_of_colors;
 
     float k = 1.00 / (float)number_of_colors;
     float delta_r = (finish_r - start_r) * k;
@@ -947,7 +947,7 @@ void shade (unsigned char far *palette_buffer,
 
 /* Copia aree video pió grandi di 4 per 1 pixels. */
 
-void copia (unsigned char far *dest, unsigned char far *sorg, unsigned x, unsigned y, int l, int a)
+void copia (uint8_t far *dest, uint8_t far *sorg, uint16_t x, uint16_t y, int16_t l, int16_t a)
 {
     if (l<4) return;
     if (a<1) return;
@@ -1106,7 +1106,7 @@ void watch (double cam_x, double cam_y, double cam_z,
 /* Calcola lo scostamento x-y dal centro del video di un certo punto
    dato da point_x;y;z. Restituisce i valori in delta_x;y. */
 
-char xy (double cam_x, double cam_y, double cam_z,
+int8_t xy (double cam_x, double cam_y, double cam_z,
      double point_x, double point_y, double point_z)
 {
     double xx, yy, zz, z2, rz;
@@ -1143,7 +1143,7 @@ void p_Forward (float delta)
    valori in plx, ply, plz. */
 
 double mox, moy, moz;
-void   moonorigin (int n)
+void   moonorigin (int16_t n)
 {
     double xx;
     double p_riv, ors;
@@ -1167,7 +1167,7 @@ void   moonorigin (int n)
     moz = moz * cos(beta) - xx * sin(beta);
 }
 
-void planet_xyz (int n)
+void planet_xyz (int16_t n)
 {
     double xx;
     double alfa, beta;
@@ -1215,7 +1215,7 @@ void planet_xyz (int n)
    0.01e-7 ä l'equivalente, nel cosmo virtuale di Noctis,
    della costante gravitazionale. */
 
-float rtp (int n)
+float rtp (int16_t n)
 {
     double p_m, p_riv, ors, xx;
 
@@ -1236,10 +1236,10 @@ float rtp (int n)
    di un certo pianeta dato da (plx, ply, plz). L'osservatore ä posto
    nel punto (obs_x; obs_z) dato che la sua Y ä ininfluente... */
 
-int planet_viewpoint (double obs_x, double obs_z)
+int16_t planet_viewpoint (double obs_x, double obs_z)
 {
-    unsigned a;
-    int plwp = 0;
+    uint16_t a;
+    int16_t plwp = 0;
 
     double xx;
     double zz;
@@ -1259,9 +1259,9 @@ int planet_viewpoint (double obs_x, double obs_z)
     return (plwp);
 }
 
-int cplx_planet_viewpoint (int logical_id)
+int16_t cplx_planet_viewpoint (int16_t logical_id)
 {
-    int owner;
+    int16_t owner;
 
     double ownerplx;
     double ownerplz;
@@ -1283,18 +1283,18 @@ int cplx_planet_viewpoint (int logical_id)
 
 /* Selezione effetti tramite variabile di controllo "flares". */
 
-char previous_flares_value = 0;
-void setfx (char fx) { previous_flares_value = flares; flares = fx; }
-void chgfx (char fx) { flares = fx; }
+int8_t previous_flares_value = 0;
+void setfx (int8_t fx) { previous_flares_value = flares; flares = fx; }
+void chgfx (int8_t fx) { flares = fx; }
 void resetfx (void)  { flares = previous_flares_value; }
 
 /* Tracciamento bastoncini (parte 2d). */
 
-void Stick (unsigned long xp, unsigned long yp,
-        unsigned long xa, unsigned long ya)
+void Stick (uint32_t xp, uint32_t yp,
+        uint32_t xa, uint32_t ya)
 {
-    long a, b, L;
-    unsigned pi, pf;
+    int32_t a, b, L;
+    uint16_t pi, pf;
 
     if (xp==xa) {
         if (ya>=yp) {
@@ -1501,8 +1501,8 @@ trace:  asm mov es, seg_adapted;
 
 /* Tracciamento bastoncini (parte 3d). */
 
-long fpx = -1; // first-point-x
-long fpy;      // first-point-y
+int32_t fpx = -1; // first-point-x
+int32_t fpy;      // first-point-y
 
 float p_rx, p_ry, p_rz;
 float stick_uneg = 200;
@@ -1510,7 +1510,7 @@ float stick_uneg = 200;
 void stick3d (float p_x, float p_y, float p_z,
           float x, float y, float z)
 {
-    long  lx, ly;
+    int32_t  lx, ly;
 
     float p_z2, diff;
 
@@ -1739,7 +1739,7 @@ void stick3d (float p_x, float p_y, float p_z,
 
 void link3d (float x, float y, float z)
 {
-    long lx, ly;
+    int32_t lx, ly;
 
     float rx, ry, rz, z2;
 
@@ -1823,8 +1823,8 @@ void link3d (float x, float y, float z)
 /* Tracciamento bastoncini luminosi (in 2d, per i bagliori,
    generalmente usata con il flag flares = 1). */
 
-void fline (long fx, long fy,
-        long lx, long ly)
+void fline (int32_t fx, int32_t fy,
+        int32_t lx, int32_t ly)
 {
     float kk, diff;
 
@@ -1912,10 +1912,10 @@ void fline (long fx, long fy,
 /* Funzione ricorsiva che suddivide poligoni triangolari in quattro parti
    ugualmente triangolari, casualizzandone leggermente la colorazione. */
 
-unsigned char map_color_a = 30;
-unsigned char map_color_b = 31;
-unsigned char map_color_c = 32;
-unsigned char map_color_d = 33;
+uint8_t map_color_a = 30;
+uint8_t map_color_b = 31;
+uint8_t map_color_c = 32;
+uint8_t map_color_d = 33;
 
 void randomic_mapper (float x0,
               float y0,
@@ -1926,7 +1926,7 @@ void randomic_mapper (float x0,
               float x2,
               float y2,
               float z2,
-              char divisions)
+              int8_t divisions)
 {
     float vx[3], vy[3], vz[3];
 
@@ -1969,10 +1969,10 @@ void randomic_mapper (float x0,
 /* Libera un handle in cui era stato caricato un file di grafica poligonale:
    se l'handle ä giÖ libero, non succede nulla. */
 
-void unloadpv (int handle)
+void unloadpv (int16_t handle)
 {
-    int      h;
-    unsigned eod;
+    int16_t      h;
+    uint16_t eod;
 
     if (handle >= handles) return;
     if (!pvfile_datalen[handle]) return;
@@ -1985,17 +1985,17 @@ void unloadpv (int handle)
     // definito l'ANSI cosç lo faccio nero.
     for (h = 0; h < handles; h++)
         if (pvfile_dataptr[h] > pvfile_dataptr[handle]) {
-            (char far*)pv_n_vtx[h] -= pvfile_datalen[handle];
-            (char far*)pvfile_x[h] -= pvfile_datalen[handle];
-            (char far*)pvfile_y[h] -= pvfile_datalen[handle];
-            (char far*)pvfile_z[h] -= pvfile_datalen[handle];
-            (char far*)pvfile_c[h] -= pvfile_datalen[handle];
+            (int8_t far*)pv_n_vtx[h] -= pvfile_datalen[handle];
+            (int8_t far*)pvfile_x[h] -= pvfile_datalen[handle];
+            (int8_t far*)pvfile_y[h] -= pvfile_datalen[handle];
+            (int8_t far*)pvfile_z[h] -= pvfile_datalen[handle];
+            (int8_t far*)pvfile_c[h] -= pvfile_datalen[handle];
             if (pv_mid_x[h]) {
-                (char far*)pv_mid_x[h] -= pvfile_datalen[handle];
-                (char far*)pv_mid_y[h] -= pvfile_datalen[handle];
-                (char far*)pv_mid_z[h] -= pvfile_datalen[handle];
-                (char far*)pv_mid_d[h] -= pvfile_datalen[handle];
-                (char far*)pv_dep_i[h] -= pvfile_datalen[handle];
+                (int8_t far*)pv_mid_x[h] -= pvfile_datalen[handle];
+                (int8_t far*)pv_mid_y[h] -= pvfile_datalen[handle];
+                (int8_t far*)pv_mid_z[h] -= pvfile_datalen[handle];
+                (int8_t far*)pv_mid_d[h] -= pvfile_datalen[handle];
+                (int8_t far*)pv_dep_i[h] -= pvfile_datalen[handle];
             }
             pvfile_dataptr[h] -= pvfile_datalen[handle];
         }
@@ -2021,7 +2021,7 @@ void unloadpv (int handle)
 
 void unloadallpv ()
 {
-    int h;
+    int16_t h;
 
     pvfile_datatop = 0;
 
@@ -2046,12 +2046,12 @@ void unloadallpv ()
             e/o gestire tutti i poligoni che compongono l'oggetto;
          +1 se tutto ä andato bene. */
 
-char loadpv (int   handle, long virtual_file_position,
+int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
          float xscale, float yscale, float zscale,
          float xmove,  float ymove,  float zmove,
-         unsigned char base_color,   char depth_sort)
+         uint8_t base_color,   int8_t depth_sort)
 {
-    int fh, c, p;
+    int16_t fh, c, p;
 
     // verifica disponibilitÖ del file e dell'handle.
     if (handle >= handles) return (0);
@@ -2069,7 +2069,7 @@ char loadpv (int   handle, long virtual_file_position,
     _rtl_read (fh, &pvfile_npolygs[handle], 2);
 
     // preparazione puntatori.
-    pv_n_vtx[handle] = (char far *)  (pvfile + pvfile_datatop);
+    pv_n_vtx[handle] = (int8_t far *)  (pvfile + pvfile_datatop);
     pvfile_datatop  +=  1 * pvfile_npolygs[handle];
     pvfile_x[handle] = (float far *) (pvfile + pvfile_datatop);
     pvfile_datatop  += 16 * pvfile_npolygs[handle];
@@ -2077,7 +2077,7 @@ char loadpv (int   handle, long virtual_file_position,
     pvfile_datatop  += 16 * pvfile_npolygs[handle];
     pvfile_z[handle] = (float far *) (pvfile + pvfile_datatop);
     pvfile_datatop  += 16 * pvfile_npolygs[handle];
-    pvfile_c[handle] = (char far *)  (pvfile + pvfile_datatop);
+    pvfile_c[handle] = (int8_t far *)  (pvfile + pvfile_datatop);
     pvfile_datatop  +=  1 * pvfile_npolygs[handle];
 
     // azzera il primo puntatore dei dati per il depth sort
@@ -2117,7 +2117,7 @@ char loadpv (int   handle, long virtual_file_position,
         pvfile_datatop  += 4 * pvfile_npolygs[handle];
         pv_mid_d[handle] = (float far *) (pvfile + pvfile_datatop);
         pvfile_datatop  += 4 * pvfile_npolygs[handle];
-        pv_dep_i[handle] = (int far *)   (pvfile + pvfile_datatop);
+        pv_dep_i[handle] = (int16_t far *)   (pvfile + pvfile_datatop);
         pvfile_datatop  += 2 * pvfile_npolygs[handle];
         // verifica disponibilitÖ memoria per i dati appena aggiunti.
         if (pvfile_datatop > pv_bytes) {
@@ -2167,12 +2167,12 @@ char loadpv (int   handle, long virtual_file_position,
    Si occupa anche di altri ordinamenti per distanza... per esempio ordina
    i pianeti e le lune... */
 
-void QuickSort (int far *index, float far *mdist, int start, int end)
+void QuickSort (int16_t far *index, float far *mdist, int16_t start, int16_t end)
 {
-    int   tq;
+    int16_t   tq;
 
-    int   jq = end;
-    int   iq = start;
+    int16_t   jq = end;
+    int16_t   iq = start;
 
     float xq = mdist[index[(start+end)/2]];
 
@@ -2206,11 +2206,11 @@ void QuickSort (int far *index, float far *mdist, int start, int end)
             opzione nella chiamata a "loadpv" per quell'handle. 
 */
 
-void drawpv (int handle, int mode, int rm_iterations,
+void drawpv (int16_t handle, int16_t mode, int16_t rm_iterations,
          float center_x, float center_y, float center_z,
-         char use_depth_sort) {
+         int8_t use_depth_sort) {
     float dx, dy, dz;
-    unsigned p, c, i, k;
+    uint16_t p, c, i, k;
 
     if (handle >= handles) return;
     if (!pvfile_datalen[handle]) return;
@@ -2318,7 +2318,7 @@ void drawpv (int handle, int mode, int rm_iterations,
 /* Replica una forma poligonale, copiandola da un'handle giÖ definito
    a uno di uguali dimensioni. In caso d'errore, non succede nulla. */
 
-void copypv (int dest_handle, int src_handle)
+void copypv (int16_t dest_handle, int16_t src_handle)
 {
     if (src_handle >= handles) return;
     if (dest_handle >= handles) return;
@@ -2337,7 +2337,7 @@ void copypv (int dest_handle, int src_handle)
    se il puntatore "vertexs_to_affect" ä nullo, tutti i vertici lo sono.
    Gli angoli sono espressi in gradi. */
 
-void modpv (int handle, int polygon_id, int vertex_id,
+void modpv (int16_t handle, int16_t polygon_id, int16_t vertex_id,
         float x_scale, float y_scale, float z_scale,
         float x_angle, float y_angle, float z_angle,
         pvlist *vertexs_to_affect)
@@ -2352,7 +2352,7 @@ void modpv (int handle, int polygon_id, int vertex_id,
     float sin_z = sin (deg * z_angle);
     float cos_z = cos (deg * z_angle);
 
-    int   c, p, v, i, j;
+    int16_t   c, p, v, i, j;
 
     float x1, y1, z1;
     float cx, cy, cz;
@@ -2425,7 +2425,7 @@ void modpv (int handle, int polygon_id, int vertex_id,
 
 /* Ritorna il corrispondente alfabetico di numeri interi e/o reali. */
 
-char *alphavalue (double value)
+int8_t *alphavalue (double value)
 {
     gcvt (value, 15, dec);
     return (dec);
@@ -2433,12 +2433,12 @@ char *alphavalue (double value)
 
 /* Background, con la mappa offsets.map, in quicktime vr. */
 
-void background (unsigned start,
-         unsigned char far *target,
-         unsigned char far *background,
-         unsigned char far *offsetsmap,
-         unsigned total_map_bytes,
-         unsigned screenshift)
+void background (uint16_t start,
+         uint8_t far *target,
+         uint8_t far *background,
+         uint8_t far *offsetsmap,
+         uint16_t total_map_bytes,
+         uint16_t screenshift)
 {
     asm {   pusha
         push ds
@@ -2494,14 +2494,14 @@ fine:   asm {   pop ds
    con magnitudine da 0 a +13 (ho pensato che un gatto, con vista scotopica,
    e nello spazio, ne possa vedere parecchie di pió del normale...). */
 
-void sky (unsigned limits)
+void sky (uint16_t limits)
 {
-    long min_xy = 1E9;
+    int32_t min_xy = 1E9;
 
-    char visible_sectors = 9;
+    int8_t visible_sectors = 9;
     if (field_amplificator) visible_sectors = 14;
 
-    unsigned char sx, sy, sz;
+    uint8_t sx, sy, sz;
     float xx, yy, zz, z2, rz, inv_rz, starneg;
 
     if (!ap_targetting)
@@ -2509,10 +2509,10 @@ void sky (unsigned limits)
     else
         starneg = 1;
 
-    long sect_x, sect_y, sect_z, rx, ry;
-    long advance = 100000, k = 100000*visible_sectors;
+    int32_t sect_x, sect_y, sect_z, rx, ry;
+    int32_t advance = 100000, k = 100000*visible_sectors;
 
-    long temp_x, temp_y, temp_z, temp;
+    int32_t temp_x, temp_y, temp_z, temp;
 
     /*  Il seguente frammento controlla la rarefazione delle stelle
         all'aumentare della distanza dal centro galattico. La scala
@@ -2535,7 +2535,7 @@ void sky (unsigned limits)
         stelle: il rapporto di rarefazione sarebbe comunque di
         1 stella effettiva ogni 16 settori. */
 
-    int rarity_factor;
+    int16_t rarity_factor;
     double distance_from_home;
 
     distance_from_home = sqrt (dzat_x*dzat_x + dzat_z*dzat_z);
@@ -2733,7 +2733,7 @@ e_end:    // No more...
    di un punto, ma di una serie di avanzamenti consecutivi lungo il
    segmento della tappezzeria, indicati per la precisione dal byte X. */
 
-unsigned char glass_bubble = 1; // Se settato, disegna una specie di bolla
+uint8_t glass_bubble = 1; // Se settato, disegna una specie di bolla
                 // trasparente attorno ai globi tracciati con
                 // la funzione "globe". Serve per simulare la
                 // presenza dell'atmosfera, ma solo per i
@@ -2779,16 +2779,16 @@ void gman4x4 ()
         mov es:[di+966], dx }
 }
 
-void globe (unsigned start,
-        unsigned char far *target,
-        unsigned char far *tapestry,
-        unsigned char far *offsetsmap,
-        unsigned total_map_bytes,
+void globe (uint16_t start,
+        uint8_t far *target,
+        uint8_t far *tapestry,
+        uint8_t far *offsetsmap,
+        uint16_t total_map_bytes,
         double x, double y, double z,
-        float mag_factor, char colormask, char globe_saturation)
+        float mag_factor, int8_t colormask, int8_t globe_saturation)
 {
     void    *gman;
-    int center_x, center_y, temp;
+    int16_t center_x, center_y, temp;
     double  xx, yy, zz, z2, rx, ry, rz;
 
     xx = x - dzat_x;
@@ -2909,15 +2909,15 @@ fine:   asm {   pop ds
    ma con un evidente demarcazione fra emisfero illuminato e buio.
    Viene usata per i pianeti in media distanza. */
 
-void glowinglobe (int start,
-          unsigned char far *target,
-          unsigned char far *offsetsmap,
-          unsigned total_map_bytes,
+void glowinglobe (int16_t start,
+          uint8_t far *target,
+          uint8_t far *offsetsmap,
+          uint16_t total_map_bytes,
           double x, double y, double z, float mag_factor,
-          int terminator_start, int terminator_arc,
-          unsigned char color)
+          int16_t terminator_start, int16_t terminator_arc,
+          uint8_t color)
 {
-    unsigned center_x, center_y, temp;
+    uint16_t center_x, center_y, temp;
     double xx, yy, zz, z2, rx, ry, rz;
 
     xx = x - dzat_x;
@@ -3034,7 +3034,7 @@ fine:   asm {   pop ds
    Non ha bisogno della mappa dei globi. Color compreso fra 0 e 0x3F,
    perchÇ per maggior velocitÖ funziona sulla prima sfumatura. */
 
-void whiteglobe (unsigned char far *target,
+void whiteglobe (uint8_t far *target,
          double x, double y, double z,
          float mag_factor, float fgm_factor)
 {
@@ -3042,8 +3042,8 @@ void whiteglobe (unsigned char far *target,
     double xx, yy, zz, z2, rx, ry, rz, xa, ya, xb, yb;
     double magsq, fgmsq;
 
-    unsigned pixptr;
-    char pix;
+    uint16_t pixptr;
+    int8_t pix;
 
     xx = x - dzat_x;
     yy = y - dzat_y;
@@ -3102,7 +3102,7 @@ void whiteglobe (unsigned char far *target,
                         pix = 0x3F - (sqrt(zz) - fgm) * ise;
                     else
                         pix = 0x3F;
-                    pixptr = riga[(int)yy] + (int)xx;
+                    pixptr = riga[(int16_t)yy] + (int16_t)xx;
                     pix += target[pixptr];
                     if (pix > 0x3F) {
                         asm {
@@ -3140,7 +3140,7 @@ void whiteglobe (unsigned char far *target,
 
 double xsun_onscreen;
 
-void whitesun (unsigned char far *target,
+void whitesun (uint8_t far *target,
            double x, double y, double z,
            float mag_factor, float fgm_factor)
 {
@@ -3148,8 +3148,8 @@ void whitesun (unsigned char far *target,
     double xx, yy, zz, z2, rx, ry, rz, xa, ya, xb, yb;
     double magsq, fgmsq;
 
-    unsigned pixptr;
-    char pix;
+    uint16_t pixptr;
+    int8_t pix;
 
     xx = x - dzat_x;
     yy = y - dzat_y;
@@ -3203,7 +3203,7 @@ void whitesun (unsigned char far *target,
                         pix = 0x3F - (sqrt(zz) - fgm) * ise;
                     else
                         pix = 0x3F;
-                    pixptr = riga[(int)yy] + (int)xx;
+                    pixptr = riga[(int16_t)yy] + (int16_t)xx;
                     pix += target[pixptr];
                     if (pix > 0x3F)
                         target[pixptr] = 0x3F;
@@ -3227,9 +3227,9 @@ float far *lft_cos = (float far *) farmalloc (361*4);*/
 float far lft_sin[361];
 float far lft_cos[361];
 
-char lens_flares_init ()
+int8_t lens_flares_init ()
 {
-    int c;
+    int16_t c;
 
     double a = 0, step = M_PI / 180;
 
@@ -3246,19 +3246,19 @@ char lens_flares_init ()
 
 void lens_flares_for (double cam_x, double cam_y, double cam_z,
               double xlight, double ylight, double zlight,
-              double step, int added, char on_hud, char condition,
-              int xshift, int yshift)
+              double step, int16_t added, int8_t on_hud, int8_t condition,
+              int16_t xshift, int16_t yshift)
 {
     double k = 10 / step, l = 1, u = 1.5;
 
     double xx, yy, zz, z2, rx, ry, rz;
 
-    long xs, ys, dx, dy;
+    int32_t xs, ys, dx, dy;
     float xr, yr;
 
-    unsigned char temp;
+    uint8_t temp;
 
-    int c, r;
+    int16_t c, r;
 
     setfx (1);
 
@@ -3322,11 +3322,11 @@ const double  pix_rad_scale = 1228.8;
 #define       LIGHT_EMITTING    0
 #define       LIGHT_ABSORBING   1
 #define       MULTICOLOUR   2
-char          pixilating_effect = LIGHT_EMITTING;
-char          pixel_spreads = 1;
-unsigned char multicolourmask = 0xC0;
+int8_t          pixilating_effect = LIGHT_EMITTING;
+int8_t          pixel_spreads = 1;
+uint8_t multicolourmask = 0xC0;
 
-void single_pixel_at_ptr (unsigned ptr, unsigned char pixel_color)
+void single_pixel_at_ptr (uint16_t ptr, uint8_t pixel_color)
 {
     _DX = ptr;
     _CL = pixel_color;
@@ -3379,16 +3379,16 @@ void single_pixel_at_ptr (unsigned ptr, unsigned char pixel_color)
     }
 }
 
-char far_pixel_at (double xlight, double ylight, double zlight,
-           double radii, unsigned char unconditioned_color)
+int8_t far_pixel_at (double xlight, double ylight, double zlight,
+           double radii, uint8_t unconditioned_color)
 {
     double  xx, yy, zz, z2, rz;
-    long    pixel_color;
+    int32_t    pixel_color;
 
-    unsigned char edge_color_1;
-    unsigned char edge_color_2;
-    unsigned char edge_color_3;
-    unsigned char edge_color_4;
+    uint8_t edge_color_1;
+    uint8_t edge_color_2;
+    uint8_t edge_color_3;
+    uint8_t edge_color_4;
 
     xx = xlight - dzat_x;
     yy = ylight - dzat_y;
@@ -3410,7 +3410,7 @@ char far_pixel_at (double xlight, double ylight, double zlight,
         pxx /= rz; pxx += x_centro;
         pyy /= rz; pyy += y_centro;
         if (pxx>10&&pyy>10&&pxx<310&&pyy<190) {
-            vptr = 320*(int)pyy + pxx;
+            vptr = 320*(int16_t)pyy + pxx;
             if (pixel_spreads) {
                 edge_color_1 = pixel_color >> 1;
                 edge_color_2 = pixel_color >> 2;
@@ -3472,9 +3472,9 @@ char far_pixel_at (double xlight, double ylight, double zlight,
 
 void getsecs ()
 {
-    int m;
+    int16_t m;
 
-    char dfm[13] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+    int8_t dfm[13] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
     asm {   mov ah, 4
         int 0x1a
@@ -3537,7 +3537,7 @@ void getsecs ()
         mov [bx], ax }
 
     secs = atol (year) - 1984;            // anni dal 1984
-    secs = secs * 365 + (long)(secs / 4);         // anni * 365 + anni / 4
+    secs = secs * 365 + (int32_t)(secs / 4);         // anni * 365 + anni / 4
 
     for (m=1; m<atoi(month); m++)
         secs += dfm[m];               // giorni per mese
@@ -3590,7 +3590,7 @@ void extract_ap_target_infos ()
 
 /* Estrae un numero pseudo-casuale di tipo intero convertendolo a f-p. */
 
-float zrandom (int range) { return (random(range) - random(range)); }
+float zrandom (int16_t range) { return (random(range) - random(range)); }
 
 /* Parte della gestione della cartografia.
    E' stata spostata qui perchÇ possa essere chiamata da "prepare_nearstar".
@@ -3602,16 +3602,16 @@ float zrandom (int range) { return (random(range) - random(range)); }
    Type puï essere: P = Pianeta, S = Stella.
    * usa come buffer di lettura "p_surfacemap". */
 
-int smh;
+int16_t smh;
 double  idscale = 0.00001;
 
-long search_id_code (double id_code, char type)
+int32_t search_id_code (double id_code, int8_t type)
 {
-    long        pos = 4;
-    char        found = 0;
-    unsigned    n, ptr, index;
+    int32_t        pos = 4;
+    int8_t        found = 0;
+    uint16_t    n, ptr, index;
 
-    char far    *buffer_ascii = (char far *)p_surfacemap;
+    int8_t far    *buffer_ascii = (int8_t far *)p_surfacemap;
     double far  *buffer_double = (double far *)p_surfacemap;
 
     double      id_low = id_code - idscale;
@@ -3650,11 +3650,11 @@ long search_id_code (double id_code, char type)
    ci si troverÖ: tra l'altro, prepara i pianeti estraendoli dalla
    tabella pseudo. */
 
-int starnop (double star_x, double star_y, double star_z)
+int16_t starnop (double star_x, double star_y, double star_z)
 // stima il numero di pianeti maggiori associato alle coord. di una stella
 {
-    int r;
-    srand ((long)star_x%10000*(long)star_y%10000*(long)star_z%10000);
+    int16_t r;
+    srand ((int32_t)star_x%10000*(int32_t)star_y%10000*(int32_t)star_z%10000);
     r = random (class_planets[ap_target_class] + 1);
     r += random (2);
     r -= random (2);
@@ -3664,7 +3664,7 @@ int starnop (double star_x, double star_y, double star_z)
 
 void prepare_nearstar ()
 {
-    int    n, c, q, r, s, t;
+    int16_t    n, c, q, r, s, t;
     double key_radius;
 
     if (!_delay) {
@@ -3683,7 +3683,7 @@ void prepare_nearstar ()
 
     nearstar_identity = nearstar_x/100000*nearstar_y/100000*nearstar_z/100000;
 
-    srand ((long)nearstar_x%10000*(long)nearstar_y%10000*(long)nearstar_z%10000);
+    srand ((int32_t)nearstar_x%10000*(int32_t)nearstar_y%10000*(int32_t)nearstar_z%10000);
 
     nearstar_nop = random (class_planets[nearstar_class] + 1);
 
@@ -3983,7 +3983,7 @@ no_moons:
 
 /* Smussa la superficie di un pianeta: media 4x4 rapida. */
 
-void ssmooth (unsigned char far *target)
+void ssmooth (uint8_t far *target)
 {
     asm {
         pusha
@@ -4019,7 +4019,7 @@ smooth: asm {   db 0x66; mov dx, es:[di-360]
 
 /* Smussa leggermente la superficie di un pianeta: media 2x2. */
 
-void lssmooth (unsigned char far *target)
+void lssmooth (uint8_t far *target)
 {
     asm {   pusha
         push es
@@ -4046,10 +4046,10 @@ smooth: asm {   mov dx, es:[di]
         popa }
 }
 
-int      c, gr, r, g, b, cr, cx, cy;
+int16_t      c, gr, r, g, b, cr, cx, cy;
 float    a, kfract = 2;
-char     lave, crays;
-unsigned px, py;
+int8_t     lave, crays;
+uint16_t px, py;
 
 /*
 
@@ -4197,7 +4197,7 @@ nvrain: asm {   fild px
         jnz nvrain }
 }
 
-void fracture (unsigned char far *target, float max_latitude)
+void fracture (uint8_t far *target, float max_latitude)
 { // solco scuro: tipo le linee su Europa.
   // ha dei parametri perchÇ viene usata anche per simulare i fulmini
   // quando piove sulla superficie dei pianeti abitabili.
@@ -4215,8 +4215,8 @@ void fracture (unsigned char far *target, float max_latitude)
         py += kfract * sin(a);
         if (py>max_latitude-1) py -= max_latitude;
         if (py<0) py += max_latitude;
-        vptr = px + 360 * (unsigned)py;
-        target[vptr] >>= (unsigned char) b;
+        vptr = px + 360 * (uint16_t)py;
+        target[vptr] >>= (uint8_t) b;
     gr--; } while (gr);
 }
 
@@ -4238,7 +4238,7 @@ void volcano () // un krakatoa volcano con Gedeone il gigante coglione.
 
 void contrast (float kt, float kq, float thrshld)
 {
-    unsigned c;
+    uint16_t c;
 
     for (c=0; c<64800; c++) {
         a = p_background[c];
@@ -4254,9 +4254,9 @@ void contrast (float kt, float kq, float thrshld)
     }
 }
 
-void randoface (int range, int upon)
+void randoface (int16_t range, int16_t upon)
 {
-    unsigned c;
+    uint16_t c;
 
     for (c=0; c<64800; c++) {
         gr = p_background[c];
@@ -4369,15 +4369,15 @@ void storm () // tempesta (una grande macchia chiara sull'atmosfera).
    campo ridotto ai bordi dei globi.
    "colorbase" viene assegnato a 192 per i pianeti, a 128 per le lune. */
 
-void surface (int logical_id, int type,
-          double seedval, unsigned char colorbase)
+void surface (int16_t logical_id, int16_t type,
+          double seedval, uint8_t colorbase)
 {
-    int         plwp;
-    unsigned        seed;
-    char            knot1 = 0, brt;
-    int             QW = QUADWORDS;
+    int16_t         plwp;
+    uint16_t        seed;
+    int8_t            knot1 = 0, brt;
+    int16_t             QW = QUADWORDS;
     float           r1, r2, r3, g1, g2, g3, b1, b2, b3;
-    unsigned char far   *overlay = (unsigned char far *)objectschart;
+    uint8_t far   *overlay = (uint8_t far *)objectschart;
 
     if (type == 10) return; // stella compagna: ha superficie stellare...
 
@@ -4497,7 +4497,7 @@ rndpat: asm {   add ax, cx
                 cr = ranged_fast_random (20) + 1;
                 cy = ranged_fast_random (178 - 2*cr) + cr;
                 switch (random(2)) {
-                    case 0: cx = ((long)(10 * secs) / (ranged_fast_random (3600) + 180)) % 360;
+                    case 0: cx = ((int32_t)(10 * secs) / (ranged_fast_random (3600) + 180)) % 360;
                         gr = ranged_fast_random (12) + 2;
                         storm ();
                         break;
@@ -4540,7 +4540,7 @@ rndpat: asm {   add ax, cx
                     cy = ranged_fast_random (172 - 2*cr) + cr + 2;
                 else
                     cy = 60 + ranged_fast_random (10) - ranged_fast_random (10);
-                cx = ((long)(secs) / (ranged_fast_random (360) + 180)) % 360;
+                cx = ((int32_t)(secs) / (ranged_fast_random (360) + 180)) % 360;
                 g  = ranged_fast_random (5) + 7;
                 a  = ranged_fast_random (360) * deg;
                 atm_cyclon ();
@@ -4589,7 +4589,7 @@ rndpat: asm {   add ax, cx
             for (c=0; c<r; c++) {
                 cr = ranged_fast_random (30) + 1;
                 cy = ranged_fast_random (178 - 2*cr) + cr;
-                cx = ((long)(60*secs) / (ranged_fast_random (3600) + 360)) % 360;
+                cx = ((int32_t)(60*secs) / (ranged_fast_random (3600) + 360)) % 360;
                 gr = ranged_fast_random (2) + 1;
                 permanent_storm ();
             }
@@ -4630,7 +4630,7 @@ rndpat: asm {   add ax, cx
             for (c=0; c<r; c++) {
                 cr = ranged_fast_random (15) + 1;
                 cy = ranged_fast_random (178 - 2*cr) + cr;
-                cx = ((long)(60*secs) / (ranged_fast_random (8000) + 360)) % 360;
+                cx = ((int32_t)(60*secs) / (ranged_fast_random (8000) + 360)) % 360;
                 gr = ranged_fast_random (2) + 1;
                 if (ranged_fast_random(10))
                     cr = cr / 2 + 1;
@@ -4807,9 +4807,9 @@ rndpat: asm {   add ax, cx
 
 /* Tracciamento degli anelli (eventuali). */
 
-void ring (int planet_id, double ox, double oy, double oz, int start, int layers)
+void ring (int16_t planet_id, double ox, double oy, double oz, int16_t start, int16_t layers)
 {
-    int     a, b, c, n, m, partn, partcls;
+    int16_t     a, b, c, n, m, partn, partcls;
     double  sx, sy, sz;
 
     double  ringray = nearstar_p_ring[planet_id];
@@ -4862,24 +4862,24 @@ void ring (int planet_id, double ox, double oy, double oz, int start, int layers
 
 void planets ()
 {
-    char far *atmosphere = (char far *) objectschart;
-    unsigned char far *surface_backup = (unsigned char far*)p_background;
+    int8_t far *atmosphere = (int8_t far *) objectschart;
+    uint8_t far *surface_backup = (uint8_t far*)p_background;
 
-    char is_moon;
-    long poffs;
-    long test;
+    int8_t is_moon;
+    int32_t poffs;
+    int32_t test;
 
-    int  i1, i2, n1, n2, c1, c2, pnpcs;
-    int  c, n, t, ts, te, ll, plwp, riwp;
+    int16_t  i1, i2, n1, n2, c1, c2, pnpcs;
+    int16_t  c, n, t, ts, te, ll, plwp, riwp;
 
-    int  te_ll_distance, te_ll_distance_1, te_ll_distance_2;
-    int  ts_ll_distance, ts_ll_distance_1, ts_ll_distance_2;
+    int16_t  te_ll_distance, te_ll_distance_1, te_ll_distance_2;
+    int16_t  ts_ll_distance, ts_ll_distance_1, ts_ll_distance_2;
 
     double xx, yy, zz;
     double d3, d2, md2 = 1E9;
 
-    unsigned char colorbase, showdisc, showrings, surfacemap;
-    int ringlayers;
+    uint8_t colorbase, showdisc, showrings, surfacemap;
+    int16_t ringlayers;
 
     if (ip_targetting) ip_targetted = -1;
     if (!nearstar_nop) return;
@@ -5243,17 +5243,17 @@ double  laststar_x, laststar_y, laststar_z;
    Quando ä visibile, le coordinate della stella sono riportate
    nelle variabili "laststar_x", "laststar_y" e "laststar_z". */
 
-char isthere (double star_id)
+int8_t isthere (double star_id)
 {
-    char        visible_sectors = 9;
+    int8_t        visible_sectors = 9;
 
-    long        sect_x, sect_y, sect_z;
-    long        k, advance = 100000;
+    int32_t        sect_x, sect_y, sect_z;
+    int32_t        k, advance = 100000;
 
     double      sidlow = star_id - idscale;
     double      sidhigh = star_id + idscale;
 
-    unsigned char   sx, sy, sz;
+    uint8_t   sx, sy, sz;
     double      laststar_id;
 
     sect_x = (dzat_x - visible_sectors*50000) / 100000; sect_x *= 100000;
@@ -5339,14 +5339,14 @@ y_end:    return (1);
    Compila una tabella contenente l'ID di ogni stella e la sua
    posizione in coordinate Parsis. */
 
-const int   tgt_bytes_per_scan = 5 * 32;
-long        tgt_collect_lastpos = 0;
+const int16_t   tgt_bytes_per_scan = 5 * 32;
+int32_t        tgt_collect_lastpos = 0;
 
-int         targets = 0;
-int         topmost_target = 0;
-int         target_line = 0;
-char        update_targets = 0;
-char        collecting_targets = 0;
+int16_t         targets = 0;
+int16_t         topmost_target = 0;
+int16_t         target_line = 0;
+int8_t        update_targets = 0;
+int8_t        collecting_targets = 0;
 
 double      targets_table_id[50];
 double      targets_table_px[50];
@@ -5355,10 +5355,10 @@ double      targets_table_pz[50];
 
 void collect_targets ()
 {
-    int     local_smh;
-    unsigned    n, ptr, index, toread;
+    int16_t     local_smh;
+    uint16_t    n, ptr, index, toread;
 
-    char far    *buffer_ascii = (char far *)p_surfacemap;
+    int8_t far    *buffer_ascii = (int8_t far *)p_surfacemap;
     double far  *buffer_double = (double far *)p_surfacemap;
 
     local_smh = _rtl_open (starmap_file, 0);
@@ -5408,7 +5408,7 @@ void collect_targets ()
 
 /* Cambia lo stato visualizzato dall'FCS sull'Head-Up-Display. */
 
-void status (char *status_description, int message_delay)
+void status (int8_t *status_description, int16_t message_delay)
 {
     if (message_delay >= fcs_status_delay) {
         strcpy (fcs_status, status_description);
@@ -5419,7 +5419,7 @@ void status (char *status_description, int message_delay)
 /* Mappa caratteri per l'HUD:
    font iper-compatto (3 x 5 pixels). */
 
-char digimap[65*5] = {
+int8_t digimap[65*5] = {
      0, 0, 0, 0, 0, // 32. spazio vuoto
      2, 2, 2, 0, 2, // 33. punto esclamativo
      5, 0, 0, 0, 0, // 34. virgolette
@@ -5494,7 +5494,7 @@ char digimap[65*5] = {
    dell'area n_globes_map che di per sÇ, contenendo una semi-texture
    di 32Kb per la superficie dei mari, ä stata estesa da 22586 a 32768. */
 
-unsigned long far *digimap2; // verrÖ assegnato a n_globes_map + gl_bytes
+uint32_t far *digimap2; // verrÖ assegnato a n_globes_map + gl_bytes
 
 /* Cupola panoramica. */
 
@@ -5536,7 +5536,7 @@ void cupola (float y_or, float brk)
     }
 }
 
-void polycupola (float y_or, char textured)
+void polycupola (float y_or, int8_t textured)
 {
     float d1, d2, d3, dd;
     float x[4], y[4], z[4];
@@ -5620,7 +5620,7 @@ void sync_stop () {
     while (clock() == gtime); 
 }
 
-long   global_surface_seed;
+int32_t   global_surface_seed;
 float  ppos_x, ppos_y, ppos_z;
 double dsd;         // per misurare distanze
 
@@ -5628,7 +5628,7 @@ double dsd;         // per misurare distanze
 
 void load_starface ()
 {
-    unsigned seed = nearstar_identity * 12345;
+    uint16_t seed = nearstar_identity * 12345;
     asm {   les di, dword ptr s_background
         mov cx, 64800
         mov ax, seed }
@@ -5643,7 +5643,7 @@ rndpat: asm {   add ax, cx
         dec cx
         jnz rndpat }
 
-    int smoothcount;
+    int16_t smoothcount;
 
     fast_srand (seed);
     smoothcount = fast_random(3);
@@ -5659,7 +5659,7 @@ rndpat: asm {   add ax, cx
 
 void load_QVRmaps ()
 {
-    int fh;
+    int16_t fh;
 
     fh = sa_open (offsets_map);
     if (fh>-1) {
@@ -5676,7 +5676,7 @@ void load_QVRmaps ()
 
 void load_digimap2 ()
 {
-    int fh;
+    int16_t fh;
 
     fh = sa_open (off_digimap2);
     if (fh>-1) {
@@ -5685,18 +5685,18 @@ void load_digimap2 ()
     }
 }
 
-char    outhudbuffer[81];
-char    *compass = "N.........E.........S.........W.........N.........E.........S.......";
+int8_t    outhudbuffer[81];
+int8_t    *compass = "N.........E.........S.........W.........N.........E.........S.......";
 
 float   tp_gravity = 1, pp_gravity = 1;
 float   tp_temp = 22, pp_temp = 22;
 float   tp_pressure = 1, pp_pressure = 1;
 float   tp_pulse = 118, pp_pulse = 118;
 
-void wrouthud (unsigned x, unsigned y, unsigned l, char *text)
+void wrouthud (uint16_t x, uint16_t y, uint16_t l, int8_t *text)
 {
-    int j, i, n;
-    unsigned spot;
+    int16_t j, i, n;
+    uint16_t spot;
 
     n = 0; if (!l) l = 32767;
     spot = y * 320 + x;
@@ -5715,10 +5715,10 @@ void wrouthud (unsigned x, unsigned y, unsigned l, char *text)
     }
 }
 
-void surrounding (char compass_on, int openhudcount)
+void surrounding (int8_t compass_on, int16_t openhudcount)
 {
-    int cpos, crem;
-    long    lsecs, lptr;
+    int16_t cpos, crem;
+    int32_t    lsecs, lptr;
     float   pp_delta, ccom;
 
     for (lptr=0; lptr<04; lptr++) areaclear (adapted, 10, openhudcount + 9 - lptr, 0, 0, 300, 1, 54 + surlight + 3*lptr);
@@ -5755,9 +5755,9 @@ void surrounding (char compass_on, int openhudcount)
         strcat (outhudbuffer, ".");
         strcat (outhudbuffer, alphavalue(landing_pt_lat));
         strcat (outhudbuffer, ":");
-        strcat (outhudbuffer, alphavalue((((long)(pos_x)) >> 14) - 100));
+        strcat (outhudbuffer, alphavalue((((int32_t)(pos_x)) >> 14) - 100));
         strcat (outhudbuffer, ".");
-        strcat (outhudbuffer, alphavalue((((long)(pos_z)) >> 14) - 100));
+        strcat (outhudbuffer, alphavalue((((int32_t)(pos_z)) >> 14) - 100));
         areaclear (adapted, 254, 1, 0, 0, 5, 7, 64 + 0);
         areaclear (adapted, 256, 8, 0, 0, 1, 1, 64 + 63);
         ccom = 360 - user_beta;
@@ -5807,22 +5807,22 @@ void surrounding (char compass_on, int openhudcount)
 /* Salva una fotografia dello schermo sul file "SNAPXXXX.BMP":
    XXXX ä un numero progressivo di disambiguazione. */
 
-extern long star_label_pos;
-extern char star_label[25];
-extern long planet_label_pos;
-extern char planet_label[25];
+extern int32_t star_label_pos;
+extern int8_t star_label[25];
+extern int32_t planet_label_pos;
+extern int8_t planet_label[25];
 
-char snapfilename[24];
-void snapshot (int forcenumber, char showdata)
+int8_t snapfilename[24];
+void snapshot (int16_t forcenumber, int8_t showdata)
 {
-    int prog;
-    unsigned pqw;
+    int16_t prog;
+    uint16_t pqw;
     double parsis_x, parsis_y, parsis_z;
 
-    unsigned ptr, c;
-    char a, b, t[54];
+    uint16_t ptr, c;
+    int8_t a, b, t[54];
 
-    int ih = sa_open (header_bmp);
+    int16_t ih = sa_open (header_bmp);
     if (ih==-1) return;
     _rtl_read (ih, t, 54);
     _rtl_close (ih);
@@ -5915,10 +5915,10 @@ void snapshot (int forcenumber, char showdata)
     - cercapianeti:             1 KD ogni 155 secondi.
 */
 
-long iqsecs = 0;
+int32_t iqsecs = 0;
 void additional_consumes()
 {
-    if (iqsecs < (long)secs)
+    if (iqsecs < (int32_t)secs)
         iqsecs = secs;
     //
     if (ip_targetted > -1 && pwr > 15000) {
