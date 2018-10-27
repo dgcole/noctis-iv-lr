@@ -11,3 +11,6 @@
 *.mrt
 *.mak
 *.exe
+
+# Save Data Folder
+data/
