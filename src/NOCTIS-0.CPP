@@ -488,31 +488,19 @@ void mask_pixels(unsigned char far *target, unsigned char mask) {
     }
 }
 
-/*
+// HSP Inclusions.
 
-    Inclusioni HSP.
+#include <tdpolygs.h> // 3D Engine.
 
-*/
+// Support files
 
-#include <tdpolygs.h> // 3d-Engine.
+char   *situation_file  = "data\\Current.BIN";
+char   *starmap_file    = "data\\StarMap.BIN";
+char   *goesoutputfile  = "data\\GOESfile.TXT";
+char   *surface_file    = "data\\Surface.BIN";
+int     sfh; // Surface situation file handle.
 
-/*
-
-    Catalogo files di supporto.
-
-*/
-
-char   *situation_file  = "..\\DATA\\Current.BIN";
-char   *starmap_file    = "..\\DATA\\StarMap.BIN";
-char   *goesoutputfile  = "..\\DATA\\GOESfile.TXT";
-char   *surface_file    = "..\\DATA\\Surface.BIN";
-int     sfh; // handle del file della situazione di superficie.
-
-/*
-
-    Dati globali di continuit… (salvati e ripristinati).
-
-*/
+// Global variables that are saved.
 
 char   sync               = 1;      // 0
 char   anti_rad           = 1;          // 1
@@ -583,11 +571,7 @@ double secs       = 0;      // 235
 char   data       = 0;      // 243
 char   surlight       = 16;     // 244
 
-/*
-
-    Dati di controllo per lo sbarco sulla superficie.
-
-*/
+// Surface landing control data.
 
 char   land_now       = 0;
 char   landing_point      = 0;
@@ -598,56 +582,48 @@ int     crepzone;
 int     nightzone;
 int sun_x_factor;
 
-/*
-
-    Dati globali non salvati (deducibili da quelli salvati).
-
-*/
+// Global data that isn't saved.
 
 char seconds[3], minutes[3], hours[3], day[3], month[3], year[5];
 int  epoc = 6011;
 
-char          ctb[512];
-char          dec[20];
+char        ctb[512];
+char        dec[20];
 
-char          _delay         = 12;
-char          stspeed        = 0;
-char          bright;
-char          elight         = 0;
-unsigned      gl_start       = 0;
-unsigned      point;
-unsigned      vptr;
-int           infoarea       = 0;
-int           s_control      = 1;
-int           s_command      = 0;
-int           isecs, p_isecs;
-double        fsecs;
-int       gl_fps         = 1;
-int       fps            = 1;
-float         dlt_alfa       = 0;
-float         dlt_beta       = 0;
-float         dlt_nav_beta   = 0;
-float         step           = 0;
-float         shift          = 0;
-double        s_m = 1000;
-double        plx, ply, plz;
-double        pxx, pyy;
-double        delta_x, delta_y;
-double        nearstar_identity;
-int       nearstar_nob = 0, nearstar_labeled;
-int       npcs, resident_map1, resident_map2;
-char          ontheroof;
-int       datasheetscroll = 0;
-int       datasheetdelta = 0;
+char        _delay          = 12;
+char        stspeed         = 0;
+char        bright;
+char        elight          = 0;
+unsigned    gl_start        = 0;
+unsigned    point;
+unsigned    vptr;
+int         infoarea        = 0;
+int         s_control       = 1;
+int         s_command       = 0;
+int         isecs, p_isecs;
+double      fsecs;
+int         gl_fps          = 1;
+int         fps             = 1;
+float       dlt_alfa        = 0;
+float       dlt_beta        = 0;
+float       dlt_nav_beta    = 0;
+float       step            = 0;
+float       shift           = 0;
+double      s_m             = 1000;
+double      plx, ply, plz;
+double      pxx, pyy;
+double      delta_x, delta_y;
+double      nearstar_identity;
+int         nearstar_labeled;
+int         nearstar_nob    = 0;
+int         npcs, resident_map1, resident_map2;
+char        ontheroof;
+int         datasheetscroll = 0;
+int         datasheetdelta  = 0;
 
-/*
+// Constant data in the global segment.
 
-    Dati costanti nel segmento globale.
-
-*/
-
-/* Alcuni ordinali (da 0 a 20) per determinate rappresentazioni.
-   Il corrispondente "zeresimo" Š infrequente ma si pu• usare: Š corretto. */
+// Some ordinals (from 0 to 20) for certain representations.
 
 char *ord[21] = { "zeroth", "first", "second", "third", "fourth", "fifth",
           "sixth", "seventh", "eight", "nineth", "tenth", "eleventh",
@@ -669,7 +645,7 @@ char *star_description[star_classes] = {
     "very large and ancient runaway star, unsuitable for planets.",
     "tiny pulsar object, unsafe, high radiation, strong gravity." };
 
-char class_rgb[3*star_classes] = {
+char class_rgb[3 * star_classes] = {
     63, 58, 40,
     30, 50, 63,
     63, 63, 63,
@@ -684,15 +660,37 @@ char class_rgb[3*star_classes] = {
     00, 63, 63
 };
 
-int class_ray[star_classes] = { 5000, 15000, 300, 20000, 15000, 1000, 3000,
-                2000, 4000, 1500, 30000, 250 };
+int class_ray[star_classes] = { 
+    5000, 15000, 
+    300, 20000, 
+    15000, 1000, 
+    3000, 2000, 
+    4000, 1500, 
+    30000, 250 
+};
 
-int class_rayvar[star_classes] = { 2000, 10000, 200, 15000, 5000, 1000, 3000,
-                   500, 5000, 10000, 1000, 10 };
+int class_rayvar[star_classes] = {
+    2000, 10000, 
+    200, 15000, 
+    5000, 1000, 
+    3000, 500, 
+    5000, 10000, 
+    1000, 10 
+};
 
-int class_act[star_classes] = { 2, 4, 1, 6, 5, 10, 100, 1, 2, 1, 10, 1 };
+int class_act[star_classes] = { 
+    2, 4, 1, 
+    6, 5, 10, 
+    100, 1, 2, 
+    1, 10, 1 
+};
 
-char class_planets[star_classes] = { 12, 18, 8, 15, 20, 3, 0, 1, 7, 20, 2, 5 };
+char class_planets[star_classes] = { 
+    12, 18, 8, 
+    15, 20, 3, 
+    0, 1, 7, 
+    20, 2, 5 
+};
 
 char   nearstar_p_type       [maxbodies];
 int    nearstar_p_owner      [maxbodies];
@@ -714,109 +712,111 @@ int    nearstar_p_term_end   [maxbodies];
 int    nearstar_p_qsortindex [maxbodies];
 float  nearstar_p_qsortdist  [maxbodies];
 
-char *planet_description[] = { "medium size, internally hot, unstable surface, no atmosphere.",
-                   "small, solid, dusty, craterized, no atmosphere.",
-                   "medium size, solid, thick atmosphere, fully covered by clouds.",
-                   "medium size, felisian, breathable atmosphere, suitable for life.",
-                   "medium size, rocky, creased, no atmosphere.",
-                   "small, solid, thin atmosphere.",
-                   "large, not consistent, covered with dense clouds.",
-                   "small, solid, icy surface, no atmosphere.",
-                   "medium size, surface is mainly native quartz, oxygen atmosphere.",
-                   "very large, substellar object, not consistent.",
-                   "companion star - not a planet" };
+char *planet_description[] = { 
+    "medium size, internally hot, unstable surface, no atmosphere.",
+    "small, solid, dusty, craterized, no atmosphere.",
+    "medium size, solid, thick atmosphere, fully covered by clouds.",
+    "medium size, felisian, breathable atmosphere, suitable for life.",
+    "medium size, rocky, creased, no atmosphere.",
+    "small, solid, thin atmosphere.",
+    "large, not consistent, covered with dense clouds.",
+    "small, solid, icy surface, no atmosphere.",
+    "medium size, surface is mainly native quartz, oxygen atmosphere.",
+    "very large, substellar object, not consistent.",
+    "companion star - not a planet" 
+};
 
-unsigned char planet_rgb_and_var[] = { 60, 30, 15,      20,
-                       40, 50, 40,  25,
-                       32, 32, 32,  32,
-                       16, 32, 48,      40,
-                       32, 40, 32,  20,
-                       32, 32, 32,      32,
-                       32, 32, 32,      32,
-                       32, 40, 48,      24,
-                       40, 40, 40,      30,
-                       50, 25, 10,      20,
-                       40, 40, 40,  40 };
+unsigned char planet_rgb_and_var[] = { 
+    60, 30, 15, 20,
+    40, 50, 40, 25,
+    32, 32, 32, 32,
+    16, 32, 48, 40,
+    32, 40, 32, 20,
+    32, 32, 32, 32,
+    32, 32, 32, 32,
+    32, 40, 48, 24,
+    40, 40, 40, 30,
+    50, 25, 10, 20,
+    40, 40, 40, 40 
+};
 
-int planet_possiblemoons[] = { 1, 1, 2, 3, 2, 2, 18, 2, 3, 20, 20 };
+int planet_possiblemoons[] = { 
+    1, 1, 
+    2, 3, 
+    2, 2, 
+    18, 2, 
+    3, 20, 
+    20 
+};
 
-const double planet_orb_scaling=  5.0;
-const double avg_planet_sizing =  2.4;
-const double moon_orb_scaling  = 12.8;
-const double avg_moon_sizing   =  1.8;
+const double planet_orb_scaling = 5.0;
+const double avg_planet_sizing  = 2.4;
+const double moon_orb_scaling   = 12.8;
+const double avg_moon_sizing    = 1.8;
 
-double avg_planet_ray[] = { 0.007, 0.003, 0.010, 0.011, 0.010,
-                0.008, 0.064, 0.009, 0.012, 0.125,
-                5.000 };
+double avg_planet_ray[] = { 
+    0.007, 0.003, 0.010, 
+    0.011, 0.010, 0.008, 
+    0.064, 0.009, 0.012, 
+    0.125, 5.000 
+};
 
 float mindiff = 0.01;
 
-/*
 
-    Matrici video fisiche e logiche, cartografie,
-    ed altri blocchi di memoria...
-
-*/
+// Physical and logical video matrices, cartography, and other memory blocks.
 
 unsigned char far  *s_background;
 unsigned char far  *p_background;
 unsigned char huge *p_surfacemap;
 quadrant      far  *objectschart;
-unsigned char far  *ruinschart; // come objectschart, ma dichiarato in bytes
+unsigned char far  *ruinschart; // As objectschart, but declared in bytes.
 unsigned char far  *pvfile;
 
 unsigned char far  *n_offsets_map;
 char far           *n_globes_map;
 
-unsigned        seg_adapted;
+unsigned            seg_adapted;
 
-/*
+// Planetary surface adjustment data.
 
-    Dati di regolazione delle superfici planetarie.
-
-*/
-
-char sky_red_filter = 63; // Filtri per il cielo.
+char sky_red_filter = 63; // Filters for the sky.
 char sky_grn_filter = 63;
 char sky_blu_filter = 63;
-char gnd_red_filter = 63; // Filtri per il suolo.
+char gnd_red_filter = 63; // Filters for the ground.
 char gnd_grn_filter = 63;
 char gnd_blu_filter = 63;
 
-float planet_grav  = 150; // corrisponde alla gravit… terrestre.
-float rainy         = 0; // 0..5 a seconda dell'albedo delle nubi.
-int   albedo        = 0; // Albedo media della superficie di sbarco:
-             // pu• andare da 0 a 62.
+float planet_grav   = 150; // Corresponds to the planetary gravity.
+float rainy         = 0; // Raininess, based on cloud albedo. [0,5]
+int   albedo        = 0; // Albedo average of the landing surface. [0,62]
 
-unsigned char sky_brightness = 32; // Luminosit… del cielo (0-48).
-unsigned char horiz_brt      = 20; // Luminosit… minima dell'orizzonte (0-48).
+unsigned char sky_brightness = 32; // Sky luminosity. [0,48]
+unsigned char horiz_brt      = 20; // Brightness of the low horizon. [0,48]
 
-unsigned m200[200]; // numeri da 0 a 199, moltiplicati per 200 (ottimizzaz.)
+unsigned m200[200]; // Numbers from 0 to 199, multipled by 200 (Lookup table)
 
-float    rwp = 15; // Potenza richiesta del vento (per regolarlo, in NODI).
-float    iwp =  0; // Potenza ideale del vento (da 0 a 1).
-float    wp  =  0; // Potenza attuale del vento.
-float    wdir=  0; // Direzione di provenienza del vento.
-float    wdirsin=0;// Valore di ottimizzazione.
-float    wdircos=1;// Valore di ottimizzazione.
+float   rwp        = 15; // Required wind power (in knots).
+float   iwp        = 0; // Ideal wind power (from 0 to 1).
+float   wp         = 0; // Current wind power.
+float   wdir       = 0; // Wind origin direction.
+float   wdirsin    = 0; // Optimization value.
+float   wdircos    = 1; // Optimization value.
 
-char landed; // Flag settato al momento dell'atterraggio.
-long atl_x, atl_z, atl_x2, atl_z2; // Posizione codificata quoziente:resto
-                   // del bozzolo di sbarco.
+char    landed; // Flag set at the time of landing.
+// Coded position quotiento of the lander (quotient:remainder).
+long    atl_x, atl_z, 
+        atl_x2, atl_z2;
 
-double qid = 1.0 / 16384; // Costante per trovare l'id x/z di un quadrante.
+double qid = 1.0 / 16384; // Constant to find the x / z id of a quadrant.
 
-/*
+// Polygonal graphics area (characters, ships, labels, etc...)
 
-    Aree per grafica poligonale (personaggi, navicelle, diciture, etc...)
+#define handles 16 // 16 handles in this case.
 
-*/
+unsigned long pvfile_datatop = 0; // Top of the data.
 
-#define handles 16 // 16 handles in questo caso...
-
-unsigned long pvfile_datatop = 0; // cima dei dati.
-
-// nota: dataptr Š un puntatore relativo che pu• andare da zero a "pvbytes".
+// Note: dataptr is a relative pointer that can go from 0 to "pvbytes".
 unsigned pvfile_dataptr[handles] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 unsigned pvfile_datalen[handles] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 unsigned pvfile_npolygs[handles] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
