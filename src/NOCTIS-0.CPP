@@ -6585,6 +6585,7 @@ void surrounding (int8_t compass_on, int16_t openhudcount) {
     sprintf (outhudbuffer, "EPOC %d & ", epoc);
     
     uint16_t sinisters = fmod(secs, 1e9) / 1e6;
+    // Pad with a 0.
     if (sinisters < 100) {
         strcat(outhudbuffer, "0");
     }
@@ -6592,10 +6593,16 @@ void surrounding (int8_t compass_on, int16_t openhudcount) {
     strcat (outhudbuffer, ".");
     
     uint16_t medii = fmod(secs, 1e6) / 1e3;
+    if (medii < 100) {
+        strcat(outhudbuffer, "0");
+    }
     strcat (outhudbuffer, alphavalue(medii));
     strcat (outhudbuffer, ".");
     
     uint16_t dexters = fmod(secs, 1e3);
+    if (dexters < 100) {
+        strcat(outhudbuffer, "0");
+    }
     strcat (outhudbuffer, alphavalue(dexters));
 
     if (compass_on) {
