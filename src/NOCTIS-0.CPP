@@ -3658,76 +3658,72 @@ exit_local:
     resetfx ();
 }
 
-/*  Puntini lontani, per esempio pianeti e lune.
-    Le due funzioni si integrano: viene disegnato un puntino se la distanza
-    Š grande. Man mano che ci si avvicina, il puntino diventa un dischetto,
-    del diametro massimo di 5 pixels. Ovviamente, per fare dischi pi— grandi,
-    bisogna passare il controllo a un'altra funzione (sul tipo di globe). */
+/*  
+    Distant dots, for example, planets and moons. The two functions are 
+    integrated: a dot is drawn if the distance is big. As you approach, the dot
+    becomes a disk of 5px diameter max. We then have to pass control to another
+    function to draw the planet properly.
+*/
 
 const double  pix_dst_scale = 0.384;
 const double  pix_rad_scale = 1228.8;
+
 #define       LIGHT_EMITTING    0
 #define       LIGHT_ABSORBING   1
 #define       MULTICOLOUR   2
+
 int8_t          pixilating_effect = LIGHT_EMITTING;
 int8_t          pixel_spreads = 1;
 uint8_t multicolourmask = 0xC0;
 
 void single_pixel_at_ptr (uint16_t ptr, uint8_t pixel_color) {
+    // Set dx register to ptr.
     _DX = ptr;
+    // Set cl to the color.
     _CL = pixel_color;
-
+    // Add ptr shift to the offset.
+    uint8_t far* shifted = adapted + ptr;
+    uint8_t alow, ahigh;
+    
     switch (pixilating_effect) {
     case LIGHT_EMITTING:
-        asm {   les di, dword ptr adapted
-                add di, dx
-                cmp byte ptr es:[di], 64
-                jb c0vered
-                mov al, es:[di]
-                mov ah, es:[di]
-                and al, 0x3F
-                and ah, 0xC0
-                add al, cl
-                cmp al, 0x3E
-                jbe grd_ok
-                mov al, 0x3E }
-        grd_ok:
-        asm {   or  al, ah
-                mov es:[di], al }
-        c0vered:
+        if (shifted[0] > 63) {
+            alow = shifted[0];
+            ahigh = shifted[0];
+            alow &= 0x3F;
+            ahigh &= 0xC0;
+            alow += pixel_color;
+            if (alow > 0x3E) {
+                alow = 0x3E;
+            }
+            alow |= ahigh;
+            shifted[0] = alow;
+        }
         break;
-
     case LIGHT_ABSORBING:
-            asm {   les di, dword ptr adapted
-                    add di, dx
-                    cmp byte ptr es:[di], 64
-                    jb c1vered
-                    mov al, es:[di]
-                    mov ah, es:[di]
-                    and al, 0x3F
-                    and ah, 0xC0
-                    add al, cl
-                    shr al, 1
-                    or  al, ah
-                    mov es:[di], al }
-            c1vered:
-            break;
-
+        if (shifted[0] > 63) {
+            alow = shifted[0];
+            ahigh = shifted[0];
+            alow &= 0x3F;
+            ahigh &= 0xC0;
+            alow += pixel_color;
+            alow >>= 1;
+            alow |= ahigh;
+            shifted[0] = alow;
+        }
+        break;
     case MULTICOLOUR:
-            asm {   les di, dword ptr adapted
-                    add di, dx
-                    cmp byte ptr es:[di], 64
-                    jb c2vered
-                    mov al, es:[di]
-                    mov ah, multicolourmask
-                    and al, 0x3F
-                    and ah, 0xC0
-                    add al, cl
-                    shr al, 1
-                    or  al, ah
-                    mov es:[di], al }
-            c2vered:
-            break;
+        if (shifted[0] > 63) {
+            alow = shifted[0];
+            ahigh = multicolourmask;
+            alow &= 0x3F;
+            ahigh &= 0xC0;
+            alow += pixel_color;
+            alow >>= 1;
+            alow |= ahigh;
+            shifted[0] = alow;
+        }
+        break;
     }
 }
 
