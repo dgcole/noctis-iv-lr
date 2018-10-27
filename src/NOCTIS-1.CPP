@@ -3,7 +3,7 @@
 
 const double deg = M_PI / 180;
 
-int opencapcount;
+int16_t opencapcount;
 float   refx, refy, refz;
 float   sp_x, sp_y, sp_z;
 
@@ -20,7 +20,7 @@ float   sp_x, sp_y, sp_z;
     comunque circa un decimo. E' importante ottimizzare quella,
     quando si vuole ottimizzare qualcosa... */
 
-char    sctype; // tipo di scenario.
+int8_t    sctype; // tipo di scenario.
 #define OCEAN   1
 #define PLAINS  2
 #define DESERT  3
@@ -31,40 +31,40 @@ float nray1, nray2;   // raggio del sole (pri/sec)
 float latitude;       // latitudine (0..90, 90=poli)
 float exposure;       // longitudine relativa al centro dell'area diurna.
 float sun_x, sun_y, sun_z; // coordinate del "sole" locale.
-int   sh_delta;     // shift del puntatore di confronto per lo shading.
+int16_t   sh_delta;     // shift del puntatore di confronto per lo shading.
 
 // dati riguardanti il "sole" primario se ci si trova
 // attorno a un sole secondario (sistemi multipli di classe 8)
-int   pri_crepzone;
-int   pri_nightzone;
-int   pri_sun_x_factor;
+int16_t   pri_crepzone;
+int16_t   pri_nightzone;
+int16_t   pri_sun_x_factor;
 float pri_latitude, pri_exposure;
 float pri_x, pri_y, pri_z;
 
-char  mirror = 0;     // effetto specchio d'acqua (agisce su "fragment").
-char  waves_in = 0;   // flag di presenza delle onde sui mari.
-char  waves_out = 0;  // flag di produzione di onde sui mari.
-long  T_SCALE;        // scala della texture, passata in H/V_MATRIXS.
+int8_t  mirror = 0;     // effetto specchio d'acqua (agisce su "fragment").
+int8_t  waves_in = 0;   // flag di presenza delle onde sui mari.
+int8_t  waves_out = 0;  // flag di produzione di onde sui mari.
+int32_t  T_SCALE;        // scala della texture, passata in H/V_MATRIXS.
 
 float base_pp_temp;
 float base_pp_pressure;
 
-float hpoint (long px, long pz)
+float hpoint (int32_t px, int32_t pz)
 { // Trova l'altezza di un punto sulla superficie.
   // Per migliorare la risoluzione, usa un procedimento d'interpolazione
   // bi-lineare, con 16384 gradazioni intermedie, tante quante le unitÖ
   // logiche che compongono il lato di un quadrante; considera anche
   // la divisione dei quadranti in due triangoli isosceli.
-    long cpos;
+    int32_t cpos;
 
     float h1, h2, h3, h4, icx, icz, py;
    
     cpos   = m200[pz>>14] + (px>>14);
 
-    h1     = - ((long)(p_surfacemap[cpos])     << 11);
-    h2     = - ((long)(p_surfacemap[cpos+1])   << 11);
-    h3     = - ((long)(p_surfacemap[cpos+201]) << 11);
-    h4     = - ((long)(p_surfacemap[cpos+200]) << 11);
+    h1     = - ((int32_t)(p_surfacemap[cpos])     << 11);
+    h2     = - ((int32_t)(p_surfacemap[cpos+1])   << 11);
+    h3     = - ((int32_t)(p_surfacemap[cpos+201]) << 11);
+    h4     = - ((int32_t)(p_surfacemap[cpos+200]) << 11);
 
     icx    = px & 16383;
     icz    = pz & 16383;
@@ -90,33 +90,33 @@ float hpoint (long px, long pz)
 
 */
 
-char  groundflares = 0;     // tipo di tracciamento del suolo.
-long  mushscaling = 8191;   // range variabilitÖ (in bitmask) "greenmush"
+int8_t  groundflares = 0;     // tipo di tracciamento del suolo.
+int32_t  mushscaling = 8191;   // range variabilitÖ (in bitmask) "greenmush"
 float treescaling = 4096;   // scalatura alberi, di solito mushscaling/2
 float treespreads = 0.75;   // scalatura rami ad ogni ricorsione
 float treepeaking = 1.25;   // passa come "distance_from_perfection"
 float branchwidth = 0.15;   // larghezza dei rami rispetto alla lunghezza
 float rootheight  = 0.50;   // altezza del tronco rispetto a "treescaling"
-char  rootshade   = 0x00;   // colore di base del tronco
-char  treeflares  = 0x00;   // tipo di tracciamento rami.
-char  leafflares  = 0x00;       // tipo di tracciamento foglie.
+int8_t  rootshade   = 0x00;   // colore di base del tronco
+int8_t  treeflares  = 0x00;   // tipo di tracciamento rami.
+int8_t  leafflares  = 0x00;       // tipo di tracciamento foglie.
 
 float rockscaling = 500;    // dimensioni delle rocce.
 float rockpeaking = 250;    // altezza delle rocce.
-int   rockdensity = 15;     // densitÖ gruppi di rocce (bitmask).
-char  quartz      = 0;      // traccia quarzi trasparenti, se impostato.
+int16_t   rockdensity = 15;     // densitÖ gruppi di rocce (bitmask).
+int8_t  quartz      = 0;      // traccia quarzi trasparenti, se impostato.
 
-int   detail_seed = 12345;
+int16_t   detail_seed = 12345;
 
 void greenmush (float x, float y, float z,
-        unsigned char mask_1, unsigned char mask_2,
-        long scaling, unsigned char colorgrade,
-        unsigned char colormask, char noseed)
+        uint8_t mask_1, uint8_t mask_2,
+        int32_t scaling, uint8_t colorgrade,
+        uint8_t colormask, int8_t noseed)
 { // produce una serie di gruppi di minuscole sagome verdi, studiate per
   // fornire l'impressione delle fronde degli alberi pió distanti.
 
-    long    correction;
-    int n1, m1, n2, m2;
+    int32_t    correction;
+    int16_t n1, m1, n2, m2;
 
     correction = scaling >> 1;
     x += correction;
@@ -124,7 +124,7 @@ void greenmush (float x, float y, float z,
     z += correction;
 
     if (!noseed)
-        fast_srand (((long)x>>14) + ((long)y>>14) + ((long)z>>14));
+        fast_srand (((int32_t)x>>14) + ((int32_t)y>>14) + ((int32_t)z>>14));
 
     m1 = 1 + fast_random (mask_1);
     for (n1 = 0; n1 < m1; n1++)
@@ -148,9 +148,9 @@ void greenmush (float x, float y, float z,
 
 void build_fractal_tree (float x, float y, float z,
              float scaling, float reduction, float globalwidth,
-             long layers, long divisions, float distance_from_perfection,
-             unsigned char rootcolormask, unsigned char leafcolormask,
-             float branchdetail, char isrootnode, char occurrence)
+             int32_t layers, int32_t divisions, float distance_from_perfection,
+             uint8_t rootcolormask, uint8_t leafcolormask,
+             float branchdetail, int8_t isrootnode, int8_t occurrence)
 { // funzione ricorsiva: eventualmente traccia l'intero albero pseudo-casuale,
   // con una struttura multilivello, ma va usata con parsimonia perchÇ ä
   // ovviamente una cosa piuttosto laboriosa in termini di tempo.
@@ -191,9 +191,9 @@ void build_fractal_tree (float x, float y, float z,
   // conifera questo valore andrebbe abbassato all'incirca a 0.3 .. 0.4
   // (ponendolo a zero si otterrebbero rami in una colonna verticale).
 
-    int   subdivs;
-    char  polycolor;
-    char  pf = flares;
+    int16_t   subdivs;
+    int8_t  polycolor;
+    int8_t  pf = flares;
 
     float x2, y2, z2;
     float fx[4], fy[4], fz[4];
@@ -201,8 +201,8 @@ void build_fractal_tree (float x, float y, float z,
     float b_angle, b_angle_delta, range, rotation, rlimit;
     float rot2, rot3;
 
-    long hm, vm, lseed;
-    unsigned char huge *previoustexture;
+    int32_t hm, vm, lseed;
+    uint8_t huge *previoustexture;
 
     widthscale1 = scaling * globalwidth;
     widthscale2 = reduction * scaling * globalwidth;
@@ -246,14 +246,14 @@ void build_fractal_tree (float x, float y, float z,
             fy[3] = y2;
             polycolor = 9 * occurrence;
             for (rotation = 0; rotation <= rlimit; rotation += branchdetail) {
-                fx[0] = x  + lft_cos[(int) rotation                 ] * widthscale1;
-                fz[0] = z  + lft_sin[(int) rotation                 ] * widthscale1;
-                fx[1] = x  + lft_cos[(int) (rotation + branchdetail)] * widthscale1;
-                fz[1] = z  + lft_sin[(int) (rotation + branchdetail)] * widthscale1;
-                fx[2] = x2 + lft_cos[(int) (rotation + branchdetail)] * widthscale2;
-                fz[2] = z2 + lft_sin[(int) (rotation + branchdetail)] * widthscale2;
-                fx[3] = x2 + lft_cos[(int) rotation                 ] * widthscale2;
-                fz[3] = z2 + lft_sin[(int) rotation                 ] * widthscale2;
+                fx[0] = x  + lft_cos[(int16_t) rotation                 ] * widthscale1;
+                fz[0] = z  + lft_sin[(int16_t) rotation                 ] * widthscale1;
+                fx[1] = x  + lft_cos[(int16_t) (rotation + branchdetail)] * widthscale1;
+                fz[1] = z  + lft_sin[(int16_t) (rotation + branchdetail)] * widthscale1;
+                fx[2] = x2 + lft_cos[(int16_t) (rotation + branchdetail)] * widthscale2;
+                fz[2] = z2 + lft_sin[(int16_t) (rotation + branchdetail)] * widthscale2;
+                fx[3] = x2 + lft_cos[(int16_t) rotation                 ] * widthscale2;
+                fz[3] = z2 + lft_sin[(int16_t) rotation                 ] * widthscale2;
                 if (isrootnode) {
                     fy[0] = hpoint (fx[0], fz[0]);
                     fy[1] = hpoint (fx[1], fz[1]);
@@ -286,12 +286,12 @@ void build_fractal_tree (float x, float y, float z,
             for (rotation = 0; rotation <= rlimit; rotation += branchdetail) {
                 rot2 = rotation + 72; if (rot2 > 359) rot2 -= 360;
                 rot3 = rotation + 36; if (rot3 > 359) rot3 -= 360;
-                fx[0] = x  + lft_cos[(int) rotation]    * widthscale1;
-                fz[0] = z  + lft_sin[(int) rotation]    * widthscale1;
-                fx[1] = x  + lft_cos[(int) rot2]    * widthscale1;
-                fz[1] = z  + lft_sin[(int) rot2]    * widthscale1;
-                fx[2] = x2 + lft_cos[(int) rot3]    * range + wdircos;
-                fz[2] = z2 + lft_sin[(int) rot3]    * range + wdirsin;
+                fx[0] = x  + lft_cos[(int16_t) rotation]    * widthscale1;
+                fz[0] = z  + lft_sin[(int16_t) rotation]    * widthscale1;
+                fx[1] = x  + lft_cos[(int16_t) rot2]    * widthscale1;
+                fz[1] = z  + lft_sin[(int16_t) rot2]    * widthscale1;
+                fx[2] = x2 + lft_cos[(int16_t) rot3]    * range + wdircos;
+                fz[2] = z2 + lft_sin[(int16_t) rot3]    * range + wdirsin;
                 polymap (fx, fy, fz, 3, polycolor + leafcolormask);
                 greenmush (fx[2], fy[2], fz[2], 15, 3, 1023, 223, 31, 0);
                 polycolor += 2;
@@ -312,11 +312,11 @@ void build_fractal_tree (float x, float y, float z,
 #define FORCE_CON   22
 #define GIANT_TREE  333
 
-void albero (float x, float y, float z, long depth)
+void albero (float x, float y, float z, int32_t depth)
 { // disegna alberi ove richiesti.
 
     fast_srand (x+y+z+3);
-    int treetype = fast_random(511);
+    int16_t treetype = fast_random(511);
 
     if (treetype == GIANT_TREE) {
         if (depth > 11) {
@@ -378,7 +378,7 @@ void albero (float x, float y, float z, long depth)
 
 }
 
-void cespuglio (float x, float y, float z, long depth)
+void cespuglio (float x, float y, float z, int32_t depth)
 { // disegna un cespuglio.
 
     // da 48 mt in poi: ammasso di foglie.
@@ -400,7 +400,7 @@ void cespuglio (float x, float y, float z, long depth)
 
 }
 
-void ciuffo (float x, float y, float z, long depth)
+void ciuffo (float x, float y, float z, int32_t depth)
 { // disegna un ciuffo d'erba.
 
     // da 64 mt in poi, non ä visibile.
@@ -422,15 +422,15 @@ void ciuffo (float x, float y, float z, long depth)
 
 }
 
-void roccia (float x, float y, float z, long depth)
+void roccia (float x, float y, float z, int32_t depth)
 { // disegna una pietra fatta sulla base di un tetraedo per risparmiare tempo.
 
     float tx[4], ty[4], tz[4];
     float px[3], pz[3];
     float rs = rockscaling;
 
-    char  rc[3], rcolor;
-    int   cdown;
+    int8_t  rc[3], rcolor;
+    int16_t   cdown;
 
     // da 160 mt in poi: nulla di visibile.
     if (depth >= 8) return;
@@ -533,9 +533,9 @@ rockrep:px[0] = x - fast_flandom () * rockscaling;
 */
 
 #define LFS     100     // massimo numero di animali.
-int   animals  =   0;       // animali attualmente visibili.
-char  ani_type [LFS];       // tipologia
-long  ani_seed [LFS];       // seme pseudo per le modifiche alla forma.
+int16_t   animals  =   0;       // animali attualmente visibili.
+int8_t  ani_type [LFS];       // tipologia
+int32_t  ani_seed [LFS];       // seme pseudo per le modifiche alla forma.
 float ani_scale[LFS];       // scala.
 float ani_x    [LFS];       // posizione (X)
 float ani_quote[LFS];       // quota rispetto al suolo.
@@ -545,9 +545,9 @@ float ani_speed[LFS];       // velocitÖ attuale.
 float tgt_quote[LFS];       // quota che vogliono raggiungere.
 float tgt_speed[LFS];       // velocitÖ che vogliono raggiungere.
 float tgt_pitch[LFS];       // direzione che vogliono acquisire.
-char  ani_lcount[LFS];      // contatempo di vicinanza.
-unsigned ani_sqc[LFS];      // sub-quadrant coordinates (attuali).
-char  ani_mtype[LFS];       // tipo di movimento.
+int8_t  ani_lcount[LFS];      // contatempo di vicinanza.
+uint16_t ani_sqc[LFS];      // sub-quadrant coordinates (attuali).
+int8_t  ani_mtype[LFS];       // tipo di movimento.
     #define FELINE_LIKE 0
     #define RABBIT_LIKE 1
         #define KANGAROO_LIKE   2
@@ -558,14 +558,14 @@ char  ani_mtype[LFS];       // tipo di movimento.
 
 // dati di definizione - classe uccelli - relativo PVfile: "birdy_ncc"
 
-const int bird_wings_center_p = 1;
-const int bird_wings_center_v = 0;
+const int16_t bird_wings_center_p = 1;
+const int16_t bird_wings_center_v = 0;
 
 pvlist bird_wing1[3] = { {  0, 1,1,1,0 }, {  1, 1,1,1,0 }, {0xFFF,0,0,0,0} };
 pvlist bird_wing2[3] = { {  2, 1,1,1,0 }, {  3, 1,1,1,0 }, {0xFFF,0,0,0,0} };
 
-const int bird_legs_center_p  = 18;
-const int bird_legs_center_v  = 1;
+const int16_t bird_legs_center_p  = 18;
+const int16_t bird_legs_center_v  = 1;
 
 pvlist bird_legs[3]  = { { 18, 0,0,1,0 }, { 19, 0,1,0,0 }, {0xFFF,0,0,0,0} };
 
@@ -579,8 +579,8 @@ pvlist mamm_ears[5] = {
     {0xFFF,0,0,0,0}
 };
 
-const int mamm_wrap_center_p  = 16;
-const int mamm_wrap_center_v  = 2;
+const int16_t mamm_wrap_center_p  = 16;
+const int16_t mamm_wrap_center_v  = 2;
 
 pvlist mamm_reartoto[19] = {
     {  7, 0,0,1,1 },
@@ -622,8 +622,8 @@ pvlist mamm_legs[15] = {
     {0xFFF,0,0,0,0}
 };
 
-const int mamm_tail_center_p  = 46;
-const int mamm_tail_center_v  = 1;
+const int16_t mamm_tail_center_p  = 46;
+const int16_t mamm_tail_center_v  = 1;
 
 pvlist mamm_tail[7] = {
     { 46, 1,1,1,1 },
@@ -637,20 +637,20 @@ pvlist mamm_tail[7] = {
 
 /* Funzione di tracciamento ed animazione delle forme di vita animali. */
 
-void live_animal (int n)
+void live_animal (int16_t n)
 {
     const double an_incl_prec = 50;
 
     double  incl;
     float   period;
-    int sqc_x, sqc_z;
-    long    tick = 18 * secs;
+    int16_t sqc_x, sqc_z;
+    int32_t    tick = 18 * secs;
     float   dx, dy, dz, ax, ay, ay2, az;
 
     float   update_ratio, tendence_to_stop; // mammals
 
-    char    perform_depth_sort = 0;
-    char    texture_skin_map   = 0;
+    int8_t    perform_depth_sort = 0;
+    int8_t    texture_skin_map   = 0;
     float   animal_distance    = 0;
 
     float   quote    = tgt_quote[n];
@@ -975,7 +975,7 @@ void live_animal (int n)
 #define  bk_lines_to_horizon    120
 #define  culling_limit      50
 
-void srf_detail (float x, float y, float z, long depth, char _class_)
+void srf_detail (float x, float y, float z, int32_t depth, int8_t _class_)
 { // disegna un oggetto sulla superficie di un pianeta.
 
     switch (_class_) {
@@ -1009,19 +1009,19 @@ void srf_detail (float x, float y, float z, long depth, char _class_)
 
 }
 
-char gtx; // se attivo, traccia il livello del suolo con texture specifica
-int  ipfx, ipfz; // centro di tracciamento (coordinate SQC dell'osservatore).
-char nearest_fragment_already_traced; // flag di lavoro.
+int8_t gtx; // se attivo, traccia il livello del suolo con texture specifica
+int16_t  ipfx, ipfz; // centro di tracciamento (coordinate SQC dell'osservatore).
+int8_t nearest_fragment_already_traced; // flag di lavoro.
 
-void fragment (long x, long z)
+void fragment (int32_t x, int32_t z)
 { // traccia un quadrante della superficie.
 
-    char  poly1, poly2;
+    int8_t  poly1, poly2;
 
-    int   c1, count, id, cl;
+    int16_t   c1, count, id, cl;
 
-    long  h1, h2, h3, h4;
-    long  x2 = x + 1, z2 = z + 1;
+    int32_t  h1, h2, h3, h4;
+    int32_t  x2 = x + 1, z2 = z + 1;
 
     float vx1[4], vy1[4], vz1[4];
     float vx2[4], vy2[4], vz2[4];
@@ -1029,9 +1029,9 @@ void fragment (long x, long z)
     float px, py, pz, icx, icz;
     float hp1, hp2, hp3, hp4, hp5, hp6, hp7, hp8;
 
-    unsigned char rch1, rch2, rch3, rch4;
+    uint8_t rch1, rch2, rch3, rch4;
 
-    unsigned int *ani_sqc_temp;
+    uint16_t *ani_sqc_temp;
 
     if (x == ipfx && z == ipfz) {
         // si assicura di tracciare una sola volta
@@ -1073,7 +1073,7 @@ void fragment (long x, long z)
     float dx    = pos_x - (0.5 * (vx1[0] + vx1[1]));
     float dz    = pos_z - (0.5 * (vz1[0] + vz1[2]));
     float hpdep = sqrt (dx*dx + dz*dz);
-    long  depth = (long)(hpdep) >> 14;
+    int32_t  depth = (int32_t)(hpdep) >> 14;
 
     // limita la visibilitÖ in diagonale, pió che altro per fare
     // uno sfondo su pianta rotonda, invece che quadrata, perchÇ cosç
@@ -1098,16 +1098,16 @@ void fragment (long x, long z)
     if (depth < 0) depth = 0;
 
     // fissa le coordinate di elevazione.
-    h1 = x  + m200[(unsigned)z];
-    h2 = x2 + m200[(unsigned)z];
-    h3 = x2 + m200[(unsigned)z2];
-    h4 = x  + m200[(unsigned)z2];
-    vy1[0] = - ((long)(p_surfacemap[h1]) << 11);
-    vy1[1] = - ((long)(p_surfacemap[h2]) << 11);
-    vy1[2] = - ((long)(p_surfacemap[h4]) << 11);
-    vy2[0] = - ((long)(p_surfacemap[h2]) << 11);
-    vy2[1] = - ((long)(p_surfacemap[h3]) << 11);
-    vy2[2] = - ((long)(p_surfacemap[h4]) << 11);
+    h1 = x  + m200[(uint16_t)z];
+    h2 = x2 + m200[(uint16_t)z];
+    h3 = x2 + m200[(uint16_t)z2];
+    h4 = x  + m200[(uint16_t)z2];
+    vy1[0] = - ((int32_t)(p_surfacemap[h1]) << 11);
+    vy1[1] = - ((int32_t)(p_surfacemap[h2]) << 11);
+    vy1[2] = - ((int32_t)(p_surfacemap[h4]) << 11);
+    vy2[0] = - ((int32_t)(p_surfacemap[h2]) << 11);
+    vy2[1] = - ((int32_t)(p_surfacemap[h3]) << 11);
+    vy2[2] = - ((int32_t)(p_surfacemap[h4]) << 11);
 
     // componente di shading della superficie in questo punto
     if (sh_delta) {
@@ -1248,7 +1248,7 @@ void fragment (long x, long z)
             }
             else {
                 if (hpdep < 49152L) {
-                    cl = 1536 - ((long)(hpdep) >> 5);
+                    cl = 1536 - ((int32_t)(hpdep) >> 5);
                     cl += TEXTURE_XSIZE;
                     XSIZE = cl;
                     YSIZE = cl;
@@ -1375,13 +1375,13 @@ void fragment (long x, long z)
     }
 }
 
-void iperficie (int additional_quadrants)
+void iperficie (int16_t additional_quadrants)
 { // Traccia i poligoni della superficie, dirigendo la funzione precedente.
   // questa funzione ä centrata su ipfx;ipfz, e si prende cura di tracciare
   // i poligoni nell'ordine corretto rispetto alla distanza.
 
-    int       b = beta;
-    int   x, z;
+    int16_t       b = beta;
+    int16_t   x, z;
 
     if (b<0)
         b += 360;
@@ -1476,7 +1476,7 @@ void iperficie (int additional_quadrants)
 
 */
 
-void round_hill (int cx, int cz, unsigned r, float h, float hmax, char allowcanyons)
+void round_hill (int16_t cx, int16_t cz, uint16_t r, float h, float hmax, int8_t allowcanyons)
 { // Una collina rotonda, o una montagna molto erosa (se la si fa grossa).
   // hmax entra in gioco se il flag "allowcanyons" ä a zero:
   //      quando l'altezza puntuale supera "hmax", per allowcanyons=0
@@ -1484,7 +1484,7 @@ void round_hill (int cx, int cz, unsigned r, float h, float hmax, char allowcany
   //      mentre allowcanyons=1 fa ignorare il parametro "hmax" e, quando
   //      l'altezza supera il limite massimo globale (127), scava un canyon
   //      al centro della collina.
-    int x, z;
+    int16_t x, z;
 
     float dx, dz, d;
     float y, v = (float)r / M_PI_2;
@@ -1497,7 +1497,7 @@ void round_hill (int cx, int cz, unsigned r, float h, float hmax, char allowcany
                 d  = sqrt (dx*dx + dz*dz);
                 y  = cos (d / v) * h;
                 if (y>=0) {
-                    y += p_surfacemap[200*(long)z+x];
+                    y += p_surfacemap[200*(int32_t)z+x];
                     if (allowcanyons) {
                         if (y>127)
                             y = 254 - y;
@@ -1506,15 +1506,15 @@ void round_hill (int cx, int cz, unsigned r, float h, float hmax, char allowcany
                         if (y>hmax)
                             y = hmax;
                     }
-                    p_surfacemap[200*(long)z+x] = y;
+                    p_surfacemap[200*(int32_t)z+x] = y;
                 }
             }
         }
 }
 
-void smoothterrain (int rounding)
+void smoothterrain (int16_t rounding)
 { // Smussa il profilo del terreno.
-    int n;
+    int16_t n;
     while (rounding) {
         for (ptr = 0; ptr < 39799; ptr++) {
             n  = p_surfacemap[ptr];
@@ -1527,7 +1527,7 @@ void smoothterrain (int rounding)
     }
 }
 
-void rockyground (int roughness, int rounding, char level)
+void rockyground (int16_t roughness, int16_t rounding, int8_t level)
 { // Produce una superficie pió o meno accidentata.
     for (ptr = 0; ptr < 40000; ptr++)
         p_surfacemap[ptr] = random (roughness);
@@ -1543,10 +1543,10 @@ void rockyground (int roughness, int rounding, char level)
     }
 }
 
-void std_crater (unsigned char huge *map, int cx, int cz, int r,
-         int lim_h, float h_factor, float h_raiser, long align)
+void std_crater (uint8_t huge *map, int16_t cx, int16_t cz, int16_t r,
+         int16_t lim_h, float h_factor, float h_raiser, int32_t align)
 { // Un cratere.
-    int x, z;
+    int16_t x, z;
 
     float dx, dz, d, y, h, fr;
 
@@ -1562,38 +1562,38 @@ void std_crater (unsigned char huge *map, int cx, int cz, int r,
                 if (d <= fr) {
                     y  = sin (M_PI*(d/fr)) * h;
                     y  = pow (y, h_raiser);
-                    y += map[align*(long)z+x];
+                    y += map[align*(int32_t)z+x];
                     if (y<0) y = 0;
                     if (y>lim_h) y = lim_h;
-                    map[align*(long)z+x] = y;
+                    map[align*(int32_t)z+x] = y;
                 }
             }
         }
 }
 
-void srf_darkline (unsigned char huge *map, int length,
-           int x_trend, int z_trend, long align)
+void srf_darkline (uint8_t huge *map, int16_t length,
+           int16_t x_trend, int16_t z_trend, int32_t align)
 { // Una crepa scura (versione principalmente per textures).
-    int fx = random(align), fz = random(align);
-    long mapsize = align*align;
-    unsigned location;
+    int16_t fx = random(align), fz = random(align);
+    int32_t mapsize = align*align;
+    uint16_t location;
     //
     while (length) {
         fx += random(3) + x_trend;
         fz += random(3) + z_trend;
-        location = align*(long)fz+fx;
+        location = align*(int32_t)fz+fx;
         if (location>0 && location<mapsize) map[location] >>= 1;
         length--;
     }
 }
 
-void felisian_srf_darkline (unsigned char huge *map, int length,
-                int x_trend, int z_trend, long align)
+void felisian_srf_darkline (uint8_t huge *map, int16_t length,
+                int16_t x_trend, int16_t z_trend, int32_t align)
 { // Un crepaccio (versione principalmente per superfici).
-    int fx = random(align), fz = random(align);
-    int peak, deviation, variability;
-    long mapsize = align*align;
-    unsigned location;
+    int16_t fx = random(align), fz = random(align);
+    int16_t peak, deviation, variability;
+    int32_t mapsize = align*align;
+    uint16_t location;
     //
     deviation = random(25) - 50;
     variability = 2 + random(10);
@@ -1601,7 +1601,7 @@ void felisian_srf_darkline (unsigned char huge *map, int length,
         fx += random(3) + x_trend;
         fz += random(3) + z_trend;
         deviation += random(variability) - (variability>>1);
-        location = align*(long)fz+fx;
+        location = align*(int32_t)fz+fx;
         if (location>0 && location<mapsize) {
             peak = map[location];
             peak += deviation;
@@ -1617,9 +1617,9 @@ void felisian_srf_darkline (unsigned char huge *map, int length,
     }
 }
 
-void asterism (unsigned char huge *map, int x, int y,
-           int base, int variation, int density,
-           int size, long align)
+void asterism (uint8_t huge *map, int16_t x, int16_t y,
+           int16_t base, int16_t variation, int16_t density,
+           int16_t size, int32_t align)
 { // Simile a un asterisco variabile. Viene usata per i ceppi d'erba.
     if (density <=0) return;
 
@@ -1627,9 +1627,9 @@ void asterism (unsigned char huge *map, int x, int y,
     float ang = 0;
 
     float shift_d;
-    long  shift_x;
-    long  shift_y;
-    long  shift_p;
+    int32_t  shift_x;
+    int32_t  shift_y;
+    int32_t  shift_p;
 
     float color, var;
 
@@ -1658,8 +1658,8 @@ void asterism (unsigned char huge *map, int x, int y,
 
 void nebular_sky ()
 { // Cielo nebuloso, piuttosto alieno, con piccoli ammassi sparsi o striati.
-    unsigned pqw = QUADWORDS;
-    unsigned seed = random (10000);
+    uint16_t pqw = QUADWORDS;
+    uint16_t seed = random (10000);
 
     QUADWORDS = st_bytes / 4;
 
@@ -1685,11 +1685,11 @@ rndpat: asm {   add ax, cx
     QUADWORDS = pqw;
 }
 
-void cloudy_sky (int density, int smooths)
+void cloudy_sky (int16_t density, int16_t smooths)
 { // Cielo con nuvole sparse, di tipo terrestre.
-    int      n = random (density + albedo);
+    int16_t      n = random (density + albedo);
     float    x, y, cx, cy, r, b;
-    unsigned p, pqw = QUADWORDS;
+    uint16_t p, pqw = QUADWORDS;
 
     QUADWORDS = st_bytes / 4;
 
@@ -1732,11 +1732,11 @@ void cloudy_sky (int density, int smooths)
    4 - edifici coloniali a forma di X (stile Feniano)
    5 - edifici coloniali con tetto a cupola (stile Suricrasiano) */
 
-int average_of_y (int ic, int jc, int ra)
+int16_t average_of_y (int16_t ic, int16_t jc, int16_t ra)
 {
-    int av = 0;
-    int ai = 1;
-    int ip, jp, pt;
+    int16_t av = 0;
+    int16_t ai = 1;
+    int16_t ip, jp, pt;
 
     for (jp = jc - ra; jp < jc + ra; jp++) {
         for (ip = ic - ra; ip < ic + ra; ip++) {
@@ -1749,10 +1749,10 @@ int average_of_y (int ic, int jc, int ra)
     return (av);
 }
 
-void make_ruins (char style1, char style2, char style3,
-         char style4, char style5, int density)
+void make_ruins (int8_t style1, int8_t style2, int8_t style3,
+         int8_t style4, int8_t style5, int16_t density)
 {
-    int buildings = 0;
+    int16_t buildings = 0;
 
     switch (sctype) {
         case OCEAN: buildings = random(4);
@@ -1766,9 +1766,9 @@ void make_ruins (char style1, char style2, char style3,
         case ICY:   buildings = random(2);
     }
 
-    int peak;
-    char bstyle;
-    unsigned ic, jc, ip, jp, ra, hr, pt, av, ai;
+    int16_t peak;
+    int8_t bstyle;
+    uint16_t ic, jc, ip, jp, ra, hr, pt, av, ai;
 
     buildings *= density;
     while (buildings) {
@@ -1932,14 +1932,14 @@ void make_ruins (char style1, char style2, char style3,
 
 void build_surface ()
 {
-    int cx, cz, cr, n, incl;
+    int16_t cx, cz, cr, n, incl;
     float hf, hr, ht;
-    unsigned ptr1;
+    uint16_t ptr1;
 
-    char waswet;
-    char frosty;
-    char snowy;
-    char liquid_water;
+    int8_t waswet;
+    int8_t frosty;
+    int8_t snowy;
+    int8_t liquid_water;
 
     snowy     = 0;
     frosty    = 0;
@@ -2626,7 +2626,7 @@ void build_surface ()
     fast_srand (landing_pt_lat * landing_pt_lon);
     srand (landing_pt_lat * landing_pt_lon);
 
-    if ((long)(nearstar_identity * 1E6) == -37828) {
+    if ((int32_t)(nearstar_identity * 1E6) == -37828) {
         // Questa stella ä Balastrackonastreya
         if (ip_targetted == 3) {
             // Questo mondo ä Felysia:
@@ -2649,7 +2649,7 @@ void build_surface ()
         }
     }
 
-    if ((long)(nearstar_identity * 1E5) == 1599551984L) {
+    if ((int32_t)(nearstar_identity * 1E5) == 1599551984L) {
         // Questa stella ä Fenia
         // Peach, base navale storica:
         // molti grattacieli, grossi edifici rovinati (industrie).
@@ -2665,7 +2665,7 @@ void build_surface ()
             make_ruins (3,4,4,4,4, 1);
     }
 
-    if ((long)(nearstar_identity * 1E8) == -11543634L) {
+    if ((int32_t)(nearstar_identity * 1E8) == -11543634L) {
         // Questa stella ä Ylastravenia, fu esplorata
         // per prima (ä vicinissima a Balastrackonastreya)
         // ed il quarto pianeta, Suricrasia, venne colonizzato
@@ -2718,7 +2718,7 @@ void build_surface ()
 /* Funzione che definisce il cielo visto da un pianeta.
    Oltretutto, definisce anche: tavola colori, temperatura e pressione. */
 
-void create_sky (char atmosphere)
+void create_sky (int8_t atmosphere)
 {
     // filtri colorati di base.
 
@@ -2737,7 +2737,7 @@ void create_sky (char atmosphere)
     // ä infuenzato anche dal tipo di stella.
 
     float sb, dfs;
-    int   owner = nearstar_p_owner[ip_targetted];
+    int16_t   owner = nearstar_p_owner[ip_targetted];
 
     if (owner == -1)
         dfs = 1 - ((float)(ip_targetted) * 0.05);
@@ -2775,7 +2775,7 @@ void create_sky (char atmosphere)
     // quando piove, tende a far scivolare le sfumature verso il grigio)
 
     float saturation = 1 - (0.15 * rainy);
-    int shade_nr;
+    int16_t shade_nr;
 
     fast_srand (global_surface_seed);
     srand (global_surface_seed);
@@ -3127,11 +3127,11 @@ void create_sky (char atmosphere)
 
 void setup_animals ()
 {
-    int n, p, x;
+    int16_t n, p, x;
 
-    int bird_probability;
-    int reptil_probability;
-    int mammal_probability;
+    int16_t bird_probability;
+    int16_t reptil_probability;
+    int16_t mammal_probability;
 
     // impostazione numero animali.
     // questo parametro dipende dal tipo di scenario.
@@ -3250,19 +3250,19 @@ void setup_animals ()
    dalla superficie (il parametro height) e dell'orientamento della normale
    alla superficie in quel punto. sp_x;y;z stanno per "stepping pos x;y;z" */
 
-void add_height (long px, long pz, float height)
+void add_height (int32_t px, int32_t pz, float height)
 {
-    long cpos;
+    int32_t cpos;
 
     float x[3], y[3], z[3];
     float h1, h2, h3, h4, icx, icz;
 
     cpos   = m200[pz>>14] + (px>>14);
 
-    h1     = - ((long)(p_surfacemap[cpos])     << 11);
-    h2     = - ((long)(p_surfacemap[cpos+1])   << 11);
-    h3     = - ((long)(p_surfacemap[cpos+201]) << 11);
-    h4     = - ((long)(p_surfacemap[cpos+200]) << 11);
+    h1     = - ((int32_t)(p_surfacemap[cpos])     << 11);
+    h2     = - ((int32_t)(p_surfacemap[cpos+1])   << 11);
+    h3     = - ((int32_t)(p_surfacemap[cpos+201]) << 11);
+    h4     = - ((int32_t)(p_surfacemap[cpos+200]) << 11);
 
     icx    = px & 16383;
     icz    = pz & 16383;
@@ -3289,40 +3289,40 @@ void add_height (long px, long pz, float height)
 
 float tiredness = 0;
 
-char exitflag = 0; // flag: se settato al ritorno di planetary_main,
+int8_t exitflag = 0; // flag: se settato al ritorno di planetary_main,
            // significa che c'ä stato un quit sulla superficie.
-char entryflag = 0;// flag: se settato all'ingresso di planetary_main,
+int8_t entryflag = 0;// flag: se settato all'ingresso di planetary_main,
            // significa che si sta recuperando la situazione
            // di superficie.
 
 void planetary_main ()
 {
-    const int widesnappingangle = 71;
+    const int16_t widesnappingangle = 71;
 
-    unsigned pqw = QUADWORDS;
-    long     cpos;
+    uint16_t pqw = QUADWORDS;
+    int32_t     cpos;
 
-    char     bfa        = 0;
-    char     flash      = 1;
-    char     flashes    = 0;
-    char     flashed    = 0;
-    char     recover    = 0;
-    char     atmosphere = 1;
+    int8_t     bfa        = 0;
+    int8_t     flash      = 1;
+    int8_t     flashes    = 0;
+    int8_t     flashed    = 0;
+    int8_t     recover    = 0;
+    int8_t     atmosphere = 1;
 
     /*global*/opencapcount= 1;
-    int  opencapdelta = 0;
-    int  openhudcount = 180;
-    int  openhuddelta = 0;
-    char     hud_rtl_closed   = 1;
-    char     widesnapping = 0;
+    int16_t  opencapdelta = 0;
+    int16_t  openhudcount = 180;
+    int16_t  openhuddelta = 0;
+    int8_t     hud_rtl_closed   = 1;
+    int8_t     widesnapping = 0;
 
-    int      w, lw = 10, now = 25, waveratio = 5, waveblur = 0;
-    int      flick, flicks, fshift;
+    int16_t      w, lw = 10, now = 25, waveratio = 5, waveblur = 0;
+    int16_t      flick, flicks, fshift;
 
-    char     secondarysun = 0;
-    int      ts, te, ll, plwp;
-    int      te_ll_distance, te_ll_distance_1, te_ll_distance_2;
-    int      ts_ll_distance, ts_ll_distance_1, ts_ll_distance_2;
+    int8_t     secondarysun = 0;
+    int16_t      ts, te, ll, plwp;
+    int16_t      te_ll_distance, te_ll_distance_1, te_ll_distance_2;
+    int16_t      ts_ll_distance, ts_ll_distance_1, ts_ll_distance_2;
 
     float    secondary_nearstar_x;
     float    secondary_nearstar_z;
@@ -3681,14 +3681,14 @@ void planetary_main ()
 
 /* inizio del ciclo d'esplorazione. */
 
-    int bounces = 0;
-    int resolve = 1;
+    int16_t bounces = 0;
+    int16_t resolve = 1;
     float   fixed_step = 0;
 
-    int ih, oh, i9997, i9998, i9999;
-    char    t[54];
-    int prog;
-    long    line;
+    int16_t ih, oh, i9997, i9998, i9999;
+    int8_t    t[54];
+    int16_t prog;
+    int32_t    line;
 
     exitflag = 0;
 
@@ -3898,10 +3898,10 @@ void planetary_main ()
         }
         // tracciamento del cielo (che ovviamente ä lo sfondo).
         alfa = user_alfa; beta = user_beta;
-        ptr = ((int)(5*beta)%5) - 320*((int)(4*(alfa+180))%4) - 4;
-        ptr -= (int)(beta / 72) * 320;
+        ptr = ((int16_t)(5*beta)%5) - 320*((int16_t)(4*(alfa+180))%4) - 4;
+        ptr -= (int16_t)(beta / 72) * 320;
         ptr -= 639;
-        background (360*(int)(alfa+51)-(int)(beta)%360,
+        background (360*(int16_t)(alfa+51)-(int16_t)(beta)%360,
                 adapted, s_background, n_offsets_map,
                 om_bytes, ptr);
         // backup zone di cielo coperte dai fulmini.
@@ -4022,8 +4022,8 @@ void planetary_main ()
                     mirror = 1;
                     halfscan_needed = 1;
                     txtr = p_background;
-                    ipfx = ((long)(cam_x)) >> 14;
-                    ipfz = ((long)(cam_z)) >> 14;
+                    ipfx = ((int32_t)(cam_x)) >> 14;
+                    ipfz = ((int32_t)(cam_z)) >> 14;
                     iperficie (0);
                     txtr = n_globes_map;
                     halfscan_needed = 0;
@@ -4037,7 +4037,7 @@ void planetary_main ()
                 // luccichçi generici
                 if (sctype == ICY) {
                     // appaiono semisolidificati, sul ghiaccio
-                    fast_srand ( ((long)(pos_x)>>10) + ((long)(pos_z)>>10) );
+                    fast_srand ( ((int32_t)(pos_x)>>10) + ((int32_t)(pos_z)>>10) );
                 }
                 else {
                     // e molto pió variabili sull'acqua
@@ -4132,11 +4132,11 @@ void planetary_main ()
                 }
                 if (!opencapdelta && gravity < 250
                 && (compdist < 512 || bounces > 10)) {
-                    pos_x   = ((((long)pos_x) >> 14) << 14) + 8192;
-                    pos_z   = ((((long)pos_z) >> 14) << 14) + 8192;
+                    pos_x   = ((((int32_t)pos_x) >> 14) << 14) + 8192;
+                    pos_z   = ((((int32_t)pos_z) >> 14) << 14) + 8192;
                     pos_y   = hpoint (pos_x, pos_z);
-                    atl_x   = ((long)pos_x) >> 14;
-                    atl_z   = ((long)pos_z) >> 14;
+                    atl_x   = ((int32_t)pos_x) >> 14;
+                    atl_z   = ((int32_t)pos_z) >> 14;
                     atl_x2  = 8192;
                     atl_z2  = 8192;
                     gravity = 0;
@@ -4260,8 +4260,8 @@ void planetary_main ()
         }
         // qui disegna tutto il landscape.
         mirror = 0; // non ä un riflesso.
-        ipfx = ((long)(cam_x)) >> 14;
-        ipfz = ((long)(cam_z)) >> 14;
+        ipfx = ((int32_t)(cam_x)) >> 14;
+        ipfz = ((int32_t)(cam_z)) >> 14;
         if (landed)
             iperficie (1);
         else

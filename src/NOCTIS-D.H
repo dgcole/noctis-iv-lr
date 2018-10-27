@@ -1,5 +1,7 @@
-// C++ Includes
+#ifndef _NOCTIS_D_INCLUDE
+#define _NOCTIS_D_INCLUDE
 
+// C++ Includes
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -18,6 +20,16 @@
     Many.
 
 */
+
+// Data type definitions. Will be useful for porting to 32-bit.
+
+typedef unsigned    char    uint8_t;
+typedef unsigned    int     uint16_t;
+typedef unsigned    long    uint32_t;
+
+typedef char        int8_t;
+typedef int         int16_t;
+typedef long        int32_t;
 
 // Data Area:   Length:     Pointer:        Description:
 
@@ -145,20 +157,20 @@
 // Structure of a byte in the surface object map (objectschart).
 
 struct quadrant {
-    unsigned nr_of_objects : 2;
-    unsigned object0_class : 2;
-    unsigned object1_class : 2;
-    unsigned object2_class : 2;
+    uint16_t nr_of_objects : 2;
+    uint16_t object0_class : 2;
+    uint16_t object1_class : 2;
+    uint16_t object2_class : 2;
 };
 
 // Structure that identifies a polygon and its vertices for the PV functions.
 
 struct pvlist {
-    unsigned polygon_id : 12;
-    unsigned vtxflag_0  : 1;
-    unsigned vtxflag_1  : 1;
-    unsigned vtxflag_2  : 1;
-    unsigned vtxflag_3  : 1;
+    uint16_t polygon_id : 12;
+    uint16_t vtxflag_0  : 1;
+    uint16_t vtxflag_1  : 1;
+    uint16_t vtxflag_2  : 1;
+    uint16_t vtxflag_3  : 1;
 };
 
 // Definitions for software interrupts.
@@ -186,3 +198,5 @@ struct pvlist {
 
 // Processor time cutoff for double left and right clicks.
 #define DBL_CLICK_CUTOFF 500
+
+#endif

@@ -8,20 +8,20 @@
 
 const double deg = M_PI / 180;
 
-extern char exitflag;
-extern char entryflag;
+extern int8_t exitflag;
+extern int8_t entryflag;
 extern void planetary_main();
 extern float tiredness;
 
 // Stuff imported from noctis-0.cpp to lighten it.
 
-char   nsnp         = 1; // Nearstar-Not-Prepared
-char   manual_target    = 0;
-char   mt_string_char   = 0;
-char   mt_coord     = 0;
-char   manual_x_string [11];
-char   manual_y_string [11];
-char   manual_z_string [11];
+int8_t   nsnp         = 1; // Nearstar-Not-Prepared
+int8_t   manual_target    = 0;
+int8_t   mt_string_char   = 0;
+int8_t   mt_coord     = 0;
+int8_t   manual_x_string [11];
+int8_t   manual_y_string [11];
+int8_t   manual_z_string [11];
 
 // Set the autopilot travel parameters.
 // TODO; This isn't getting called on a double right-click like it should be.
@@ -68,7 +68,7 @@ void alogena ()
 {
     float x[3], y[3], z[3];
     float lon, dlon, dlon_2;
-    int pcol;
+    int16_t pcol;
 
     dlon = M_PI / 5;
 
@@ -93,7 +93,7 @@ void alogena ()
 
 /* Quadranti di selezione del computer di bordo. */
 
-void qsel (float *x, float *y, float *z, unsigned n, unsigned char c)
+void qsel (float *x, float *y, float *z, uint16_t n, uint8_t c)
 {
     setfx (1);
 
@@ -206,7 +206,7 @@ noevid: lbxf--;
 /* Schemi aggiuntivi per lo schermo del computer. */
 
 void frame (float x, float y, float l, float h,
-        float borderwidth, unsigned char color)
+        float borderwidth, uint8_t color)
 { // disegna una cornice rettangolare.
     float vx[4], vy[4], vz[4] = { 0, 0, 0, 0 };
 
@@ -256,11 +256,11 @@ void pointer_cross_for (double xlight, double ylight, double zlight) {
         rx /= rz; rx += x_centro;
         ry /= rz; ry += y_centro - 2;
         if (rx>10&&ry>10&&rx<310&&ry<190) {
-            unsigned int offsetmaybe = 320 * (int) ry + rx;
-            for (int i = 0; i < 4; i++) {
-                int mod1 = (i == 1 || i == 3) ? 1 : -1;
-                int mod2 = (i == 1 || i == 2) ? 1 : -1;
-                for (int j = 7; j > 3; j--) {
+            uint16_t offsetmaybe = 320 * (int16_t) ry + rx;
+            for (int16_t i = 0; i < 4; i++) {
+                int16_t mod1 = (i == 1 || i == 3) ? 1 : -1;
+                int16_t mod2 = (i == 1 || i == 2) ? 1 : -1;
+                for (int16_t j = 7; j > 3; j--) {
                     adapted[offsetmaybe + mod1 * 320 * j + mod2 * j] = 126;
                 }
             }
@@ -269,11 +269,11 @@ void pointer_cross_for (double xlight, double ylight, double zlight) {
 }
 
 // Write a line on the onboard computer screen.
-void cline(int line, char *text) {
+void cline(int16_t line, int8_t *text) {
     // Multiply the line index by 128 b/c there are 128 characters per line. 
     line *= 128;
     // The non-control section starts 20 characters into the line.
-    unsigned int start = line + 20;
+    uint16_t start = line + 20;
     
     strcpy(&ctb[start], text);
     
@@ -282,7 +282,7 @@ void cline(int line, char *text) {
 }
 
 // Write text following what was just written with cline().
-void other(char *text) {
+void other(int8_t *text) {
     strcpy(&ctb[point], text);
     
     // Increment the current character index by the length of what was just added.
@@ -290,20 +290,20 @@ void other(char *text) {
 }
 
 // Write the title of a system check (there are 4 in all).
-void control (int line, char *text) {
+void control (int16_t line, int8_t *text) {
     // Multiply the line index by 128 b/c there are 128 characters per line.
-    unsigned int start = line * 128;
+    uint16_t start = line * 128;
     
     strcpy(&ctb[start], text);
 }
 
 // Writes the title of a command on the main display.
 // These are split up into 4 blocks of 27 characters.
-void command (int nr, char *text) {
-   unsigned int length = strlen(text);
+void command (int16_t nr, int8_t *text) {
+   uint16_t length = strlen(text);
    if (length > 27) return;
    
-   int index = 20 + 27 * nr;
+   int16_t index = 20 + 27 * nr;
    strcpy(&ctb[index], text);
 }
 
@@ -315,26 +315,26 @@ void clear_onboard_screen () {
 
 /* Gruppo di gestione del sistema operativo di bordo. */
 
-unsigned char reset_signal = 55;        // Segnale di reset (=55).
-char force_update = 0;              // Forza il refresh schermi.
-char active_screen = 0;             // Schermo attualmente attivo.
-unsigned char osscreen[2][7*21+1];      // Matrici degli schermi GOES.
-int osscreen_cursor_x[2] = { 0, 0 };        // Posizione cursori (x).
-int osscreen_cursor_y[2] = { 0, 0 };        // Posizione cursori (y).
-char osscreen_textbuffer[7*21+1] = "";      // Buffer degli schermi.
+uint8_t reset_signal = 55;        // Segnale di reset (=55).
+int8_t force_update = 0;              // Forza il refresh schermi.
+int8_t active_screen = 0;             // Schermo attualmente attivo.
+uint8_t osscreen[2][7*21+1];      // Matrici degli schermi GOES.
+int16_t osscreen_cursor_x[2] = { 0, 0 };        // Posizione cursori (x).
+int16_t osscreen_cursor_y[2] = { 0, 0 };        // Posizione cursori (y).
+int8_t osscreen_textbuffer[7*21+1] = "";      // Buffer degli schermi.
 
-void mslocate (int screen_id, int cursor_x, int cursor_y)
+void mslocate (int16_t screen_id, int16_t cursor_x, int16_t cursor_y)
 { // Rilocazione cursore (multischermo).
 
     osscreen_cursor_x[screen_id] = cursor_x;
     osscreen_cursor_y[screen_id] = cursor_y;
 }
 
-void mswrite (int screen_id, char *text)
+void mswrite (int16_t screen_id, int8_t *text)
 { // Scrittura caratteri (multischermo).
 
-    int  i, c = 0;
-    char symbol;
+    int16_t  i, c = 0;
+    int8_t symbol;
 
     while ((symbol = text[c]) != 0) {
         if (symbol>=32 && symbol<=96) {
@@ -366,16 +366,16 @@ void mswrite (int screen_id, char *text)
     }
 }
 
-char gnc_pos = 0;           // Numero carattere in command line.
+int8_t gnc_pos = 0;           // Numero carattere in command line.
 long goesfile_pos = 0;          // Posizione sul file output di GOES.
-char goesnet_command[120] = "_";    // Command line di GOES Net.
-char *comm = "..\\DATA\\COMM.BIN";  // File di comunicazione dei moduli.
+int8_t goesnet_command[120] = "_";    // Command line di GOES Net.
+int8_t *comm = "DATA\\COMM.BIN";  // File di comunicazione dei moduli.
 
 /* Congela la situazione (all'uscita dal programma o al run di un modulo). */
 
 void freeze ()
 {
-    int fh = _rtl_creat(situation_file, 0);
+    int16_t fh = _rtl_creat(situation_file, 0);
     if (fh==-1) return;
 
     _rtl_write (fh, &sync, 245);
@@ -388,8 +388,8 @@ void freeze ()
 void run_goesnet_module ()
 { // Esecuzione di un modulo eseguibile della GOES Net.
 
-    int ch;
-    unsigned bqw = QUADWORDS;
+    int16_t ch;
+    uint16_t bqw = QUADWORDS;
 
     // Salva la situazione perch‚ alcuni moduli ne hanno bisogno.
     freeze ();
@@ -417,7 +417,7 @@ void run_goesnet_module ()
     system (goesnet_command);
 
     // Ri-alloca l'area temporaneamente liberata.
-solong: adapted = (unsigned char far  *) farmalloc (sc_bytes);
+solong: adapted = (uint8_t far  *) farmalloc (sc_bytes);
 
     if (!adapted) {
         _80_25_C ();
@@ -480,7 +480,7 @@ solong: adapted = (unsigned char far  *) farmalloc (sc_bytes);
 
 /* Gruppo di tracciamento dello schermo del computer di bordo. */
 
-void squaredot (float x, float y, float size, unsigned char color)
+void squaredot (float x, float y, float size, uint8_t color)
 { // questo Š un quadratino, un "pixel" del computer di bordo.
     float vx[4], vy[4], vz[4] = { 0, 0, 0, 0 };
 
@@ -506,9 +506,9 @@ long pp[32]= { 0x00000001, 0x00000002, 0x00000004, 0x00000008,
            0x01000000, 0x02000000, 0x04000000, 0x08000000,
            0x10000000, 0x20000000, 0x40000000, 0x80000000 };
 
-void digit_at (char digit, float x, float y, float size, unsigned char color, char shader)
+void digit_at (int8_t digit, float x, float y, float size, uint8_t color, int8_t shader)
 { // questo Š un carattere alfanumerico...
-    unsigned char huge *prev_txtr = txtr;
+    uint8_t huge *prev_txtr = txtr;
 
     float vx[4], vy[4], vz[4] = { 0, 0, 0, 0 };
 
@@ -520,10 +520,10 @@ void digit_at (char digit, float x, float y, float size, unsigned char color, ch
     long prev_xs = XSIZE;
     long prev_ys = YSIZE;
 
-    int  n, m, d, i;
+    int16_t  n, m, d, i;
 
-    char pixel_color = color % 64;
-    char map_base = (color >> 6) << 6;
+    int8_t pixel_color = color % 64;
+    int8_t map_base = (color >> 6) << 6;
 
     if (reset_signal > 100) {
         pixel_color -= (reset_signal - 100);
@@ -565,7 +565,7 @@ void digit_at (char digit, float x, float y, float size, unsigned char color, ch
 
 void screen() {
     float x, y;
-    int   c, p, t = 0;
+    int16_t   c, p, t = 0;
 
     #define blinkscolor 127
     #define screencolor 127
@@ -632,8 +632,8 @@ void screen() {
 
 void show_planetary_map ()
 {
-    char    is_moon;
-    int     lat, lon, i, j, p;
+    int8_t    is_moon;
+    int16_t     lat, lon, i, j, p;
 
     if (nearstar_p_owner[ip_targetted] > -1)
         is_moon = 1;
@@ -665,14 +665,14 @@ void show_planetary_map ()
 /* Disegna l'astrozattera. (Quella che si sta usando, vista dall'interno.)
    Assume anche il compito di decifrare i comandi da tastiera per GOESNet. */
 
-int goesk_a = -1;
-int goesk_e = -1;
+int16_t goesk_a = -1;
+int16_t goesk_e = -1;
 
 void vehicle (float opencapcount)
 {
-    int   n, c, i, j, k, screenfile;
-    char  short_text[11];
-    unsigned char chcol;
+    int16_t   n, c, i, j, k, screenfile;
+    int8_t  short_text[11];
+    uint8_t chcol;
 
     float backup_cam_x, backup_cam_z;
     float backup_beta = beta;
@@ -906,7 +906,7 @@ void vehicle (float opencapcount)
                     goesk_a = -1;
                 }
                 /* Unit… di debugging dell'albedo
-                unsigned char far *ov=(unsigned char far*)objectschart;
+                uint8_t far *ov=(uint8_t far*)objectschart;
                 if (c == 'b') {
                     ov[(18 + 60*360) / 2] += 4;
                     p_background[18 + 60*360] ++;
@@ -1096,39 +1096,39 @@ void other_vehicle_at (double ovhx, double ovhy, double ovhz)
 
 /* Variabili globali di uso generico. */
 
-unsigned char far * ctrlkeys     = (unsigned char far *) 0x00000417;
+uint8_t far * ctrlkeys     = (uint8_t far *) 0x00000417;
 
-char   aso_countdown = 100; // contatore per la funzione "autoscreenoff"
+int8_t   aso_countdown = 100; // contatore per la funzione "autoscreenoff"
 long   tgt_label_pos = -1;  // posizione etichetta target selezionato
-int    tgts_in_show = 0;    // targets correntemente visualizzati
+int16_t    tgts_in_show = 0;    // targets correntemente visualizzati
 
 /* Dati gestione cartografia. */
 
-char   targets_in_range = 0;
+int8_t   targets_in_range = 0;
 long   sm_consolidated  = 0;
 
-char   target_name[4][24];
+int8_t   target_name[4][24];
 
-char   iptargetstring[11];
-char   iptargetchar = 0;
-char   iptargetplanet;
-char   iptargetmoon;
+int8_t   iptargetstring[11];
+int8_t   iptargetchar = 0;
+int8_t   iptargetplanet;
+int8_t   iptargetmoon;
 
 double ap_target_id = 12345, ap_target_previd = 54321;
 double current_planet_id = 12345, prev_planet_id = 54321;
-char   labstar = 0, labplanet = 0, labstar_char = 0, labplanet_char = 0;
+int8_t   labstar = 0, labplanet = 0, labstar_char = 0, labplanet_char = 0;
 long   star_label_pos = -1, planet_label_pos = -1;
 
 double star_id = 12345;
-char   star_label[25] = "UNKNOWN STAR / CLASS ...";
-char   star_no_label[24] = "UNKNOWN STAR / CLASS ...";
+int8_t   star_label[25] = "UNKNOWN STAR / CLASS ...";
+int8_t   star_no_label[24] = "UNKNOWN STAR / CLASS ...";
 
 double planet_id = 12345;
-char   planet_label[25] = "NAMELESS PLANET / N. ...";
-char   planet_no_label[24] = "NAMELESS PLANET / N. ...";
-char   moon_no_label[24] =   "NAMELESS MOON #../../...";
+int8_t   planet_label[25] = "NAMELESS PLANET / N. ...";
+int8_t   planet_no_label[24] = "NAMELESS PLANET / N. ...";
+int8_t   moon_no_label[24] =   "NAMELESS MOON #../../...";
 
-char   *sr_message = "SYSTEM RESET";
+int8_t   *sr_message = "SYSTEM RESET";
 
 void update_star_label ()
 {
@@ -1181,7 +1181,7 @@ void update_planet_label ()
 
 // Control the flight (Flight Control System).
 void fcs() {
-    int n;
+    int16_t n;
 
     if (ip_targetted != -1) {
         cline (1, "local target: ");
@@ -1336,7 +1336,7 @@ void fcs_commands ()
 void devices ()
 {
     double  parsis_x, parsis_y, parsis_z;
-    int     n, sp;
+    int16_t     n, sp;
     long    lsecs;
 
     switch (dev_page) {
@@ -1501,9 +1501,9 @@ void devices ()
             other (";");
             other (alphavalue(parsis_z));
             cline (3, "heading pitch: ");
-            other (alphavalue((int)(sin(deg*navigation_beta)*+100)));
+            other (alphavalue((int16_t)(sin(deg*navigation_beta)*+100)));
             other (";");
-            other (alphavalue((int)(cos(deg*navigation_beta)*-100)));
+            other (alphavalue((int16_t)(cos(deg*navigation_beta)*-100)));
             break;
         case 4: // emergency functions status
             command (0, "reset onboard system");
@@ -1523,12 +1523,12 @@ void devices ()
 
 /* Comandi dei dispositivi di bordo. */
 
-char dummy_identity[8] = "Removed:";
-char comp_data[32];
+int8_t dummy_identity[8] = "Removed:";
+int8_t comp_data[32];
 
 void dev_commands ()
 {
-    int n;
+    int16_t n;
     float dist;
 
     switch (dev_page) {
@@ -1824,7 +1824,7 @@ void prefs ()
 
 /* Comandi di impostazione delle opzioni preferenziali. */
 
-void toggle_option (char *option_flag)
+void toggle_option (int8_t *option_flag)
 {
     *option_flag = 1 - *option_flag;
     if (*option_flag)
@@ -1858,12 +1858,11 @@ void commands ()
 /* Scongela la situazione, riproducendola in tutto e per tutto,
    e facendola evolvere al momento attuale. */
 
-void unfreeze ()
-{
-    int     fh;
+void unfreeze() {
+    int16_t     fh;
     double  elapsed, dpwr;
 
-    /* Lettura della mappa stellare consolidata. */
+    // Reading the consolidated starmap.
 
     smh = _rtl_open (starmap_file, 4);
     if (smh > -1) {
@@ -1958,7 +1957,7 @@ void unfreeze ()
 /* Gestione errori hardware. */
 
 #pragma warn -par
-int caught_somewhere_in_time (int errval, int ax, int bp, int si)
+int16_t caught_somewhere_in_time (int16_t errval, int16_t ax, int16_t bp, int16_t si)
 {
     hardresume (_HARDERR_FAIL);
     return (2);
@@ -1982,7 +1981,7 @@ float starmass_correction[star_classes] = {
     15000.00  // Class 11
 };
 
-extern unsigned _stklen = 0x1800;
+extern uint16_t _stklen = 0x1800;
 
 void main() {
     float satur, DfCoS;
@@ -1992,23 +1991,23 @@ void main() {
     long  ir2, ig2, ib2, ir2e = 0, ig2e = 0, ib2e = 0;
     long  ir3, ig3, ib3, ir3e = 0, ig3e = 0, ib3e = 0;
 
-    int   c, p_mpul = 0;
-    char  sky_palette_ok = 0;
-    char  select, lrv, right_dblclick = 0;
+    int16_t   c, p_mpul = 0;
+    int8_t  sky_palette_ok = 0;
+    int8_t  select, lrv, right_dblclick = 0;
     float right_dblclick_dir;
 
     double dpz, ras, rap, dasp, eclipse;
     double dxx, dyy, dzz, l_dsd, p_dsd, stz, ang;
 
-    int opencapcount = 0;
-    int opencapdelta = 0;
-    int holdtomiddle = 0;
+    int16_t opencapcount = 0;
+    int16_t opencapdelta = 0;
+    int16_t holdtomiddle = 0;
 
-    char leftturn, rightturn, arrowcolor, farstar = 0;
+    int8_t leftturn, rightturn, arrowcolor, farstar = 0;
 
-    char temp_distance_buffer[16];
+    int8_t temp_distance_buffer[16];
 
-    unsigned pqw;
+    uint16_t pqw;
     float hold_z;
 
     float tmp_float;
@@ -2023,17 +2022,17 @@ void main() {
         return;
     }
 
-    n_offsets_map = (unsigned char far  *) farmalloc (om_bytes);
-    n_globes_map  = (char far  *) farmalloc ((unsigned)gl_bytes+(unsigned)gl_brest);
-    s_background  = (unsigned char far  *) farmalloc (st_bytes);
-    p_background  = (unsigned char far  *) farmalloc (pl_bytes);
-    p_surfacemap  = (unsigned char huge *) farmalloc (ps_bytes);
+    n_offsets_map = (uint8_t far  *) farmalloc (om_bytes);
+    n_globes_map  = (int8_t far  *) farmalloc ((uint16_t)gl_bytes+(uint16_t)gl_brest);
+    s_background  = (uint8_t far  *) farmalloc (st_bytes);
+    p_background  = (uint8_t far  *) farmalloc (pl_bytes);
+    p_surfacemap  = (uint8_t huge *) farmalloc (ps_bytes);
     objectschart  = (quadrant far       *) farmalloc (oc_bytes);
-    ruinschart    = (unsigned char far  *) objectschart; // oc alias
-    pvfile        = (unsigned char far  *) farmalloc (pv_bytes);
-    adapted       = (unsigned char far  *) farmalloc (sc_bytes);
-    txtr          = (unsigned char huge *) p_background; // txtr alias
-    digimap2      = (unsigned long far *) &n_globes_map[gl_bytes]; // font alias
+    ruinschart    = (uint8_t far  *) objectschart; // oc alias
+    pvfile        = (uint8_t far  *) farmalloc (pv_bytes);
+    adapted       = (uint8_t far  *) farmalloc (sc_bytes);
+    txtr          = (uint8_t huge *) p_background; // txtr alias
+    digimap2      = (uint32_t far *) &n_globes_map[gl_bytes]; // font alias
 
     reach_your_dir ();
 
@@ -2084,7 +2083,7 @@ void main() {
     tavola_colori (range8088, 0, 64, 16, 32, 63);
     tavola_colori (tmppal, 0, 256, 64, 64, 64);
 
-    int resolve = 64;
+    int16_t resolve = 64;
 
     // causa il recupero dell'eventuale contenuto dello schermo
     // di output della GOES command net
@@ -2968,11 +2967,11 @@ void main() {
         if ((ip_targetted != -1 && !ip_reached) || ip_targetting) {
             planet_xyz (ip_targetted);
             if (far_pixel_at (plx, ply, plz, 0, 1)) {
-                unsigned int index = vptr - 640;
-                for (int i = 0; i < 4; i++) {
-                    int voffset = (i > 1) ? 320 : 1;
-                    int signmod = (i % 2 == 0) ?  -1 : 1;
-                    for (int j = 4; j < 8; j++) {
+                uint16_t index = vptr - 640;
+                for (int16_t i = 0; i < 4; i++) {
+                    int16_t voffset = (i > 1) ? 320 : 1;
+                    int16_t signmod = (i % 2 == 0) ?  -1 : 1;
+                    for (int16_t j = 4; j < 8; j++) {
                         adapted[index + signmod * voffset * j] = 126;
                     }
                 }

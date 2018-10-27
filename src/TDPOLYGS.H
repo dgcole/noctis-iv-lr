@@ -44,6 +44,8 @@
 #include <io.h>
 #endif
 
+#include "noctis-d.h"
+
 /* Dati sui poligoni (quanti vertici al massimo si pensa di fare). */
 
 #ifndef VERTICI_PER_POLIGONO
@@ -118,20 +120,20 @@ const   TEXTURE_XSIZE =                 256; // Larghezza delle BMP.
 const   TEXTURE_YSIZE =                 256; // Altezza delle BMP.
 
 float   EMU_K         =                      16; // Cost. di emulaz. FPU
-long    H_MATRIXS     =                  16; // Nr. ripetizioni. 16-128
-long    V_MATRIXS     =                  16; // Nr. ripetizioni. 16-128
-long    XSIZE         =   TEXTURE_XSIZE * H_MATRIXS; // Calibraz. dimensioni.
-long    YSIZE         =   TEXTURE_YSIZE * V_MATRIXS; // Calibraz. dimensioni.
+int32_t    H_MATRIXS     =                  16; // Nr. ripetizioni. 16-128
+int32_t    V_MATRIXS     =                  16; // Nr. ripetizioni. 16-128
+int32_t    XSIZE         =   TEXTURE_XSIZE * H_MATRIXS; // Calibraz. dimensioni.
+int32_t    YSIZE         =   TEXTURE_YSIZE * V_MATRIXS; // Calibraz. dimensioni.
 float   XCOEFF        =                 EMU_K / dpp; // Coefficente di comodo.
 float   YCOEFF        =                 EMU_K / dpp; // Coefficente di comodo.
 
 // Inizializza indirizzi scanlines.
 
-unsigned riga[200];
+uint16_t riga[200];
 
 void initscanlines ()
 {
-    unsigned c;
+    uint16_t c;
 
     for (c=0; c<200; c++)
         riga[c] = 320 * c;
@@ -147,16 +149,16 @@ void initscanlines ()
 // Quella che effettua i controlli si trova nella funzione waveline di
 // Liquid Player, ed Š sicura al 1000 per mille.
 
-unsigned ptr;
+uint16_t ptr;
 
-unsigned long xp, yp, xa, ya;
-unsigned long global_x, global_y;
+uint32_t xp, yp, xa, ya;
+uint32_t global_x, global_y;
 
 void Segmento ()
 {
-    long a, b, L;
+    int32_t a, b, L;
 
-    unsigned pi, pf;
+    uint16_t pi, pf;
 
     if (xp==xa) {
         if (ya>=yp) {
@@ -267,17 +269,17 @@ _do:    asm {   mov bx, word ptr global_y[2]
 // Per default, Š la seguente, posta a nulla perch‚ tdpolygs non si
 // prepara subito a questa particolare funzione.
 
-char flares = 0;
+int8_t flares = 0;
 
-long mp[6*VERTICI_PER_POLIGONO];
+int32_t mp[6*VERTICI_PER_POLIGONO];
 
-unsigned max_x, max_y, min_x, min_y;
+uint16_t max_x, max_y, min_x, min_y;
 
 // Dati globali per conversioni, rototraslazioni e clipping.
 
-char doflag;
-int pvert, nvert, vvert;
-int vr, vr2, vr3, vr4, vr5, vr6;
+int8_t doflag;
+int16_t pvert, nvert, vvert;
+int16_t vr, vr2, vr3, vr4, vr5, vr6;
 
 float zk;
 float x2, y2, z2;
@@ -321,7 +323,7 @@ float xx, yy, zz;
 
 */
 
-char rwf[VERTICI_PER_POLIGONO];
+int8_t rwf[VERTICI_PER_POLIGONO];
 
 float rxf[VERTICI_PER_POLIGONO];
 float ryf[VERTICI_PER_POLIGONO];
@@ -334,10 +336,10 @@ float rzf[VERTICI_PER_POLIGONO];
 #define lby -altezza/2 + y_centro
 #define uby altezza/2 + y_centro
 
-long lbxl = lbx;
-long ubxl = ubx;
-long lbyl = lby;
-long ubyl = uby;
+int32_t lbxl = lbx;
+int32_t ubxl = ubx;
+int32_t lbyl = lby;
+int32_t ubyl = uby;
 
 float lbxf = lbx;
 float ubxf = ubx;
@@ -412,14 +414,14 @@ void change_txm_repeating_mode ()
 
 float uno = 1; // sempre uno: Š una costante di comodo.
 
-unsigned char entity = 1; /* controlla quantit… generiche nel riempimento
+uint8_t entity = 1; /* controlla quantit… generiche nel riempimento
                  dei poligoni con alcuni effetti speciali. */
 
 void poly3d (float *x, float *y, float *z,
-         unsigned nrv, unsigned char colore)
+         uint16_t nrv, uint8_t colore)
 {
-    unsigned _8n;
-        unsigned char ent = entity;
+    uint16_t _8n;
+        uint8_t ent = entity;
 
     // Matrici 3d: tutto sullo stack.
 
@@ -1493,13 +1495,13 @@ bordo:  asm {   db 0x66; mov ax, word ptr mp[si]
 
     // Pixel di Partenza.
 
-    unsigned segmptr; //= riga[min_y] + min_x;
+    uint16_t segmptr; //= riga[min_y] + min_x;
 
     // Pixel d'Arrivo.
 
-    unsigned lim_y; // = riga[max_y] + min_x;
-    unsigned lim_x; // = segmptr + max_x - min_x;
-    unsigned bytes; // = lim_x - segmptr + 2;
+    uint16_t lim_y; // = riga[max_y] + min_x;
+    uint16_t lim_x; // = segmptr + max_x - min_x;
+    uint16_t bytes; // = lim_x - segmptr + 2;
 
     asm {   mov si, min_y
         mov ax, min_x
@@ -1772,15 +1774,15 @@ bordo:  asm {   db 0x66; mov ax, word ptr mp[si]
 #define OK                     1 // Ritorno positivo.
 #define NOT_OK                     0 // Ritorno negativo.
 
-unsigned char huge *txtr; /* Area della texture (FLS a livelli di intensit…,
+uint8_t huge *txtr; /* Area della texture (FLS a livelli di intensit…,
                  64 livelli per pixel, senza header).*/
 
-char init_texture_mapping ()
+int8_t init_texture_mapping ()
 {
     _control87 (MCW_EM, MCW_EM); // disattiva i Floating Point Errors.
 
-    txtr = (unsigned char huge *)
-           farmalloc ((long)TEXTURE_YSIZE * 256 + 16);
+    txtr = (uint8_t huge *)
+           farmalloc ((int32_t)TEXTURE_YSIZE * 256 + 16);
 
     if (txtr)
         return (OK);
@@ -1788,13 +1790,13 @@ char init_texture_mapping ()
         return (NOT_OK);
 }
 
-char load_texture (char *fname, long offset)
+int8_t load_texture (int8_t *fname, int32_t offset)
                 /* Carica una bitmap:
                    formato FLS a livelli di luminanza,
                    64 livelli per pixel, senza header. */
 {
-    int fh, sl;
-    unsigned long p;
+    int16_t fh, sl;
+    uint32_t p;
 
     fh = _rtl_open (fname, 0);
 
@@ -1820,10 +1822,10 @@ char load_texture (char *fname, long offset)
         return (NOT_OK);
 }
 
-char fast_load_texture (char *fname) /* Solo per bitmaps 256 x 256. */
+int8_t fast_load_texture (int8_t *fname) /* Solo per bitmaps 256 x 256. */
 {
-    int fh;
-    unsigned long p;
+    int16_t fh;
+    uint32_t p;
 
     fh = _rtl_open (fname, 0);
 
@@ -1843,25 +1845,25 @@ char fast_load_texture (char *fname) /* Solo per bitmaps 256 x 256. */
    Possono essere cambiate per conferire un aspetto diverso
    ad ogni poligono.
 
-char    shade = 0;        // in che modo i poligoni intercettano la luce
+int8_t    shade = 0;        // in che modo i poligoni intercettano la luce
 
 #define NORMAL       0x00 // luminosit… non curata
 
               /* sezione spotlight */
 #define SPOTLIGHT    0x10 // torcia elettrica o faro, con centro su <xl, yl>
-int     xl = x_centro;    // coordinate video del centro di luce
-int yl = y_centro;    // coordinata y
-int     aspect = 8;       // aspetto d. proiezione: + alto = + schiacciato
-int     fallout = 20;     // evidenza della zona centrale: + alto = + diffuso
-int     lt_range = 30;    // ampiezza zona illumin.: 0 = infinita
-int     absorption = 45;  // assorbimento della superficie, da 0 a 63
+int16_t     xl = x_centro;    // coordinate video del centro di luce
+int16_t yl = y_centro;    // coordinata y
+int16_t     aspect = 8;       // aspetto d. proiezione: + alto = + schiacciato
+int16_t     fallout = 20;     // evidenza della zona centrale: + alto = + diffuso
+int16_t     lt_range = 30;    // ampiezza zona illumin.: 0 = infinita
+int16_t     absorption = 45;  // assorbimento della superficie, da 0 a 63
 
               /* sezione radiosity semplificata */
 #define RADIOSITY    0x20 // luminosit… regolabile orizzontalmente o vertic.
-char    shadymask = 1;
-int shady_aux = 0;
+int8_t    shadymask = 1;
+int16_t shady_aux = 0;
 
-int     xsh, ysh, ksh; // variabili di lavoro che devono rientrare in DS.
+int16_t     xsh, ysh, ksh; // variabili di lavoro che devono rientrare in DS.
 
 float   pnx, pny, pnz; // valori di ritorno della funzione successiva. */
 
@@ -1925,40 +1927,39 @@ float   x_antialias = 1.125;
 float   y_antialias = 1.125;
 float   z_antialias = 1.125;
 
-char    culling_needed = 0;  // flag: traccia due punti per volta.
-char    halfscan_needed = 0; // flag: traccia due linee per volta.
+int8_t    culling_needed = 0;  // flag: traccia due punti per volta.
+int8_t    halfscan_needed = 0; // flag: traccia due linee per volta.
 
-unsigned char escrescenze = 0xE0; // primo colore dei bumps (escrescenze)
+uint8_t escrescenze = 0xE0; // primo colore dei bumps (escrescenze)
 
-void polymap (float *x, float *y, float *z, char nv, unsigned char tinta)
-{
+void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
 
     float ultima_x[2*VERTICI_PER_POLIGONO];
     float ultima_y[2*VERTICI_PER_POLIGONO];
     float ultima_z[2*VERTICI_PER_POLIGONO];
 
-    int   fpart[MPIY];
-    int   ipart[MPIY];
+    int16_t   fpart[MPIY];
+    int16_t   ipart[MPIY];
 
     float tempXsize = XSIZE;
     float tempYsize = YSIZE;
 
-    char  _flares = flares;
+    int8_t  _flares = flares;
     float _uno = 1;
 
-    char  culling = culling_needed;
-    char  halfscan = halfscan_needed;
+    int8_t  culling = culling_needed;
+    int8_t  halfscan = halfscan_needed;
 
-    int   vr22;
-    long  bndx;
+    int16_t   vr22;
+    int32_t  bndx;
 
-    int   i, sections;
+    int16_t   i, sections;
 
-    long  i_low_lim = -10000;
-    long  i_hig_lim = +10000;
+    int32_t  i_low_lim = -10000;
+    int32_t  i_hig_lim = +10000;
 
-    long  u, v, min_y, max_y;
-    long  x1, y1, x2, y2, ity, jty;
+    int32_t  u, v, min_y, max_y;
+    int32_t  x1, y1, x2, y2, ity, jty;
 
     float k1, k2, k3, k4;
     float hx, vx, ox, hy, vy, oy, hz, vz, oz, _x, _y, _z;
@@ -3081,9 +3082,9 @@ void Forward (float delta) /* Provoca l'avanzamento dell'osservatore
     cam_y += delta * opt_tsinalfa;
 }
 
-long _x_, _y_;
+int32_t _x_, _y_;
 
-char getcoords (float x, float y, float z)
+int8_t getcoords (float x, float y, float z)
 { // calcola le coordinate sullo schermo di un punto nello spazio,
   // usando lo stesso nucleo di calcolo di poly3d e di polymap,
   // se il punto rientra nello schermo ritorna 1, altrimenti ritorna 0.
@@ -3203,7 +3204,7 @@ char getcoords (float x, float y, float z)
             return (0);
 }
 
-char facing (float *x, float *y, float *z)
+int8_t facing (float *x, float *y, float *z)
 { /* Controlla se un poligono a una sola faccia Š visibile o meno.
      Certo che come procedimento non Š poi tanto semplice: va calcolata,
      anche approssimativamente, la normale alla superficie; comunque,
