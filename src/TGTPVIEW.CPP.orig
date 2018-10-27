@@ -78,10 +78,8 @@ void view_local_object (int body_logical_id) {
     // Traccia l'oggetto sulla pagina nascosta,
     // usando i colori da 64 a 127.
     glass_bubble = 0;
-    globe (359 - planet_viewpoint (_dzat_x,
-                                   _dzat_z) + nearstar_p_rotation[body_logical_id],
-           adapted, p_background, n_globes_map, gl_bytes, plx, ply, plz,
-           nearstar_p_ray[body_logical_id], 64);
+    globe (359 - planet_viewpoint (_dzat_x, _dzat_z) + nearstar_p_rotation[body_logical_id],
+           adapted, p_background, n_globes_map, gl_bytes, plx, ply, plz, nearstar_p_ray[body_logical_id], 64);
 
     // Traduce l'immagine dell'oggetto in modo che possa essere
     // visualizzata come texture, usando il buffer "p_surfacemap".

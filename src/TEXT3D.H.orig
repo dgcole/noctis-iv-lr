@@ -79,10 +79,10 @@ char symbol[65][41] = {
     4, -1, -2,  1, -1,  1, -1,  0, -1,  0, -1, -1, -1, -1, -1, -1, -2,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
 };
 
-/*  void OutTextXYZ (double x, double y, double z,
+/*void OutTextXYZ (double x, double y, double z,
          double scale_x, double scale_y,
          int a, int b, char t)
-    {
+{
     double fxx, fyy, pxx=100, pyy=100;
     double lsx, lsy, lsz;
     double sx, sy, sz;
@@ -118,9 +118,9 @@ char symbol[65][41] = {
         f += 4;
     }
 
-    //  pxx = 100;
-    //  pyy = 100;
-    } */
+//  pxx = 100;
+//  pyy = 100;
+} */
 
 void Txt (char* testo, double x, double y, double z,
           double scala_x, double scala_y, int alfa, int beta) {

@@ -448,8 +448,7 @@ ripeti:
     }
 }
 
-void Copia (unsigned char far* dest, unsigned char far* sorg, unsigned x,
-            unsigned y, int l, int a) {
+void Copia (unsigned char far* dest, unsigned char far* sorg, unsigned x, unsigned y, int l, int a) {
     // ds:si partenza
     // es:di arrivo
     if (l < 2) {

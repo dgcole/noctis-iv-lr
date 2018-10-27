@@ -1,7 +1,7 @@
 /*
 
-    Noctis galactic guide / OUTBOX command.
-    GOES Net Module.
+	Noctis galactic guide / OUTBOX command.
+	GOES Net Module.
 
 */
 
@@ -128,7 +128,7 @@ void areaclear (unsigned char far* dest, int x, int y,
     }
 
     p = 320 * y + x;
-    asm {   push es
+    asm {	push es
             pusha
             pushf
             cld
@@ -145,7 +145,7 @@ void areaclear (unsigned char far* dest, int x, int y,
             shl ax, 8
             mov al, pattern }
     ac_nextl:
-    asm {   push di
+    asm {	push di
             mov cx, l
             shr cx, 2
             jcxz ac_bytes
@@ -224,38 +224,38 @@ void msg (char* string) {
     }
 }
 
-double  object_id = 12345;
-char    object_label[25];
-double  s_object_id = 12345;
-char    s_object_label[25];
+double 	object_id = 12345;
+char   	object_label[25];
+double 	s_object_id = 12345;
+char   	s_object_label[25];
 
-double  subject_id = 12345;
+double	subject_id = 12345;
 double  idscale = 0.00001;
 
-long    round;
-int     fh, gh, ph;
-char*   map = "..\\DATA\\STARMAP.BIN";
-char*   guide = "..\\DATA\\GUIDE.BIN";
-char*   packet = "..\\DATA\\OUTBOX.ZIP";
+long	round;
+int 	fh, gh, ph;
+char*	map = "..\\DATA\\STARMAP.BIN";
+char*	guide = "..\\DATA\\GUIDE.BIN";
+char*	packet = "..\\DATA\\OUTBOX.ZIP";
 
-char    outbuffer[40];
-char    textbuffer[40];
-char    parbuffer[160];
-char    nullbuffer[128];
-char    objectname[21];
-char    subjectname[21];
+char	outbuffer[40];
+char	textbuffer[40];
+char	parbuffer[160];
+char	nullbuffer[128];
+char	objectname[21];
+char	subjectname[21];
 
-double  mblock_subject;
-char    mblock_message[77];
+double	mblock_subject;
+char	mblock_message[77];
 
-long    starmap_size, sm_out;
-long    guide_size, gg_out;
+long	starmap_size, sm_out;
+long	guide_size, gg_out;
 
 void main () {
-    asm {   xor ax, ax
-            mov es, ax
-            cmp byte ptr es:[0x449], 0x13
-            je  startup }
+    asm {	xor	ax, ax
+            mov	es, ax
+            cmp	byte ptr es:[0x449], 0x13
+            je	startup }
     printf ("\nGalactic Organization of Explorers and Stardrifters (G.O.E.S)\n");
     printf ("-------------------------------------------------------------\n");
     printf ("This is a GOES NET module and must be run from a stardrifter.\n");

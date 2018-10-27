@@ -1,6 +1,6 @@
 /*
 
-    Noctis galactic guide / DELE command.
+    Noctis galactic guide / PRI command.
     GOES Net Module.
 
 */
@@ -12,8 +12,9 @@
 #include <dos.h>
 #include <io.h>
 
-char msgbuffer[40];
+char msgbuffer[81];
 char* divider = "&&&&&&&&&&&&&&&&&&&&&";
+char* pdivider = "________________________________________________________________________";
 
 void msg (char* string) {
     int x;
@@ -28,6 +29,13 @@ void msg (char* string) {
     }
 }
 
+void pmsg (char* string) {
+    strcpy (msgbuffer, string);
+    msgbuffer[80] = 0;
+    fputs (msgbuffer, stdprn);
+    fputs ("\r\n", stdprn);
+}
+
 double  object_id = 12345;
 char    object_label[25];
 double  s_object_id = 12345;
@@ -37,8 +45,6 @@ double  subject_id = 12345;
 double  idscale = 0.00001;
 
 long    round;
-long    guide_consolidated;
-
 int     i, fh, gh;
 char*   file = "..\\DATA\\STARMAP.BIN";
 char*   guide = "..\\DATA\\GUIDE.BIN";
@@ -51,7 +57,7 @@ char    objectname[21];
 char    subjectname[21];
 
 double  mblock_subject;
-char    mblock_message[68];
+char    mblock_message[77];
 
 char find (char* starname) {
     int p, n, ctc, found;
@@ -113,8 +119,7 @@ char find (char* starname) {
         lseek (fh, 4, SEEK_SET);
 
         while (_read (fh, &s_object_id, 8) && _read (fh, &s_object_label, 24) == 24) {
-            if (memcmp (&s_object_id, "Removed:", 8)
-                    && !memcmp (s_object_label, starname, ctc)) {
+            if (memcmp (&s_object_id, "Removed:", 8) && !memcmp (s_object_label, starname, ctc)) {
                 s_object_label[21] = 0;
                 msg (s_object_label);
             }
@@ -128,9 +133,9 @@ char find (char* starname) {
 }
 
 void main () {
+    int COLS = 72;
     char query;
-    int tmessages;
-    int rmessages;
+    int j, col, pre;
     int is, rec, rec_start, rec_end;
     asm {   xor ax, ax
             mov es, ax
@@ -146,8 +151,8 @@ startup:
 
     if (_argc < 2) {
         msg ("________USAGE________");
-        msg ("DELE OBJECTNAME");
-        msg ("DELE OBJECTNAME:X..Y");
+        msg ("PRI OBJECTNAME");
+        msg ("PRI OBJECTNAME:X..Y");
         msg ("^^^^^^^^^^^^^^^^^^^^^");
         msg ("PLEASE RUN AGAIN,");
         msg ("SPECIFYING PARAMETERS");
@@ -155,6 +160,8 @@ startup:
     } else {
         msg (" GOES GALACTIC GUIDE ");
         msg (divider);
+        pmsg ("GOES GALACTIC GUIDE DATA SNIPPET");
+        pmsg (pdivider);
     }
 
     fh = _open (file, 4);
@@ -216,72 +223,105 @@ startup:
         rec_end = 32767;
     }
 
-    if (parbuffer[i] != ':') {
-        strupr (parbuffer);
-        strupr (objectname);
-        objectname[i] = 0;
-        query = find (objectname);
+    objectname[i] = 0;
+    query = find (objectname);
 
-        if (query) {
+    if (query) {
+        gh = _open (guide, 4);
+
+        if (gh == -1) {
+            msg ("DATABASE ERROR.");
+            msg ("(ERROR CODE 1003)");
+        } else {
             if (query == 1) {
                 msg ("SUBJECT: STAR;");
+                pmsg ("SUBJECT: STAR;");
             }
 
             if (query == 2) {
                 msg ("SUBJECT: PLANET;");
+                pmsg ("SUBJECT: PLANET;");
             }
 
-            sprintf (outbuffer, "NAME: %s", subjectname);
-            msg (outbuffer);
+            msg (subjectname);
+            pmsg (subjectname);
             msg (divider);
-            gh = _open (guide, 4);
+            pmsg (pdivider);
+            msg ("DATA IS BEING SENT");
+            msg ("TO THE PRINTER...");
+            rec = 0;
+            col = 0;
+            query = 0;
+            lseek (gh, 4, SEEK_SET);
 
-            if (gh == -1) {
-                msg ("DATABASE ERROR.");
-                msg ("(ERROR CODE 1004)");
-            } else {
-                rec = 0;
-                query = 0;
-                tmessages = 0;
-                rmessages = 0;
-                _read (gh, &guide_consolidated, 4);
+            while (_read (gh, &mblock_subject, 84) == 84) {
+                if (mblock_subject > subject_id - idscale && mblock_subject < subject_id + idscale) {
+                    rec++;
 
-                while (_read (gh, &mblock_subject, 84) == 84) {
-                    if (mblock_subject > subject_id - idscale
-                            && mblock_subject < subject_id + idscale) {
-                        tmessages++;
-                        rec++;
+                    if (rec >= rec_start && rec <= rec_end) {
+                        if (col != 0 && col < COLS) {
+                            fputc (32, stdprn);
+                            col++;
+                        }
 
-                        if (rec >= rec_start && rec <= rec_end) {
-                            query = 1;
-                            round = tell(gh);
-                            round -= 84;
+                        query = 1;
+                        i = 0;
 
-                            if (round >= guide_consolidated) {
-                                rmessages++;
-                                lseek (gh, round, SEEK_SET);
-                                _write (gh, "Removed:", 8);
-                                round += 84;
-                                lseek (gh, round, SEEK_SET);
+                        while (i < 76 && mblock_message[i]) {
+                            if (i == 0 || mblock_message[i] == 32) {
+                                j = i + 1;
+                                pre = col + 1;
+
+                                while (j < 76 && mblock_message[j] != 32 && mblock_message[j] != 0) {
+                                    if (pre >= COLS) {
+                                        fputs ("\r\n", stdprn);
+                                        col = 0;
+
+                                        if (i != 0) {
+                                            i++;
+                                        }
+
+                                        goto wordwrap;
+                                    }
+
+                                    pre++;
+                                    j++;
+                                }
                             }
+
+wordwrap:
+
+                            if (col == 0 && mblock_message[i] == 32) {
+                                goto removeleadingspace;
+                            }
+
+                            fputc (mblock_message[i], stdprn);
+                            col++;
+
+                            if (col > COLS - 1) {
+                                fputs ("\r\n", stdprn);
+                                col = 0;
+                            }
+
+removeleadingspace:
+                            i++;
                         }
                     }
                 }
-
-                if (!query) {
-                    msg ("THERE WERE NO RECORDS");
-                    msg ("THAT COULD BE DELETED");
-                } else {
-                    sprintf (outbuffer, "TOTAL RECORDS: %d", tmessages);
-                    msg (outbuffer);
-                    sprintf (outbuffer, "REMOVED: %d", rmessages);
-                    msg (outbuffer);
-                    sprintf (outbuffer, "PROTECTED: %d", tmessages - rmessages);
-                    msg (outbuffer);
-                }
-
-                _close (gh);
             }
+
+            if (!query) {
+                msg ("THERE WERE NO RECORDS");
+                msg ("IN THE GUIDE RELATING");
+                msg ("SPECIFIED SUBJECT.");
+            } else {
+                msg ("");
+                pmsg ("");
+                pmsg (pdivider);
+                pmsg ("- END OF DATA -");
+            }
+
+            _close (gh);
         }
     }
 

@@ -34,36 +34,36 @@ typedef long        int32_t;
 // Data Area:   Length:     Pointer:        Description:
 
 #define om_bytes      7340 //   n_offsets_map contains "offsets.map",
-//           (concave sphere in QT-VR).
+               //           (concave sphere in QT-VR).
 #define gl_bytes     22586 //   n_globes_map    contains "globes.map"
-//           (convex sphere in QT-VR).
-//           sea surface texture.
+               //           (convex sphere in QT-VR).
+               //           sea surface texture.
 #define gl_brest     10182 //   remainder of the bytes allocated for:
-//           n_globes_map as this?
-//           buffer is also used for:
-//           the sea surface of 32K,
-//           or otherwise for the font 32x36
-//           which serves the pilot.
+               //           n_globes_map as this?
+               //           buffer is also used for:
+               //           the sea surface of 32K,
+               //           or otherwise for the font 32x36
+               //           which serves the pilot.
 #define st_bytes     64800 //   s_background    star surface map;
-//           satellite surface map;
-//           surface sky map;
-//           surface shading buffer.
+               //           satellite surface map;
+               //           surface sky map;
+               //           surface shading buffer.
 #define pl_bytes     65552 //   p_background    planetary map from orbit;
-//       texture for the ground.
+               //       texture for the ground.
 #define ps_bytes     40000 //   p_surfacemap    elevation map;
-//           temporary reading of buffer;
-//           screen update buffer.
+               //           temporary reading of buffer;
+               //           screen update buffer.
 #define oc_bytes     40000 //   objectschart    map objects on the surface;
-//           atmospheric overlay.
+               //           atmospheric overlay.
 #define sc_bytes     65540 //   adapted         the hidden video page?—
-//          2 bytes (support for polymap)
-//           would give 64002. But I extended
-//          it to 64Kb + 4 bytes to avoid it
-//          breaking "poly3d", as there is one
-//          faulty function I have neither the
-//          time nor the care to change currently.
+               //          2 bytes (support for polymap)
+               //           would give 64002. But I extended
+            //          it to 64Kb + 4 bytes to avoid it
+            //          breaking "poly3d", as there is one
+            //          faulty function I have neither the
+            //          time nor the care to change currently.
 #define pv_bytes     20480 //   pvfile      dynamic data bank of files
-//           of polygonal graphics.
+               //           of polygonal graphics.
 // -------------------------//
 // totale bytes         334941 //   (Dynamically allocated memory)
 // -------------------------//

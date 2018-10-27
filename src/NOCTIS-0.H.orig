@@ -25,8 +25,7 @@ extern void areaclear (uint8_t far* dest, int16_t x, int16_t y,
 extern void psmooth_grays (uint8_t far* target);
 extern void pfade (uint8_t far* target, uint16_t segshift, uint8_t speed);
 extern void psmooth_64 (uint8_t far* target, uint16_t segshift);
-extern void smootharound_64 (uint8_t far* target, long cx, long cy, long r,
-                             int8_t diffuse);
+extern void smootharound_64 (uint8_t far* target, long cx, long cy, long r, int8_t diffuse);
 extern void mask_pixels (uint8_t far* target, uint8_t mask);
 
 const TEXTURE_XSIZE = 256; // Larghezza delle BMP.
@@ -291,8 +290,7 @@ extern void watch (double cam_x, double cam_y, double cam_z,
 extern int8_t xy (double cam_x, double cam_y, double cam_z,
                   double point_x, double point_y, double point_z);
 extern void p_Forward (float delta);
-extern void copia (uint8_t far* dest, uint8_t far* sorg, uint16_t x, uint16_t y,
-                   int16_t l, int16_t a);
+extern void copia (uint8_t far* dest, uint8_t far* sorg, uint16_t x, uint16_t y, int16_t l, int16_t a);
 extern void setfx (int8_t fx);
 extern void chgfx (int8_t fx);
 extern void resetfx (void);
@@ -328,8 +326,7 @@ extern int8_t loadpv (int16_t   handle, long virtual_file_position,
                       float xscale, float yscale, float zscale,
                       float xmove,  float ymove,  float zmove,
                       uint8_t base_color,   int8_t depth_sort);
-extern void QuickSort (int16_t far* index, float far* mdist, int16_t start,
-                       int16_t end);
+extern void QuickSort (int16_t far* index, float far* mdist, int16_t start, int16_t end);
 extern void drawpv (int16_t handle, int16_t mode, int16_t rm_iterations,
                     float center_x, float center_y, float center_z,
                     int8_t use_depth_sort);
@@ -379,8 +376,7 @@ extern void lens_flares_for (double cam_x, double cam_y, double cam_z,
                              double step, int16_t added, int8_t on_hud, int8_t condition,
                              int16_t xshift, int16_t yshift);
 extern void single_pixel_at_ptr (uint16_t ptr, uint8_t pixel_color);
-extern int8_t far_pixel_at (double xlight, double ylight, double zlight,
-                            double radii, uint8_t unconditioned_color);
+extern int8_t far_pixel_at (double xlight, double ylight, double zlight, double radii, uint8_t unconditioned_color);
 extern uint32_t far* digimap2;
 extern void cupola (float y_or, float brk);
 extern void polycupola (float y_or, int8_t textured);
@@ -438,8 +434,7 @@ extern void storm (void);
 extern void planet_xyz (int16_t n);
 extern float rtp (int16_t n);
 extern int16_t planet_viewpoint (double obs_x, double obs_z);
-extern void surface (int16_t logical_id, int16_t type, double seedval,
-                     uint8_t colorbase);
+extern void surface (int16_t logical_id, int16_t type, double seedval, uint8_t colorbase);
 extern int16_t nightzone, crepzone, sun_x_factor;
 extern void planets (void);
 extern void ring (void);

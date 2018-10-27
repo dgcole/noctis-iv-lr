@@ -1,6 +1,6 @@
 /*
 
-    Noctis galactic guide / DELE command.
+    Noctis galactic guide / CAST command.
     GOES Net Module.
 
 */
@@ -34,12 +34,9 @@ double  s_object_id = 12345;
 char    s_object_label[25];
 
 double  subject_id = 12345;
-double  idscale = 0.00001;
 
 long    round;
-long    guide_consolidated;
-
-int     i, fh, gh;
+int     i, mlen, fh, gh;
 char*   file = "..\\DATA\\STARMAP.BIN";
 char*   guide = "..\\DATA\\GUIDE.BIN";
 
@@ -49,9 +46,6 @@ char    parbuffer[160];
 char    nullbuffer[128];
 char    objectname[21];
 char    subjectname[21];
-
-double  mblock_subject;
-char    mblock_message[68];
 
 char find (char* starname) {
     int p, n, ctc, found;
@@ -113,8 +107,7 @@ char find (char* starname) {
         lseek (fh, 4, SEEK_SET);
 
         while (_read (fh, &s_object_id, 8) && _read (fh, &s_object_label, 24) == 24) {
-            if (memcmp (&s_object_id, "Removed:", 8)
-                    && !memcmp (s_object_label, starname, ctc)) {
+            if (memcmp (&s_object_id, "Removed:", 8) && !memcmp (s_object_label, starname, ctc)) {
                 s_object_label[21] = 0;
                 msg (s_object_label);
             }
@@ -129,9 +122,6 @@ char find (char* starname) {
 
 void main () {
     char query;
-    int tmessages;
-    int rmessages;
-    int is, rec, rec_start, rec_end;
     asm {   xor ax, ax
             mov es, ax
             cmp byte ptr es:[0x449], 0x13
@@ -146,8 +136,7 @@ startup:
 
     if (_argc < 2) {
         msg ("________USAGE________");
-        msg ("DELE OBJECTNAME");
-        msg ("DELE OBJECTNAME:X..Y");
+        msg ("CAST OBJECTNAME:NOTES");
         msg ("^^^^^^^^^^^^^^^^^^^^^");
         msg ("PLEASE RUN AGAIN,");
         msg ("SPECIFYING PARAMETERS");
@@ -190,97 +179,66 @@ startup:
         i++;
     }
 
-    if (i == 21) {
-        msg ("INVALID SUBJECT NAME.");
-        _close (fh);
-    }
-
-    if (parbuffer[i] == ':') {
-        is = i + 1;
-        i++;
-
-        while (parbuffer[i] != '.' && parbuffer[i] != 0) {
-            i++;
-        }
-
-        parbuffer[i] = 0;
-        rec_start = atoi (parbuffer + is);
-
-        if (parbuffer[i + 1] == '.') {
-            rec_end = atoi (parbuffer + i + 2);
-        } else {
-            rec_end = 32767;
-        }
-    } else {
-        rec_start = 1;
-        rec_end = 32767;
-    }
-
     if (parbuffer[i] != ':') {
+        msg ("SYNTAX ERROR:");
+        msg ("MISSING COLON BETWEEN");
+        msg ("OBJECT NAME AND NOTES");
+    } else {
         strupr (parbuffer);
         strupr (objectname);
-        objectname[i] = 0;
-        query = find (objectname);
 
-        if (query) {
-            if (query == 1) {
-                msg ("SUBJECT: STAR;");
-            }
+        if (parbuffer[i + 1] == 0) {
+            msg ("VOID MESSAGE:");
+            msg ("WAS NOT SENT.");
+        } else {
+            objectname[i] = 0;
+            query = find (objectname);
 
-            if (query == 2) {
-                msg ("SUBJECT: PLANET;");
-            }
+            if (query) {
+                msg ("TRANSFER SUCCEDED:");
+                msg (divider);
 
-            sprintf (outbuffer, "NAME: %s", subjectname);
-            msg (outbuffer);
-            msg (divider);
-            gh = _open (guide, 4);
-
-            if (gh == -1) {
-                msg ("DATABASE ERROR.");
-                msg ("(ERROR CODE 1004)");
-            } else {
-                rec = 0;
-                query = 0;
-                tmessages = 0;
-                rmessages = 0;
-                _read (gh, &guide_consolidated, 4);
-
-                while (_read (gh, &mblock_subject, 84) == 84) {
-                    if (mblock_subject > subject_id - idscale
-                            && mblock_subject < subject_id + idscale) {
-                        tmessages++;
-                        rec++;
-
-                        if (rec >= rec_start && rec <= rec_end) {
-                            query = 1;
-                            round = tell(gh);
-                            round -= 84;
-
-                            if (round >= guide_consolidated) {
-                                rmessages++;
-                                lseek (gh, round, SEEK_SET);
-                                _write (gh, "Removed:", 8);
-                                round += 84;
-                                lseek (gh, round, SEEK_SET);
-                            }
-                        }
-                    }
+                if (query == 1) {
+                    msg ("SUBJECT: STAR;");
                 }
 
-                if (!query) {
-                    msg ("THERE WERE NO RECORDS");
-                    msg ("THAT COULD BE DELETED");
+                if (query == 2) {
+                    msg ("SUBJECT: PLANET;");
+                }
+
+                sprintf (outbuffer, "NAME: %s", subjectname);
+                msg (outbuffer);
+                msg ("MESSAGE SENT;");
+                gh = _open (guide, 4);
+
+                if (gh == -1) {
+                    msg ("DATABASE ERROR;");
+                    msg ("MESSAGE REJECTED.");
+                    msg ("(ERROR CODE 1001)");
                 } else {
-                    sprintf (outbuffer, "TOTAL RECORDS: %d", tmessages);
-                    msg (outbuffer);
-                    sprintf (outbuffer, "REMOVED: %d", rmessages);
-                    msg (outbuffer);
-                    sprintf (outbuffer, "PROTECTED: %d", tmessages - rmessages);
-                    msg (outbuffer);
-                }
+                    mlen = strlen (parbuffer + i + 1);
+                    lseek (gh, 0, SEEK_END);
+                    _write (gh, &subject_id, 8);
+                    _write (gh, parbuffer + i + 1, mlen);
+                    round = filelength (gh) - 4;
 
-                _close (gh);
+                    if (round >= 0) {
+                        round %= 84;
+
+                        if (round) {
+                            round = 84 - round;
+                            _write (gh, nullbuffer, round);
+                        }
+
+                        msg ("MESSAGE ACCEPTED.");
+                    } else {
+                        msg ("DATABASE ERROR;");
+                        msg ("MESSAGE REJECTED.");
+                        msg ("(ERROR CODE 1002)");
+                    }
+
+                    _close (gh);
+                }
             }
         }
     }

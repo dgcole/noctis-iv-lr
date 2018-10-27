@@ -393,8 +393,7 @@ char find (char* starname) {
         lseek (fh, 4, SEEK_SET);
 
         while (_read (fh, &s_object_id, 8) && _read (fh, &s_object_label, 24) == 24) {
-            if (memcmp (&s_object_id, "Removed:", 8)
-                    && !memcmp (s_object_label, starname, ctc)) {
+            if (memcmp (&s_object_id, "Removed:", 8) && !memcmp (s_object_label, starname, ctc)) {
                 s_object_label[21] = 0;
                 msg (s_object_label);
             }
@@ -601,8 +600,7 @@ char isthere (double star_id) {
           pusha }
 
     if (sts > 100) {
-        sprintf (warnbuffer, "SLICE %d OF %d", visible_sectors_x - sx,
-                 visible_sectors_x);
+        sprintf (warnbuffer, "SLICE %d OF %d", visible_sectors_x - sx, visible_sectors_x);
         warn (warnbuffer, 0);
 
         while (kbhit()) {
@@ -625,8 +623,7 @@ y_end:
 void extract_ap_target_infos () {
     srand (ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z / 100000);
     ap_target_class = random (star_classes);
-    ap_target_ray = ((float)class_ray[ap_target_class] + (float)random(
-                         class_rayvar[ap_target_class])) * 0.001;
+    ap_target_ray = ((float)class_ray[ap_target_class] + (float)random(class_rayvar[ap_target_class])) * 0.001;
     ap_target_r = class_rgb[3 * ap_target_class + 0];
     ap_target_g = class_rgb[3 * ap_target_class + 1];
     ap_target_b = class_rgb[3 * ap_target_class + 2];
@@ -657,25 +654,19 @@ void prepare_nearstar () {
     nearstar_r = ap_target_r;
     nearstar_g = ap_target_g;
     nearstar_b = ap_target_b;
-    nearstar_identity = nearstar_x / 100000 * nearstar_y / 100000 * nearstar_z /
-                        100000;
-    srand ((long)nearstar_x % 10000 * (long)nearstar_y % 10000 *
-           (long)nearstar_z % 10000);
+    nearstar_identity = nearstar_x / 100000 * nearstar_y / 100000 * nearstar_z / 100000;
+    srand ((long)nearstar_x % 10000 * (long)nearstar_y % 10000 * (long)nearstar_z % 10000);
     nearstar_nop = random (class_planets[nearstar_class] + 1);
 
     for (n = 0; n < nearstar_nop; n++) {
         nearstar_p_owner[n]  = -1;
         nearstar_p_orb_orient[n] = (double) deg * (double) random (360);
-        nearstar_p_orb_seed[n]   = 3 * (n * n + 1) * nearstar_ray + (float) random (
-                                       300 * nearstar_ray) / 100;
+        nearstar_p_orb_seed[n]   = 3 * (n * n + 1) * nearstar_ray + (float) random (300 * nearstar_ray) / 100;
         nearstar_p_tilt[n]       = zrandom (10 * nearstar_p_orb_seed[n]) / 500;
         nearstar_p_orb_tilt[n]   = zrandom (10 * nearstar_p_orb_seed[n]) / 5000;
-        nearstar_p_orb_ecc[n]    = 1 - (double) random (nearstar_p_orb_seed[n] + 10 *
-                                   fabs(nearstar_p_orb_tilt[n])) / 2000;
-        nearstar_p_ray[n]        = (double) random (nearstar_p_orb_seed[n]) * 0.001 +
-                                   0.01;
-        nearstar_p_ring[n]   = zrandom (nearstar_p_ray[n]) * (1 + (double) random (
-                                   1000) / 100);
+        nearstar_p_orb_ecc[n]    = 1 - (double) random (nearstar_p_orb_seed[n] + 10 * fabs(nearstar_p_orb_tilt[n])) / 2000;
+        nearstar_p_ray[n]        = (double) random (nearstar_p_orb_seed[n]) * 0.001 + 0.01;
+        nearstar_p_ring[n]   = zrandom (nearstar_p_ray[n]) * (1 + (double) random (1000) / 100);
 
         if (nearstar_class != 8) {
             nearstar_p_type[n] = random (planet_types);
@@ -807,14 +798,11 @@ void prepare_nearstar () {
             nearstar_p_owner[q]  = n;
             nearstar_p_moonid[q]     = c;
             nearstar_p_orb_orient[q] = (double) deg * (double) random (360);
-            nearstar_p_orb_seed[q]   = (c * c + 4) * nearstar_p_ray[n] + (float) zrandom (
-                                           300 * nearstar_p_ray[n]) / 100;
+            nearstar_p_orb_seed[q]   = (c * c + 4) * nearstar_p_ray[n] + (float) zrandom (300 * nearstar_p_ray[n]) / 100;
             nearstar_p_tilt[q]       = zrandom (10 * nearstar_p_orb_seed[q]) / 50;
             nearstar_p_orb_tilt[q]   = zrandom (10 * nearstar_p_orb_seed[q]) / 500;
-            nearstar_p_orb_ecc[q]    = 1 - (double) random (nearstar_p_orb_seed[q] + 10 *
-                                       fabs(nearstar_p_orb_tilt[q])) / 2000;
-            nearstar_p_ray[q]        = (double) random (nearstar_p_orb_seed[n]) * 0.05 +
-                                       0.1;
+            nearstar_p_orb_ecc[q]    = 1 - (double) random (nearstar_p_orb_seed[q] + 10 * fabs(nearstar_p_orb_tilt[q])) / 2000;
+            nearstar_p_ray[q]        = (double) random (nearstar_p_orb_seed[n]) * 0.05 + 0.1;
             nearstar_p_ring[q]   = 0;
             nearstar_p_type[q]       = random (planet_types);
             r = nearstar_p_type[q];
@@ -1053,9 +1041,7 @@ void listplanets () {
         while (_read (fh, &object_id, 8) && _read (fh, &object_label, 24) == 24) {
             fp_object_check = fpart (object_id, object_label);
 
-            if (memcmp (&object_id, "Removed:", 8) && fp_object_check == fp_star_check
-                    && object_id > star_id + 1 - idscale
-                    && object_id <= star_id + MAX_OBJECTS_PER_STAR + idscale) {
+            if (memcmp (&object_id, "Removed:", 8) && fp_object_check == fp_star_check && object_id > star_id + 1 - idscale && object_id <= star_id + MAX_OBJECTS_PER_STAR + idscale) {
                 planet_nr  = object_label[23] - '0';
                 planet_nr += 10 * (object_label[22] - '0');
 
@@ -1125,9 +1111,7 @@ void listplanets () {
             while (_read (fh, &object_id, 8) && _read (fh, &object_label, 24) == 24) {
                 fp_object_check = fpart (object_id, object_label);
 
-                if (memcmp (&object_id, "Removed:", 8) && fp_object_check == fp_star_check
-                        && object_id > star_id + 1 - idscale
-                        && object_id <= star_id + MAX_OBJECTS_PER_STAR + idscale) {
+                if (memcmp (&object_id, "Removed:", 8) && fp_object_check == fp_star_check && object_id > star_id + 1 - idscale && object_id <= star_id + MAX_OBJECTS_PER_STAR + idscale) {
                     planet_nr  = object_label[23] - '0';
                     planet_nr += 10 * (object_label[22] - '0');
 
@@ -1170,8 +1154,7 @@ void listplanets () {
 
                 if (pcount) {
                     if (mcount) {
-                        sprintf (textbuffer, "] $%02d&%s", nearstar_p_moonid[planet_nr - 1] + 1,
-                                 object_label);
+                        sprintf (textbuffer, "] $%02d&%s", nearstar_p_moonid[planet_nr - 1] + 1, object_label);
                         msg (textbuffer);
                         ncount = notesabout (object_id);
 
@@ -1180,8 +1163,7 @@ void listplanets () {
                             msg (textbuffer);
                         }
                     } else {
-                        sprintf (textbuffer, "] [%02d&%s", nearstar_p_moonid[planet_nr - 1] + 1,
-                                 object_label);
+                        sprintf (textbuffer, "] [%02d&%s", nearstar_p_moonid[planet_nr - 1] + 1, object_label);
                         msg (textbuffer);
                         ncount = notesabout (object_id);
 
@@ -1192,8 +1174,7 @@ void listplanets () {
                     }
                 } else {
                     if (mcount) {
-                        sprintf (textbuffer, "  $%02d&%s", nearstar_p_moonid[planet_nr - 1] + 1,
-                                 object_label);
+                        sprintf (textbuffer, "  $%02d&%s", nearstar_p_moonid[planet_nr - 1] + 1, object_label);
                         msg (textbuffer);
                         ncount = notesabout (object_id);
 
@@ -1202,8 +1183,7 @@ void listplanets () {
                             msg (textbuffer);
                         }
                     } else {
-                        sprintf (textbuffer, "  [%02d&%s", nearstar_p_moonid[planet_nr - 1] + 1,
-                                 object_label);
+                        sprintf (textbuffer, "  [%02d&%s", nearstar_p_moonid[planet_nr - 1] + 1, object_label);
                         msg (textbuffer);
                         ncount = notesabout (object_id);
 
@@ -1244,9 +1224,7 @@ void listplanets () {
         while (_read (fh, &object_id, 8) && _read (fh, &object_label, 24) == 24) {
             fp_object_check = fpart (object_id, object_label);
 
-            if (memcmp (&object_id, "Removed:", 8) && fp_object_check == fp_star_check
-                    && object_id > star_id + 1 - idscale
-                    && object_id <= star_id + MAX_OBJECTS_PER_STAR + idscale) {
+            if (memcmp (&object_id, "Removed:", 8) && fp_object_check == fp_star_check && object_id > star_id + 1 - idscale && object_id <= star_id + MAX_OBJECTS_PER_STAR + idscale) {
                 planet_nr  = object_label[23] - '0';
                 planet_nr += 10 * (object_label[22] - '0');
 
@@ -1289,8 +1267,7 @@ void listplanets () {
             mcount--;
 
             if (mcount) {
-                sprintf (textbuffer, "$%02d&%s", nearstar_p_moonid[planet_nr - 1] + 1,
-                         object_label);
+                sprintf (textbuffer, "$%02d&%s", nearstar_p_moonid[planet_nr - 1] + 1, object_label);
                 msg (textbuffer);
                 ncount = notesabout (object_id);
 
@@ -1299,8 +1276,7 @@ void listplanets () {
                     msg (textbuffer);
                 }
             } else {
-                sprintf (textbuffer, "[%02d&%s", nearstar_p_moonid[planet_nr - 1] + 1,
-                         object_label);
+                sprintf (textbuffer, "[%02d&%s", nearstar_p_moonid[planet_nr - 1] + 1, object_label);
                 msg (textbuffer);
                 ncount = notesabout (object_id);
 
@@ -1362,8 +1338,7 @@ startup:
     }
 
     if (_argc < 2) {
-        ap_target_id = ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z /
-                       100000;
+        ap_target_id = ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z / 100000;
         lseek (fh, 4, SEEK_SET);
 
         while (_read (fh, &object_id, 8) && _read (fh, &object_label, 24) == 24) {

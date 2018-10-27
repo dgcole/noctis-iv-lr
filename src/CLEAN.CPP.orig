@@ -1,7 +1,7 @@
 /*
 
-    Noctis database / CLEAN command.
-    GOES Net Module.
+	Noctis database / CLEAN command.
+	GOES Net Module.
 
 */
 
@@ -25,34 +25,34 @@ void msg (char* string) {
     }
 }
 
-double  object_id;
-char    object_label[25];
-double  mblock_subject;
-char    mblock_message[77];
+double 	object_id;
+char   	object_label[25];
+double	mblock_subject;
+char	mblock_message[77];
 
-long    starmap_consolidated;
-long    cleaned_starmap_consolidated;
-long    guide_consolidated;
-long    cleaned_guide_consolidated;
+long	starmap_consolidated;
+long	cleaned_starmap_consolidated;
+long	guide_consolidated;
+long	cleaned_guide_consolidated;
 
-long    round, sm_pos, gg_pos;
-int     fh, gh, fh2, gh2;
+long	round, sm_pos, gg_pos;
+int 	fh, gh, fh2, gh2;
 
-char*   starmap = "..\\DATA\\STARMAP.BIN";
-char*   starmap_swp = "..\\DATA\\STARMAP.SWP";
-char*   guide = "..\\DATA\\GUIDE.BIN";
-char*   guide_swp = "..\\DATA\\GUIDE.SWP";
+char*	starmap = "..\\DATA\\STARMAP.BIN";
+char*	starmap_swp = "..\\DATA\\STARMAP.SWP";
+char*	guide = "..\\DATA\\GUIDE.BIN";
+char*	guide_swp = "..\\DATA\\GUIDE.SWP";
 
-long    tmessages;
-long    rmessages;
+long	tmessages;
+long	rmessages;
 
-char    outbuffer[40];
+char	outbuffer[40];
 
 void main () {
-    asm {   xor ax, ax
-            mov es, ax
-            cmp byte ptr es:[0x449], 0x13
-            je  startup }
+    asm {	xor	ax, ax
+            mov	es, ax
+            cmp	byte ptr es:[0x449], 0x13
+            je	startup }
     printf ("\nGalactic Organization of Explorers and Stardrifters (G.O.E.S)\n");
     printf ("-------------------------------------------------------------\n");
     printf ("This is a GOES NET module and must be run from a stardrifter.\n");

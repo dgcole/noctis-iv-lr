@@ -412,18 +412,15 @@ void cespuglio (float x, float y, float z, int32_t depth) {
 
     switch (depth) {
     case 2: // 32 -- 48 mt: visibili i ramoscelli pi— grandi.
-        build_fractal_tree (x, y, z, 3000, 0.75, 0.15, 1, 1, 1.5, 0x00, 0xC0, 180, 0,
-                            0);
+        build_fractal_tree (x, y, z, 3000, 0.75, 0.15, 1, 1, 1.5, 0x00, 0xC0, 180, 0, 0);
         break;
 
     case 1: // 16 -- 32 mt: visibili il 50% delle ramificazioni.
-        build_fractal_tree (x, y, z, 3000, 0.75, 0.15, 1, 2, 1.5, 0x00, 0xC0, 120, 0,
-                            0);
+        build_fractal_tree (x, y, z, 3000, 0.75, 0.15, 1, 2, 1.5, 0x00, 0xC0, 120, 0, 0);
         break;
 
     case 0: //  0 -- 16 mt: cespuglio completo.
-        build_fractal_tree (x, y, z, 3000, 0.75, 0.15, 1, 3, 1.5, 0x00, 0xC0, 120, 0,
-                            0);
+        build_fractal_tree (x, y, z, 3000, 0.75, 0.15, 1, 3, 1.5, 0x00, 0xC0, 120, 0, 0);
     }
 }
 
@@ -441,18 +438,15 @@ void ciuffo (float x, float y, float z, int32_t depth) {
         break;
 
     case 2: // 32 -- 48 mt: visibile un filo d'erba.
-        build_fractal_tree (x, y, z, 1000, 1.00, 0.25, 0, 0, 1.0, 0x00, 0xC0, 120, 0,
-                            0);
+        build_fractal_tree (x, y, z, 1000, 1.00, 0.25, 0, 0, 1.0, 0x00, 0xC0, 120, 0, 0);
         break;
 
     case 1: // 16 -- 32 mt: visibili il 50% dei fili d'erba.
-        build_fractal_tree (x, y, z, 1000, 1.00, 0.25, 0, 7, 1.0, 0x00, 0xC0,  90, 0,
-                            0);
+        build_fractal_tree (x, y, z, 1000, 1.00, 0.25, 0, 7, 1.0, 0x00, 0xC0,  90, 0, 0);
         break;
 
     case 0: //  0 -- 16 mt: un ciuffo completo.
-        build_fractal_tree (x, y, z, 1000, 1.00, 0.25, 0, 7, 1.0, 0x00, 0xC0,  60, 0,
-                            0);
+        build_fractal_tree (x, y, z, 1000, 1.00, 0.25, 0, 7, 1.0, 0x00, 0xC0,  60, 0, 0);
     }
 }
 
@@ -908,8 +902,7 @@ inactive:
     if (ani_type[n] == BIRD) {
         // preparazione forma di base:
         copypv (bird_result, bird_base);
-        modpv (bird_result, -1, -1, ani_scale[n], ani_scale[n], ani_scale[n], 0, 0, 0,
-               NULL);
+        modpv (bird_result, -1, -1, ani_scale[n], ani_scale[n], ani_scale[n], 0, 0, 0, NULL);
 
         // modifiche alla forma di base:
         if (ani_lcount[n] < 0) {
@@ -941,16 +934,13 @@ inactive:
                     dy = 0;
                 }
 
-                modpv (bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1, 0,
-                       +45 * dy, +75 * dy, bird_wing1);
-                modpv (bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1, 0,
-                       -45 * dy, -75 * dy, bird_wing2);
+                modpv (bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1, 0, +45 * dy, +75 * dy, bird_wing1);
+                modpv (bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1, 0, -45 * dy, -75 * dy, bird_wing2);
                 goto bird_trace;
             }
         }
 
-        modpv (bird_result, bird_legs_center_p, bird_legs_center_v, 1, 1, 1, -75, 0, 0,
-               bird_legs);
+        modpv (bird_result, bird_legs_center_p, bird_legs_center_v, 1, 1, 1, -75, 0, 0, bird_legs);
 
         if (ani_scale[n] > 10) {
             // modello di comportamento:
@@ -1008,8 +998,7 @@ bird_trace:
     if (ani_type[n] == MAMMAL) {
         // preparazione forma di base:
         copypv (mamm_result, mamm_base);
-        modpv (mamm_result, -1, -1, ani_scale[n], ani_scale[n], ani_scale[n], 0, 0, 0,
-               NULL);
+        modpv (mamm_result, -1, -1, ani_scale[n], ani_scale[n], ani_scale[n], 0, 0, 0, NULL);
 
         if (ay > -10 && sctype == OCEAN) {
             // nell'acqua...
@@ -1024,8 +1013,7 @@ bird_trace:
             if (ani_mtype[n] != FELINE_LIKE) {
                 modpv (mamm_result, -1, -1, 2, 2, 0.75, 0, 0, 0, mamm_reartoto);
                 modpv (mamm_result, -1, -1, 1, 1, 1, 60, 0, 0, NULL);
-                modpv (mamm_result, mamm_tail_center_p, mamm_tail_center_v, 1, 1, 1, -100, 0, 0,
-                       mamm_tail);
+                modpv (mamm_result, mamm_tail_center_p, mamm_tail_center_v, 1, 1, 1, -100, 0, 0, mamm_tail);
 
                 if (ani_mtype[n] != KANGAROO_LIKE) {
                     modpv (mamm_result, -1, -1, 0.33, 0.33, 0.33, 0, 0, 0, NULL);
@@ -1161,8 +1149,7 @@ void srf_detail (float x, float y, float z, int32_t depth, int8_t _class_) {
 }
 
 int8_t gtx; // se attivo, traccia il livello del suolo con texture specifica
-int16_t  ipfx,
-         ipfz; // centro di tracciamento (coordinate SQC dell'osservatore).
+int16_t  ipfx, ipfz; // centro di tracciamento (coordinate SQC dell'osservatore).
 int8_t nearest_fragment_already_traced; // flag di lavoro.
 
 void fragment (int32_t x, int32_t z) {
@@ -1728,8 +1715,7 @@ backoff:
 
 */
 
-void round_hill (int16_t cx, int16_t cz, uint16_t r, float h, float hmax,
-                 int8_t allowcanyons) {
+void round_hill (int16_t cx, int16_t cz, uint16_t r, float h, float hmax, int8_t allowcanyons) {
     // Una collina rotonda, o una montagna molto erosa (se la si fa grossa).
     // hmax entra in gioco se il flag "allowcanyons" Š a zero:
     //      quando l'altezza puntuale supera "hmax", per allowcanyons=0
@@ -3902,8 +3888,7 @@ anitypeselected:
     loadpv (mamm_base, mammal_ncc,
             1, 0.5 + 0.5 * flandom(), 0.75 + 0.5 * flandom(),
             0, 0, 0, fast_random(0xC0), 1);
-    modpv (mamm_base, -1, -1, 2 * flandom(), 2 * flandom(), 2 * flandom(),
-           45 - 90 * flandom(), 0, 0, mamm_ears);
+    modpv (mamm_base, -1, -1, 2 * flandom(), 2 * flandom(), 2 * flandom(), 45 - 90 * flandom(), 0, 0, mamm_ears);
     loadpv (mamm_result, mammal_ncc, 1, 1, 1, 0, 0, 0, 0x80, 1);
     // uccelli:
     loadpv (bird_base, birdy_ncc,

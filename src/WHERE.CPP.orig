@@ -1,6 +1,6 @@
 /*
 
-    Noctis galactic guide / DELE command.
+    Noctis galactic guide / WHERE command.
     GOES Net Module.
 
 */
@@ -12,7 +12,7 @@
 #include <dos.h>
 #include <io.h>
 
-char msgbuffer[40];
+char msgbuffer[77];
 char* divider = "&&&&&&&&&&&&&&&&&&&&&";
 
 void msg (char* string) {
@@ -36,12 +36,8 @@ char    s_object_label[25];
 double  subject_id = 12345;
 double  idscale = 0.00001;
 
-long    round;
-long    guide_consolidated;
-
-int     i, fh, gh;
+int     i, fh;
 char*   file = "..\\DATA\\STARMAP.BIN";
-char*   guide = "..\\DATA\\GUIDE.BIN";
 
 char    outbuffer[40];
 char    textbuffer[40];
@@ -49,9 +45,7 @@ char    parbuffer[160];
 char    nullbuffer[128];
 char    objectname[21];
 char    subjectname[21];
-
-double  mblock_subject;
-char    mblock_message[68];
+char    parentname[21];
 
 char find (char* starname) {
     int p, n, ctc, found;
@@ -75,6 +69,13 @@ char find (char* starname) {
                 memcpy (subjectname, object_label, 20);
                 subject_id = object_id;
 
+                //
+                if (object_label[21] == 'P') {
+                    subject_id -= (object_label[22] - '0') * 10;
+                    subject_id -= (object_label[23] - '0');
+                }
+
+                //
                 if (object_label[21] == 'S') {
                     found = 1;
                 }
@@ -113,8 +114,7 @@ char find (char* starname) {
         lseek (fh, 4, SEEK_SET);
 
         while (_read (fh, &s_object_id, 8) && _read (fh, &s_object_label, 24) == 24) {
-            if (memcmp (&s_object_id, "Removed:", 8)
-                    && !memcmp (s_object_label, starname, ctc)) {
+            if (memcmp (&s_object_id, "Removed:", 8) && !memcmp (s_object_label, starname, ctc)) {
                 s_object_label[21] = 0;
                 msg (s_object_label);
             }
@@ -129,9 +129,6 @@ char find (char* starname) {
 
 void main () {
     char query;
-    int tmessages;
-    int rmessages;
-    int is, rec, rec_start, rec_end;
     asm {   xor ax, ax
             mov es, ax
             cmp byte ptr es:[0x449], 0x13
@@ -146,14 +143,13 @@ startup:
 
     if (_argc < 2) {
         msg ("________USAGE________");
-        msg ("DELE OBJECTNAME");
-        msg ("DELE OBJECTNAME:X..Y");
+        msg ("WHERE PLANETNAME");
         msg ("^^^^^^^^^^^^^^^^^^^^^");
         msg ("PLEASE RUN AGAIN,");
         msg ("SPECIFYING PARAMETERS");
         return;
     } else {
-        msg (" GOES GALACTIC GUIDE ");
+        msg ("  GOES GALACTIC MAP  ");
         msg (divider);
     }
 
@@ -173,115 +169,36 @@ startup:
         i++;
     }
 
-    i = 0;
+    strcpy (objectname, parbuffer);
+    query = find (objectname);
 
-    while (parbuffer[i]) {
-        if (parbuffer[i] == '_') {
-            parbuffer[i] = 32;
-        }
-
-        i++;
-    }
-
-    i = 0;
-
-    while (i < 21 && parbuffer[i] != ':' && parbuffer[i] != 0) {
-        objectname[i] = parbuffer[i];
-        i++;
-    }
-
-    if (i == 21) {
-        msg ("INVALID SUBJECT NAME.");
-        _close (fh);
-    }
-
-    if (parbuffer[i] == ':') {
-        is = i + 1;
-        i++;
-
-        while (parbuffer[i] != '.' && parbuffer[i] != 0) {
-            i++;
-        }
-
-        parbuffer[i] = 0;
-        rec_start = atoi (parbuffer + is);
-
-        if (parbuffer[i + 1] == '.') {
-            rec_end = atoi (parbuffer + i + 2);
+    if (query) {
+        if (query == 1) {
+            msg ("THIS OBJECT IS A STAR");
+            msg ("AND ITS POSITION CAN");
+            msg ("BE DETERMINED USING");
+            msg ("THE 'PAR' MODULE.");
         } else {
-            rec_end = 32767;
-        }
-    } else {
-        rec_start = 1;
-        rec_end = 32767;
-    }
+            lseek (fh, 4, SEEK_SET);
 
-    if (parbuffer[i] != ':') {
-        strupr (parbuffer);
-        strupr (objectname);
-        objectname[i] = 0;
-        query = find (objectname);
-
-        if (query) {
-            if (query == 1) {
-                msg ("SUBJECT: STAR;");
-            }
-
-            if (query == 2) {
-                msg ("SUBJECT: PLANET;");
-            }
-
-            sprintf (outbuffer, "NAME: %s", subjectname);
-            msg (outbuffer);
-            msg (divider);
-            gh = _open (guide, 4);
-
-            if (gh == -1) {
-                msg ("DATABASE ERROR.");
-                msg ("(ERROR CODE 1004)");
-            } else {
-                rec = 0;
-                query = 0;
-                tmessages = 0;
-                rmessages = 0;
-                _read (gh, &guide_consolidated, 4);
-
-                while (_read (gh, &mblock_subject, 84) == 84) {
-                    if (mblock_subject > subject_id - idscale
-                            && mblock_subject < subject_id + idscale) {
-                        tmessages++;
-                        rec++;
-
-                        if (rec >= rec_start && rec <= rec_end) {
-                            query = 1;
-                            round = tell(gh);
-                            round -= 84;
-
-                            if (round >= guide_consolidated) {
-                                rmessages++;
-                                lseek (gh, round, SEEK_SET);
-                                _write (gh, "Removed:", 8);
-                                round += 84;
-                                lseek (gh, round, SEEK_SET);
-                            }
-                        }
+            while (_read (fh, &s_object_id, 8) && _read (fh, &s_object_label, 24) == 24) {
+                if (memcmp (&s_object_id, "Removed:", 8)) {
+                    if (s_object_id >= subject_id - idscale && s_object_id <= subject_id + idscale) {
+                        s_object_label[20] = 0;
+                        msg (subjectname);
+                        msg ("IS PART OF THE");
+                        msg (s_object_label);
+                        msg ("SYSTEM.");
+                        goto gotit;
                     }
                 }
-
-                if (!query) {
-                    msg ("THERE WERE NO RECORDS");
-                    msg ("THAT COULD BE DELETED");
-                } else {
-                    sprintf (outbuffer, "TOTAL RECORDS: %d", tmessages);
-                    msg (outbuffer);
-                    sprintf (outbuffer, "REMOVED: %d", rmessages);
-                    msg (outbuffer);
-                    sprintf (outbuffer, "PROTECTED: %d", tmessages - rmessages);
-                    msg (outbuffer);
-                }
-
-                _close (gh);
             }
+
+            msg ("UNABLE  TO  DETERMINE");
+            msg ("THIS PLANET'S  PARENT");
+            msg ("STAR;  PROBABLY, THAT");
+            msg ("STAR ISN'T CATALOGUED");
+gotit:
         }
     }
 

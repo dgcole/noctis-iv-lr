@@ -543,8 +543,7 @@ long pp[32] = { 0x00000001, 0x00000002, 0x00000004, 0x00000008,
                 0x10000000, 0x20000000, 0x40000000, 0x80000000
               };
 
-void digit_at (int8_t digit, float x, float y, float size, uint8_t color,
-               int8_t shader) {
+void digit_at (int8_t digit, float x, float y, float size, uint8_t color, int8_t shader) {
     // questo Š un carattere alfanumerico...
     uint8_t huge* prev_txtr = txtr;
     float vx[4], vy[4], vz[4] = { 0, 0, 0, 0 };
@@ -1222,26 +1221,14 @@ krep2:
 #define surface_crosshair_x_spacing +11
 #define surface_crosshair_y_spacing +10
     setfx (2);
-    stick3d (osscreen_x[0], osscreen_y[0],
-             osscreen_z[0] - 27 * 15 - surface_crosshair_x_spacing +
-             surface_crosshair_x_shift,
-             osscreen_x[0], osscreen_y[1],
-             osscreen_z[0] - 27 * 15 - surface_crosshair_x_spacing +
-             surface_crosshair_x_shift);
-    stick3d (osscreen_x[0], osscreen_y[0],
-             osscreen_z[0] - 27 * 15 + surface_crosshair_x_spacing +
-             surface_crosshair_x_shift,
-             osscreen_x[0], osscreen_y[1],
-             osscreen_z[0] - 27 * 15 + surface_crosshair_x_spacing +
-             surface_crosshair_x_shift);
-    stick3d (osscreen_x[0], osscreen_y[0] + 17 * 15 - surface_crosshair_y_spacing +
-             surface_crosshair_y_shift, osscreen_z[0],
-             osscreen_x[0], osscreen_y[0] + 17 * 15 - surface_crosshair_y_spacing +
-             surface_crosshair_y_shift, osscreen_z[2]);
-    stick3d (osscreen_x[0], osscreen_y[0] + 17 * 15 + surface_crosshair_y_spacing +
-             surface_crosshair_y_shift, osscreen_z[0],
-             osscreen_x[0], osscreen_y[0] + 17 * 15 + surface_crosshair_y_spacing +
-             surface_crosshair_y_shift, osscreen_z[2]);
+    stick3d (osscreen_x[0], osscreen_y[0], osscreen_z[0] - 27 * 15 - surface_crosshair_x_spacing + surface_crosshair_x_shift,
+             osscreen_x[0], osscreen_y[1], osscreen_z[0] - 27 * 15 - surface_crosshair_x_spacing + surface_crosshair_x_shift);
+    stick3d (osscreen_x[0], osscreen_y[0], osscreen_z[0] - 27 * 15 + surface_crosshair_x_spacing + surface_crosshair_x_shift,
+             osscreen_x[0], osscreen_y[1], osscreen_z[0] - 27 * 15 + surface_crosshair_x_spacing + surface_crosshair_x_shift);
+    stick3d (osscreen_x[0], osscreen_y[0] + 17 * 15 - surface_crosshair_y_spacing + surface_crosshair_y_shift, osscreen_z[0],
+             osscreen_x[0], osscreen_y[0] + 17 * 15 - surface_crosshair_y_spacing + surface_crosshair_y_shift, osscreen_z[2]);
+    stick3d (osscreen_x[0], osscreen_y[0] + 17 * 15 + surface_crosshair_y_spacing + surface_crosshair_y_shift, osscreen_z[0],
+             osscreen_x[0], osscreen_y[0] + 17 * 15 + surface_crosshair_y_spacing + surface_crosshair_y_shift, osscreen_z[2]);
     resetfx();
 
     if (active_screen == 2) {
@@ -1380,8 +1367,7 @@ void update_star_label () {
     if (ap_targetted == -1) {
         strcpy (star_label, "- DIRECT PARSIS TARGET -");
     } else {
-        ap_target_id = ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z /
-                       100000;
+        ap_target_id = ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z / 100000;
 
         if (ap_target_id != ap_target_previd) {
             ap_target_previd = ap_target_id;
@@ -2407,8 +2393,7 @@ void unfreeze() {
 /* Gestione errori hardware. */
 
 #pragma warn -par
-int16_t caught_somewhere_in_time (int16_t errval, int16_t ax, int16_t bp,
-                                  int16_t si) {
+int16_t caught_somewhere_in_time (int16_t errval, int16_t ax, int16_t bp, int16_t si) {
     hardresume (_HARDERR_FAIL);
     return (2);
 }
@@ -2466,8 +2451,7 @@ void main() {
     }
 
     n_offsets_map = (uint8_t far*) farmalloc (om_bytes);
-    n_globes_map  = (int8_t far*) farmalloc ((uint16_t)gl_bytes +
-                    (uint16_t)gl_brest);
+    n_globes_map  = (int8_t far*) farmalloc ((uint16_t)gl_bytes + (uint16_t)gl_brest);
     s_background  = (uint8_t far*) farmalloc (st_bytes);
     p_background  = (uint8_t far*) farmalloc (pl_bytes);
     p_surfacemap  = (uint8_t huge*) farmalloc (ps_bytes);
@@ -2696,8 +2680,7 @@ void main() {
                 mslocate (0, 0, 2);
                 mswrite (0, "SESSION ID ");
                 fast_srand (secs * 18);
-                sprintf (temp_distance_buffer, "%05lu%05lu", fast_random (0x7FFF),
-                         fast_random (0x7FFF));
+                sprintf (temp_distance_buffer, "%05lu%05lu", fast_random (0x7FFF), fast_random (0x7FFF));
                 mswrite (0, temp_distance_buffer);
                 break;
 
@@ -3152,8 +3135,7 @@ jpr:
 
         if (!elight) {
             // Paratia destra:
-            if (user_beta > -135 && user_beta < -45 && pos_z < -104 * 15
-                    && pos_z > -262 * 15 && pos_x > 172 * 15) {
+            if (user_beta > -135 && user_beta < -45 && pos_z < -104 * 15 && pos_z > -262 * 15 && pos_x > 172 * 15) {
                 active_screen = (pos_z + 104 * 15) / (-54 * 15);
             }
 
@@ -3611,11 +3593,9 @@ ext_1:   //
                             }
 
                             wrouthud (14, 113, c, "SURFACE TEMPERATURE:");
-                            sprintf (outhudbuffer, "%1.0f@K&%1.0f@C&%1.0f@F", tmp_float + 273.15, tmp_float,
-                                     tmp_float * 1.8 + 32);
+                            sprintf (outhudbuffer, "%1.0f@K&%1.0f@C&%1.0f@F", tmp_float + 273.15, tmp_float, tmp_float * 1.8 + 32);
                             wrouthud (14, 119, c, outhudbuffer);
-                            sprintf (outhudbuffer, "MAJOR BODIES: %d EST.", starnop (ap_target_x,
-                                     ap_target_y, ap_target_z));
+                            sprintf (outhudbuffer, "MAJOR BODIES: %d EST.", starnop (ap_target_x, ap_target_y, ap_target_z));
                             wrouthud (14, 129, c, outhudbuffer);
                         } else {
                             wrouthud (14, 87, c, "DIRECT PARSIS TARGET");
@@ -4939,8 +4919,7 @@ searchmoon:
                             ir = 0;
 
                             while (ir < nearstar_nob) {
-                                if (nearstar_p_owner[ir] == iptargetplanet - 1
-                                        && nearstar_p_moonid[ir] == iptargetmoon - 1) {
+                                if (nearstar_p_owner[ir] == iptargetplanet - 1 && nearstar_p_moonid[ir] == iptargetmoon - 1) {
                                     ip_targetted = ir;
                                     fix_local_target ();
                                     ip_targetting = 0;
@@ -4982,8 +4961,7 @@ searchmoon:
                             }
                         }
 
-                        if ((c >= '0' && c <= '9' && mt_string_char < 10) || (c == '-'
-                                && mt_string_char == 0)) {
+                        if ((c >= '0' && c <= '9' && mt_string_char < 10) || (c == '-' && mt_string_char == 0)) {
                             switch (mt_coord) {
                             case 0:
                                 manual_x_string[mt_string_char] = c;

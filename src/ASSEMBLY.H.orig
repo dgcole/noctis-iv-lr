@@ -23,230 +23,230 @@ void _320_200_256 () { // inizializza grafica a 320x200x256 colori.
 }
 
 /*
-    vga_X320Y240 label word
-    db      0e3h    ; dot clock
-    db      10      ; Number of CRTC Registers to update
-    dw      00d06h  ; vertical total
-    dw      03e07h  ; overflow (bit 8 of vertical counts)
-    dw      04109h  ; cell height (2 to double-scan)
-    dw      0ea10h  ; v sync start
-    dw      0ac11h  ; v sync end and protect cr0-cr7
-    dw      0df12h  ; vertical displayed
-    dw      00014h  ; turn off dword mode
-    dw      0e715h  ; v blank start
-    dw      00616h  ; v blank end
-    dw      0e317h  ; turn on byte mode
-    dw      320     ; width
-    dw      240     ; height
+vga_X320Y240 label word
+  db      0e3h    ; dot clock
+  db      10      ; Number of CRTC Registers to update
+  dw      00d06h  ; vertical total
+  dw      03e07h  ; overflow (bit 8 of vertical counts)
+  dw      04109h  ; cell height (2 to double-scan)
+  dw      0ea10h  ; v sync start
+  dw      0ac11h  ; v sync end and protect cr0-cr7
+  dw      0df12h  ; vertical displayed
+  dw      00014h  ; turn off dword mode
+  dw      0e715h  ; v blank start
+  dw      00616h  ; v blank end
+  dw      0e317h  ; turn on byte mode
+  dw      320     ; width
+  dw      240     ; height
 
-    vga_X360Y200 label word
-    db      0e7h    ; dot clock
-    db      08      ; Number of CRTC Registers to update
-    dw      06b00h  ; horz total
-    dw      05901h  ; horz displayed
-    dw      05a02h  ; start horz blanking
-    dw      08e03h  ; end horz blanking
-    dw      05e04h  ; start h sync
-    dw      08a05h  ; end h sync
-    dw      00014h  ; turn off dword mode
-    dw      0e317h  ; turn on byte mode
-    dw      360     ; width
-    dw      200     ; height
+vga_X360Y200 label word
+  db      0e7h    ; dot clock
+  db      08      ; Number of CRTC Registers to update
+  dw      06b00h  ; horz total
+  dw      05901h  ; horz displayed
+  dw      05a02h  ; start horz blanking
+  dw      08e03h  ; end horz blanking
+  dw      05e04h  ; start h sync
+  dw      08a05h  ; end h sync
+  dw      00014h  ; turn off dword mode
+  dw      0e317h  ; turn on byte mode
+  dw      360     ; width
+  dw      200     ; height
 
-    vga_X360Y240 label word
-    db      0e7h    ; dot clock
-    db      17      ; Number of CRTC Registers to update
-    dw      06b00h  ; horz total
-    dw      05901h  ; horz displayed
-    dw      05a02h  ; start horz blanking
-    dw      08e03h  ; end horz blanking
-    dw      05e04h  ; start h sync
-    dw      08a05h  ; end h sync
-    dw      00d06h  ; vertical total
-    dw      03e07h  ; overflow (bit 8 of vertical counts)
-    dw      04109h  ; cell height (2 to double-scan)
-    dw      0ea10h  ; v sync start
-    dw      0ac11h  ; v sync end and protect cr0-cr7
-    dw      0df12h  ; vertical displayed
-    dw      02d13h  ; offset
-    dw      00014h  ; turn off dword mode
-    dw      0e715h  ; v blank start
-    dw      00616h  ; v blank end
-    dw      0e317h  ; turn on byte mode
-    dw      360
-    dw      240
+vga_X360Y240 label word
+  db      0e7h    ; dot clock
+  db      17      ; Number of CRTC Registers to update
+  dw      06b00h  ; horz total
+  dw      05901h  ; horz displayed
+  dw      05a02h  ; start horz blanking
+  dw      08e03h  ; end horz blanking
+  dw      05e04h  ; start h sync
+  dw      08a05h  ; end h sync
+  dw      00d06h  ; vertical total
+  dw      03e07h  ; overflow (bit 8 of vertical counts)
+  dw      04109h  ; cell height (2 to double-scan)
+  dw      0ea10h  ; v sync start
+  dw      0ac11h  ; v sync end and protect cr0-cr7
+  dw      0df12h  ; vertical displayed
+  dw      02d13h  ; offset
+  dw      00014h  ; turn off dword mode
+  dw      0e715h  ; v blank start
+  dw      00616h  ; v blank end
+  dw      0e317h  ; turn on byte mode
+  dw      360
+  dw      240
 
-    vga_X376Y282 label word
-    db      0e7h
-    db      18
-    dw      06e00h  ; horz total
-    dw      05d01h  ; horz displayed
-    dw      05e02h  ; start horz blanking
-    dw      09103h  ; end horz blanking
-    dw      06204h  ; start h sync
-    dw      08f05h  ; end h sync
-    dw      06206h  ; vertical total
-    dw      0f007h  ; overflow
-    dw      06109h  ; cell height
-    dw      0310fh  ;
-    dw      03710h  ; v sync start
-    dw      08911h  ; v sync end and protect cr0-cr7
-    dw      03312h  ; vertical displayed
-    dw      02f13h  ; offset
-    dw      00014h  ; turn off dword mode
-    dw      03c15h  ; v blank start
-    dw      05c16h  ; v blank end
-    dw      0e317h  ; turn on byte mode
-    dw      376
-    dw      282
+vga_X376Y282 label word
+  db      0e7h
+  db      18
+  dw      06e00h  ; horz total
+  dw      05d01h  ; horz displayed
+  dw      05e02h  ; start horz blanking
+  dw      09103h  ; end horz blanking
+  dw      06204h  ; start h sync
+  dw      08f05h  ; end h sync
+  dw      06206h  ; vertical total
+  dw      0f007h  ; overflow
+  dw      06109h  ; cell height
+  dw      0310fh  ;
+  dw      03710h  ; v sync start
+  dw      08911h  ; v sync end and protect cr0-cr7
+  dw      03312h  ; vertical displayed
+  dw      02f13h  ; offset
+  dw      00014h  ; turn off dword mode
+  dw      03c15h  ; v blank start
+  dw      05c16h  ; v blank end
+  dw      0e317h  ; turn on byte mode
+  dw      376
+  dw      282
 
-    vga_X320Y400 label word
-    db      0e3h    ; dot clock
-    db      03      ; Number of CRTC Registers to update
-    dw      04009h  ; cell height
-    dw      00014h  ; turn off dword mode
-    dw      0e317h  ; turn on byte mode
-    dw      320     ; width
-    dw      400     ; height
+vga_X320Y400 label word
+  db      0e3h    ; dot clock
+  db      03      ; Number of CRTC Registers to update
+  dw      04009h  ; cell height
+  dw      00014h  ; turn off dword mode
+  dw      0e317h  ; turn on byte mode
+  dw      320     ; width
+  dw      400     ; height
 
-    vga_X320Y480 label word
-    db      0e3h    ; dotclock
-    db      10      ; Number of CRTC Registers to update
-    dw      00d06h  ; vertical total
-    dw      03e07h  ; overflow (bit 8 of vertical counts)
-    dw      04009h  ; cell height (2 to double-scan)
-    dw      0ea10h  ; v sync start
-    dw      0ac11h  ; v sync end and protect cr0-cr7
-    dw      0df12h  ; vertical displayed
-    dw      00014h  ; turn off dword mode
-    dw      0e715h  ; v blank start
-    dw      00616h  ; v blank end
-    dw      0e317h  ; turn on byte mode
-    dw      320     ; width
-    dw      480     ; height
+vga_X320Y480 label word
+  db      0e3h    ; dotclock
+  db      10      ; Number of CRTC Registers to update
+  dw      00d06h  ; vertical total
+  dw      03e07h  ; overflow (bit 8 of vertical counts)
+  dw      04009h  ; cell height (2 to double-scan)
+  dw      0ea10h  ; v sync start
+  dw      0ac11h  ; v sync end and protect cr0-cr7
+  dw      0df12h  ; vertical displayed
+  dw      00014h  ; turn off dword mode
+  dw      0e715h  ; v blank start
+  dw      00616h  ; v blank end
+  dw      0e317h  ; turn on byte mode
+  dw      320     ; width
+  dw      480     ; height
 
-    vga_X360Y400 label word
-    db      0e7h    ; dot clock
-    db      09      ; Number of CRTC Registers to update
-    dw      06b00h  ; horz total
-    dw      05901h  ; horz displayed
-    dw      05a02h  ; start horz blanking
-    dw      08e03h  ; end horz blanking
-    dw      05e04h  ; start h sync
-    dw      08a05h  ; end h sync
-    dw      04009h  ; cell height
-    dw      00014h  ; turn off dword mode
-    dw      0e317h  ; turn on byte mode
-    dw      360     ; width
-    dw      400     ; height
+vga_X360Y400 label word
+  db      0e7h    ; dot clock
+  db      09      ; Number of CRTC Registers to update
+  dw      06b00h  ; horz total
+  dw      05901h  ; horz displayed
+  dw      05a02h  ; start horz blanking
+  dw      08e03h  ; end horz blanking
+  dw      05e04h  ; start h sync
+  dw      08a05h  ; end h sync
+  dw      04009h  ; cell height
+  dw      00014h  ; turn off dword mode
+  dw      0e317h  ; turn on byte mode
+  dw      360     ; width
+  dw      400     ; height
 
-    vga_X360Y480  label word
-    db      0e7h
-    db      17
-    dw      06b00h  ; horz total
-    dw      05901h  ; horz displayed
-    dw      05a02h  ; start horz blanking
-    dw      08e03h  ; end horz blanking
-    dw      05e04h  ; start h sync
-    dw      08a05h  ; end h sync
-    dw      00d06h  ; vertical total
-    dw      03e07h  ; overflow
-    dw      04009h  ; cell height
-    dw      0ea10h  ; v sync start
-    dw      0ac11h  ; v sync end and protect cr0-cr7
-    dw      0df12h  ; vertical displayed
-    dw      02d13h  ; offset
-    dw      00014h  ; turn off dword mode
-    dw      0e715h  ; v blank start
-    dw      00616h  ; v blank end
-    dw      0e317h  ; turn on byte mode
-    dw      360     ; width
-    dw      480     ; height
+vga_X360Y480  label word
+  db      0e7h
+  db      17
+  dw      06b00h  ; horz total
+  dw      05901h  ; horz displayed
+  dw      05a02h  ; start horz blanking
+  dw      08e03h  ; end horz blanking
+  dw      05e04h  ; start h sync
+  dw      08a05h  ; end h sync
+  dw      00d06h  ; vertical total
+  dw      03e07h  ; overflow
+  dw      04009h  ; cell height
+  dw      0ea10h  ; v sync start
+  dw      0ac11h  ; v sync end and protect cr0-cr7
+  dw      0df12h  ; vertical displayed
+  dw      02d13h  ; offset
+  dw      00014h  ; turn off dword mode
+  dw      0e715h  ; v blank start
+  dw      00616h  ; v blank end
+  dw      0e317h  ; turn on byte mode
+  dw      360     ; width
+  dw      480     ; height
 
-    vga_X360Y360  label word
-    db      0e7h
-    db      15
-    dw      06b00h  ; horz total
-    dw      05901h  ; horz displayed
-    dw      05a02h  ; start horz blanking
-    dw      08e03h  ; end horz blanking
-    dw      05e04h  ; start h sync
-    dw      08a05h  ; end h sync
-    dw      04009h  ; cell height
-    dw      08810h  ; v sync start
-    dw      08511h  ; v sync end and protect cr0-cr7
-    dw      06712h  ; vertical displayed
-    dw      02d13h  ; offset
-    dw      00014h  ; turn off dword mode
-    dw      06d15h  ; v blank start
-    dw      0ba16h  ; v blank end
-    dw      0e317h  ; turn on byte mode
-    dw      360     ; width
-    dw      360     ; height
+vga_X360Y360  label word
+  db      0e7h
+  db      15
+  dw      06b00h  ; horz total
+  dw      05901h  ; horz displayed
+  dw      05a02h  ; start horz blanking
+  dw      08e03h  ; end horz blanking
+  dw      05e04h  ; start h sync
+  dw      08a05h  ; end h sync
+  dw      04009h  ; cell height
+  dw      08810h  ; v sync start
+  dw      08511h  ; v sync end and protect cr0-cr7
+  dw      06712h  ; vertical displayed
+  dw      02d13h  ; offset
+  dw      00014h  ; turn off dword mode
+  dw      06d15h  ; v blank start
+  dw      0ba16h  ; v blank end
+  dw      0e317h  ; turn on byte mode
+  dw      360     ; width
+  dw      360     ; height
 
-    vga_X376Y308 label word
-    db      0e7h
-    db      18
-    dw      06e00h  ; horz total
-    dw      05d01h  ; horz displayed
-    dw      05e02h  ; start horz blanking
-    dw      09103h  ; end horz blanking
-    dw      06204h  ; start h sync
-    dw      08f05h  ; end h sync
-    dw      06206h  ; vertical total
-    dw      00f07h  ; overflow
-    dw      04009h  ;
-    dw      0310fh  ;
-    dw      03710h  ; v sync start
-    dw      08911h  ; v sync end and protect cr0-cr7
-    dw      03312h  ; vertical displayed
-    dw      02f13h  ; offset
-    dw      00014h  ; turn off dword mode
-    dw      03c15h  ; v blank start
-    dw      05c16h  ; v blank end
-    dw      0e317h  ; turn on byte mode
-    dw      376     ; width
-    dw      308     ; height
+vga_X376Y308 label word
+  db      0e7h
+  db      18
+  dw      06e00h  ; horz total
+  dw      05d01h  ; horz displayed
+  dw      05e02h  ; start horz blanking
+  dw      09103h  ; end horz blanking
+  dw      06204h  ; start h sync
+  dw      08f05h  ; end h sync
+  dw      06206h  ; vertical total
+  dw      00f07h  ; overflow
+  dw      04009h  ;
+  dw      0310fh  ;
+  dw      03710h  ; v sync start
+  dw      08911h  ; v sync end and protect cr0-cr7
+  dw      03312h  ; vertical displayed
+  dw      02f13h  ; offset
+  dw      00014h  ; turn off dword mode
+  dw      03c15h  ; v blank start
+  dw      05c16h  ; v blank end
+  dw      0e317h  ; turn on byte mode
+  dw      376     ; width
+  dw      308     ; height
 
-    vga_X376Y564 label word
-    db      0e7h
-    db      18
-    dw      06e00h  ; horz total
-    dw      05d01h  ; horz displayed
-    dw      05e02h  ; start horz blanking
-    dw      09103h  ; end horz blanking
-    dw      06204h  ; start h sync
-    dw      08f05h  ; end h sync
-    dw      06206h  ; vertical total
-    dw      0f007h  ; overflow
-    dw      06009h  ;
-    dw      0310fh  ;
-    dw      03710h  ; v sync start
-    dw      08911h  ; v sync end and protect cr0-cr7
-    dw      03312h  ; vertical displayed
-    dw      02f13h  ; offset
-    dw      00014h  ; turn off dword mode
-    dw      03c15h  ; v blank start
-    dw      05c16h  ; v blank end
-    dw      0e317h  ; turn on byte mode
-    dw      376     ; width
-    dw      564     ; height
+vga_X376Y564 label word
+  db      0e7h
+  db      18
+  dw      06e00h  ; horz total
+  dw      05d01h  ; horz displayed
+  dw      05e02h  ; start horz blanking
+  dw      09103h  ; end horz blanking
+  dw      06204h  ; start h sync
+  dw      08f05h  ; end h sync
+  dw      06206h  ; vertical total
+  dw      0f007h  ; overflow
+  dw      06009h  ;
+  dw      0310fh  ;
+  dw      03710h  ; v sync start
+  dw      08911h  ; v sync end and protect cr0-cr7
+  dw      03312h  ; vertical displayed
+  dw      02f13h  ; offset
+  dw      00014h  ; turn off dword mode
+  dw      03c15h  ; v blank start
+  dw      05c16h  ; v blank end
+  dw      0e317h  ; turn on byte mode
+  dw      376     ; width
+  dw      564     ; height
 */
 
-/*  Le seguenti tabelle sono una collezione di modalit… video
-    derivate dalla normale MCGA, altrimenti note come ModeX.
-    Le tabelle sono pronte per essere passate alla funzione
-    "tweakedVGA" per ottenere stili di visualizzazione diversi
-    dallo standard MCGA, il quale sarebbe descritto come
-    "Chained NTSC screen: 320x200", ma che non Š incluso perch‚
-    Š sufficiente aprire la normale modalit… MCGA per ottenerlo...
-    - Una modalit… interessante Š la tabella "X320Y200C4YPAL",
-    che corregge il fastidioso rapporto d'aspetto "allungato"
-    dovuto all'incongruenza fra gli standard PAL (256 linee)
-    ed NTSC (200 linee), che rende i pixels non del tutto quadrati.
-    - Per le modalit… "unchained", bisogna procedere selezionando
-    le bit-planes su cui operare prima di disegnare quattro o pi—
-    pixels consecutivi. E' opportuno quindi disegnare per colonne. */
+/* Le seguenti tabelle sono una collezione di modalit… video
+   derivate dalla normale MCGA, altrimenti note come ModeX.
+   Le tabelle sono pronte per essere passate alla funzione
+   "tweakedVGA" per ottenere stili di visualizzazione diversi
+   dallo standard MCGA, il quale sarebbe descritto come
+   "Chained NTSC screen: 320x200", ma che non Š incluso perch‚
+   Š sufficiente aprire la normale modalit… MCGA per ottenerlo...
+ - Una modalit… interessante Š la tabella "X320Y200C4YPAL",
+   che corregge il fastidioso rapporto d'aspetto "allungato"
+   dovuto all'incongruenza fra gli standard PAL (256 linee)
+   ed NTSC (200 linee), che rende i pixels non del tutto quadrati.
+ - Per le modalit… "unchained", bisogna procedere selezionando
+   le bit-planes su cui operare prima di disegnare quattro o pi—
+   pixels consecutivi. E' opportuno quindi disegnare per colonne. */
 
 unsigned X320Y200C4NNTS[5] = { /* Unchained NTSC screen: 320x200 */
     0x0001, // Chain4 OFF
@@ -348,14 +348,14 @@ void _640_480_16 () { // inizializza grafica a 640x480x16 colori.
 }
 
 /*
-    unsigned char VgaInfoBlock[256];
-    unsigned char ModeInfoBlock[256];
-    long          VRAM_granularity = 65536;
-    long          VRAM_total = 65536;
-    long          VRAM_pages = 1;
+unsigned char VgaInfoBlock[256];
+unsigned char ModeInfoBlock[256];
+long          VRAM_granularity = 65536;
+long          VRAM_total = 65536;
+long          VRAM_pages = 1;
 
-    char video_page_select (char videopage) // Seleziona la pagina indicata.
-    {
+char video_page_select (char videopage) // Seleziona la pagina indicata.
+{
     asm {   mov dl, videopage
         mov ax, 0x4f05
         xor dh, dh
@@ -363,10 +363,10 @@ void _640_480_16 () { // inizializza grafica a 640x480x16 colori.
         int 0x10 }
 
     return (_AL);
-    }
+}
 
-    char openvesa (unsigned mode_code)
-    {
+char openvesa (unsigned mode_code)
+{
     char vesa_err = 0;
 
     asm {   push    es
@@ -379,7 +379,7 @@ void _640_480_16 () { // inizializza grafica a 640x480x16 colori.
         cmp al, 0x4F
         je  vib_ok
         mov vesa_err, 1 }
-    vib_ok: if (vesa_err) return (0);
+vib_ok: if (vesa_err) return (0);
     if ( VgaInfoBlock[0]!='V' ||
          VgaInfoBlock[1]!='E' ||
          VgaInfoBlock[2]!='S' ||
@@ -399,7 +399,7 @@ void _640_480_16 () { // inizializza grafica a 640x480x16 colori.
         cmp al, 0x4F
         je  mib_ok
         mov vesa_err, 1 }
-    mib_ok: if (vesa_err) return (0);
+mib_ok: if (vesa_err) return (0);
 
     VRAM_granularity   = (unsigned int)ModeInfoBlock[4];
     VRAM_granularity <<= 10;
@@ -410,7 +410,7 @@ void _640_480_16 () { // inizializza grafica a 640x480x16 colori.
         cmp al, 0x4F
         je  gphxok
         mov vesa_err, 1 }
-    gphxok: if (vesa_err) return (0);
+gphxok: if (vesa_err) return (0);
 
     switch (mode_code) {
         case 0x105: VRAM_pages = 1024L*768L; break;
@@ -424,15 +424,15 @@ void _640_480_16 () { // inizializza grafica a 640x480x16 colori.
         return (0);
     else
         return (1);
-    }
+}
 
-    void MCGA2VESA (unsigned char huge *source,
+void MCGA2VESA (unsigned char huge *source,
         unsigned display_x, unsigned display_y,
         unsigned physical_scanline_width,
         unsigned physical_alignment,
         unsigned logical_scanline_width,
         unsigned long framesize)
-    {
+{
     unsigned long location = ((unsigned long)display_y * (unsigned long)logical_scanline_width) + display_x;
 
     unsigned v_align = logical_scanline_width - physical_scanline_width;
@@ -451,27 +451,27 @@ void _640_480_16 () { // inizializza grafica a 640x480x16 colori.
         lds si, source
         add di, ofs
         mov cx, physical_scanline_width }
-    slcopy: asm {   mov al, [si]
+slcopy: asm {   mov al, [si]
         mov es:[di], al
         add si, 1
         jnc samesg
         mov ax, ds
         add ax, 0x1000
         mov ds, ax }
-    samesg: asm {   add di, 1
+samesg: asm {   add di, 1
         jc      endpg
         cmp VRG, 0
         je  samepg
         cmp di, word ptr VRG
         jnb endpg
         jmp samepg }
-    endpg:  asm {   sub di, word ptr VRG
+endpg:  asm {   sub di, word ptr VRG
         inc page
         mov dx, page
         mov ax, 0x4F05
         mov bx, 1
         int 0x10 }
-    samepg: asm {   db 0x66; dec word ptr framesize
+samepg: asm {   db 0x66; dec word ptr framesize
         jz  endfr
         dec cx
         jnz slcopy
@@ -480,26 +480,26 @@ void _640_480_16 () { // inizializza grafica a 640x480x16 colori.
         mov ax, ds
         add ax, 0x1000
         mov ds, ax }
-    samesgV:asm {   add di, v_align
+samesgV:asm {   add di, v_align
         jc  endpgV
         cmp VRG, 0
         je  samepgV
         cmp di, word ptr VRG
         jnb endpgV
         jmp samepgV }
-    endpgV: asm {   sub di, word ptr VRG
+endpgV: asm {   sub di, word ptr VRG
         inc page
         mov dx, page
         mov ax, 0x4F05
         mov bx, 1
         int 0x10 }
-    samepgV:asm {   mov cx, physical_scanline_width
+samepgV:asm {   mov cx, physical_scanline_width
         jmp slcopy }
-    endfr:  asm {   pop ds
+endfr:  asm {   pop ds
         pop es
         popf
         popa }
-    }*/
+}*/
 
 void _80_25_C () { // modo grafico 80x25 testo a colori.
     asm {
@@ -766,7 +766,7 @@ int lstri (char* stri) { // misura una stringa e la copia su temptesto.
     return (0);
 }
 
-/*  Lettura del mouse e ritorno nelle variabili indicate.
+/* Lettura del mouse e ritorno nelle variabili indicate.
     mdltx = delta-x (in mikeys)
     mdlty = delta-y (in mikeys)
     mpul  = pulsanti premuti
@@ -1366,26 +1366,26 @@ unsigned char far* psp () {
     return (pspa);
 }
 
-/*  Ritorna lo stato completo della tastiera: tasto in ingresso, esteso o
-    normale (ingresso anche asincrono), pi— il byte di stato per i tasti
-    di controllo dislocato a ctrlkeys[0].
-    La funzione azzera anche qualsiasi altro tentativo d'intercettare i tasti,
-    perch‚ svuota il buffer di tastiera.
-    Lo scancode hardware tradotto Š relativo al tasto che SI STA PREMENDO.
-    Tuttavia, questa funzione non permette di eliminare l'ottusit… nel bios
-    di non consentire la ripresa dei tasti quando non sono rilasciati:
-    ad esempio, se si preme left cr e, tenendolo premuto, si preme up cr,
-    si otterr… immediatamente la registrazione del tasto up cr ma, quando si
-    rilascier… solo up cr, non si potr… ottenere di nuovo la registrazione
-    della pressione di left cr se prima non si rilascer… anche questo.
-    Se, per esempio ad un platform, serve anche la ripresa di questi tasti,
-    si dovr… intercettare l'int 9 generata dal microprocessorino della
-    tastiera, ovvero l'i8084, per rimpiazzare l'interrupt bios che infila
-    i tasti nel buffer di tastiera. Purtroppo, questo comporta che il bios
-    non tradurr… gli scancode hardware, che continueranno ad esser tali
-    e dovranno essere opportunamente interpretati (non saranno pi— gli ascii
-    normali o estesi, in soldoni). Di questo, comunque, si occupano le
-    funzioni seguenti a questa. */
+/* Ritorna lo stato completo della tastiera: tasto in ingresso, esteso o
+   normale (ingresso anche asincrono), pi— il byte di stato per i tasti
+   di controllo dislocato a ctrlkeys[0].
+   La funzione azzera anche qualsiasi altro tentativo d'intercettare i tasti,
+   perch‚ svuota il buffer di tastiera.
+   Lo scancode hardware tradotto Š relativo al tasto che SI STA PREMENDO.
+   Tuttavia, questa funzione non permette di eliminare l'ottusit… nel bios
+   di non consentire la ripresa dei tasti quando non sono rilasciati:
+   ad esempio, se si preme left cr e, tenendolo premuto, si preme up cr,
+   si otterr… immediatamente la registrazione del tasto up cr ma, quando si
+   rilascier… solo up cr, non si potr… ottenere di nuovo la registrazione
+   della pressione di left cr se prima non si rilascer… anche questo.
+   Se, per esempio ad un platform, serve anche la ripresa di questi tasti,
+   si dovr… intercettare l'int 9 generata dal microprocessorino della
+   tastiera, ovvero l'i8084, per rimpiazzare l'interrupt bios che infila
+   i tasti nel buffer di tastiera. Purtroppo, questo comporta che il bios
+   non tradurr… gli scancode hardware, che continueranno ad esser tali
+   e dovranno essere opportunamente interpretati (non saranno pi— gli ascii
+   normali o estesi, in soldoni). Di questo, comunque, si occupano le
+   funzioni seguenti a questa. */
 
 unsigned char scancode = 0, extended_scancode = 0, status_byte = 0;
 unsigned char hardware_scancode = 0;

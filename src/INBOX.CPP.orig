@@ -505,14 +505,11 @@ endmap:
     gg_in = 0;
     chsize (gh, guide_size);
 
-    while (_read (ph, &mblock_subject, 8) == 8
-            && _read (ph, mblock_message, 76) == 76) {
+    while (_read (ph, &mblock_subject, 8) == 8 && _read (ph, mblock_message, 76) == 76) {
         lseek (gh, 4, SEEK_SET);
 
-        while (_read (gh, &s_mblock_subject, 8)
-                && _read (gh, s_mblock_message, 76) == 76) {
-            if (s_mblock_subject >= mblock_subject - idscale
-                    && s_mblock_subject <= mblock_subject + idscale) {
+        while (_read (gh, &s_mblock_subject, 8) && _read (gh, s_mblock_message, 76) == 76) {
+            if (s_mblock_subject >= mblock_subject - idscale && s_mblock_subject <= mblock_subject + idscale) {
                 if (!strcmp (s_mblock_message, mblock_message)) {
                     goto skiprecord;
                 }
@@ -521,10 +518,8 @@ endmap:
 
         lseek (gh2, 0, SEEK_SET);
 
-        while (_read (gh2, &s_mblock_subject, 8)
-                && _read (gh2, s_mblock_message, 76) == 76) {
-            if (s_mblock_subject >= mblock_subject - idscale
-                    && s_mblock_subject <= mblock_subject + idscale) {
+        while (_read (gh2, &s_mblock_subject, 8) && _read (gh2, s_mblock_message, 76) == 76) {
+            if (s_mblock_subject >= mblock_subject - idscale && s_mblock_subject <= mblock_subject + idscale) {
                 if (!strcmp (s_mblock_message, mblock_message)) {
                     lseek (gh2, -84L, SEEK_CUR);
                     _write (gh2, "Removed:", 8);
@@ -559,8 +554,7 @@ skiprecord:
     lseek (gh, 0, SEEK_END);
     lseek (gh2, 0, SEEK_SET);
 
-    while (_read (gh2, &mblock_subject, 8)
-            && _read (gh2, mblock_message, 76) == 76) {
+    while (_read (gh2, &mblock_subject, 8) && _read (gh2, mblock_message, 76) == 76) {
         if (memcmp (&mblock_subject, "Removed:", 8)) {
             _write (gh, &mblock_subject, 8);
             round = _write (gh, mblock_message, 76);

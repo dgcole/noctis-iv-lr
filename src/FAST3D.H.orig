@@ -641,8 +641,7 @@ void rel (double sx, double sy, double sz, double fx, double fy, double fz) {
 /*  Traccia un rettangolo relativamente alle coordinate dell'origine di un
     Crystal Pixel. Lunghezza e larghezza sono date da 2*hx e 2*hz. */
 
-void rectrel (double cx, double cy, double cz, double hx, double hz,
-              char orient) {
+void rectrel (double cx, double cy, double cz, double hx, double hz, char orient) {
     cx += ox;
     cy += oy;
     cz += oz;

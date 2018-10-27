@@ -1,6 +1,6 @@
 /*
 
-    Noctis galactic guide / SL command.
+    Noctis galactic guide / PAR command.
     GOES Net Module.
 
 */
@@ -9,7 +9,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <conio.h>
-#include <math.h>
 #include <dos.h>
 #include <io.h>
 
@@ -332,10 +331,80 @@ char    subjectname[21];
 double  mblock_subject;
 char    mblock_message[77];
 
-//////////////////////////////////////////////////////////////////////////////
+char find (char* starname) {
+    int p, n, ctc, found;
+    ctc = strlen (starname);
 
-double laststar_x, laststar_y, laststar_z;
-long   current_star, total_stars;
+    if (ctc > 20 || ctc <= 0) {
+        msg ("INVALID OBJECT NAME.");
+        return (0);
+    }
+
+    n = 0;
+    found = 0;
+    lseek (fh, 4, SEEK_SET);
+
+    while (_read (fh, &s_object_id, 8) && _read (fh, &s_object_label, 24) == 24) {
+        if (memcmp (&s_object_id, "Removed:", 8)) {
+            if (!memcmp (s_object_label, starname, ctc)) {
+                n++;
+                memcpy (object_label, s_object_label, 24);
+                object_id = s_object_id;
+                memcpy (subjectname, object_label, 20);
+                subject_id = object_id;
+
+                if (object_label[21] == 'S') {
+                    found = 1;
+                }
+
+                if (object_label[21] == 'P') {
+                    found = 2;
+                }
+
+                p = 20;
+
+                while (p >= 0) {
+                    if (s_object_label[p] != 32) {
+                        if (s_object_label[p] == starname[p]) {
+                            return (found);
+                        } else {
+                            break;
+                        }
+                    }
+
+                    p--;
+                }
+            }
+        }
+    }
+
+    if (!n) {
+        msg ("OBJECT NOT FOUND.");
+    }
+
+    if (n > 1) {
+        msg ("AMBIGUOUS SEARCH KEY:");
+        msg ("PLEASE EXPAND NAME...");
+        msg (divider);
+        msg ("POSSIBLE RESULTS ARE:");
+        msg (divider);
+        lseek (fh, 4, SEEK_SET);
+
+        while (_read (fh, &s_object_id, 8) && _read (fh, &s_object_label, 24) == 24) {
+            if (memcmp (&s_object_id, "Removed:", 8) && !memcmp (s_object_label, starname, ctc)) {
+                s_object_label[21] = 0;
+                msg (s_object_label);
+            }
+        }
+
+        msg (divider);
+        found = 0;
+    }
+
+    return (found);
+}
+
+double  laststar_x, laststar_y, laststar_z;
 
 char isthere (double star_id) {
     char warnbuffer[41];
@@ -381,56 +450,65 @@ char isthere (double star_id) {
             add dx, word ptr sect_x
             db 0x66;
             sub dx, bx
-            db 0x66;
-            mov word ptr laststar_x, dx
-            db 0x66;
-            imul dx
-            db 0x66;
-            add dx, ax
-            db 0x66;
-            add cx, dx
-            db 0x66, 0x81, 0xE2, 0xFF, 0xFF, 0x01, 0x00 // and edx, 0x0001FFFF
-            db 0x66;
-            add dx, word ptr sect_y
-            db 0x66;
-            sub dx, bx
-            db 0x66;
-            mov word ptr laststar_y, dx
-            db 0x66;
-            mov ax, cx
-            db 0x66;
-            imul dx
-            db 0x66;
-            add dx, ax
-            db 0x66, 0x81, 0xE2, 0xFF, 0xFF, 0x01, 0x00 // and edx, 0x0001FFFF
-            db 0x66;
-            add dx, word ptr sect_z
-            db 0x66;
-            sub dx, bx
-            db 0x66;
-            mov word ptr laststar_z, dx
-            fild dword ptr laststar_x
-            fst  laststar_x
-            fmul idscale
-            fild dword ptr laststar_y
-            fst  laststar_y
-            fmul idscale
-            fild dword ptr laststar_z
-            fst  laststar_z
-            fmul idscale
-            fmulp
-            fmulp
-            fst laststar_id
-            fcomp sidlow
-            fstsw ax
-            sahf
-            jb i_next
-            fld laststar_id
-            fcomp sidhigh
-            fstsw ax
-            sahf
-            jb y_end }
-    i_next:
+            jnz i_cont_x }  // |
+    asm jmp i_next; // | excludes stars with x coordinate = 0
+    i_cont_x: asm {                 // |
+        db 0x66;
+        mov word ptr laststar_x, dx
+        db 0x66;
+        imul dx
+        db 0x66;
+        add dx, ax
+        db 0x66;
+        add cx, dx
+        db 0x66, 0x81, 0xE2, 0xFF, 0xFF, 0x01, 0x00 // and edx, 0x0001FFFF
+        db 0x66;
+        add dx, word ptr sect_y
+        db 0x66;
+        sub dx, bx
+        jnz i_cont_y }  // |
+    asm jmp i_next; // | excludes stars with y coordinate = 0
+    i_cont_y: asm {                 // |
+        db 0x66;
+        mov word ptr laststar_y, dx
+        db 0x66;
+        mov ax, cx
+        db 0x66;
+        imul dx
+        db 0x66;
+        add dx, ax
+        db 0x66, 0x81, 0xE2, 0xFF, 0xFF, 0x01, 0x00 // and edx, 0x0001FFFF
+        db 0x66;
+        add dx, word ptr sect_z
+        db 0x66;
+        sub dx, bx
+        jnz i_cont_z }  // |
+    asm jmp i_next; // | excludes stars with z coordinate = 0
+    i_cont_z: asm {                 // |
+        db 0x66;
+        mov word ptr laststar_z, dx
+        fild dword ptr laststar_x
+        fst  laststar_x
+        fmul idscale
+        fild dword ptr laststar_y
+        fst  laststar_y
+        fmul idscale
+        fild dword ptr laststar_z
+        fst  laststar_z
+        fmul idscale
+        fmulp
+        fmulp
+        fst laststar_id
+        fcomp sidlow
+        fstsw ax
+        sahf
+        jb i_next
+        fld laststar_id
+        fcomp sidhigh
+        fstsw ax
+        sahf
+        jb y_end }
+i_next:
     asm {   db 0x66;
             mov ax, word ptr advance
             db 0x66;
@@ -448,9 +526,7 @@ char isthere (double star_id) {
           dec sy
           jz m_end
           jmp m_while }
-    y_end:
-    return (1);
-m_end:
+    m_end:
     asm { db 0x66;
           mov dx, word ptr align_e
           db 0x66;
@@ -461,16 +537,16 @@ m_end:
           jz e_end
           db 0x66;
           pusha }
-    sprintf (warnbuffer, "SLICE %d OF %d", visible_sectors_x - sx,
-             visible_sectors_x);
-    warn (warnbuffer, 0);
-    sprintf (warnbuffer, "SUBJECT %ld OF %ld", current_star, total_stars);
-    warn (warnbuffer, 1);
 
-    while (kbhit()) {
-        if (getch() == 27) {
-            asm { db 0x66; popa }
-            return (2);
+    if (sts > 100) {
+        sprintf (warnbuffer, "SLICE %d OF %d", visible_sectors_x - sx, visible_sectors_x);
+        warn (warnbuffer, 0);
+
+        while (kbhit()) {
+            if (getch() == 27) {
+                asm { db 0x66; popa }
+                return (0);
+            }
         }
     }
 
@@ -479,58 +555,44 @@ m_end:
           jmp e_while }
     e_end:
     return (0);
+y_end:
+    return (1);
 }
 
-//////////////////////////////////////////////////////////////////////////////
+void calc_parsis_for () {
+    double  star_id;
+    int     planet_nr;
 
-void liststars () {
-    char    least = 0, retval;
-    double  xdist, ydist, zdist, dist;
-    lseek (fh, 4, SEEK_SET);
+    if (object_label[21] == 'S') {
+        star_id = object_id;
 
-    while (_read (fh, &object_id, 8) && _read (fh, &object_label, 24) == 24) {
-        if (memcmp (&object_id, "Removed:", 8) && object_label[21] == 'S') {
-            least = 1;
-
-            if (sts) {
-                current_star++;
-                retval = isthere (object_id);
-
-                if (retval == 2) {
-                    msg (divider);
-                    msg ("INTERRUPTED!");
-                    return;
-                }
-
-                if (retval) {
-                    sprintf (textbuffer, "*%s", object_label);
-                    msg (textbuffer);
-                    sprintf (textbuffer, "$X=%1.0f", laststar_x);
-                    msg (textbuffer);
-                    sprintf (textbuffer, "$Y=%1.0f", -laststar_y);
-                    msg (textbuffer);
-                    sprintf (textbuffer, "$Z=%1.0f", laststar_z);
-                    msg (textbuffer);
-                    xdist = dzat_x - laststar_x;
-                    ydist = dzat_y - laststar_y;
-                    zdist = dzat_z - laststar_z;
-                    dist = sqrt(xdist * xdist + ydist * ydist + zdist * zdist);
-                    sprintf (textbuffer, "$D=%1.2f L.Y.", dist * 5E-5);
-                    msg (textbuffer);
-                    msg ("[&&&&&&&&&&&&&&&&&&&&");
-                }
-            } else {
-                sprintf (textbuffer, "*%s", object_label);
-                msg (textbuffer);
-            }
+        if (isthere (star_id)) {
+            sprintf (textbuffer, "X=%1.0f", laststar_x);
+            msg (textbuffer);
+            sprintf (textbuffer, "Y=%1.0f", -laststar_y);
+            msg (textbuffer);
+            sprintf (textbuffer, "Z=%1.0f", laststar_z);
+            msg (textbuffer);
+        } else {
+            msg (object_label);
+            msg ("IS OUT OF RANGE");
         }
-    }
-
-    if (least) {
-        msg (divider);
-        msg ("STARS LISTING END.");
     } else {
-        msg ("NO KNOWN STARS.");
+        planet_nr  = object_label[23] - '0';
+        planet_nr += 10 * (object_label[22] - '0');
+        star_id    = object_id - planet_nr;
+
+        if (isthere (star_id)) {
+            sprintf (textbuffer, "X=%1.0f", laststar_x);
+            msg (textbuffer);
+            sprintf (textbuffer, "Y=%1.0f", -laststar_y);
+            msg (textbuffer);
+            sprintf (textbuffer, "Z=%1.0f", laststar_z);
+            msg (textbuffer);
+        } else {
+            msg (object_label);
+            msg ("IS OUT OF RANGE");
+        }
     }
 }
 
@@ -546,17 +608,22 @@ void main () {
     printf ("\n\t- GOES NET onboard microsystem, EPOC 6011 REVISION 2\n");
     return;
 startup:
-    msg ("________USAGE________");
-    msg ("SL (OPTIONAL RANGE)");
-    msg ("^^^^^^^^^^^^^^^^^^^^^");
 
     if (_argc < 2) {
-        msg ("GLOBAL STARS LISTING:");
+        msg ("________USAGE________");
+        msg ("PAR OBJECTNAME");
+        msg ("PAR OBJECTNAME:RANGE");
+        msg ("^^^^^^^^^^^^^^^^^^^^^");
+        msg ("PLEASE RUN AGAIN,");
+        msg ("SPECIFYING PARAMETERS");
+        msg (divider);
+        msg ("(PAR REVISION 6011/2)");
+        return;
     } else {
-        msg ("RANGED STARS LISTING:");
+        msg ("GOES STARMAP ANALYSIS");
+        msg (divider);
     }
 
-    msg (divider);
     fh = _open (file, 4);
 
     if (fh == -1) {
@@ -583,30 +650,49 @@ startup:
         i++;
     }
 
-    if (_argc > 1) {
-        sts = atoi (parbuffer);
+    i = 0;
+
+    while (i < 21 && parbuffer[i] != ':' && parbuffer[i] != 0) {
+        objectname[i] = parbuffer[i];
+        i++;
+    }
+
+    if (parbuffer[i] != ':') {
+        analyzed_sectors_range = 100;
+    } else {
+        sts = atoi (parbuffer + i + 1);
 
         if (sts <= 2 || sts > 10000) {
             analyzed_sectors_range = 100;
         } else {
             analyzed_sectors_range = sts;
         }
-
-        unfreeze ();
-        warn ("SCANNING THE GALAXY: ESC TO STOP", -1);
-        total_stars = 0;
-        current_star = 0;
-        lseek (fh, 4, SEEK_SET);
-
-        while (_read (fh, &object_id, 8) && _read (fh, &object_label, 24) == 24) {
-            if (memcmp (&object_id, "Removed:", 8) && object_label[21] == 'S') {
-                total_stars++;
-            }
-        }
-    } else {
-        sts = 0;
     }
 
-    liststars ();
+    unfreeze ();
+
+    if (sts > 100) {
+        warn ("SCANNING THE GALAXY: ESC TO STOP", -1);
+    }
+
+    strupr (parbuffer);
+    strupr (objectname);
+    objectname[i] = 0;
+    query = find (objectname);
+
+    if (query) {
+        if (query == 1) {
+            msg ("SUBJECT: STAR;");
+        }
+
+        if (query == 2) {
+            msg ("SUBJECT: PLANET;");
+        }
+
+        sprintf (outbuffer, "NAME: %s", subjectname);
+        msg (outbuffer);
+        calc_parsis_for ();
+    }
+
     _close (fh);
 }

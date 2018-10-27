@@ -113,8 +113,7 @@ char find (char* starname) {
         lseek (fh, 4, SEEK_SET);
 
         while (_read (fh, &s_object_id, 8) && _read (fh, &s_object_label, 24) == 24) {
-            if (memcmp (&s_object_id, "Removed:", 8)
-                    && !memcmp (s_object_label, starname, ctc)) {
+            if (memcmp (&s_object_id, "Removed:", 8) && !memcmp (s_object_label, starname, ctc)) {
                 s_object_label[21] = 0;
                 msg (s_object_label);
             }
@@ -247,8 +246,7 @@ startup:
                 _read (gh, &guide_consolidated, 4);
 
                 while (_read (gh, &mblock_subject, 84) == 84) {
-                    if (mblock_subject > subject_id - idscale
-                            && mblock_subject < subject_id + idscale) {
+                    if (mblock_subject > subject_id - idscale && mblock_subject < subject_id + idscale) {
                         tmessages++;
                         rec++;
 

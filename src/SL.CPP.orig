@@ -461,8 +461,7 @@ m_end:
           jz e_end
           db 0x66;
           pusha }
-    sprintf (warnbuffer, "SLICE %d OF %d", visible_sectors_x - sx,
-             visible_sectors_x);
+    sprintf (warnbuffer, "SLICE %d OF %d", visible_sectors_x - sx, visible_sectors_x);
     warn (warnbuffer, 0);
     sprintf (warnbuffer, "SUBJECT %ld OF %ld", current_star, total_stars);
     warn (warnbuffer, 1);

@@ -408,8 +408,7 @@ void psmooth_64(uint8_t far* target, uint16_t segshift) {
 
 
 // Circular version of the smoothing process.
-void smootharound_64(uint8_t far* target, int32_t cx, int32_t cy, int32_t r,
-                     int8_t diffuse) {
+void smootharound_64(uint8_t far* target, int32_t cx, int32_t cy, int32_t r, int8_t diffuse) {
     int32_t x1 = cx - r, y1 = cy - r;
     int32_t x2 = cx + r, y2 = cy + r;
     int32_t px, py, rs = r * r;
@@ -869,8 +868,7 @@ int8_t  far* pv_n_vtx[handles]; // numero vertici per ogni poligono (3 o 4).
 float far* pvfile_x[handles]; // coord. X (quattro vertici) di ogni poligono.
 float far* pvfile_y[handles]; // coord. Y (quattro vertici) di ogni poligono.
 float far* pvfile_z[handles]; // coord. Z (quattro vertici) di ogni poligono.
-int8_t  far*
-pvfile_c[handles]; // intensit… del colore di ogni poligono (0..63).
+int8_t  far* pvfile_c[handles]; // intensit… del colore di ogni poligono (0..63).
 float far* pv_mid_x[handles]; // coordinate X dei punti medi di ogni poligono.
 float far* pv_mid_y[handles]; // coordinate Y dei punti medi di ogni poligono.
 float far* pv_mid_z[handles]; // coordinate Z dei punti medi di ogni poligono.
@@ -894,8 +892,7 @@ void fast_srand (int32_t seed) // selezione tabella pseudo.
     }
 }
 
-int32_t fast_random (int32_t
-                     mask) { // estrazione di un numero: "mask" attiva i bits.
+int32_t fast_random (int32_t mask) { // estrazione di un numero: "mask" attiva i bits.
     int32_t num;
     asm {
         db 0x66;
@@ -1007,8 +1004,7 @@ void shade (uint8_t far* palette_buffer,
 
 /* Copia aree video pi— grandi di 4 per 1 pixels. */
 
-void copia (uint8_t far* dest, uint8_t far* sorg, uint16_t x, uint16_t y,
-            int16_t l, int16_t a) {
+void copia (uint8_t far* dest, uint8_t far* sorg, uint16_t x, uint16_t y, int16_t l, int16_t a) {
     if (l < 4) {
         return;
     }
@@ -2365,8 +2361,7 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
     Si occupa anche di altri ordinamenti per distanza... per esempio ordina
     i pianeti e le lune... */
 
-void QuickSort (int16_t far* index, float far* mdist, int16_t start,
-                int16_t end) {
+void QuickSort (int16_t far* index, float far* mdist, int16_t start, int16_t end) {
     int16_t   tq;
     int16_t   jq = end;
     int16_t   iq = start;
@@ -2480,18 +2475,14 @@ void drawpv (int16_t handle, int16_t mode, int16_t rm_iterations,
                 map_color_b = map_color_a - 2;
                 map_color_c = map_color_a - 1;
                 map_color_d = map_color_a + 1;
-                randomic_mapper (pvfile_x[handle][i + 0], pvfile_y[handle][i + 0],
-                                 pvfile_z[handle][i + 0],
+                randomic_mapper (pvfile_x[handle][i + 0], pvfile_y[handle][i + 0], pvfile_z[handle][i + 0],
                                  pvfile_x[handle][i + 1], pvfile_y[handle][i + 1], pvfile_z[handle][i + 1],
-                                 pvfile_x[handle][i + 2], pvfile_y[handle][i + 2], pvfile_z[handle][i + 2],
-                                 rm_iterations);
+                                 pvfile_x[handle][i + 2], pvfile_y[handle][i + 2], pvfile_z[handle][i + 2], rm_iterations);
 
                 if (pv_n_vtx[handle][p] == 4)
-                    randomic_mapper (pvfile_x[handle][i + 2], pvfile_y[handle][i + 2],
-                                     pvfile_z[handle][i + 2],
+                    randomic_mapper (pvfile_x[handle][i + 2], pvfile_y[handle][i + 2], pvfile_z[handle][i + 2],
                                      pvfile_x[handle][i + 3], pvfile_y[handle][i + 3], pvfile_z[handle][i + 3],
-                                     pvfile_x[handle][i + 0], pvfile_y[handle][i + 0], pvfile_z[handle][i + 0],
-                                     rm_iterations);
+                                     pvfile_x[handle][i + 0], pvfile_y[handle][i + 0], pvfile_z[handle][i + 0], rm_iterations);
             }
         }
     } else {
@@ -2528,18 +2519,14 @@ void drawpv (int16_t handle, int16_t mode, int16_t rm_iterations,
                 map_color_b = map_color_a - 2;
                 map_color_c = map_color_a - 1;
                 map_color_d = map_color_a + 1;
-                randomic_mapper (pvfile_x[handle][i + 0], pvfile_y[handle][i + 0],
-                                 pvfile_z[handle][i + 0],
+                randomic_mapper (pvfile_x[handle][i + 0], pvfile_y[handle][i + 0], pvfile_z[handle][i + 0],
                                  pvfile_x[handle][i + 1], pvfile_y[handle][i + 1], pvfile_z[handle][i + 1],
-                                 pvfile_x[handle][i + 2], pvfile_y[handle][i + 2], pvfile_z[handle][i + 2],
-                                 rm_iterations);
+                                 pvfile_x[handle][i + 2], pvfile_y[handle][i + 2], pvfile_z[handle][i + 2], rm_iterations);
 
                 if (pv_n_vtx[handle][p] == 4)
-                    randomic_mapper (pvfile_x[handle][i + 2], pvfile_y[handle][i + 2],
-                                     pvfile_z[handle][i + 2],
+                    randomic_mapper (pvfile_x[handle][i + 2], pvfile_y[handle][i + 2], pvfile_z[handle][i + 2],
                                      pvfile_x[handle][i + 3], pvfile_y[handle][i + 3], pvfile_z[handle][i + 3],
-                                     pvfile_x[handle][i + 0], pvfile_y[handle][i + 0], pvfile_z[handle][i + 0],
-                                     rm_iterations);
+                                     pvfile_x[handle][i + 0], pvfile_y[handle][i + 0], pvfile_z[handle][i + 0], rm_iterations);
             }
     }
 
@@ -2569,8 +2556,7 @@ void copypv (int16_t dest_handle, int16_t src_handle) {
         return;
     }
 
-    _fmemmove (pv_n_vtx[dest_handle], pv_n_vtx[src_handle],
-               pvfile_datalen[src_handle]);
+    _fmemmove (pv_n_vtx[dest_handle], pv_n_vtx[src_handle], pvfile_datalen[src_handle]);
 }
 
 /*  Ruota una forma poligonale rispetto a uno dei suoi vertici,
@@ -2623,8 +2609,7 @@ void modpv (int16_t handle, int16_t polygon_id, int16_t vertex_id,
             for (v = 0; v < pv_n_vtx[handle][p]; v++) {
                 x1 = (pvfile_x[handle][i] - cx) * cos_y + (pvfile_z[handle][i] - cz) * sin_y;
                 z1 = (pvfile_z[handle][i] - cz) * cos_y - (pvfile_x[handle][i] - cx) * sin_y;
-                pvfile_z[handle][i] = z_scale * (z1 * cos_x + (pvfile_y[handle][i] - cy) *
-                                                 sin_x) + cz;
+                pvfile_z[handle][i] = z_scale * (z1 * cos_x + (pvfile_y[handle][i] - cy) * sin_x) + cz;
                 y1 = (pvfile_y[handle][i] - cy) * cos_x - z1 * sin_x;
                 pvfile_x[handle][i] = x_scale * (x1 * cos_z + y1 * sin_z) + cx;
                 pvfile_y[handle][i] = y_scale * (y1 * cos_z - x1 * sin_z) + cy;
@@ -2664,8 +2649,7 @@ void modpv (int16_t handle, int16_t polygon_id, int16_t vertex_id,
 perform:
                 x1 = (pvfile_x[handle][j] - cx) * cos_y + (pvfile_z[handle][j] - cz) * sin_y;
                 z1 = (pvfile_z[handle][j] - cz) * cos_y - (pvfile_x[handle][j] - cx) * sin_y;
-                pvfile_z[handle][j] = z_scale * (z1 * cos_x + (pvfile_y[handle][j] - cy) *
-                                                 sin_x) + cz;
+                pvfile_z[handle][j] = z_scale * (z1 * cos_x + (pvfile_y[handle][j] - cy) * sin_x) + cz;
                 y1 = (pvfile_y[handle][j] - cy) * cos_x - z1 * sin_x;
                 pvfile_x[handle][j] = x_scale * (x1 * cos_z + y1 * sin_z) + cx;
                 pvfile_y[handle][j] = y_scale * (y1 * cos_z - x1 * sin_z) + cy;
@@ -4025,8 +4009,7 @@ void getsecs () {
 void extract_ap_target_infos () {
     srand (ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z / 100000);
     ap_target_class = random (star_classes);
-    ap_target_ray = ((float)class_ray[ap_target_class] + (float)random(
-                         class_rayvar[ap_target_class])) * 0.001;
+    ap_target_ray = ((float)class_ray[ap_target_class] + (float)random(class_rayvar[ap_target_class])) * 0.001;
     ap_target_r = class_rgb[3 * ap_target_class + 0];
     ap_target_g = class_rgb[3 * ap_target_class + 1];
     ap_target_b = class_rgb[3 * ap_target_class + 2];
@@ -4115,8 +4098,7 @@ int16_t starnop (double star_x, double star_y, double star_z)
 // stima il numero di pianeti maggiori associato alle coord. di una stella
 {
     int16_t r;
-    srand ((int32_t)star_x % 10000 * (int32_t)star_y % 10000 *
-           (int32_t)star_z % 10000);
+    srand ((int32_t)star_x % 10000 * (int32_t)star_y % 10000 * (int32_t)star_z % 10000);
     r = random (class_planets[ap_target_class] + 1);
     r += random (2);
     r -= random (2);
@@ -4145,10 +4127,8 @@ void prepare_nearstar () {
     }
 
     s_m = qt_M_PI * nearstar_ray * nearstar_ray * nearstar_ray * 0.01e-7;
-    nearstar_identity = nearstar_x / 100000 * nearstar_y / 100000 * nearstar_z /
-                        100000;
-    srand ((int32_t)nearstar_x % 10000 * (int32_t)nearstar_y % 10000 *
-           (int32_t)nearstar_z % 10000);
+    nearstar_identity = nearstar_x / 100000 * nearstar_y / 100000 * nearstar_z / 100000;
+    srand ((int32_t)nearstar_x % 10000 * (int32_t)nearstar_y % 10000 * (int32_t)nearstar_z % 10000);
     nearstar_nop = random (class_planets[nearstar_class] + 1);
 
     /* Prima estrazione (pressoch‚ casuale, non realistica). */
@@ -4156,16 +4136,12 @@ void prepare_nearstar () {
     for (n = 0; n < nearstar_nop; n++) {
         nearstar_p_owner[n]  = -1;
         nearstar_p_orb_orient[n] = (double) deg * (double) random (360);
-        nearstar_p_orb_seed[n]   = 3 * (n * n + 1) * nearstar_ray + (float) random (
-                                       300 * nearstar_ray) / 100;
+        nearstar_p_orb_seed[n]   = 3 * (n * n + 1) * nearstar_ray + (float) random (300 * nearstar_ray) / 100;
         nearstar_p_tilt[n]       = zrandom (10 * nearstar_p_orb_seed[n]) / 500;
         nearstar_p_orb_tilt[n]   = zrandom (10 * nearstar_p_orb_seed[n]) / 5000;
-        nearstar_p_orb_ecc[n]    = 1 - (double) random (nearstar_p_orb_seed[n] + 10 *
-                                   fabs(nearstar_p_orb_tilt[n])) / 2000;
-        nearstar_p_ray[n]        = (double) random (nearstar_p_orb_seed[n]) * 0.001 +
-                                   0.01;
-        nearstar_p_ring[n]   = zrandom (nearstar_p_ray[n]) * (1 + (double) random (
-                                   1000) / 100);
+        nearstar_p_orb_ecc[n]    = 1 - (double) random (nearstar_p_orb_seed[n] + 10 * fabs(nearstar_p_orb_tilt[n])) / 2000;
+        nearstar_p_ray[n]        = (double) random (nearstar_p_orb_seed[n]) * 0.001 + 0.01;
+        nearstar_p_ring[n]   = zrandom (nearstar_p_ray[n]) * (1 + (double) random (1000) / 100);
 
         if (nearstar_class != 8) {
             nearstar_p_type[n] = random (planet_types);
@@ -4307,14 +4283,11 @@ void prepare_nearstar () {
             nearstar_p_owner[q]  = n;
             nearstar_p_moonid[q]     = c;
             nearstar_p_orb_orient[q] = (double) deg * (double) random (360);
-            nearstar_p_orb_seed[q]   = (c * c + 4) * nearstar_p_ray[n] + (float) zrandom (
-                                           300 * nearstar_p_ray[n]) / 100;
+            nearstar_p_orb_seed[q]   = (c * c + 4) * nearstar_p_ray[n] + (float) zrandom (300 * nearstar_p_ray[n]) / 100;
             nearstar_p_tilt[q]       = zrandom (10 * nearstar_p_orb_seed[q]) / 50;
             nearstar_p_orb_tilt[q]   = zrandom (10 * nearstar_p_orb_seed[q]) / 500;
-            nearstar_p_orb_ecc[q]    = 1 - (double) random (nearstar_p_orb_seed[q] + 10 *
-                                       fabs(nearstar_p_orb_tilt[q])) / 2000;
-            nearstar_p_ray[q]        = (double) random (nearstar_p_orb_seed[n]) * 0.05 +
-                                       0.1;
+            nearstar_p_orb_ecc[q]    = 1 - (double) random (nearstar_p_orb_seed[q] + 10 * fabs(nearstar_p_orb_tilt[q])) / 2000;
+            nearstar_p_ray[q]        = (double) random (nearstar_p_orb_seed[n]) * 0.05 + 0.1;
             nearstar_p_ring[q]   = 0;
             nearstar_p_type[q]       = random (planet_types);
             // Estrazione tipologia di satellite:
@@ -5594,8 +5567,7 @@ void surface (int16_t logical_id, int16_t type,
 
 /* Tracciamento degli anelli (eventuali). */
 
-void ring (int16_t planet_id, double ox, double oy, double oz, int16_t start,
-           int16_t layers) {
+void ring (int16_t planet_id, double ox, double oy, double oz, int16_t start, int16_t layers) {
     int16_t     a, b, c, n, m, partn, partcls;
     double  sx, sy, sz;
     double  ringray = nearstar_p_ring[planet_id];
@@ -6651,8 +6623,7 @@ void load_digimap2 () {
 }
 
 int8_t    outhudbuffer[81];
-int8_t*    compass =
-    "N.........E.........S.........W.........N.........E.........S.......";
+int8_t*    compass = "N.........E.........S.........W.........N.........E.........S.......";
 
 float   tp_gravity = 1, pp_gravity = 1;
 float   tp_temp = 22, pp_temp = 22;
@@ -6701,8 +6672,7 @@ void surrounding (int8_t compass_on, int16_t openhudcount) {
     float   pp_delta, ccom;
 
     for (lptr = 0; lptr < 04; lptr++) {
-        areaclear (adapted, 10, openhudcount + 9 - lptr, 0, 0, 300, 1,
-                   54 + surlight + 3 * lptr);
+        areaclear (adapted, 10, openhudcount + 9 - lptr, 0, 0, 300, 1, 54 + surlight + 3 * lptr);
     }
 
     for (lptr = 0; lptr < 10; lptr++) {
@@ -6811,9 +6781,7 @@ void surrounding (int8_t compass_on, int16_t openhudcount) {
     tp_pulse += pp_delta;
     //unit… di debugging dell'albedo:
     //sprintf (outhudbuffer, "GRAVITY %2.3f FG & TEMPERATURE %+3.1f@C & PRESSURE %2.3f ATM & PULSE %3.0f PPS", tp_gravity, tp_temp, tp_pressure, (float)albedo);
-    sprintf (outhudbuffer,
-             "GRAVITY %2.3f FG & TEMPERATURE %+3.1f@C & PRESSURE %2.3f ATM & PULSE %3.0f PPS",
-             tp_gravity, tp_temp, tp_pressure, tp_pulse);
+    sprintf (outhudbuffer, "GRAVITY %2.3f FG & TEMPERATURE %+3.1f@C & PRESSURE %2.3f ATM & PULSE %3.0f PPS", tp_gravity, tp_temp, tp_pressure, tp_pulse);
     wrouthud (2, 192, NULL, outhudbuffer);
 }
 

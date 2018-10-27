@@ -1,81 +1,81 @@
 /*
 
-    Editor per oggetti poligonali complessi.
-    ----------------------------------------
-    Strettamente personale, mi servir… per varie cose.
-    I programmi di PolyVert non sono scherzi, tutt'altro che
-    giocattolini, richiedono un computer che come minimo deve avere
-    un Pentium: qualsiasi velocit… di clock, anche 60, ma un Pentium.
-    Questo perch‚ tutto il livello di dettaglio si basa sul numero di
-    poligoni usati: niente dettagli superficiali o effetti particolari
-    di rimescolamento dei pixels, tutti sani poligoni indipendenti
-    come piacciono a me.
+	Editor per oggetti poligonali complessi.
+	----------------------------------------
+	Strettamente personale, mi servir… per varie cose.
+	I programmi di PolyVert non sono scherzi, tutt'altro che
+	giocattolini, richiedono un computer che come minimo deve avere
+	un Pentium: qualsiasi velocit… di clock, anche 60, ma un Pentium.
+	Questo perch‚ tutto il livello di dettaglio si basa sul numero di
+	poligoni usati: niente dettagli superficiali o effetti particolari
+	di rimescolamento dei pixels, tutti sani poligoni indipendenti
+	come piacciono a me.
 
-    Elenco comandi da mouse:
+	Elenco comandi da mouse:
 
-        Spostamento del mouse: cambio angolazione.
-        Click Sinistro + Spostamento: cambio coords. x/y origine.
-        Click Destro + Spostamento: allontana / avvicina l'oggetto.
+		Spostamento del mouse: cambio angolazione.
+		Click Sinistro + Spostamento: cambio coords. x/y origine.
+		Click Destro + Spostamento: allontana / avvicina l'oggetto.
 
-    Elenco comandi da tastiera:
+	Elenco comandi da tastiera:
 
-        Cursore: sposta il cursore 3d su x/y.
-        Ctrl+CrUp,CrDown: aumenta/diminuisce passo di griglia.
-        Pag Up/Dn.: sposta il cursore 3d su z.
-        Ctrl+Pag Up/Dn.: sposta l'origine su z.
-        Barra spaziatrice: fissa un vertice.
-        Backspace: cancella un vertice o un poligono.
-        Invio: fissa un poligono.
-        +: incrementa intensit… del colore.
-        -: decrem. intensit… colore.
-        c: riduce contrasto di colori.
-        C: aumenta contrasto colori.
-        l: riduce luminosit… colori.
-        L: aumenta luminosit… colori.
-        Shift+Invio: salva l'oggetto sul file "POLYVERT.NCC".
-        Barra rovescia: sposta il cursore sul vertice pi— vicino,
-                d… inoltre la possibilit… di spostare tutti
-                i vertici ad esso sovrapposti tramite lo
-                spostamento del cursore.
-        p: porta in primopiano il poligono selezionato,
-           ovvero in fondo alla lista (viene disegnato per ultimo).
-        b: porta in sfondo il poligono selezionato,
-           ovvero in cima alla lista (viene disegnato per primo).
-        t: porta tutti i poligoni a tre vertici, aggiungendo quelli
-           che servono per dividere quelli a 4 vertici;
-           Š utile per approssimare forme "piegate" a 4 vertici,
-           per poi poterle far tracciare al codice 3d correttamente
-           sotto forma di due poligoni a 3 vertici.
-        s: seleziona il poligono pi— vicino al cursore,
-           e lo evidenzia in giallo: da ora in poi, lo si potr…
-           spostare solidalmente al cursore.
-           se un poligono Š selezionato, lo deseleziona.
-        punto (.): porta al cursore il colore del poligono
-               selezionato.
-        duepunti (:): porta al poligono selezionato il colore
-                  del cursore.
-        h: da chiarire a cosa serva.
-           mi Š stato utile per portare un oggetto studiato con
-           una certa origine dal punto 0;0;0 al punto in cui si
-           trovava il cursore; per questo Š servito, ma se lo
-           ripeto, ovviamente, mi si risposta di crx;cry;crz
-           unit… di misura.
-        o: fissa l'origine (intesa come riferimento nella
-           rotazione di comodit… dell'oggetto) sul cursore.
-        q: abbandona il programma (quit). prima salvare!
+		Cursore: sposta il cursore 3d su x/y.
+		Ctrl+CrUp,CrDown: aumenta/diminuisce passo di griglia.
+		Pag Up/Dn.: sposta il cursore 3d su z.
+		Ctrl+Pag Up/Dn.: sposta l'origine su z.
+		Barra spaziatrice: fissa un vertice.
+		Backspace: cancella un vertice o un poligono.
+		Invio: fissa un poligono.
+		+: incrementa intensit… del colore.
+		-: decrem. intensit… colore.
+		c: riduce contrasto di colori.
+		C: aumenta contrasto colori.
+		l: riduce luminosit… colori.
+		L: aumenta luminosit… colori.
+		Shift+Invio: salva l'oggetto sul file "POLYVERT.NCC".
+		Barra rovescia: sposta il cursore sul vertice pi— vicino,
+				d… inoltre la possibilit… di spostare tutti
+				i vertici ad esso sovrapposti tramite lo
+				spostamento del cursore.
+		p: porta in primopiano il poligono selezionato,
+		   ovvero in fondo alla lista (viene disegnato per ultimo).
+		b: porta in sfondo il poligono selezionato,
+		   ovvero in cima alla lista (viene disegnato per primo).
+		t: porta tutti i poligoni a tre vertici, aggiungendo quelli
+		   che servono per dividere quelli a 4 vertici;
+		   Š utile per approssimare forme "piegate" a 4 vertici,
+		   per poi poterle far tracciare al codice 3d correttamente
+		   sotto forma di due poligoni a 3 vertici.
+		s: seleziona il poligono pi— vicino al cursore,
+		   e lo evidenzia in giallo: da ora in poi, lo si potr…
+		   spostare solidalmente al cursore.
+		   se un poligono Š selezionato, lo deseleziona.
+		punto (.): porta al cursore il colore del poligono
+			   selezionato.
+		duepunti (:): porta al poligono selezionato il colore
+			      del cursore.
+		h: da chiarire a cosa serva.
+		   mi Š stato utile per portare un oggetto studiato con
+		   una certa origine dal punto 0;0;0 al punto in cui si
+		   trovava il cursore; per questo Š servito, ma se lo
+		   ripeto, ovviamente, mi si risposta di crx;cry;crz
+		   unit… di misura.
+		o: fissa l'origine (intesa come riferimento nella
+		   rotazione di comodit… dell'oggetto) sul cursore.
+		q: abbandona il programma (quit). prima salvare!
 
-    Descrizione del formato NCC:
+	Descrizione del formato NCC:
 
-        La sigla sta per Numero vertici, Coordinate, Colore.
-        Struttura del file:
+		La sigla sta per Numero vertici, Coordinate, Colore.
+		Struttura del file:
 
-      Inizio-> 2 bytes: n=numero di poligoni di cui Š composto l'ogg.
-           n bytes: nr. vertici per ogni poligono.
-           16 * n:  coordinata x di ogni vertice. max. 4 vertici.
-           16 * n:  y (16 * n = 4 vertici * 4 bytes * n).
-           16 * n:  z.
-           n bytes: intensit… colore di ogni poligono (da 1 a 62).
-      Fine->   Eof.
+	  Inizio-> 2 bytes: n=numero di poligoni di cui Š composto l'ogg.
+		   n bytes: nr. vertici per ogni poligono.
+		   16 * n:  coordinata x di ogni vertice. max. 4 vertici.
+		   16 * n:  y (16 * n = 4 vertici * 4 bytes * n).
+		   16 * n:  z.
+		   n bytes: intensit… colore di ogni poligono (da 1 a 62).
+	  Fine->   Eof.
 
 */
 

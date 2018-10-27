@@ -2230,8 +2230,7 @@ void setcolor (double red, double green, double blue) {
             mov patword, cx }
 }
 
-void attachtexture (double reference_x1, double reference_y1,
-                    double reference_z1,
+void attachtexture (double reference_x1, double reference_y1, double reference_z1,
                     double reference_x2, double reference_y2, double reference_z2,
                     double reference_x3, double reference_y3, double reference_z3,
                     unsigned int huge* texturemappointer) {
