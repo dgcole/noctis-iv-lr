@@ -4393,9 +4393,7 @@ ip_drive_mode:
             }
         }
 
-        //
         // Page swap.
-        //
         QUADWORDS = 16000;
 
         if (_delay == 13) {
@@ -4638,10 +4636,6 @@ last_sky_palette_redefinition:
                 ib = (s_background[ir] >> 6) << 6;
                 s_background[ir] = ig + ib;
             }
-
-            //QUADWORDS = 16200;
-            //pcycle (s_background, 1);
-            //QUADWORDS = pqw;
         }
 
         //
@@ -4677,22 +4671,6 @@ last_sky_palette_redefinition:
             goto endmain;
         }
 
-        //
-        // non saprei...
-        // un'istruzione di debug,
-        // o la lascio come "codice segreto"?
-        // fa istantaneamente il pieno di litio.
-        //
-        /*  ir = ctrlkeys[0];
-            ir &= 0x70;
-            if (ir == 0x70) {
-            charge = 120;
-            pwr = 20000;
-            ctrlkeys[0] = 0x20;
-            }*/
-        //
-        // Comandi da tastiera.
-        //
         if (goesk_e != -1) {
             c = goesk_e;
             goesk_e = -1;

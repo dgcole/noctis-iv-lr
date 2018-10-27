@@ -2683,9 +2683,11 @@ void background (uint16_t start,
             popa }
 }
 
-/*  Cielo stellato, tre-di vero. A campo amplificato, annovera 2744 stelle,
-    con magnitudine da 0 a +13 (ho pensato che un gatto, con vista scotopica,
-    e nello spazio, ne possa vedere parecchie di pi— del normale...). */
+/*  
+    Starry sky, three-of-a-kind. In the amplified view, it has 2,744 stars.
+    Star magnitudes go from 0 to +13. Since the player is a cat, with scotopic
+    vision, they can probably see more than normal.
+*/
 
 void sky (uint16_t limits) {
     int32_t min_xy = 1E9;
@@ -2707,26 +2709,22 @@ void sky (uint16_t limits) {
     int32_t sect_x, sect_y, sect_z, rx, ry;
     int32_t advance = 100000, k = 100000 * visible_sectors;
     int32_t temp_x, temp_y, temp_z, temp;
-    /*  Il seguente frammento controlla la rarefazione delle stelle
-        all'aumentare della distanza dal centro galattico. La scala
-        sull'asse Y Š amplificata di 30 volte per matenere credibili
-        le proporzioni della galassia che, pur essendo piuttosto
-        ellittica (o grassottella), ha la forma di un disco
-        schiacciato. Le stelle si rarefanno a seconda del valore
-        di "distance_from_home". Questa Š una tabella che fornisce
-        il numero di stelle eliminate (ogni settore contiene una
-        stella, e il numero di settori visibili a campo amplificato
-        Š di 14*14*14 = 2744) man mano che distance_from_home
-        aumenta il suo valore:
-
-        0-400.000.000           0 stelle eliminate
-        400.000.000-800.000.000     1 su 2 stelle eliminate
-        1.200.000.000-1.600.000.000 3 su 4 stelle eliminate
-        1.600.000.000-2.000.000.000 7 su 8 stelle eliminate
-
-        Oltre 2 miliardi di unit…, non Š pi— permesso selezionare
-        stelle: il rapporto di rarefazione sarebbe comunque di
-        1 stella effettiva ogni 16 settori. */
+    /*  
+        The following section changes the rarity factor of the stars as the
+        distance from the galactic center increases. The scale on the Y-Axis is
+        amplified 30 times, so that the galaxy has the shape of a crushed disk.
+        Stars will be rarefied depending on the value of "distance_from_home".
+        This is a table that provides the number of stars eliminated (each 
+        sector contains one star, and the number of sectors visible to the
+        amplified field is 14 * 14 * 14 = 2744) as distance_from_home increases
+        its value:
+            0 - 400,000,000                 0% eliminated
+            400,000,000 - 800,000,000       50% eliminated
+            1,200,000,000 - 1,600,000,000   75% eliminated
+            1,600,000,000 - 2,000,000,000   87.5% eliminated.
+        Over 2 billion units, the player can no longer select stars: The rarity
+        factor ratio would still be of 1 effective star every 16 sectors.
+    */
     int16_t rarity_factor;
     double distance_from_home;
     distance_from_home = sqrt (dzat_x * dzat_x + dzat_z * dzat_z);
@@ -2740,38 +2738,47 @@ void sky (uint16_t limits) {
     sect_y *= 100000;
     sect_z = (dzat_z - visible_sectors * 50000) / 100000;
     sect_z *= 100000;
-    asm {   les ax, dword ptr adapted
-            mov al, visible_sectors
-            mov sx, al }
+    asm {   
+        les ax, dword ptr adapted
+        mov al, visible_sectors
+        mov sx, al 
+    }
     e_while:
-    asm {   mov al, visible_sectors
-            mov sy, al }
+    asm {   
+        mov al, visible_sectors
+        mov sy, al 
+    }
     m_while:
-    asm {   mov al, visible_sectors
-            mov sz, al }
+    asm {   
+        mov al, visible_sectors
+        mov sz, al 
+    }
     i_while:
-    asm {   db 0x66, 0xBB, 0x50, 0xC3, 0x00, 0x00 // mov ebx, 50000
-            db 0x66;
-            mov ax, word ptr sect_x
-            db 0x66;
-            mov cx, word ptr sect_y
-            db 0x66;
-            mov dx, word ptr sect_z
-            db 0x66, 0x0F, 0xAF, 0xCA // imul ecx, edx
-            db 0x66;
-            add ax, dx
-            db 0x66;
-            mov cx, ax
-            db 0x66;
-            mov dx, cx
-            db 0x66, 0x81, 0xE2, 0xFF, 0xFF, 0x01, 0x00 // and edx, 0x0001FFFF
-            db 0x66;
-            add dx, word ptr sect_x
-            db 0x66;
-            sub dx, bx
-            jnz i_cont_x }  // |
+    asm {   
+        db 0x66, 0xBB, 0x50, 0xC3, 0x00, 0x00 // mov ebx, 50000
+        db 0x66;
+        mov ax, word ptr sect_x
+        db 0x66;
+        mov cx, word ptr sect_y
+        db 0x66;
+        mov dx, word ptr sect_z
+        db 0x66, 0x0F, 0xAF, 0xCA // imul ecx, edx
+        db 0x66;
+        add ax, dx
+        db 0x66;
+        mov cx, ax
+        db 0x66;
+        mov dx, cx
+        db 0x66, 0x81, 0xE2, 0xFF, 0xFF, 0x01, 0x00 // and edx, 0x0001FFFF
+        db 0x66;
+        add dx, word ptr sect_x
+        db 0x66;
+        sub dx, bx
+        jnz i_cont_x 
+    }  // |
     asm jmp next;   // | excludes stars with x coordinate = 0
-    i_cont_x: asm {                 // |
+    i_cont_x: 
+    asm {                 // |
         db 0x66;
         mov word ptr temp_x, dx
         db 0x66;
@@ -2787,9 +2794,11 @@ void sky (uint16_t limits) {
         add dx, word ptr sect_y
         db 0x66;
         sub dx, bx
-        jnz i_cont_y }  // |
+        jnz i_cont_y 
+    }  // |
     asm jmp next;   // | excludes stars with y coordinate = 0
-    i_cont_y: asm {                 // |
+    i_cont_y: 
+    asm {                 // |
         db 0x66;
         mov word ptr temp_y, dx
         db 0x66;
@@ -2803,9 +2812,11 @@ void sky (uint16_t limits) {
         add dx, word ptr sect_z
         db 0x66;
         sub dx, bx
-        jnz i_cont_z }  // |
+        jnz i_cont_z 
+    }  // |
     asm jmp next;   // | excludes stars with z coordinate = 0
-    i_cont_z: asm {                 // |
+    i_cont_z: 
+    asm {                 // |
         db 0x66;
         mov word ptr temp_z, dx
         mov ax, word ptr temp_x
@@ -2813,155 +2824,182 @@ void sky (uint16_t limits) {
         add ax, word ptr temp_z
         test ax, rarity_factor
         jz ispresent
-        jmp endgame }
-ispresent:
-    asm { fild dword ptr temp_z
-          fsub dzat_z
-          fst zz
-          fmul opt_tcosbeta
-          fild dword ptr temp_x
-          fsub dzat_x
-          fst xx
-          fmul opt_tsinbeta
-          fsubp
-          fst z2
-          fmul opt_tcosalfa
-          fild dword ptr temp_y
-          fsub dzat_y
-          fst yy
-          fmul opt_tsinalfa
-          faddp
-          fst rz
-          fcomp starneg
-          fstsw ax
-          sahf
-          jnb _123stella
-          jmp endgame }
+        jmp endgame 
+    }
+    ispresent:
+    asm { 
+        fild dword ptr temp_z
+        fsub dzat_z
+        fst zz
+        fmul opt_tcosbeta
+        fild dword ptr temp_x
+        fsub dzat_x
+        fst xx
+        fmul opt_tsinbeta
+        fsubp
+        fst z2
+        fmul opt_tcosalfa
+        fild dword ptr temp_y
+        fsub dzat_y
+        fst yy
+        fmul opt_tsinalfa
+        faddp
+        fst rz
+        fcomp starneg
+        fstsw ax
+        sahf
+        jnb _123stella
+        jmp endgame 
+    }
     _123stella:
-    asm {fld xx
-         fmul opt_pcosbeta
-         fld zz
-         fmul opt_psinbeta
-         faddp
-         fld uno
-         fdiv rz
-         fst inv_rz
-         fmulp
-         fistp rx
-         mov di, word ptr rx
-         add di, x_centro
-         cmp di, 10
-         ja _x_low_ok
-         jmp endgame }
+    asm {
+        fld xx
+        fmul opt_pcosbeta
+        fld zz
+        fmul opt_psinbeta
+        faddp
+        fld uno
+        fdiv rz
+        fst inv_rz
+        fmulp
+        fistp rx
+        mov di, word ptr rx
+        add di, x_centro
+        cmp di, 10
+        ja _x_low_ok
+        jmp endgame
+    }
     _x_low_ok:
-    asm { cmp di, 310
-          jb _x_high_ok
-          jmp endgame }
+    asm { 
+        cmp di, 310
+        jb _x_high_ok
+        jmp endgame 
+    }
     _x_high_ok:
-    asm{ fld yy
-         fmul opt_pcosalfa
-         fld z2
-         fmul opt_psinalfa
-         fsubp
-         fmul inv_rz
-         fistp ry
-         sub word ptr ry, 2
-         mov bx, word ptr ry
-         add bx, y_centro
-         cmp bx, 10
-         ja _y_low_ok
-         jmp endgame }
+    asm{ 
+        fld yy
+        fmul opt_pcosalfa
+        fld z2
+        fmul opt_psinalfa
+        fsubp
+        fmul inv_rz
+        fistp ry
+        sub word ptr ry, 2
+        mov bx, word ptr ry
+        add bx, y_centro
+        cmp bx, 10
+        ja _y_low_ok
+        jmp endgame 
+    }
     _y_low_ok:
-    asm { cmp bx, 190
-          jb _y_high_ok
-          jmp endgame }
+    asm { 
+        cmp bx, 190
+        jb _y_high_ok
+        jmp endgame 
+    }
     _y_high_ok:
-    asm{ shl bx, 1
-         add di, word ptr riga[bx]
-         cmp ap_targetting, 1
-         je newgame
-         cmp byte ptr es:[di+4], 68
-         je endgame
-         mov ax, limits
-         cmp byte ptr es:[di+4], ah
-         jb endgame
-         cmp byte ptr es:[di+4], al
-         ja endgame }
+    asm { 
+        shl bx, 1
+        add di, word ptr riga[bx]
+        cmp ap_targetting, 1
+        je newgame
+        cmp byte ptr es:[di+4], 68
+        je endgame
+        mov ax, limits
+        cmp byte ptr es:[di+4], ah
+        jb endgame
+        cmp byte ptr es:[di+4], al
+        ja endgame 
+    }
     newgame:
-    asm {  fld rz
-           fistp temp
-           mov cl, 13
-           add cl, field_amplificator
-           db 0x66;
-           mov dx, word ptr temp
-           db 0x66;
-           shr dx, cl
-           mov al, 63
-           sub al, dl
-           jc colorout
-           mov dl, es:[di+4]
-           and byte ptr es:[di+4], 0xC0
-           and dl, 0x3F
-           add al, dl
-           cmp al, 63
-           jbe colorin
-           mov al, 63 }
+    asm {  
+        fld rz
+        fistp temp
+        mov cl, 13
+        add cl, field_amplificator
+        db 0x66;
+        mov dx, word ptr temp
+        db 0x66;
+        shr dx, cl
+        mov al, 63
+        sub al, dl
+        jc colorout
+        mov dl, es:[di+4]
+        and byte ptr es:[di+4], 0xC0
+        and dl, 0x3F
+        add al, dl
+        cmp al, 63
+        jbe colorin
+        mov al, 63 
+    }
     colorin:
-    asm {  or es:[di+4], al }
+    asm or es:[di+4], al;
     colorout:
-    asm {  cmp ap_targetting, 1
-           je extend }
+    asm {  
+        cmp ap_targetting, 1
+        je extend 
+    }
     endgame:
     asm    jmp next
-    extend: asm {   fild rx
-                    fmul st(0), st(0)
-                    fild ry
-                    fmul st(0), st(0)
-                    faddp
-                    fistp temp
-                    db 0x66;
-                    mov ax, word ptr temp
-                    db 0x66;
-                    cmp ax, word ptr min_xy
-                    jnb next
-                    db 0x66;
-                    mov word ptr min_xy, ax
-                    fild dword ptr temp_x
-                    fstp ap_target_x
-                    fild dword ptr temp_y
-                    fstp ap_target_y
-                    fild dword ptr temp_z
-                    fstp ap_target_z }
+    extend: 
+    asm {   
+        fild rx
+        fmul st(0), st(0)
+        fild ry
+        fmul st(0), st(0)
+        faddp
+        fistp temp
+        db 0x66;
+        mov ax, word ptr temp
+        db 0x66;
+        cmp ax, word ptr min_xy
+        jnb next
+        db 0x66;
+        mov word ptr min_xy, ax
+        fild dword ptr temp_x
+        fstp ap_target_x
+        fild dword ptr temp_y
+        fstp ap_target_y
+        fild dword ptr temp_z
+        fstp ap_target_z 
+    }
     next:
-    asm { db 0x66;
-          mov ax, word ptr advance
-          db 0x66;
-          add word ptr sect_z, ax
-          dec sz
-          jz i_end
-          jmp i_while }
+    asm { 
+        db 0x66;
+        mov ax, word ptr advance
+        db 0x66;
+        add word ptr sect_z, ax
+        dec sz
+        jz i_end
+        jmp i_while 
+    }
     i_end:
-    asm { db 0x66;
-          mov dx, word ptr k
-          db 0x66;
-          sub word ptr sect_z, dx
-          db 0x66;
-          add word ptr sect_y, ax
-          dec sy
-          jz m_end
-          jmp m_while }
+    asm { 
+        db 0x66;
+        mov dx, word ptr k
+        db 0x66;
+        sub word ptr sect_z, dx
+        db 0x66;
+        add word ptr sect_y, ax
+        dec sy
+        jz m_end
+        jmp m_while 
+    }
     m_end:
-    asm { db 0x66;
-          sub word ptr sect_y, dx
-          db 0x66;
-          add word ptr sect_x, ax
-          dec sx
-          jz e_end
-          jmp e_while }
+    asm { 
+        db 0x66;
+        sub word ptr sect_y, dx
+        db 0x66;
+        add word ptr sect_x, ax
+        dec sx
+        jz e_end
+        jmp e_while 
+    }
     e_end:    // No more...
 }
 
-/*  Ancora quicktime-vr, purtroppo Š necessaria: una sfera che poi pu• essere
+/*  
+    Ancora quicktime-vr, purtroppo Š necessaria: una sfera che poi pu• essere
     un pianeta o una stella (non Š il caso di andare per il sottile).
     Usa un'enormit… di registri: salti mortali con le macro in codice macchina
     perch‚ il c++ non mi considera i registri estesi. Meglio ricapitolare:
@@ -2973,7 +3011,8 @@ ispresent:
     vanno calcolati (primo byte = Y, secondo byte = X). Quando la Y Š 100
     significa che l'offset originario era 64000 e che quindi non si tratta
     di un punto, ma di una serie di avanzamenti consecutivi lungo il
-    segmento della tappezzeria, indicati per la precisione dal byte X. */
+    segmento della tappezzeria, indicati per la precisione dal byte X. 
+*/
 
 uint8_t glass_bubble = 1; // Se settato, disegna una specie di bolla
 // trasparente attorno ai globi tracciati con
