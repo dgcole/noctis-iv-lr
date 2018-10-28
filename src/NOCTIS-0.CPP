@@ -2727,32 +2727,37 @@ void sky (uint16_t limits) {
     */
     int16_t rarity_factor;
     double distance_from_home;
+    
     distance_from_home = sqrt (dzat_x * dzat_x + dzat_z * dzat_z);
     distance_from_home += 30 * fabs(dzat_y);
+    
     rarity_factor = distance_from_home * 0.25e-8;
     rarity_factor = 1 << rarity_factor;
     rarity_factor--;
+    
     sect_x = (dzat_x - visible_sectors * 50000) / 100000;
     sect_x *= 100000;
+    
     sect_y = (dzat_y - visible_sectors * 50000) / 100000;
     sect_y *= 100000;
+    
     sect_z = (dzat_z - visible_sectors * 50000) / 100000;
     sect_z *= 100000;
+    
     asm {   
         les ax, dword ptr adapted
-        mov al, visible_sectors
-        mov sx, al 
     }
+    _AL = visible_sectors;
+    sx = _AL;
+    
     e_while:
-    asm {   
-        mov al, visible_sectors
-        mov sy, al 
-    }
+    _AL = visible_sectors;
+    sy = _AL;
+    
     m_while:
-    asm {   
-        mov al, visible_sectors
-        mov sz, al 
-    }
+    _AL = visible_sectors;
+    sz = _AL;
+    
     i_while:
     asm {   
         db 0x66, 0xBB, 0x50, 0xC3, 0x00, 0x00 // mov ebx, 50000
@@ -2816,15 +2821,14 @@ void sky (uint16_t limits) {
     }  // |
     asm jmp next;   // | excludes stars with z coordinate = 0
     i_cont_z: 
-    asm {                 // |
-        db 0x66;
-        mov word ptr temp_z, dx
-        mov ax, word ptr temp_x
-        add ax, word ptr temp_y
-        add ax, word ptr temp_z
-        test ax, rarity_factor
-        jz ispresent
-        jmp endgame 
+    temp_z = _EDX;
+    _AX = temp_x;
+    _AX += temp_y;
+    _AX += temp_z;
+    if (_AX & rarity_factor == 0) {
+        goto ispresent;
+    } else {
+        goto endgame;
     }
     ispresent:
     asm { 
@@ -2870,10 +2874,10 @@ void sky (uint16_t limits) {
         jmp endgame
     }
     _x_low_ok:
-    asm { 
-        cmp di, 310
-        jb _x_high_ok
-        jmp endgame 
+    if (_DI < 310) {
+        goto _x_high_ok;
+    } else {
+        goto endgame;
     }
     _x_high_ok:
     asm{ 
@@ -2892,10 +2896,10 @@ void sky (uint16_t limits) {
         jmp endgame 
     }
     _y_low_ok:
-    asm { 
-        cmp bx, 190
-        jb _y_high_ok
-        jmp endgame 
+    if (_BX < 190) {
+        goto _y_high_ok;
+    } else {
+        goto endgame;
     }
     _y_high_ok:
     asm { 
@@ -2932,15 +2936,17 @@ void sky (uint16_t limits) {
         jbe colorin
         mov al, 63 
     }
+    
     colorin:
     asm or es:[di+4], al;
     colorout:
-    asm {  
-        cmp ap_targetting, 1
-        je extend 
+    if (ap_targetting == 1) {
+        goto extend;
     }
+    
     endgame:
-    asm    jmp next
+    goto next;
+    
     extend: 
     asm {   
         fild rx
@@ -2963,39 +2969,38 @@ void sky (uint16_t limits) {
         fild dword ptr temp_z
         fstp ap_target_z 
     }
+    
     next:
-    asm { 
-        db 0x66;
-        mov ax, word ptr advance
-        db 0x66;
-        add word ptr sect_z, ax
-        dec sz
-        jz i_end
-        jmp i_while 
-    }
+    sect_z += advance;
+    sz--;
+    if (sz == 0) {
+        goto i_end;
+    } else {
+        goto i_while;
+    } 
+    
     i_end:
-    asm { 
-        db 0x66;
-        mov dx, word ptr k
-        db 0x66;
-        sub word ptr sect_z, dx
-        db 0x66;
-        add word ptr sect_y, ax
-        dec sy
-        jz m_end
-        jmp m_while 
+    sect_y += advance;
+    sect_z -= k;
+    sy--;
+    if (sy == 0) {
+        goto m_end;
+    } else {
+        goto m_while;
     }
+    
     m_end:
-    asm { 
-        db 0x66;
-        sub word ptr sect_y, dx
-        db 0x66;
-        add word ptr sect_x, ax
-        dec sx
-        jz e_end
-        jmp e_while 
+    sect_y -= k;
+    sect_x += advance;
+    sx--;
+    if (sx == 0) {
+        goto e_end;
+    } else {
+        goto e_while;
     }
-    e_end:    // No more...
+    
+    
+    e_end:    
 }
 
 /*  
