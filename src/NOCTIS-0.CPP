@@ -2747,9 +2747,6 @@ void sky (uint16_t limits) {
     sect_z *= 100000;
     
     uint32_t index = 0;
-    asm {   
-        les ax, dword ptr adapted
-    }
 
     // Loop over a 3D cube of l,w,h = visible_sectors.
     for (sx = 0; sx < visible_sectors; sx++) {
@@ -2809,8 +2806,8 @@ void sky (uint16_t limits) {
                 
                 _EDX -= _EBX;
                 temp_z = _EDX;                
-                _AX = temp_x + temp_y + temp_z;
-                if (_AX & rarity_factor != 0) {
+                uint32_t netpos = temp_x + temp_y + temp_z;
+                if (netpos & rarity_factor != 0) {
                     sect_z += advance;
                     continue;
                 }
@@ -2829,24 +2826,25 @@ void sky (uint16_t limits) {
                 inv_rz = uno / rz;
                 rx = ((xx * opt_pcosbeta) + (zz * opt_psinbeta)) * inv_rz;
                 
-                _DI = rx + x_centro;
                 index = rx + x_centro;
-                if (_DI <= 10 || _DI >= 310) {
+                if (index <= 10 || index >= 310) {
                     sect_z += advance;
                     continue;
                 }
                 
                 ry = (yy * opt_pcosalfa - z2 * opt_psinalfa) * inv_rz - 2;
                 
-                _BX = ry + y_centro;
-                if (_BX <= 10 || _BX >= 190) {
+                uint16_t nety = ry + y_centro;
+                if (nety <= 10 || nety >= 190) {
                     sect_z += advance;
                     continue;
                 }
 
-                _BX <<= 1; 
-                asm add di, word ptr riga[bx]
-                index = _DI;
+                nety <<= 1;
+                uint16_t toAddLow = ((uint8_t*) riga)[nety];
+                uint16_t toAddHigh = ((uint8_t*) riga)[nety + 1];
+                uint16_t toAdd = (toAddHigh << 8) + toAddLow;
+                index += toAdd;
                 
                 if (ap_targetting != 1) {
                     if (adapted[index] == 68) {
@@ -2866,17 +2864,17 @@ void sky (uint16_t limits) {
                 }
 
                 temp = (int32_t) rz;
-                _EDX = temp >> (13 + field_amplificator);
-                _AL = 63 - _DL;
-                if ((int16_t) _AL >= 0) {
+                int32_t tempshift = temp >> (13 + field_amplificator);
+                int16_t colormaybe = 63 - (tempshift & 0xFF);
+                if ((int16_t) colormaybe >= 0) {
                     _DL = adapted[index];
                     adapted[index] &= 0xC0;
                     _DL &= 0x3F;
-                    _AL += _DL;
-                    if (_AL > 63) {
-                        _AL = 63;
+                    colormaybe += _DL;
+                    if (colormaybe > 63) {
+                        colormaybe = 63;
                     }
-                    adapted[index] |= _AL;
+                    adapted[index] |= colormaybe;
                 }
                 
                 if (ap_targetting != 1) {
