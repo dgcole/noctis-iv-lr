@@ -2766,7 +2766,7 @@ void sky (uint16_t limits) {
                 _EDX = (_ECX & 0x0001FFFF) + sect_x;
                 
                 // Exclude stars with x coordinate = 0
-                if (_EDX == _EBX) {          
+                if (_EDX == _EBX) {  
                     sect_z += advance;
                     continue;
                 }
@@ -2847,49 +2847,39 @@ void sky (uint16_t limits) {
                 index += toAdd;
                 
                 if (ap_targetting != 1) {
-                    if (adapted[index] == 68) {
-                        sect_z += advance;
-                        continue;
-                    }
-                
-                    if (adapted[index] < (limits >> 8)) {
-                        sect_z += advance;
-                        continue;
-                    }
-                
-                    if (adapted[index] > (limits & 0xFF)) {
+                    uint8_t color = adapted[index];
+                    if (color == 68 || color < (limits >> 8) 
+                        || color > (limits & 0xFF)) {
                         sect_z += advance;
                         continue;
                     }
                 }
 
                 temp = (int32_t) rz;
-                _EDX = temp >> (13 + field_amplificator);
-                _AL = 63 - _DL;
-                if ((int16_t) _AL >= 0) {
-                    _DL = adapted[index];
+                int32_t tempshift = temp >> (13 + field_amplificator);
+                int8_t mask = 63 - tempshift;
+                if (mask >= 0) {
+                    int8_t color = adapted[index];
                     adapted[index] &= 0xC0;
-                    _DL &= 0x3F;
-                    _AL += _DL;
-                    if (_AL > 63) {
-                        _AL = 63;
+                    color &= 0x3F;
+                    mask += color;
+                    if (mask > 63) {
+                        mask = 63;
                     }
-                    adapted[index] |= _AL;
+                    adapted[index] |= mask;
                 }
                 
-                if (ap_targetting != 1) {
-                    sect_z += advance;
-                    continue;
-                }
+                if (ap_targetting == 1) {
+                    temp = (rx * rx) + (ry * ry);
                 
-                temp = (rx * rx) + (ry * ry);
-                
-                if (temp < min_xy) {
-                    min_xy = temp;
-                    ap_target_x = temp_x;
-                    ap_target_y = temp_y;
-                    ap_target_z = temp_z;
-                }
+                    if (temp < min_xy) {
+                        min_xy = temp;
+                        ap_target_x = temp_x;
+                        ap_target_y = temp_y;
+                        ap_target_z = temp_z;
+                    }
+                }   
+                sect_z += advance;
             }
             sect_z -= k;
             sect_y += advance;
