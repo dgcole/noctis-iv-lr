@@ -2690,6 +2690,8 @@ void background (uint16_t start,
 */
 
 void sky (uint16_t limits) {
+    uint16_t debug;
+    
     int32_t min_xy = 1E9;
     int8_t visible_sectors = 9;
 
@@ -2752,7 +2754,7 @@ void sky (uint16_t limits) {
     // Loop over a 3D cube of l,w,h = visible_sectors.
     for (sx = 0; sx < visible_sectors; sx++) {
         for (sy = 0; sy < visible_sectors; sy++) {
-            for (sz = 0; sz < visible_sectors; sz++) {
+            for (sz = 0; sz < visible_sectors; sz++) {          
                 _EBX = 50000;
                 _EAX = sect_x;
                 _ECX = sect_y;
@@ -2768,7 +2770,8 @@ void sky (uint16_t limits) {
                 
                 // Exclude stars with x coordinate = 0
                 if (_EDX == _EBX) {          
-                    goto i_while;
+                    sect_z += advance;
+                    continue;
                 }
                 
                 _EDX -= _EBX;
@@ -2784,7 +2787,8 @@ void sky (uint16_t limits) {
                 
                 // Exclude stars with y coordinate = 0
                 if (_EDX == _EBX) {
-                    goto i_while; 
+                    sect_z += advance;
+                    continue;
                 }
                 
                 _EDX -= _EBX;
@@ -2799,14 +2803,16 @@ void sky (uint16_t limits) {
                 
                 // Exclude stars with z coordinate = 0
                 if (_EDX == _EBX) {
-                    goto i_while;
+                    sect_z += advance;
+                    continue;
                 }
                 
                 _EDX -= _EBX;
                 temp_z = _EDX;                
                 _AX = temp_x + temp_y + temp_z;
                 if (_AX & rarity_factor != 0) {
-                    goto i_while;
+                    sect_z += advance;
+                    continue;
                 }
 
                 zz = temp_z - dzat_z;
@@ -2816,7 +2822,8 @@ void sky (uint16_t limits) {
                 rz = (z2 * opt_tcosalfa) + (yy * opt_tsinalfa);
         
                 if (rz < starneg) {
-                    goto i_while;
+                    sect_z += advance;
+                    continue;
                 }
 
                 inv_rz = uno / rz;
@@ -2825,49 +2832,56 @@ void sky (uint16_t limits) {
                 _DI = rx + x_centro;
                 index = rx + x_centro;
                 if (_DI <= 10 || _DI >= 310) {
-                    goto i_while;
+                    sect_z += advance;
+                    continue;
                 }
                 
                 ry = (yy * opt_pcosalfa - z2 * opt_psinalfa) * inv_rz - 2;
                 
                 _BX = ry + y_centro;
                 if (_BX <= 10 || _BX >= 190) {
-                    goto i_while;
+                    sect_z += advance;
+                    continue;
                 }
 
                 _BX <<= 1; 
                 asm add di, word ptr riga[bx]
+                index = _DI;
                 
                 if (ap_targetting != 1) {
-                    asm cmp byte ptr es:[di+4], 68
-                    asm je i_while
+                    if (adapted[index] == 68) {
+                        sect_z += advance;
+                        continue;
+                    }
                 
-                    _AX = limits;
-                    asm cmp byte ptr es:[di+4], ah
-                    asm jb i_while
+                    if (adapted[index] < (limits >> 8)) {
+                        sect_z += advance;
+                        continue;
+                    }
                 
-                    asm cmp byte ptr es:[di+4], al
-                    asm ja i_while 
+                    if (adapted[index] > (limits & 0xFF)) {
+                        sect_z += advance;
+                        continue;
+                    }
                 }
 
                 temp = (int32_t) rz;
                 _EDX = temp >> (13 + field_amplificator);
                 _AL = 63 - _DL;
                 if ((int16_t) _AL >= 0) {
-                    printf("_DI: %x, Index: %x", _DI, index);
-                    getch();
-                    asm mov dl, es:[di+4]
-                    asm and byte ptr es:[di+4], 0xC0
+                    _DL = adapted[index];
+                    adapted[index] &= 0xC0;
                     _DL &= 0x3F;
                     _AL += _DL;
                     if (_AL > 63) {
                         _AL = 63;
                     }
-                    asm or es:[di+4], al;
+                    adapted[index] |= _AL;
                 }
                 
                 if (ap_targetting != 1) {
-                    goto i_while;
+                    sect_z += advance;
+                    continue;
                 }
                 
                 temp = (rx * rx) + (ry * ry);
@@ -2878,9 +2892,6 @@ void sky (uint16_t limits) {
                     ap_target_y = temp_y;
                     ap_target_z = temp_z;
                 }
-                
-                i_while:
-                sect_z += advance;
             }
             sect_z -= k;
             sect_y += advance;
