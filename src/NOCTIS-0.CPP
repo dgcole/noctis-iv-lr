@@ -2757,7 +2757,8 @@ void sky (uint16_t limits) {
                 _ECX = sect_y;
                 _EDX = sect_z;
                 
-                // The low 32-bits of the result will go into ecx, the high 32-bits into edx.
+                // The low 32-bits of the result go into ECX, the high 32-bits into EDX.
+                // TODO; Replace these imul calls once we can use longs.
                 asm db 0x66
                 asm imul cx, dx
 
@@ -2890,61 +2891,64 @@ void sky (uint16_t limits) {
 }
 
 /*  
-    Ancora quicktime-vr, purtroppo Š necessaria: una sfera che poi pu• essere
-    un pianeta o una stella (non Š il caso di andare per il sottile).
-    Usa un'enormit… di registri: salti mortali con le macro in codice macchina
-    perch‚ il c++ non mi considera i registri estesi. Meglio ricapitolare:
-    DS passa su GS, ES Š la pagina video (solitamente nascosta, non Š
-    l'area dell'adattatore) specificata in target, FS ospita la tapestry,
-    la tappezzeria da mappare sul globo, e il vecchio DS punta all'area
-    della mappa degli offsets, compressa con il sistema di MAPS.EXE nella
-    sua sezione X-Y. In effetti non sono offsets video gi… pronti, perch‚
-    vanno calcolati (primo byte = Y, secondo byte = X). Quando la Y Š 100
-    significa che l'offset originario era 64000 e che quindi non si tratta
-    di un punto, ma di una serie di avanzamenti consecutivi lungo il
-    segmento della tappezzeria, indicati per la precisione dal byte X. 
+    Still quicktime-vr, unfortunately it is necessary for planets. Otherwise, a 
+    huge amount of registers and complex machine code macros would be used, b/c
+    we can not use the extended registers normally. Better to recap: DS passes
+    on GS, ES is the video page (usually hidden, not the adapter area) specified
+    in target, FS hosts the tapestry wallpaper to map the globe, and the old DS
+    points to the area of the map of the offsets, compressed with MAPS.EXE along
+    the x-y plane. In fact, they are not video offset ready, because they must 
+    becalculated (first byte = Y, second byte = X). When the Y is 100, that means
+    the original offset was 64000, and that is not a question of a point, but of
+    a series of advances along the segment, indicated for accuracy by byte X.
 */
 
-uint8_t glass_bubble = 1; // Se settato, disegna una specie di bolla
-// trasparente attorno ai globi tracciati con
-// la funzione "globe". Serve per simulare la
-// presenza dell'atmosfera, ma solo per i
-// pianeti che hanno CONSIDEREVOLI quantit…
-// di gas attorno.
+uint8_t glass_bubble = 1; 
+// If set, draw a kind of bubble transparent around the globes drawn with the
+// "globe" function. It is used to simulate the presence of the atmosphere, but
+// only for planets with considerable quantities of gas.
 
-/*  Cacchio, dei veri e propri fill managers, e funzionano!
-    Da non crederci, in C++, e pure dopo aver cambiato ES, FS e GS! */
+/*  
+    Heck, real fill managers, and they work!
+    Unbelievable, in C++, and even after changing ES, FS, and GS.
+*/
 
 void gman1x1 () {
     asm mov es:[di+4], dl
 }
 
 void gman2x2 () {
-    asm {   mov dh, dl
-            mov es:[di+4], dx
-            mov es:[di+324], dx }
+    asm {   
+        mov dh, dl
+        mov es:[di+4], dx
+        mov es:[di+324], dx 
+    }
 }
 
 void gman3x3 () {
-    asm {   mov dh, dl
-            mov es:[di+4], dx
-            mov es:[di+6], dl
-            mov es:[di+324], dx
-            mov es:[di+326], dl
-            mov es:[di+644], dx
-            mov es:[di+646], dl }
+    asm {   
+        mov dh, dl
+        mov es:[di+4], dx
+        mov es:[di+6], dl
+        mov es:[di+324], dx
+        mov es:[di+326], dl
+        mov es:[di+644], dx
+        mov es:[di+646], dl 
+    }
 }
 
 void gman4x4 () {
-    asm {   mov dh, dl
-            mov es:[di+4], dx
-            mov es:[di+6], dx
-            mov es:[di+324], dx
-            mov es:[di+326], dx
-            mov es:[di+644], dx
-            mov es:[di+646], dx
-            mov es:[di+964], dx
-            mov es:[di+966], dx }
+    asm {   
+        mov dh, dl
+        mov es:[di+4], dx
+        mov es:[di+6], dx
+        mov es:[di+324], dx
+        mov es:[di+326], dx
+        mov es:[di+644], dx
+        mov es:[di+646], dx
+        mov es:[di+964], dx
+        mov es:[di+966], dx 
+    }
 }
 
 void globe (uint16_t start,
@@ -2995,8 +2999,8 @@ void globe (uint16_t start,
     rx /= rz;
     ry /= rz;
 
-    /*  320 = Largh. schermo, 100 = max x/y pixels della mappa,
-        1.32 = massimo fattore d'ingrandimento con punti di 4 pixels. */
+    // 320 = Screen width, 100 = Max x/y pixels of the map,
+    // 1.32 = Maximum magnification factor with points of 4 pixels.
 
     if (rx < -292 || rx > 292) {
         return;    // 292 = (320 / 2) + (100 * 1.32)
@@ -3008,76 +3012,87 @@ void globe (uint16_t start,
 
     center_x = rx + x_centro_f;
     center_y = ry + y_centro_f;
-    asm {   pusha
-            push ds
-            push ds
-            db 0x0F, 0xA9 // pop gs
-            mov cx, total_map_bytes
-            shr cx, 1
-            les ax, dword ptr tapestry
-            add start, ax
-            mov bx, start
-            mov ax, es
-            db 0x8E, 0xE0 // mov fs, ax
-            les ax, dword ptr target
-            lds si, dword ptr offsetsmap }
-    rigiro:
-    asm {   cmp byte ptr [si], 100
-            jne pixel
-            jmp blanket }
-    pixel:
-    asm {   mov al, [si]
-            cbw
-            mov temp, ax
-            fild word ptr temp
-            fmul dword ptr mag_factor
-            fistp word ptr temp
-            mov di, temp
-            add di, center_y
-            cmp di, 6
-            jb clipout
-            cmp di, 191
-            jnb clipout
-            mov al, [si+1]      // istruzione di caricamento x #1
-            add di, di
-            cbw         // istruzione di caricamento x #2
-            db 0x65, 0x8B, 0xBD /* mov di, gs:riga[di] - prima parte */
-            dw offset riga      /* mov di, gs:riga[di] - 2nda parte */
-            mov temp, ax        // istruzione di caricamento x #3
-            fild word ptr temp
-            fmul dword ptr mag_factor
-            fistp word ptr temp
-            mov ax, temp
-            add ax, center_x
-            cmp ax, 6
-            jb clipout
-            cmp ax, 311
-            jnb clipout
-            add di, ax
-            db 0x64, 0x8A, 0x17 // mov dl, fs:[bx]
-            cmp dl, globe_saturation
-            jnb asis
-            mov dl, globe_saturation }
+    
+    asm pusha
+    asm push ds
+    asm push ds
+    asm db 0x0F, 0xA9 // pop gs
+    _CX = total_map_bytes;
+    _CX >>= 1;
+    asm les ax, dword ptr tapestry
+    start += _AX;
+    _BX = start;
+    _AX = _ES;
+    asm db 0x8E, 0xE0 // mov fs, ax
+    asm les ax, dword ptr target
+    asm lds si, dword ptr offsetsmap 
+
+    rigiro: 
+    asm cmp byte ptr [si], 100
+    asm jne pixel
+    asm jmp blanket
+
+    pixel:   
+    asm mov al, [si]
+    asm cbw
+    temp = _AX;
+    temp *= mag_factor;
+    _DI = temp;
+    _DI += center_y;
+    asm cmp di, 6
+    asm jb clipout
+    asm cmp di, 191
+    asm jnb clipout
+    asm mov al, [si+1]      // istruzione di caricamento x #1
+    asm add di, di
+    asm cbw         // istruzione di caricamento x #2
+    asm db 0x65, 0x8B, 0xBD /* mov di, gs:riga[di] - prima parte */
+    asm dw offset riga      /* mov di, gs:riga[di] - 2nda parte */
+    asm mov temp, ax        // istruzione di caricamento x #3
+    asm fild word ptr temp
+    asm fmul dword ptr mag_factor
+    asm fistp word ptr temp
+    asm mov ax, temp
+    asm add ax, center_x
+    asm cmp ax, 6
+    asm jb clipout
+    asm cmp ax, 311
+    asm jnb clipout
+    asm add di, ax
+    asm db 0x64, 0x8A, 0x17 // mov dl, fs:[bx]
+    asm cmp dl, globe_saturation
+    asm jnb asis
+    asm mov dl, globe_saturation 
+
     asis:
-    asm {   or dl, colormask
-            call [gman] }
+    _DL |= colormask;
+    ((void(*)()) gman)();
+    
     clipout:
-    asm {   add bx, 1
-            add si, 2
-            dec cx
-            jz fine
-            jmp rigiro }
+    _BX += 1;
+    _SI += 2;
+    _CX--;
+    if (_CX == 0) {
+        goto fine;
+    }
+    goto rigiro;
+    
     blanket:
-    asm {   mov al, [si+1]
-            xor ah, ah
-            add bx, ax
-            add si, 2
-            dec cx
-            jz fine
-            jmp rigiro }
+    asm mov al, [si+1];
+    _AH ^= _AH;
+    _BX += _AX;
+    _SI += 2;
+    _CX--;
+    if (_CX == 0) {
+        goto fine;
+    }
+    goto rigiro;
+        
     fine:
-    asm {   pop ds
-            popa }
+    asm {   
+        pop ds
+        popa 
+    }
 
     if (!glass_bubble) {
         return;
