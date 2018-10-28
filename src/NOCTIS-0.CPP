@@ -2748,16 +2748,13 @@ void sky (uint16_t limits) {
     asm {   
         les ax, dword ptr adapted
     }
-    _AL = visible_sectors;
-    sx = _AL;
+    sx = visible_sectors;
     
     e_while:
-    _AL = visible_sectors;
-    sy = _AL;
+    sy = visible_sectors;
     
     m_while:
-    _AL = visible_sectors;
-    sz = _AL;
+    sz = visible_sectors;
     
     i_while:
     _EBX = 50000;
@@ -2771,49 +2768,49 @@ void sky (uint16_t limits) {
 
     _EAX += _EDX;
     _ECX = _EAX;
-    _EDX = _ECX;
-    _EDX &= 0x0001FFFF;
-    _EDX += sect_x;
+    _EDX = (_ECX & 0x0001FFFF) + sect_x;
     if (_EDX != _EBX) {
         _EDX -= _EBX;
         goto i_cont_x;
     }
     goto next; // Excludes stars with x coordinate = 0
     
-    i_cont_x: 
+    i_cont_x:
+    
     temp_x = _EDX;
     _EAX = _ECX;
+    
     asm db 0x66
     asm imul dx
+    
     _EDX += _EAX;
     _ECX += _EDX;
-    _EDX &= 0x0001FFFF;
-    _EDX += sect_y;
+    _EDX = (_EDX & 0x001FFFF) + sect_y;
     if (_EDX != _EBX) {
         _EDX -= _EBX;
         goto i_cont_y;
     }
     goto next; // Excludes stars with y coordinate = 0
     
-    i_cont_y: 
+    i_cont_y:
+    
     temp_y = _EDX;
     _EAX = _ECX;
+    
     asm db 0x66
     asm imul dx
+    
     _EDX += _EAX;
-    _EDX &= 0x0001FFFF;
-    _EDX += sect_z;
+    _EDX = (_EDX & 0x0001FFFF) + sect_z;
     if (_EDX != _EBX) {
         _EDX -= _EBX;
+        temp_z = _EDX;
         goto i_cont_z;
     }
     goto next;   // Excludes stars with z coordinate = 0
     
     i_cont_z: 
-    temp_z = _EDX;
-    _AX = temp_x;
-    _AX += temp_y;
-    _AX += temp_z;
+    _AX = temp_x + temp_y + temp_z;
     if (_AX & rarity_factor == 0) {
         goto ispresent;
     } else {
@@ -2837,10 +2834,8 @@ void sky (uint16_t limits) {
     inv_rz = uno / rz;
     rx = ((xx * opt_pcosbeta) + (zz * opt_psinbeta)) * inv_rz;
     
-    _DI = rx;
-    index = rx;
-    _DI += x_centro;
-    index += x_centro;
+    _DI = rx + x_centro;
+    index = rx + x_centro;
     if (_DI > 10) {
         goto _x_low_ok;
     } else {
@@ -2857,8 +2852,7 @@ void sky (uint16_t limits) {
     _x_high_ok:
     ry = (yy * opt_pcosalfa - z2 * opt_psinalfa) * inv_rz - 2;
     
-    _BX = ry;
-    _BX += y_centro;
+    _BX = ry + y_centro;
     if (_BX  > 10) {
         goto _y_low_ok;
     } else {
@@ -2886,10 +2880,8 @@ void sky (uint16_t limits) {
         
     newgame:
     temp = (int32_t) rz;
-    _EDX = temp;
-    _EDX >>= 13 + field_amplificator;
-    _AL = 63;
-    _AL -= _DL;
+    _EDX = temp >> (13 + field_amplificator);
+    _AL = 63 - _DL;
     if ((int16_t) _AL < 0) {
         goto colorout;
     }
