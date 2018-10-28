@@ -2765,14 +2765,13 @@ void sky (uint16_t limits) {
                 _EAX += _EDX;
                 _ECX = _EAX;
                 _EDX = (_ECX & 0x0001FFFF) + sect_x;
-                if (_EDX != _EBX) {
-                    _EDX -= _EBX;
-                    goto i_cont_x;
+                
+                // Exclude stars with x coordinate = 0
+                if (_EDX == _EBX) {          
+                    goto i_while;
                 }
-                goto i_while; // Excludes stars with x coordinate = 0
                 
-                i_cont_x:
-                
+                _EDX -= _EBX;
                 temp_x = _EDX;
                 _EAX = _ECX;
                 
@@ -2782,14 +2781,13 @@ void sky (uint16_t limits) {
                 _EDX += _EAX;
                 _ECX += _EDX;
                 _EDX = (_EDX & 0x001FFFF) + sect_y;
-                if (_EDX != _EBX) {
-                    _EDX -= _EBX;
-                    goto i_cont_y;
+                
+                // Exclude stars with y coordinate = 0
+                if (_EDX == _EBX) {
+                    goto i_while; 
                 }
-                goto i_while; // Excludes stars with y coordinate = 0
                 
-                i_cont_y:
-                
+                _EDX -= _EBX;
                 temp_y = _EDX;
                 _EAX = _ECX;
                 
@@ -2798,22 +2796,19 @@ void sky (uint16_t limits) {
                 
                 _EDX += _EAX;
                 _EDX = (_EDX & 0x0001FFFF) + sect_z;
-                if (_EDX != _EBX) {
-                    _EDX -= _EBX;
-                    temp_z = _EDX;
-                    goto i_cont_z;
-                }
-                goto i_while;   // Excludes stars with z coordinate = 0
                 
-                i_cont_z: 
+                // Exclude stars with z coordinate = 0
+                if (_EDX == _EBX) {
+                    goto i_while;
+                }
+                
+                _EDX -= _EBX;
+                temp_z = _EDX;                
                 _AX = temp_x + temp_y + temp_z;
-                if (_AX & rarity_factor == 0) {
-                    goto ispresent;
-                } else {
-                    goto endgame;
+                if (_AX & rarity_factor != 0) {
+                    goto i_while;
                 }
-                
-                ispresent: 
+
                 zz = temp_z - dzat_z;
                 xx = temp_x - dzat_x;
                 yy = temp_y - dzat_y;
@@ -2821,97 +2816,67 @@ void sky (uint16_t limits) {
                 rz = (z2 * opt_tcosalfa) + (yy * opt_tsinalfa);
 
                 
-                if (rz >= starneg) {
-                    goto _123stella;
+                if (rz < starneg) {
+                    goto i_while;
                 }
-                goto endgame;
-                
-                _123stella:
+
                 inv_rz = uno / rz;
                 rx = ((xx * opt_pcosbeta) + (zz * opt_psinbeta)) * inv_rz;
                 
                 _DI = rx + x_centro;
                 index = rx + x_centro;
-                if (_DI > 10) {
-                    goto _x_low_ok;
-                } else {
-                    goto endgame;
-                }
-
-                _x_low_ok:
-                if (_DI < 310) {
-                    goto _x_high_ok;
-                } else {
-                    goto endgame;
-                }
-                
-                _x_high_ok:
-                ry = (yy * opt_pcosalfa - z2 * opt_psinalfa) * inv_rz - 2;
-                
-                _BX = ry + y_centro;
-                if (_BX  > 10) {
-                    goto _y_low_ok;
-                } else {
-                    goto endgame;
-                }
-
-                _y_low_ok:
-                if (_BX < 190) {
-                    goto _y_high_ok;
-                } else {
-                    goto endgame;
-                }
-                _y_high_ok:
-                _BX <<= 1; 
-                asm add di, word ptr riga[bx]
-                
-                if (ap_targetting == 1) goto newgame;
-                asm cmp byte ptr es:[di+4], 68
-                asm je endgame
-                asm mov ax, limits
-                asm cmp byte ptr es:[di+4], ah
-                asm jb endgame
-                asm cmp byte ptr es:[di+4], al
-                asm ja endgame 
-                    
-                newgame:
-                temp = (int32_t) rz;
-                _EDX = temp >> (13 + field_amplificator);
-                _AL = 63 - _DL;
-                if ((int16_t) _AL < 0) {
-                    goto colorout;
-                }
-                asm mov dl, es:[di+4]
-                asm and byte ptr es:[di+4], 0xC0
-                _DL &= 0x3F;
-                _AL += _DL;
-                if (_AL <= 63) {
-                    goto colorin;
-                } else {
-                    _AL = 63;
-                }
-
-                colorin:
-                asm or es:[di+4], al;
-                colorout:
-                if (ap_targetting == 1) {
-                    goto extend;
-                }
-                
-                endgame:
-                goto i_while;
-                
-                extend:
-                temp = (rx * rx) + (ry * ry);
-                
-                if (temp >= min_xy) {
+                if (_DI <= 10 || _DI >= 310) {
                     goto i_while;
                 }
                 
-                min_xy = temp;
-                ap_target_x = temp_x;
-                ap_target_y = temp_y;
-                ap_target_z = temp_z;
+                ry = (yy * opt_pcosalfa - z2 * opt_psinalfa) * inv_rz - 2;
+                
+                _BX = ry + y_centro;
+                if (_BX <= 10 || _BX >= 190) {
+                    goto i_while;
+                }
+
+                _BX <<= 1; 
+                asm add di, word ptr riga[bx]
+                
+                if (ap_targetting != 1) {
+                    asm cmp byte ptr es:[di+4], 68
+                    asm je i_while
+                
+                    _AX = limits;
+                    asm cmp byte ptr es:[di+4], ah
+                    asm jb i_while
+                
+                    asm cmp byte ptr es:[di+4], al
+                    asm ja i_while 
+                }
+
+                temp = (int32_t) rz;
+                _EDX = temp >> (13 + field_amplificator);
+                _AL = 63 - _DL;
+                if ((int16_t) _AL >= 0) {
+                    asm mov dl, es:[di+4]
+                    asm and byte ptr es:[di+4], 0xC0
+                    _DL &= 0x3F;
+                    _AL += _DL;
+                    if (_AL > 63) {
+                        _AL = 63;
+                    }
+                    asm or es:[di+4], al;
+                }
+                
+                if (ap_targetting != 1) {
+                    goto i_while;
+                }
+                
+                temp = (rx * rx) + (ry * ry);
+                
+                if (temp < min_xy) {
+                    min_xy = temp;
+                    ap_target_x = temp_x;
+                    ap_target_y = temp_y;
+                    ap_target_z = temp_z;
+                }
                 
                 i_while:
                 sect_z += advance;
