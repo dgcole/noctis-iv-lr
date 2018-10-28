@@ -2759,67 +2759,55 @@ void sky (uint16_t limits) {
     sz = _AL;
     
     i_while:
-    asm {   
-        db 0x66, 0xBB, 0x50, 0xC3, 0x00, 0x00 // mov ebx, 50000
-        db 0x66;
-        mov ax, word ptr sect_x
-        db 0x66;
-        mov cx, word ptr sect_y
-        db 0x66;
-        mov dx, word ptr sect_z
-        db 0x66, 0x0F, 0xAF, 0xCA // imul ecx, edx
-        db 0x66;
-        add ax, dx
-        db 0x66;
-        mov cx, ax
-        db 0x66;
-        mov dx, cx
-        db 0x66, 0x81, 0xE2, 0xFF, 0xFF, 0x01, 0x00 // and edx, 0x0001FFFF
-        db 0x66;
-        add dx, word ptr sect_x
-        db 0x66;
-        sub dx, bx
-        jnz i_cont_x 
-    }  // |
-    asm jmp next;   // | excludes stars with x coordinate = 0
+    _EBX = 50000;
+    _EAX = sect_x;
+    _ECX = sect_y;
+    _EDX = sect_z;
+    
+    // The low 32-bits of the result will go into ecx, the high 32-bits into edx.
+    asm db 0x66
+    asm imul cx, dx
+
+    _EAX += _EDX;
+    _ECX = _EAX;
+    _EDX = _ECX;
+    _EDX &= 0x0001FFFF;
+    _EDX += sect_x;
+    if (_EDX != _EBX) {
+        _EDX -= _EBX;
+        goto i_cont_x;
+    }
+    goto next; // Excludes stars with x coordinate = 0
+    
     i_cont_x: 
-    asm {                 // |
-        db 0x66;
-        mov word ptr temp_x, dx
-        db 0x66;
-        mov ax, cx
-        db 0x66;
-        imul dx
-        db 0x66;
-        add dx, ax
-        db 0x66;
-        add cx, dx
-        db 0x66, 0x81, 0xE2, 0xFF, 0xFF, 0x01, 0x00 // and edx, 0x0001FFFF
-        db 0x66;
-        add dx, word ptr sect_y
-        db 0x66;
-        sub dx, bx
-        jnz i_cont_y 
-    }  // |
-    asm jmp next;   // | excludes stars with y coordinate = 0
+    temp_x = _EDX;
+    _EAX = _ECX;
+    asm db 0x66
+    asm imul dx
+    _EDX += _EAX;
+    _ECX += _EDX;
+    _EDX &= 0x0001FFFF;
+    _EDX += sect_y;
+    if (_EDX != _EBX) {
+        _EDX -= _EBX;
+        goto i_cont_y;
+    }
+    goto next; // Excludes stars with y coordinate = 0
+    
     i_cont_y: 
-    asm {                 // |
-        db 0x66;
-        mov word ptr temp_y, dx
-        db 0x66;
-        mov ax, cx
-        db 0x66;
-        imul dx
-        db 0x66;
-        add dx, ax
-        db 0x66, 0x81, 0xE2, 0xFF, 0xFF, 0x01, 0x00 // and edx, 0x0001FFFF
-        db 0x66;
-        add dx, word ptr sect_z
-        db 0x66;
-        sub dx, bx
-        jnz i_cont_z 
-    }  // |
-    asm jmp next;   // | excludes stars with z coordinate = 0
+    temp_y = _EDX;
+    _EAX = _ECX;
+    asm db 0x66
+    asm imul dx
+    _EDX += _EAX;
+    _EDX &= 0x0001FFFF;
+    _EDX += sect_z;
+    if (_EDX != _EBX) {
+        _EDX -= _EBX;
+        goto i_cont_z;
+    }
+    goto next;   // Excludes stars with z coordinate = 0
+    
     i_cont_z: 
     temp_z = _EDX;
     _AX = temp_x;
@@ -2830,31 +2818,36 @@ void sky (uint16_t limits) {
     } else {
         goto endgame;
     }
+    
     ispresent:
-    asm { 
-        fild dword ptr temp_z
-        fsub dzat_z
-        fst zz
-        fmul opt_tcosbeta
-        fild dword ptr temp_x
-        fsub dzat_x
-        fst xx
-        fmul opt_tsinbeta
-        fsubp
-        fst z2
-        fmul opt_tcosalfa
-        fild dword ptr temp_y
-        fsub dzat_y
-        fst yy
-        fmul opt_tsinalfa
-        faddp
-        fst rz
-        fcomp starneg
-        fstsw ax
-        sahf
-        jnb _123stella
-        jmp endgame 
+    double st0, st1;
+    
+    st0 = temp_z;
+    st0 -= dzat_z;
+    zz = st0;
+    st0 *= opt_tcosbeta;
+    st1 = st0;
+    st0 = temp_x;
+    st0 -= dzat_x;
+    xx = st0;
+    st0 *= opt_tsinbeta;
+    st1 -= st0;
+    st0 = st1;
+    z2 = st0;
+    st0 *= opt_tcosalfa;
+    st1 = st0;
+    st0 = temp_y;
+    st0 -= dzat_y;
+    yy = st0;
+    st0 *= opt_tsinalfa;
+    st1 += st0;
+    st0 = st1;
+    rz = st0;
+    if (st0 >= starneg) {
+        goto _123stella;
     }
+    goto endgame;
+    
     _123stella:
     asm {
         fld xx
@@ -3899,10 +3892,10 @@ void getsecs () {
         fps = 1;
     } else { // Fractions of a second
         if (gl_fps) {
-            secs += (double)fps / (double)gl_fps;
+            secs += (double) fps / (double) gl_fps;
         }
 
-        fsecs = (double)fps / (double)gl_fps;
+        fsecs = (double) fps / (double) gl_fps;
         fps++;
     }
 
