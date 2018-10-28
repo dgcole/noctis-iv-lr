@@ -2748,204 +2748,182 @@ void sky (uint16_t limits) {
     asm {   
         les ax, dword ptr adapted
     }
-    sx = visible_sectors;
-    
-    e_while:
-    sy = visible_sectors;
-    
-    m_while:
-    sz = visible_sectors;
-    
-    i_while:
-    _EBX = 50000;
-    _EAX = sect_x;
-    _ECX = sect_y;
-    _EDX = sect_z;
-    
-    // The low 32-bits of the result will go into ecx, the high 32-bits into edx.
-    asm db 0x66
-    asm imul cx, dx
 
-    _EAX += _EDX;
-    _ECX = _EAX;
-    _EDX = (_ECX & 0x0001FFFF) + sect_x;
-    if (_EDX != _EBX) {
-        _EDX -= _EBX;
-        goto i_cont_x;
-    }
-    goto next; // Excludes stars with x coordinate = 0
-    
-    i_cont_x:
-    
-    temp_x = _EDX;
-    _EAX = _ECX;
-    
-    asm db 0x66
-    asm imul dx
-    
-    _EDX += _EAX;
-    _ECX += _EDX;
-    _EDX = (_EDX & 0x001FFFF) + sect_y;
-    if (_EDX != _EBX) {
-        _EDX -= _EBX;
-        goto i_cont_y;
-    }
-    goto next; // Excludes stars with y coordinate = 0
-    
-    i_cont_y:
-    
-    temp_y = _EDX;
-    _EAX = _ECX;
-    
-    asm db 0x66
-    asm imul dx
-    
-    _EDX += _EAX;
-    _EDX = (_EDX & 0x0001FFFF) + sect_z;
-    if (_EDX != _EBX) {
-        _EDX -= _EBX;
-        temp_z = _EDX;
-        goto i_cont_z;
-    }
-    goto next;   // Excludes stars with z coordinate = 0
-    
-    i_cont_z: 
-    _AX = temp_x + temp_y + temp_z;
-    if (_AX & rarity_factor == 0) {
-        goto ispresent;
-    } else {
-        goto endgame;
-    }
-    
-    ispresent: 
-    zz = temp_z - dzat_z;
-    xx = temp_x - dzat_x;
-    yy = temp_y - dzat_y;
-    z2 = (zz * opt_tcosbeta) - (xx * opt_tsinbeta);
-    rz = (z2 * opt_tcosalfa) + (yy * opt_tsinalfa);
+    // Loop over a 3D cube of l,w,h = visible_sectors.
+    for (sx = 0; sx < visible_sectors; sx++) {
+        for (sy = 0; sy < visible_sectors; sy++) {
+            for (sz = 0; sz < visible_sectors; sz++) {
+                _EBX = 50000;
+                _EAX = sect_x;
+                _ECX = sect_y;
+                _EDX = sect_z;
+                
+                // The low 32-bits of the result will go into ecx, the high 32-bits into edx.
+                asm db 0x66
+                asm imul cx, dx
 
-    
-    if (rz >= starneg) {
-        goto _123stella;
-    }
-    goto endgame;
-    
-    _123stella:
-    inv_rz = uno / rz;
-    rx = ((xx * opt_pcosbeta) + (zz * opt_psinbeta)) * inv_rz;
-    
-    _DI = rx + x_centro;
-    index = rx + x_centro;
-    if (_DI > 10) {
-        goto _x_low_ok;
-    } else {
-        goto endgame;
-    }
+                _EAX += _EDX;
+                _ECX = _EAX;
+                _EDX = (_ECX & 0x0001FFFF) + sect_x;
+                if (_EDX != _EBX) {
+                    _EDX -= _EBX;
+                    goto i_cont_x;
+                }
+                goto i_while; // Excludes stars with x coordinate = 0
+                
+                i_cont_x:
+                
+                temp_x = _EDX;
+                _EAX = _ECX;
+                
+                asm db 0x66
+                asm imul dx
+                
+                _EDX += _EAX;
+                _ECX += _EDX;
+                _EDX = (_EDX & 0x001FFFF) + sect_y;
+                if (_EDX != _EBX) {
+                    _EDX -= _EBX;
+                    goto i_cont_y;
+                }
+                goto i_while; // Excludes stars with y coordinate = 0
+                
+                i_cont_y:
+                
+                temp_y = _EDX;
+                _EAX = _ECX;
+                
+                asm db 0x66
+                asm imul dx
+                
+                _EDX += _EAX;
+                _EDX = (_EDX & 0x0001FFFF) + sect_z;
+                if (_EDX != _EBX) {
+                    _EDX -= _EBX;
+                    temp_z = _EDX;
+                    goto i_cont_z;
+                }
+                goto i_while;   // Excludes stars with z coordinate = 0
+                
+                i_cont_z: 
+                _AX = temp_x + temp_y + temp_z;
+                if (_AX & rarity_factor == 0) {
+                    goto ispresent;
+                } else {
+                    goto endgame;
+                }
+                
+                ispresent: 
+                zz = temp_z - dzat_z;
+                xx = temp_x - dzat_x;
+                yy = temp_y - dzat_y;
+                z2 = (zz * opt_tcosbeta) - (xx * opt_tsinbeta);
+                rz = (z2 * opt_tcosalfa) + (yy * opt_tsinalfa);
 
-    _x_low_ok:
-    if (_DI < 310) {
-        goto _x_high_ok;
-    } else {
-        goto endgame;
-    }
-    
-    _x_high_ok:
-    ry = (yy * opt_pcosalfa - z2 * opt_psinalfa) * inv_rz - 2;
-    
-    _BX = ry + y_centro;
-    if (_BX  > 10) {
-        goto _y_low_ok;
-    } else {
-        goto endgame;
-    }
+                
+                if (rz >= starneg) {
+                    goto _123stella;
+                }
+                goto endgame;
+                
+                _123stella:
+                inv_rz = uno / rz;
+                rx = ((xx * opt_pcosbeta) + (zz * opt_psinbeta)) * inv_rz;
+                
+                _DI = rx + x_centro;
+                index = rx + x_centro;
+                if (_DI > 10) {
+                    goto _x_low_ok;
+                } else {
+                    goto endgame;
+                }
 
-    _y_low_ok:
-    if (_BX < 190) {
-        goto _y_high_ok;
-    } else {
-        goto endgame;
-    }
-    _y_high_ok:
-    _BX <<= 1; 
-    asm add di, word ptr riga[bx]
-    
-    if (ap_targetting == 1) goto newgame;
-    asm cmp byte ptr es:[di+4], 68
-    asm je endgame
-    asm mov ax, limits
-    asm cmp byte ptr es:[di+4], ah
-    asm jb endgame
-    asm cmp byte ptr es:[di+4], al
-    asm ja endgame 
-        
-    newgame:
-    temp = (int32_t) rz;
-    _EDX = temp >> (13 + field_amplificator);
-    _AL = 63 - _DL;
-    if ((int16_t) _AL < 0) {
-        goto colorout;
-    }
-    asm mov dl, es:[di+4]
-    asm and byte ptr es:[di+4], 0xC0
-    _DL &= 0x3F;
-    _AL += _DL;
-    if (_AL <= 63) {
-        goto colorin;
-    } else {
-        _AL = 63;
-    }
+                _x_low_ok:
+                if (_DI < 310) {
+                    goto _x_high_ok;
+                } else {
+                    goto endgame;
+                }
+                
+                _x_high_ok:
+                ry = (yy * opt_pcosalfa - z2 * opt_psinalfa) * inv_rz - 2;
+                
+                _BX = ry + y_centro;
+                if (_BX  > 10) {
+                    goto _y_low_ok;
+                } else {
+                    goto endgame;
+                }
 
-    colorin:
-    asm or es:[di+4], al;
-    colorout:
-    if (ap_targetting == 1) {
-        goto extend;
+                _y_low_ok:
+                if (_BX < 190) {
+                    goto _y_high_ok;
+                } else {
+                    goto endgame;
+                }
+                _y_high_ok:
+                _BX <<= 1; 
+                asm add di, word ptr riga[bx]
+                
+                if (ap_targetting == 1) goto newgame;
+                asm cmp byte ptr es:[di+4], 68
+                asm je endgame
+                asm mov ax, limits
+                asm cmp byte ptr es:[di+4], ah
+                asm jb endgame
+                asm cmp byte ptr es:[di+4], al
+                asm ja endgame 
+                    
+                newgame:
+                temp = (int32_t) rz;
+                _EDX = temp >> (13 + field_amplificator);
+                _AL = 63 - _DL;
+                if ((int16_t) _AL < 0) {
+                    goto colorout;
+                }
+                asm mov dl, es:[di+4]
+                asm and byte ptr es:[di+4], 0xC0
+                _DL &= 0x3F;
+                _AL += _DL;
+                if (_AL <= 63) {
+                    goto colorin;
+                } else {
+                    _AL = 63;
+                }
+
+                colorin:
+                asm or es:[di+4], al;
+                colorout:
+                if (ap_targetting == 1) {
+                    goto extend;
+                }
+                
+                endgame:
+                goto i_while;
+                
+                extend:
+                temp = (rx * rx) + (ry * ry);
+                
+                if (temp >= min_xy) {
+                    goto i_while;
+                }
+                
+                min_xy = temp;
+                ap_target_x = temp_x;
+                ap_target_y = temp_y;
+                ap_target_z = temp_z;
+                
+                i_while:
+                sect_z += advance;
+            }
+            m_while:
+            sect_z -= k;
+            sect_y += advance;
+        }             
+        e_while:
+        sect_y -= k;
+        sect_x += advance;
     }
-    
-    endgame:
-    goto next;
-    
-    extend:
-    temp = (rx * rx) + (ry * ry);
-    
-    if (temp >= min_xy) {
-        goto next;
-    }
-    
-    min_xy = temp;
-    ap_target_x = temp_x;
-    ap_target_y = temp_y;
-    ap_target_z = temp_z;
-    
-    next:
-    sect_z += advance;
-    sz--;
-    if (sz == 0) {
-        goto i_end;
-    } else {
-        goto i_while;
-    } 
-    
-    i_end:
-    sect_y += advance;
-    sect_z -= k;
-    sy--;
-    if (sy == 0) {
-        goto m_end;
-    } else {
-        goto m_while;
-    }
-    
-    m_end:
-    sect_y -= k;
-    sect_x += advance;
-    sx--;
-    if (sx == 0) {
-        goto e_end;
-    } else {
-        goto e_while;
-    }
-    
     
     e_end:    
 }
