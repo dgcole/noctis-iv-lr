@@ -2814,8 +2814,7 @@ void sky (uint16_t limits) {
                 yy = temp_y - dzat_y;
                 z2 = (zz * opt_tcosbeta) - (xx * opt_tsinbeta);
                 rz = (z2 * opt_tcosalfa) + (yy * opt_tsinalfa);
-
-                
+        
                 if (rz < starneg) {
                     goto i_while;
                 }
@@ -2855,6 +2854,8 @@ void sky (uint16_t limits) {
                 _EDX = temp >> (13 + field_amplificator);
                 _AL = 63 - _DL;
                 if ((int16_t) _AL >= 0) {
+                    printf("_DI: %x, Index: %x", _DI, index);
+                    getch();
                     asm mov dl, es:[di+4]
                     asm and byte ptr es:[di+4], 0xC0
                     _DL &= 0x3F;
@@ -2881,16 +2882,12 @@ void sky (uint16_t limits) {
                 i_while:
                 sect_z += advance;
             }
-            m_while:
             sect_z -= k;
             sect_y += advance;
-        }             
-        e_while:
+        }        
         sect_y -= k;
         sect_x += advance;
-    }
-    
-    e_end:    
+    }   
 }
 
 /*  
