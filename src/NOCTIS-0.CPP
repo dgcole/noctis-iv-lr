@@ -2690,6 +2690,7 @@ void background (uint16_t start,
 */
 
 void sky (uint16_t limits) {
+    double st0, st1;
     int32_t min_xy = 1E9;
     int8_t visible_sectors = 9;
 
@@ -2819,8 +2820,8 @@ void sky (uint16_t limits) {
         goto endgame;
     }
     
-    ispresent:
-    double st0, st1;
+    ispresent: 
+    st0 = st1 = 0.0;
     
     st0 = temp_z;
     st0 -= dzat_z;
@@ -2849,45 +2850,60 @@ void sky (uint16_t limits) {
     goto endgame;
     
     _123stella:
-    asm {
-        fld xx
-        fmul opt_pcosbeta
-        fld zz
-        fmul opt_psinbeta
-        faddp
-        fld uno
-        fdiv rz
-        fst inv_rz
-        fmulp
-        fistp rx
-        mov di, word ptr rx
-        add di, x_centro
-        cmp di, 10
-        ja _x_low_ok
-        jmp endgame
+    st0 = st1 = 0.0;
+    
+    st0 = xx;
+    st0 *= opt_pcosbeta;
+    st1 = st0;
+    st0 = zz;
+    st0 *= opt_psinbeta;
+    st1 += st0;
+    st0 = st1;
+    st1 = st0;
+    st0 = uno;
+    st0 /= rz;
+    inv_rz = st0;
+    st1 *= st0;
+    st0 = st1;
+    rx = st0;
+    
+    _DI = rx;
+    _DI += x_centro;
+    if (_DI > 10) {
+        goto _x_low_ok;
+    } else {
+        goto endgame;
     }
+
     _x_low_ok:
     if (_DI < 310) {
         goto _x_high_ok;
     } else {
         goto endgame;
     }
+    
     _x_high_ok:
-    asm{ 
-        fld yy
-        fmul opt_pcosalfa
-        fld z2
-        fmul opt_psinalfa
-        fsubp
-        fmul inv_rz
-        fistp ry
-        sub word ptr ry, 2
-        mov bx, word ptr ry
-        add bx, y_centro
-        cmp bx, 10
-        ja _y_low_ok
-        jmp endgame 
+    st0 = st1 = 0.0;
+    
+    st0 = yy;
+    st0 *= opt_pcosalfa;
+    st1 = st0;
+    st0 = z2;
+    st0 *= opt_psinalfa;
+    st1 -= st0;
+    st0 = st1;
+    st0 *= inv_rz;
+    ry = st0;
+    
+    ry -= 2;
+    _BX = ry;
+    _BX += y_centro;
+    if (_BX  > 10) {
+        goto _y_low_ok;
+    } else {
+        goto endgame;
     }
+
     _y_low_ok:
     if (_BX < 190) {
         goto _y_high_ok;
@@ -2895,8 +2911,8 @@ void sky (uint16_t limits) {
         goto endgame;
     }
     _y_high_ok:
+    _BX <<= 1;
     asm { 
-        shl bx, 1
         add di, word ptr riga[bx]
         cmp ap_targetting, 1
         je newgame
@@ -2909,27 +2925,26 @@ void sky (uint16_t limits) {
         ja endgame 
     }
     newgame:
-    asm {  
-        fld rz
-        fistp temp
-        mov cl, 13
-        add cl, field_amplificator
-        db 0x66;
-        mov dx, word ptr temp
-        db 0x66;
-        shr dx, cl
-        mov al, 63
-        sub al, dl
-        jc colorout
-        mov dl, es:[di+4]
-        and byte ptr es:[di+4], 0xC0
-        and dl, 0x3F
-        add al, dl
-        cmp al, 63
-        jbe colorin
-        mov al, 63 
+    temp = (int32_t) rz;
+    _CL = 13;
+    _CL += field_amplificator;
+    _EDX = temp;
+    _EDX >>= _CL;
+    _AL = 63;
+    _AL -= _DL;
+    if ((int16_t) _AL < 0) {
+        goto colorout;
     }
-    
+    asm mov dl, es:[di+4]
+    asm and byte ptr es:[di+4], 0xC0
+    _DL &= 0x3F;
+    _AL += _DL;
+    if (_AL <= 63) {
+        goto colorin;
+    } else {
+        _AL = 63;
+    }
+
     colorin:
     asm or es:[di+4], al;
     colorout:
@@ -2941,27 +2956,25 @@ void sky (uint16_t limits) {
     goto next;
     
     extend: 
-    asm {   
-        fild rx
-        fmul st(0), st(0)
-        fild ry
-        fmul st(0), st(0)
-        faddp
-        fistp temp
-        db 0x66;
-        mov ax, word ptr temp
-        db 0x66;
-        cmp ax, word ptr min_xy
-        jnb next
-        db 0x66;
-        mov word ptr min_xy, ax
-        fild dword ptr temp_x
-        fstp ap_target_x
-        fild dword ptr temp_y
-        fstp ap_target_y
-        fild dword ptr temp_z
-        fstp ap_target_z 
+    st0 = st1 = 0.0;
+    
+    st0 = rx;
+    st0 *= st0;
+    st1 = st0;
+    st0 = ry;
+    st0 *= st0;
+    st1 += st0;
+    st0 = st1;
+    temp = st0;
+    
+    _EAX = temp;
+    if (_EAX >= (uint32_t) min_xy) {
+        goto next;
     }
+    min_xy = _EAX;
+    ap_target_x = temp_x;
+    ap_target_y = temp_y;
+    ap_target_z = temp_z;
     
     next:
     sect_z += advance;
