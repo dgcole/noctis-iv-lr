@@ -2864,17 +2864,17 @@ void sky (uint16_t limits) {
                 }
 
                 temp = (int32_t) rz;
-                int32_t tempshift = temp >> (13 + field_amplificator);
-                int16_t colormaybe = 63 - (tempshift & 0xFF);
-                if ((int16_t) colormaybe >= 0) {
+                _EDX = temp >> (13 + field_amplificator);
+                _AL = 63 - _DL;
+                if ((int16_t) _AL >= 0) {
                     _DL = adapted[index];
                     adapted[index] &= 0xC0;
                     _DL &= 0x3F;
-                    colormaybe += _DL;
-                    if (colormaybe > 63) {
-                        colormaybe = 63;
+                    _AL += _DL;
+                    if (_AL > 63) {
+                        _AL = 63;
                     }
-                    adapted[index] |= colormaybe;
+                    adapted[index] |= _AL;
                 }
                 
                 if (ap_targetting != 1) {
