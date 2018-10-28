@@ -2690,7 +2690,6 @@ void background (uint16_t start,
 */
 
 void sky (uint16_t limits) {
-    double st0, st1;
     int32_t min_xy = 1E9;
     int8_t visible_sectors = 9;
 
@@ -2745,6 +2744,7 @@ void sky (uint16_t limits) {
     sect_z = (dzat_z - visible_sectors * 50000) / 100000;
     sect_z *= 100000;
     
+    uint32_t index = 0;
     asm {   
         les ax, dword ptr adapted
     }
@@ -2821,54 +2821,26 @@ void sky (uint16_t limits) {
     }
     
     ispresent: 
-    st0 = st1 = 0.0;
+    zz = temp_z - dzat_z;
+    xx = temp_x - dzat_x;
+    yy = temp_y - dzat_y;
+    z2 = (zz * opt_tcosbeta) - (xx * opt_tsinbeta);
+    rz = (z2 * opt_tcosalfa) + (yy * opt_tsinalfa);
+
     
-    st0 = temp_z;
-    st0 -= dzat_z;
-    zz = st0;
-    st0 *= opt_tcosbeta;
-    st1 = st0;
-    st0 = temp_x;
-    st0 -= dzat_x;
-    xx = st0;
-    st0 *= opt_tsinbeta;
-    st1 -= st0;
-    st0 = st1;
-    z2 = st0;
-    st0 *= opt_tcosalfa;
-    st1 = st0;
-    st0 = temp_y;
-    st0 -= dzat_y;
-    yy = st0;
-    st0 *= opt_tsinalfa;
-    st1 += st0;
-    st0 = st1;
-    rz = st0;
-    if (st0 >= starneg) {
+    if (rz >= starneg) {
         goto _123stella;
     }
     goto endgame;
     
     _123stella:
-    st0 = st1 = 0.0;
-    
-    st0 = xx;
-    st0 *= opt_pcosbeta;
-    st1 = st0;
-    st0 = zz;
-    st0 *= opt_psinbeta;
-    st1 += st0;
-    st0 = st1;
-    st1 = st0;
-    st0 = uno;
-    st0 /= rz;
-    inv_rz = st0;
-    st1 *= st0;
-    st0 = st1;
-    rx = st0;
+    inv_rz = uno / rz;
+    rx = ((xx * opt_pcosbeta) + (zz * opt_psinbeta)) * inv_rz;
     
     _DI = rx;
+    index = rx;
     _DI += x_centro;
+    index += x_centro;
     if (_DI > 10) {
         goto _x_low_ok;
     } else {
@@ -2883,19 +2855,8 @@ void sky (uint16_t limits) {
     }
     
     _x_high_ok:
-    st0 = st1 = 0.0;
+    ry = (yy * opt_pcosalfa - z2 * opt_psinalfa) * inv_rz - 2;
     
-    st0 = yy;
-    st0 *= opt_pcosalfa;
-    st1 = st0;
-    st0 = z2;
-    st0 *= opt_psinalfa;
-    st1 -= st0;
-    st0 = st1;
-    st0 *= inv_rz;
-    ry = st0;
-    
-    ry -= 2;
     _BX = ry;
     _BX += y_centro;
     if (_BX  > 10) {
@@ -2911,25 +2872,22 @@ void sky (uint16_t limits) {
         goto endgame;
     }
     _y_high_ok:
-    _BX <<= 1;
-    asm { 
-        add di, word ptr riga[bx]
-        cmp ap_targetting, 1
-        je newgame
-        cmp byte ptr es:[di+4], 68
-        je endgame
-        mov ax, limits
-        cmp byte ptr es:[di+4], ah
-        jb endgame
-        cmp byte ptr es:[di+4], al
-        ja endgame 
-    }
+    _BX <<= 1; 
+    asm add di, word ptr riga[bx]
+    
+    if (ap_targetting == 1) goto newgame;
+    asm cmp byte ptr es:[di+4], 68
+    asm je endgame
+    asm mov ax, limits
+    asm cmp byte ptr es:[di+4], ah
+    asm jb endgame
+    asm cmp byte ptr es:[di+4], al
+    asm ja endgame 
+        
     newgame:
     temp = (int32_t) rz;
-    _CL = 13;
-    _CL += field_amplificator;
     _EDX = temp;
-    _EDX >>= _CL;
+    _EDX >>= 13 + field_amplificator;
     _AL = 63;
     _AL -= _DL;
     if ((int16_t) _AL < 0) {
@@ -2955,23 +2913,14 @@ void sky (uint16_t limits) {
     endgame:
     goto next;
     
-    extend: 
-    st0 = st1 = 0.0;
+    extend:
+    temp = (rx * rx) + (ry * ry);
     
-    st0 = rx;
-    st0 *= st0;
-    st1 = st0;
-    st0 = ry;
-    st0 *= st0;
-    st1 += st0;
-    st0 = st1;
-    temp = st0;
-    
-    _EAX = temp;
-    if (_EAX >= (uint32_t) min_xy) {
+    if (temp >= min_xy) {
         goto next;
     }
-    min_xy = _EAX;
+    
+    min_xy = temp;
     ap_target_x = temp_x;
     ap_target_y = temp_y;
     ap_target_z = temp_z;
