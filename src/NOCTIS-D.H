@@ -176,7 +176,7 @@ struct pvlist {
 // Definitions for software interrupts.
 
 #define INTERRUPT_VIDEO_MODE    0x10
-#define INTERRUPT_TIME      0x1A
+#define INTERRUPT_TIME          0x1A
 #define INTERRUPT_DOS_API       0x21
 #define INTERRUPT_MOUSE         0x33
 

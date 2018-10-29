@@ -406,6 +406,7 @@ void psmooth_64(uint8_t far* target, uint16_t segshift) {
 
 
 // Circular version of the smoothing process.
+// Used on the white corners on the hud and on planets.
 void smootharound_64(uint8_t far* target, int32_t cx, int32_t cy, int32_t r,
                      int8_t diffuse) {
     int32_t x1 = cx - r, y1 = cy - r;
@@ -444,30 +445,42 @@ void smootharound_64(uint8_t far* target, int32_t cx, int32_t cy, int32_t r,
 
         if (diffuse) {
             while (x1 <= x2) {
-                if (px * px + py * py < rs) {
-                    asm {   
-                        les     di, dword ptr target
-                        add di, cp
-                        mov ax, es:[di]
-                        mov cx, ax
-                        mov bx, es:[di+320]
-                        mov dx, bx
-                        and ax, 0x3F3F
-                        and bx, 0x3F3F
-                        add ax, bx
-                        and cx, 0xC0C0
-                        add al, ah
-                        and dx, 0xC0C0
-                        shr al, 2
-                        mov     ah, al
-                        mov bx, ax
-                        or  ax, cx
-                        or  bx, dx
-                        mov     es:[di], ax
-                        mov     es:[di+320], bx 
+                if (px * px + py * py < rs) {    
+                    uint8_t colors[4], colormasks[4];
+                    
+                    colors[0] = target[cp];
+                    colors[1] = target[cp + 1];
+                    colors[2] = target[cp + 320];
+                    colors[3] = target[cp + 321];
+                
+                    memcpy(colormasks, colors, 4 * sizeof(uint8_t));
+                    for (int i = 0; i < 4; i++) {
+                        colormasks[i] &= 0xC0;
                     }
+                    
+                    for (int i = 0; i < 4; i++) {
+                        colors[i] &= 0x3F;
+                    }
+                    
+                    colors[0] += colors[2];
+                    colors[1] += colors[3];
+                    colors[0] += colors[1];
+                    
+                    colors[0] >>= 2;
+                    
+                    colors[1] = colors[0];
+                    colors[2] = colors[0];
+                    colors[3] = colors[1];
+                    
+                    for (int i = 0; i < 4; i ++) {
+                        colors[i] |= colormasks[i];
+                    }
+                    
+                    target[cp] = colors[0];
+                    target[cp + 1] = colors[1];
+                    target[cp + 320] = colors[2];
+                    target[cp + 321] = colors[3];
                 }
-
                 cp++;
                 px++;
                 x1++;
@@ -475,20 +488,28 @@ void smootharound_64(uint8_t far* target, int32_t cx, int32_t cy, int32_t r,
         } else {
             while (x1 <= x2) {
                 if (px * px + py * py < rs) {
-                    asm {   
-                        les     di, dword ptr target
-                        add di, cp
-                        mov ax, es:[di]
-                        mov bx, es:[di+320]
-                        mov cl, al
-                        and ax, 0x3F3F
-                        and bx, 0x3F3F
-                        and cl, 0xC0
-                        add ax, bx
-                        add al, ah
-                        shr al, 2
-                        or      al, cl
-                        mov     es:[di], al }
+                    uint8_t colors[4];
+                    
+                    colors[0] = target[cp];
+                    colors[1] = target[cp + 1];
+                    colors[2] = target[cp + 320];
+                    colors[3] = target[cp + 321];
+                    
+                    uint8_t temp = colors[0];
+                    temp &= 0xC0;
+    
+                    for (int i = 0; i < 4; i++) {
+                        colors[i] &= 0x3F;
+                    }
+                    
+                    colors[0] += colors[2];
+                    colors[1] += colors[3];
+                    colors[0] += colors[1];
+                    
+                    colors[0] >>= 2;
+                    colors[0] |= temp;
+                    
+                    target[cp] = colors[0];
                 }
 
                 cp++;
@@ -2908,6 +2929,7 @@ uint8_t glass_bubble = 1;
 // "globe" function. It is used to simulate the presence of the atmosphere, but
 // only for planets with considerable quantities of gas.
 
+
 /*  
     Heck, real fill managers, and they work!
     Unbelievable, in C++, and even after changing ES, FS, and GS.
@@ -3355,7 +3377,7 @@ void whiteglobe (uint8_t far* target,
                         pix = 0x3F;
                     }
 
-                    pixptr = riga[(int16_t)yy] + (int16_t)xx;
+                    pixptr = riga[(int16_t) yy] + (int16_t) xx;
                     pix += target[pixptr];
 
                     if (pix > 0x3F) {
@@ -3406,10 +3428,10 @@ void whitesun (uint8_t far* target,
     xx = x - dzat_x;
     yy = y - dzat_y;
     zz = z - dzat_z;
-    rx = xx * (double)opt_pcosbeta + zz * (double)opt_psinbeta;
-    z2 = zz * (double)opt_tcosbeta - xx * (double)opt_tsinbeta;
-    rz = z2 * (double)opt_tcosalfa + yy * (double)opt_tsinalfa;
-    ry = yy * (double)opt_pcosalfa - z2 * (double)opt_psinalfa;
+    rx = xx * (double) opt_pcosbeta + zz * (double) opt_psinbeta;
+    z2 = zz * (double) opt_tcosbeta - xx * (double) opt_tsinbeta;
+    rz = z2 * (double) opt_tcosalfa + yy * (double) opt_tsinalfa;
+    ry = yy * (double) opt_pcosalfa - z2 * (double) opt_psinalfa;
 
     if (rz < 0.001) {
         return;
@@ -3493,7 +3515,7 @@ void whitesun (uint8_t far* target,
     }
 }
 
-/* Bagliori attorno alle luci pi— intense. */
+// Glow aroun dthe most intense lights.
 
 /*  float far *lft_sin = (float far *) farmalloc (361*4);
     float far *lft_cos = (float far *) farmalloc (361*4);*/
@@ -3510,8 +3532,8 @@ int8_t lens_flares_init () {
     }
 
     for (c = 0; c <= 360; c++) {
-        lft_cos[c] = cos (a);
-        lft_sin[c] = sin (a);
+        lft_cos[c] = cos(a);
+        lft_sin[c] = sin(a);
         a += step;
     }
 
@@ -3754,11 +3776,10 @@ int8_t far_pixel_at (double xlight, double ylight, double zlight,
 }
 
 /*
-
-    Resto delle funzioni che operano su dati locali.
-    Funzioni per: regolazione del timer cosmico di NOCTIS,
-              costruzione dei dintorni delle stelle e dei pianeti,
-              visualizzazione dei pianeti dall'orbita.
+    The rest of the functions that operate on local data.
+    Functions for: Setting the cosmic timer of Noctis, constructing the
+    surroundings of the stars and planets, and visualization of the planets
+    from orbit.
 
 */
 
@@ -3810,8 +3831,8 @@ void getsecs () {
     epoc = 6011 + secs / 1e9;
 }
 
-/*  Estrae dalla tabella pseudo, da 74000 miliardi di elementi diversi, le
-    informazioni sulla stella che si Š scelta. */
+// Extracts from the pseudo table, from 74 trillion different elements, 
+// information about the chosen star.
 
 void extract_ap_target_infos () {
     srand (ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z / 100000);
@@ -3836,7 +3857,7 @@ void extract_ap_target_infos () {
     }
 }
 
-/* Estrae un numero pseudo-casuale di tipo intero convertendolo a f-p. */
+// Extracts a whole-type pseudo-random number by converting it to f-p.
 
 float zrandom (int16_t range) {
     return (random(range) - random(range));
