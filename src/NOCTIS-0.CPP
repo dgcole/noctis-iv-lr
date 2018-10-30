@@ -305,42 +305,48 @@ void areaclear (uint8_t far* dest, int16_t x, int16_t y,
 
 void psmooth_grays(uint8_t far* target) {
     uint16_t count = (QUADWORDS << 2) - (320 << 2);
-    asm {
-        pusha
-        push    ds
-        mov     cx, count
-        lds     di, dword ptr target
-        add     di, 320
-    }
-smooth:
-    asm {
-        db      0x66
-        mov     dx, [di-320]
-        db      0x66
-        add     dx, [di]
-        db      0x66
-        add     dx, [di+320]
-        db      0x66
-        add     dx, [di+640]
-        db      0x66, 0x81, 0xE2, 0xFC, 0xFC, 0xFC, 0xFC
-        db      0x66
-        shr     dx, 2
-        mov     al, dl
-        add     al, dh
-        db      0x66;
-        shr dx, 16
-        add     al, dl
-        add     al, dh
-        shr     al, 2
-        mov     [di], al
-    }
-next:
-    asm {
-        inc     di
-        dec     cx
-        jnz     smooth
-        pop     ds
-        popa
+    int index = 0;
+    for (uint16_t i = 0; i < count ; i++, index++) {
+        uint8_t smoothed;
+        uint16_t col1, col2, col3, col4;
+        uint32_t temp;
+        
+        col1 = target[index];
+        col2 = target[index + 1];
+        col3 = target[index + 2];
+        col4 = target[index + 3];
+        temp = (col4 << 24) + (col3 << 16) + (col2 << 8) + col1;
+        
+        col1 = target[index + 320];
+        col2 = target[index + 321];
+        col3 = target[index + 322];
+        col4 = target[index + 323];
+        temp += (col4 << 24) + (col3 << 16) + (col2 << 8) + col1;
+        
+        col1 = target[index + 640];
+        col2 = target[index + 641];
+        col3 = target[index + 642];
+        col4 = target[index + 643];
+        temp += (col4 << 24) + (col3 << 16) + (col2 << 8) + col1;
+        
+        col1 = target[index + 960];
+        col2 = target[index + 961];
+        col3 = target[index + 962];
+        col4 = target[index + 963];
+        temp += (col4 << 24) + (col3 << 16) + (col2 << 8) + col1;
+        
+        temp &= 0xFCFCFCFC;
+        temp >>= 2;
+        
+        smoothed = temp & 0xFF;
+        smoothed += temp & 0xFF00;
+        
+        temp >>= 16;
+        
+        smoothed += temp & 0xFF;
+        smoothed += temp & 0xFF00;
+        smoothed >>= 2;
+        target[320] = smoothed;
     }
 }
 
@@ -454,11 +460,11 @@ void smootharound_64(uint8_t far* target, int32_t cx, int32_t cy, int32_t r,
                     colors[3] = target[cp + 321];
                 
                     memcpy(colormasks, colors, 4 * sizeof(uint8_t));
-                    for (int i = 0; i < 4; i++) {
+                    for (uint16_t i = 0; i < 4; i++) {
                         colormasks[i] &= 0xC0;
                     }
                     
-                    for (int i = 0; i < 4; i++) {
+                    for (uint16_t i = 0; i < 4; i++) {
                         colors[i] &= 0x3F;
                     }
                     
@@ -472,7 +478,7 @@ void smootharound_64(uint8_t far* target, int32_t cx, int32_t cy, int32_t r,
                     colors[2] = colors[0];
                     colors[3] = colors[1];
                     
-                    for (int i = 0; i < 4; i ++) {
+                    for (uint16_t i = 0; i < 4; i ++) {
                         colors[i] |= colormasks[i];
                     }
                     
@@ -498,7 +504,7 @@ void smootharound_64(uint8_t far* target, int32_t cx, int32_t cy, int32_t r,
                     uint8_t temp = colors[0];
                     temp &= 0xC0;
     
-                    for (int i = 0; i < 4; i++) {
+                    for (uint16_t i = 0; i < 4; i++) {
                         colors[i] &= 0x3F;
                     }
                     
@@ -670,7 +676,6 @@ int16_t         datasheetdelta  = 0;
 // Constant data in the global segment.
 
 // Some ordinals (from 0 to 20) for certain representations.
-
 int8_t* ord[21] = { "zeroth", "first", "second", "third", "fourth", "fifth",
                     "sixth", "seventh", "eight", "nineth", "tenth", "eleventh",
                     "twelveth", "thiteenth", "fourteenth",
@@ -1111,7 +1116,7 @@ int8_t xy (double cam_x, double cam_y, double cam_z,
     return (0);
 }
 
-// Move the user inside the stardrifter.
+// Move the user around inside the stardrifter.
 void p_Forward (float delta) {
     pos_x -= delta * opt_tsinbeta * opt_tcosalfa;
     pos_z += delta * opt_tcosbeta * opt_tcosalfa;
@@ -1784,7 +1789,8 @@ void stick3d (float p_x, float p_y, float p_z,
     stick (fpx + x_centro, fpy + y_centro, lx + x_centro, ly + y_centro);
 }
 
-/*  Se uno "stick" Š un "bastoncino" tridimensionale delimitato da due
+/*  
+    Se uno "stick" Š un "bastoncino" tridimensionale delimitato da due
     estremit…, un "link" Š un "ponte" tra il punto iniziale dell'ultimo stick
     tracciato ed il punto passato a questa funzione.
     Sembrerebbe un sistema efficace per velocizzare le proiezioni 3d, ma
@@ -1792,7 +1798,8 @@ void stick3d (float p_x, float p_y, float p_z,
     Š sempre lo stesso, quando questo non Š risultato visibile in precedenza
     neanche i link saranno visibili.
     Attualmente, Noctis usa "link3d" per mostrare i singoli fili d'erba
-    sulla superficie di pianeti abitabili. */
+    sulla superficie di pianeti abitabili. 
+*/
 
 void link3d (float x, float y, float z) {
     int32_t lx, ly;
@@ -2019,15 +2026,8 @@ uint8_t map_color_b = 31;
 uint8_t map_color_c = 32;
 uint8_t map_color_d = 33;
 
-void randomic_mapper (float x0,
-                      float y0,
-                      float z0,
-                      float x1,
-                      float y1,
-                      float z1,
-                      float x2,
-                      float y2,
-                      float z2,
+void randomic_mapper (float x0, float y0, float z0, float x1, float y1,
+                      float z1, float x2, float y2, float z2, 
                       int8_t divisions) {
     float vx[3], vy[3], vz[3];
     float e0, f0, g0;
@@ -2085,8 +2085,10 @@ void randomic_mapper (float x0,
     }
 }
 
-/*  Libera un handle in cui era stato caricato un file di grafica poligonale:
-    se l'handle Š gi… libero, non succede nulla. */
+/*  
+    Free a handle in which a polygonal graphic file was loaded: if the handle
+    is already free nothing happens.
+*/
 
 void unloadpv (int16_t handle) {
     int16_t      h;
@@ -2108,18 +2110,18 @@ void unloadpv (int16_t handle) {
     // definito l'ANSI cos lo faccio nero.
     for (h = 0; h < handles; h++)
         if (pvfile_dataptr[h] > pvfile_dataptr[handle]) {
-            (int8_t far*)pv_n_vtx[h] -= pvfile_datalen[handle];
-            (int8_t far*)pvfile_x[h] -= pvfile_datalen[handle];
-            (int8_t far*)pvfile_y[h] -= pvfile_datalen[handle];
-            (int8_t far*)pvfile_z[h] -= pvfile_datalen[handle];
-            (int8_t far*)pvfile_c[h] -= pvfile_datalen[handle];
+            (int8_t far*) pv_n_vtx[h] -= pvfile_datalen[handle];
+            (int8_t far*) pvfile_x[h] -= pvfile_datalen[handle];
+            (int8_t far*) pvfile_y[h] -= pvfile_datalen[handle];
+            (int8_t far*) pvfile_z[h] -= pvfile_datalen[handle];
+            (int8_t far*) pvfile_c[h] -= pvfile_datalen[handle];
 
             if (pv_mid_x[h]) {
-                (int8_t far*)pv_mid_x[h] -= pvfile_datalen[handle];
-                (int8_t far*)pv_mid_y[h] -= pvfile_datalen[handle];
-                (int8_t far*)pv_mid_z[h] -= pvfile_datalen[handle];
-                (int8_t far*)pv_mid_d[h] -= pvfile_datalen[handle];
-                (int8_t far*)pv_dep_i[h] -= pvfile_datalen[handle];
+                (int8_t far*) pv_mid_x[h] -= pvfile_datalen[handle];
+                (int8_t far*) pv_mid_y[h] -= pvfile_datalen[handle];
+                (int8_t far*) pv_mid_z[h] -= pvfile_datalen[handle];
+                (int8_t far*) pv_mid_d[h] -= pvfile_datalen[handle];
+                (int8_t far*) pv_dep_i[h] -= pvfile_datalen[handle];
             }
 
             pvfile_dataptr[h] -= pvfile_datalen[handle];
@@ -2141,8 +2143,10 @@ void unloadpv (int16_t handle) {
     pvfile_datalen[handle] = 0;
 }
 
-/*  Libera tutti gli handles.
-    (E non guarda in faccia a nessuno). */
+/*  
+    Free all the handles.
+    (And he does not look at anyone).
+*/
 
 void unloadallpv () {
     int16_t h;
