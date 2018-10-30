@@ -1559,10 +1559,10 @@ void stick (uint32_t xp, uint32_t yp,
     }
 }
 
-/* Tracciamento bastoncini (parte 3d). */
+/* Tracing sticks (3D Part). */
 
-int32_t fpx = -1; // first-point-x
-int32_t fpy;      // first-point-y
+int32_t fpx = -1; // First-point-x
+int32_t fpy;      // First-point-y
 
 float p_rx, p_ry, p_rz;
 float stick_uneg = 200;
@@ -1573,68 +1573,28 @@ void stick3d (float p_x, float p_y, float p_z,
     float p_z2, diff;
     float rx, ry, rz, z2, kk;
     fpx = -1;
-    asm {   fld p_x
-            fsub cam_x
-            fst p_x
-            fmul opt_tsinbeta
-            fld p_z
-            fsub cam_z
-            fst p_z
-            fmul opt_tcosbeta
-            fsubrp
-            fst p_z2
-            fmul opt_tcosalfa
-            fld p_y
-            fsub cam_y
-            fst p_y
-            fmul opt_tsinalfa
-            faddp
-            fstp p_rz }
-    asm {   fld x
-            fsub cam_x
-            fst x
-            fmul opt_tsinbeta
-            fld z
-            fsub cam_z
-            fst z
-            fmul opt_tcosbeta
-            fsubrp
-            fst z2
-            fmul opt_tcosalfa
-            fld y
-            fsub cam_y
-            fst y
-            fmul opt_tsinalfa
-            faddp
-            fstp rz }
+    
+    p_x -= cam_x;
+    p_y -= cam_y;
+    p_z -= cam_z;
+    p_z2 = (p_z * opt_tcosbeta) - (p_x * opt_tsinbeta);
+    p_rz = (p_z2 * opt_tcosalfa) + (p_y * opt_tsinalfa);
+    
+    x -= cam_x;
+    y -= cam_y;
+    z -= cam_z;
+    z2 = (z * opt_tcosbeta) - (x * opt_tsinbeta);
+    rz = (z2 * opt_tcosalfa) + (y * opt_tsinalfa);
 
     if (rz < stick_uneg && p_rz < stick_uneg) {
         return;
     }
-    asm {   fld p_x
-            fmul opt_pcosbeta
-            fld p_z
-            fmul opt_psinbeta
-            faddp
-            fstp p_rx
-            fld p_y
-            fmul opt_pcosalfa
-            fld p_z2
-            fmul opt_psinalfa
-            fsubp
-            fstp p_ry }
-    asm {   fld x
-            fmul opt_pcosbeta
-            fld z
-            fmul opt_psinbeta
-            faddp
-            fstp rx
-            fld y
-            fmul opt_pcosalfa
-            fld z2
-            fmul opt_psinalfa
-            fsubp
-            fstp ry }
+
+    p_rx = (p_x * opt_pcosbeta) + (p_z * opt_psinbeta);
+    p_ry = (p_y * opt_pcosalfa) - (p_z2 * opt_psinalfa);
+    
+    rx = (x * opt_pcosbeta) + (z * opt_psinbeta);
+    ry = (y * opt_pcosalfa) - (z2 * opt_psinalfa);
 
     // Conversion of points behind the observer with respect to the screen plane.
 
@@ -1662,26 +1622,15 @@ void stick3d (float p_x, float p_y, float p_z,
         }
     }
 
-    // Prospettiva.
-//  lx = rx / rz; ly = ry / rz;
-//  fpx = p_rx / p_rz; fpy = p_ry / p_rz;
-    asm {   fld uno
-            fdiv rz
-            fld st(0)
-            fmul rx
-            fistp lx
-            fmul ry
-            fistp ly
-            fld uno
-            fdiv p_rz
-            fld st(0)
-            fmul p_rx
-            fistp fpx
-            fmul p_ry
-            fistp fpy }
+    // Perspective.
+    lx = rx / rz; 
+    ly = ry / rz;
+    
+    fpx = p_rx / p_rz; 
+    fpy = p_ry / p_rz;
 
     if (fpy < stk_lby && ly < stk_lby) {
-        return;    // Linee del tutto fuori campo.
+        return;    // Out-of-range lines.
     }
 
     if (fpy > stk_uby && ly > stk_uby) {
@@ -1696,11 +1645,12 @@ void stick3d (float p_x, float p_y, float p_z,
         return;
     }
 
-    /*  Ottimizza il tracciamento del segmento, tagliando via le parti
-        che di sicuro non si vedono. Questa parte non ä efficace se
-        i punti di partenza e di arrivo fanno sç che il segmento non
-        intersechi alcun lato dell'area visibile: ma in questo peculiare
-        caso le linee vengono escluse dai controlli precedenti. */
+    /*  
+        Optimize segment tracking by cutting away parts that cannot be seen.
+        This part is not effective if the departure and arrival points make it
+        so that the segment does not intersect any side of the visible area:
+        but in this pecular case the lines are excluded by pregvious checks.
+    */
 
     if (fpx < stk_lbx) {
         diff = fpx - lx;
