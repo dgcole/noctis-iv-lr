@@ -1257,11 +1257,15 @@ void resetfx (void)  {
     flares = previous_flares_value;
 }
 
-// Tracing sticks (2D)
+// Tracing sticks (2D).
 void stick (uint32_t xp, uint32_t yp,
             uint32_t xa, uint32_t ya) {
     int32_t a, b, L;
     uint16_t pi, pf;
+    // Used to temporarily hold variables for bitwise operations.
+    // Good old Borland C++ only applies bitwise operations to the lower 16 bits
+    // of 32-bit registers.
+    uint32_t bitTemp;
 
     if (xp == xa) {
         if (ya >= yp) {
@@ -1272,290 +1276,262 @@ void stick (uint32_t xp, uint32_t yp,
             pf = riga[yp + 1];
         }
 
-        asm {   
-            les si, dword ptr adapted
-            add pi, si
-            add pf, si
-            mov si, pi 
-        }
+        asm les si, dword ptr adapted
+        pi += _SI;
+        pf += _SI;
+        _SI = pi;
 
         switch (flares) {
         case 0:
-            clu:
-            asm {   
-                cmp si, pf
-                jnb _ret
-                mov word ptr es:[si], 0x3E00
-                add si, 320
-                jmp clu 
+            while(_SI < pf) {
+                asm mov word ptr es:[si], 0x3E00
+                _SI += 320;
             }
             break;
         case 1:
-            _clu:
-            asm {   
-                cmp si, pf
-                jnb _ret
-                mov cl, es:[si]
-                and cl, 0x3F
-                and byte ptr es:[si], 0xC0
-                add cl, 0x08
-                cmp cl, 0x3E
-                jb _cl_ok
-                mov cl, 0x3E 
+            while (_SI < pf) {
+                asm mov cl, es:[si]
+                _CL &= 0x3F;
+                asm and byte ptr es:[si], 0xC0
+                _CL += 0x08;
+                if (_CL < 0x3E) {
+                    goto _cl_ok;
+                }
+                _CL = 0x3E;
+                _cl_ok:   
+                asm add es:[si], cl
+                _SI += 320;
             }
-            _cl_ok:
-            asm {   
-                add es:[si], cl
-                add si, 320
-                jmp _clu 
-            }
-            break;
+            break;  
         case 2:
-            __clu:
-            asm {   
-                cmp si, pf
-                jnb _ret
-                mov cl, es:[si]
-                and cl, 0x3F
-                and byte ptr es:[si], 0xC0
-                shr cl, 1
-                add es:[si], cl
-                add si, 320
-                jmp __clu 
+            while (_SI < pf) {
+                asm mov cl, es:[si]
+                _CL &= 0x3F;
+                asm and byte ptr es:[si], 0xC0
+                _CL >>= 1;
+                asm add es:[si], cl
+                _SI += 320;
             }
             break;
         case 3:
-                ___clu:
-                asm {   
-                    cmp si, pf
-                    jnb _ret
-                    db 0x66, 0x26, 0xC7, 0x04, 0x0E, 0x13, 0x1E, 0x2E // mov dword ptr es:[si], 0x2E1E130E
-                    add si, 320
-                    jmp ___clu 
+                while (_SI < pf) {
+                    asm db 0x66, 0x26, 0xC7, 0x04, 0x0E, 0x13, 0x1E, 0x2E // mov dword ptr es:[si], 0x2E1E130E
+                    _SI += 320;
                 }
+            break;
         }
-        _ret:
         return;
     }
+  
+    _ESI = xa;
+    
+    asm db 0x66;
+    asm sub si, word ptr xp
+    asm jnb a_posit
+    /*if (_ESI >= xp) {
+        _ESI -= xp;
+        goto a_posit;
+    }*/
+    
+    uint32_t swap;
+    
+    swap = xp;
+    xp = xa;
+    xa = swap;
+    
+    swap = yp;
+    yp = ya;
+    ya = swap;
+    
+    
+    bitTemp = _ESI;
+    bitTemp = ~bitTemp + 1;
+    _ESI = bitTemp;
 
-    asm {   
-        db 0x66;
-        mov si, word ptr xa
-        db 0x66;
-        sub si, word ptr xp
-        jnc a_posit
-        db 0x66;
-        mov ax, word ptr xp
-        db 0x66;
-        mov bx, word ptr xa
-        db 0x66;
-        mov cx, word ptr yp
-        db 0x66;
-        mov dx, word ptr ya
-        db 0x66;
-        mov word ptr xa, ax
-        db 0x66;
-        mov word ptr xp, bx
-        db 0x66;
-        mov word ptr ya, cx
-        db 0x66;
-        mov word ptr yp, dx
-        db 0x66;
-        neg si 
-    }
     a_posit:
-    asm {   
-        db 0x66;
-        mov word ptr a, si
-        db 0x66;
-        mov word ptr L, si
-        xor ch, ch
-        db 0x66;
-        mov ax, word ptr ya
-        db 0x66;
-        sub ax, word ptr yp
-        jnc b_posit
-        not ch
-        db 0x66;
-        neg ax 
+    a = _ESI;
+    L = _ESI;
+    
+    _CH |= _CH;
+    
+    _EAX = ya;
+    
+    if (_EAX >= yp) {
+        _EAX -= yp;
+        goto b_posit;
     }
+    _EAX -= yp;
+    
+    asm not ch
+    
+    bitTemp = _EAX;
+    bitTemp = ~bitTemp + 1;
+    _EAX = bitTemp;
+
     b_posit:
-    asm {   
-        db 0x66;
-        mov word ptr b, ax
-        db 0x66;
-        cmp ax, word ptr L
-        jb b_lower
-        db 0x66;
-        mov word ptr L, ax 
+    b = _EAX;
+    
+    if (_EAX > (uint32_t) L) {
+        L = _EAX;
     }
-    b_lower:
-    asm {   
-        db 0x66;
-        inc word ptr L
-        db 0x66;
-        shl word ptr xa, 16
-        db 0x66;
-        mov ax, word ptr xp
-        db 0x66;
-        mov bx, word ptr yp
-        db 0x66;
-        shl ax, 16
-        db 0x66;
-        shl bx, 16
-        db 0x66;
-        mov word ptr global_x, ax
-        db 0x66;
-        mov word ptr global_y, bx
-        db 0x66;
-        shl word ptr a, 16 // a *= 65536, unsigned
-        db 0x66;
-        sal word ptr b, 16 // b *= 65536, signed
-        mov dx, word ptr a[2]
-        mov ax, word ptr a
-        div word ptr L     // a /= L, 16bit - unsigned
-        mov word ptr a, ax
-        mov word ptr a[2], 0
-        mov dx, word ptr b[2]
-        mov ax, word ptr b
-        div word ptr L     // b /= L, 16bit - false unsigned
-        mov word ptr b, ax
-        mov word ptr b[2], 0
-        test ch, ch
-        jz trace
-        db 0x66;
-        neg word ptr b 
-    }
+    
+    L++;
+    
+    xa <<= 16;
+
+    global_x = xp << 16;
+    global_y = yp << 16;
+    
+    a <<= 16;
+    b <<= 16;
+    
+    asm mov dx, word ptr a[2]
+    asm mov ax, word ptr a
+    asm div word ptr L     // a /= L, 16bit - unsigned
+    asm mov word ptr a, ax
+    asm mov word ptr a[2], 0
+    asm mov dx, word ptr b[2]
+    asm mov ax, word ptr b
+    asm div word ptr L     // b /= L, 16bit - false unsigned
+    asm mov word ptr b, ax
+    asm mov word ptr b[2], 0
+    asm test ch, ch
+    asm jz trace
+    
+    b = -b;
+
     trace:
     asm mov es, seg_adapted;
 
     switch (flares) {
     case 0: // bastoncini solidi che "riflettono" luce.
-        asm {   
-            db 0x66;
-            mov ax, word ptr a    // passa in eax il delta_x (ovvero a).
-            db 0x66;
-            mov dx, word ptr b    // passa in edx il delta_y (ovvero b).
-            db 0x66;
-            mov cx, word ptr xa 
-        } // passa in ecx il limite superiore del ciclo (come coordinata x d'arrivo).
-        _do:
-        asm {   
-            mov bx, word ptr global_y[2]
-            mov di, word ptr global_x[2]
-            add bx, bx
-            db 0x66;
-            add word ptr global_x, ax
-            add di, word ptr riga[bx]
-            db 0x66;
-            add word ptr global_y, dx
-            db 0x66;
-            cmp word ptr global_x, cx
-            mov word ptr es:[di+4], 0x3E00
-            jb  _do 
-        }
+        asm db 0x66;
+        asm mov ax, word ptr a    // passa in eax il delta_x (ovvero a).
+        
+        asm db 0x66;
+        asm mov dx, word ptr b    // passa in edx il delta_y (ovvero b).
+        
+        asm db 0x66;
+        asm mov cx, word ptr xa 
+        // passa in ecx il limite superiore del ciclo (come coordinata x d'arrivo).
+        _do:  
+        asm mov bx, word ptr global_y[2]
+        asm mov di, word ptr global_x[2]
+        asm add bx, bx
+        
+        asm db 0x66;
+        asm add word ptr global_x, ax
+        asm add di, word ptr riga[bx]
+        
+        asm db 0x66;
+        asm add word ptr global_y, dx
+        
+        asm db 0x66;
+        asm cmp word ptr global_x, cx
+        asm mov word ptr es:[di+4], 0x3E00
+        asm jb  _do 
+
         break;
     case 1: // bastoncini intrinsecamente luminosi.
-        asm {   
-            db 0x66;
-            mov ax, word ptr a    // passa in eax il delta_x (ovvero a).
-            db 0x66;
-            mov dx, word ptr b    // passa in edx il delta_y (ovvero b).
+        asm db 0x66;
+        asm mov ax, word ptr a    // passa in eax il delta_x (ovvero a).
+        
+        asm db 0x66;
+        asm mov dx, word ptr b    // passa in edx il delta_y (ovvero b).
 
-            db 0x66;
-            shl ax, 1         // moltiplica i delta per 2:
-            db 0x66;
-            shl dx, 1         // un punto s, uno no.
+        asm db 0x66;
+        asm shl ax, 1         // moltiplica i delta per 2:
+        
+        asm db 0x66;
+        asm shl dx, 1         // un punto s, uno no.
 
-            push bp                // salva bp sullo stack
-            db 0x66;
-            mov bp, word ptr xa 
-        } // passa in ebp il limite superiore del ciclo (come coordinata x d'arrivo).
+        asm push bp                // salva bp sullo stack
+        asm db 0x66;
+        
+        asm mov bp, word ptr xa 
+        // passa in ebp il limite superiore del ciclo (come coordinata x d'arrivo).
         __do:
-        asm {   
-            mov bx, word ptr global_y[2]
-            mov di, word ptr global_x[2]
-            add bx, bx
-            db 0x66;
-            add word ptr global_x, ax
-            add di, word ptr riga[bx]
-            db 0x66;
-            add word ptr global_y, dx
-            mov cl, es:[di+4]
-            shl cx, 2
-            add cl, 32
-            jnc cl_ok
-            mov cl, 0xFB 
-        }
-        cl_ok:
-        asm {   
-            shr cx, 2
-            db 0x66;
-            cmp word ptr global_x, bp
-            mov es:[di+4], cl
-            jb __do 
-        }
+        asm mov bx, word ptr global_y[2]
+        asm mov di, word ptr global_x[2]
+        asm add bx, bx
+        
+        asm db 0x66;
+        asm add word ptr global_x, ax
+        asm add di, word ptr riga[bx]
+        
+        asm db 0x66;
+        asm add word ptr global_y, dx
+        asm mov cl, es:[di+4]
+        asm shl cx, 2
+        asm add cl, 32
+        asm jnc cl_ok
+        asm mov cl, 0xFB 
+
+        cl_ok:  
+        asm shr cx, 2
+        
+        asm db 0x66;
+        asm cmp word ptr global_x, bp
+        
+        asm mov es:[di+4], cl
+        asm jb __do 
+
         asm pop bp                 // riprende bp
         break;
-    case 2: // bastoncini che assorbono luce ("affumicati").
-        asm {   
-            db 0x66;
-            mov ax, word ptr a    // passa in eax il delta_x (ovvero a).
-            db 0x66;
-            mov dx, word ptr b    // passa in edx il delta_y (ovvero b).
+    case 2: // bastoncini che assorbono luce ("affumicati"). 
+        asm db 0x66;
+        asm mov ax, word ptr a    // passa in eax il delta_x (ovvero a).
+        asm db 0x66;
+        asm mov dx, word ptr b    // passa in edx il delta_y (ovvero b).
 
-            push bp                // salva bp sullo stack
-            db 0x66;
-            mov bp, word ptr xa  // passa in ebp il limite superiore del ciclo (come coordinata x d'arrivo).
-        } 
+        asm push bp                // salva bp sullo stack
+        asm db 0x66;
+        asm mov bp, word ptr xa  // passa in ebp il limite superiore del ciclo (come coordinata x d'arrivo).
+        
         ___do:
-        asm {   
-            mov bx, word ptr global_y[2]
-            mov di, word ptr global_x[2]
-            add bx, bx
-            db 0x66;
-            add word ptr global_x, ax
-            add di, word ptr riga[bx]
-            db 0x66;
-            add word ptr global_y, dx
-            mov cl, es:[di+4]
-            and cl, 0x3F
-            and byte ptr es:[di+4], 0xC0
-            shr cl, 1
-            add es:[di+4], cl
-            db 0x66;
-            cmp word ptr global_x, bp
-            jb ___do 
-        }
+        asm mov bx, word ptr global_y[2]
+        asm mov di, word ptr global_x[2]
+        asm add bx, bx
+        asm db 0x66;
+        asm add word ptr global_x, ax
+        asm add di, word ptr riga[bx]
+        asm db 0x66;
+        asm add word ptr global_y, dx
+        asm mov cl, es:[di+4]
+        asm and cl, 0x3F
+        asm and byte ptr es:[di+4], 0xC0
+        asm shr cl, 1
+        asm add es:[di+4], cl
+        asm db 0x66;
+        asm cmp word ptr global_x, bp
+        asm jb ___do 
+
         asm pop bp                 // riprende bp
         break;
 
     case 3: // come tipo 0, ma pi— larghi.
-        asm {   
-            db 0x66;
-            mov ax, word ptr a    // passa in eax il delta_x (ovvero a).
-            db 0x66;
-            mov dx, word ptr b    // passa in edx il delta_y (ovvero b).
-            db 0x66;
-            mov cx, word ptr xa // passa in ecx il limite superiore del ciclo (come coordinata x d'arrivo).
-        } 
+        asm db 0x66;
+        asm mov ax, word ptr a    // passa in eax il delta_x (ovvero a).
+        asm db 0x66;
+        asm mov dx, word ptr b    // passa in edx il delta_y (ovvero b).
+        asm db 0x66;
+        asm mov cx, word ptr xa // passa in ecx il limite superiore del ciclo (come coordinata x d'arrivo).
+
         ____do:
-        asm {   
-            mov bx, word ptr global_y[2]
-            mov di, word ptr global_x[2]
-            add bx, bx
-            db 0x66;
-            add word ptr global_x, ax
-            add di, word ptr riga[bx]
-            db 0x66;
-            add word ptr global_y, dx
-            db 0x66;
-            cmp word ptr global_x, cx
-            db 0x66, 0x26, 0xC7, 0x45, 0x04 // mov dword ptr es:[di+4],
-//          db 0x0E, 0x13, 0x1E, 0x2E       // 0x2E1E130E
-            db 0xCE, 0xD3, 0xDE, 0xEE       // 0x2E1E130E
-            jb  ____do 
-        }
+        asm mov bx, word ptr global_y[2]
+        asm mov di, word ptr global_x[2]
+        asm add bx, bx
+        asm db 0x66;
+        asm add word ptr global_x, ax
+        asm add di, word ptr riga[bx]
+        asm db 0x66;
+        asm add word ptr global_y, dx
+        asm db 0x66;
+        asm cmp word ptr global_x, cx
+        asm db 0x66, 0x26, 0xC7, 0x45, 0x04 // mov dword ptr es:[di+4],
+//      asm db 0x0E, 0x13, 0x1E, 0x2E       // 0x2E1E130E
+        asm db 0xCE, 0xD3, 0xDE, 0xEE       // 0x2E1E130E
+        asm jb  ____do 
     }
 }
 
