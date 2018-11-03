@@ -1412,10 +1412,8 @@ void stick (uint32_t xp, uint32_t yp,
         // the time being.
         _ECX = xa;
         while (global_x < xa) {
-            uint16_t tempB = global_y >> 16;
+            uint16_t tempB = (global_y >> 16) * 2;
             uint16_t index = global_x >> 16;
-            
-            tempB += tempB;
             
             global_x += a;
             global_y += b;
@@ -1428,48 +1426,31 @@ void stick (uint32_t xp, uint32_t yp,
             truncated[index + 4] = 0x00;
             truncated[index + 5] = 0x3E;
         }
-
         break;
-    case 1: // Intrinsically luminous sticks.
-        _EAX = a;
-        _EDX = b;
+    case 1: // Intrinsically luminous sticks.    
+        _ECX = xa;
+        while(global_x < xa) {
+            uint16_t tempB = (global_y >> 16) * 2;
+            uint16_t index = global_x >> 16;
+            
+            global_x += a * 2;
+            global_y += b * 2;
+            
+            uint16_t rLow, rHigh;
+            rLow = ((uint8_t*) riga)[tempB];
+            rHigh = ((uint8_t*) riga)[tempB + 1];
+            index += (rHigh << 8) + rLow;
+            
+            uint16_t color = truncated[index + 4] << 2;
 
-        asm db 0x66;
-        asm shl ax, 1         // _EAX *= 2;
-        
-        asm db 0x66;
-        asm shl dx, 1         // _EDX *= 2;
-
-        asm push bp                // salva bp sullo stack
-        
-        _EBP = xa;
-        // Pass the upper limit of the cycle to ebp ( as the x coordinate of arrival.
-        while(global_x < _EBP) {
-            asm mov bx, word ptr global_y[2]
-            asm mov di, word ptr global_x[2]
-            
-            _BX += _BX;
-            
-            global_x += _EAX;
-            global_y += _EDX;
-            
-            asm add di, word ptr riga[bx]
-            
-            asm mov cl, es:[di+4]
-            asm shl cx, 2
-
-            if (_CL <= 0xDF) {
-                _CL += 32;
+            if ((color & 0xFF) <= 0xDF) {
+                color += 32;
             } else {
-                _CL = 0xFB;
+                color = (color & 0xFF00) + 0xFB;
             }
 
-            asm shr cx, 2
-            
-            asm mov es:[di+4], cl
+            truncated[index + 4] = (color >> 2) & 0xFF;
         }
-
-        asm pop bp                 // riprende bp
         break;
     case 2: // bastoncini che assorbono luce ("affumicati"). 
         asm db 0x66;
