@@ -1380,8 +1380,6 @@ void stick (uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
         b = -b;
     }
     
-    // I have no idea whatsoever why this is needed.
-    _ECX = xa;
     switch (flares) {
     case 0: // Solid sticks that "reflect" light;
         while (global_x < xa) {
