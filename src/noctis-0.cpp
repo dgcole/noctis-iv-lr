@@ -829,8 +829,6 @@ uint8_t far*  pvfile;
 uint8_t far*  n_offsets_map;
 int8_t far*           n_globes_map;
 
-uint16_t            seg_adapted;
-
 // Planetary surface adjustment data.
 
 int8_t sky_red_filter = 63; // Filters for the sky.
@@ -5786,13 +5784,6 @@ notaplanet:
     }
 
     p_background = surface_backup;
-}
-
-// Necessaria all'inizializzazione (ottimizzazione caricamento segmenti).
-
-void init_FP_segments () {
-    asm {   les ax, dword ptr adapted
-            mov seg_adapted, es }
 }
 
 /*

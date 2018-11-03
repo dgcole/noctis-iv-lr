@@ -233,7 +233,6 @@ extern uint8_t far*  ruinschart; // come objectschart, ma dichiarato in bytes
 extern uint8_t far*  pvfile;
 extern uint8_t far*  n_offsets_map;
 extern int8_t far*           n_globes_map;
-extern uint16_t     seg_adapted;
 extern int8_t sky_red_filter;
 extern int8_t sky_grn_filter;
 extern int8_t sky_blu_filter;
