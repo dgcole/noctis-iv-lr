@@ -1386,95 +1386,88 @@ void stick (uint32_t xp, uint32_t yp,
     b <<= 16;
     
     asm mov dx, word ptr a[2]
-    asm mov ax, word ptr a
-    asm div word ptr L     // a /= L, 16bit - unsigned
-    asm mov word ptr a, ax
+    
+    a /= L;
+    
     asm mov word ptr a[2], 0
     asm mov dx, word ptr b[2]
-    asm mov ax, word ptr b
-    asm div word ptr L     // b /= L, 16bit - false unsigned
-    asm mov word ptr b, ax
-    asm mov word ptr b[2], 0
-    asm test ch, ch
-    asm jz trace
     
-    b = -b;
-
-    trace:
+    b /= L;
+    
+    asm mov word ptr b[2], 0
+    
+    if (_CH != 0) {
+        b = -b;
+    }
+    
     asm mov es, seg_adapted;
+    uint32_t address = (uint32_t) adapted;
+    address &= 0xFFFF0000;
+    unsigned char far * truncated = (unsigned char far *) address;
 
     switch (flares) {
-    case 0: // bastoncini solidi che "riflettono" luce.
-        asm db 0x66;
-        asm mov ax, word ptr a    // passa in eax il delta_x (ovvero a).
-        
-        asm db 0x66;
-        asm mov dx, word ptr b    // passa in edx il delta_y (ovvero b).
-        
-        asm db 0x66;
-        asm mov cx, word ptr xa 
-        // passa in ecx il limite superiore del ciclo (come coordinata x d'arrivo).
-        _do:  
-        asm mov bx, word ptr global_y[2]
-        asm mov di, word ptr global_x[2]
-        asm add bx, bx
-        
-        asm db 0x66;
-        asm add word ptr global_x, ax
-        asm add di, word ptr riga[bx]
-        
-        asm db 0x66;
-        asm add word ptr global_y, dx
-        
-        asm db 0x66;
-        asm cmp word ptr global_x, cx
-        asm mov word ptr es:[di+4], 0x3E00
-        asm jb  _do 
+    case 0: // Solid sticks that "reflect" light;
+        // Pass the upper limit of the cycle in ECX (as a coordinate x of arrival.)
+        // This value is expected somewhere else so this declaration must stay for
+        // the time being.
+        _ECX = xa;
+        while (global_x < xa) {
+            uint16_t tempB = global_y >> 16;
+            uint16_t index = global_x >> 16;
+            
+            tempB += tempB;
+            
+            global_x += a;
+            global_y += b;
+           
+            uint16_t rLow, rHigh;
+            rLow = ((uint8_t*) riga)[tempB];
+            rHigh = ((uint8_t*) riga)[tempB + 1];
+            index += (rHigh << 8) + rLow;
+            
+            truncated[index + 4] = 0x00;
+            truncated[index + 5] = 0x3E;
+        }
 
         break;
-    case 1: // bastoncini intrinsecamente luminosi.
-        asm db 0x66;
-        asm mov ax, word ptr a    // passa in eax il delta_x (ovvero a).
-        
-        asm db 0x66;
-        asm mov dx, word ptr b    // passa in edx il delta_y (ovvero b).
+    case 1: // Intrinsically luminous sticks.
+        _EAX = a;
+        _EDX = b;
 
         asm db 0x66;
-        asm shl ax, 1         // moltiplica i delta per 2:
+        asm shl ax, 1         // _EAX *= 2;
         
         asm db 0x66;
-        asm shl dx, 1         // un punto s, uno no.
+        asm shl dx, 1         // _EDX *= 2;
 
         asm push bp                // salva bp sullo stack
-        asm db 0x66;
         
-        asm mov bp, word ptr xa 
-        // passa in ebp il limite superiore del ciclo (come coordinata x d'arrivo).
-        __do:
-        asm mov bx, word ptr global_y[2]
-        asm mov di, word ptr global_x[2]
-        asm add bx, bx
-        
-        asm db 0x66;
-        asm add word ptr global_x, ax
-        asm add di, word ptr riga[bx]
-        
-        asm db 0x66;
-        asm add word ptr global_y, dx
-        asm mov cl, es:[di+4]
-        asm shl cx, 2
-        asm add cl, 32
-        asm jnc cl_ok
-        asm mov cl, 0xFB 
+        _EBP = xa;
+        // Pass the upper limit of the cycle to ebp ( as the x coordinate of arrival.
+        while(global_x < _EBP) {
+            asm mov bx, word ptr global_y[2]
+            asm mov di, word ptr global_x[2]
+            
+            _BX += _BX;
+            
+            global_x += _EAX;
+            global_y += _EDX;
+            
+            asm add di, word ptr riga[bx]
+            
+            asm mov cl, es:[di+4]
+            asm shl cx, 2
 
-        cl_ok:  
-        asm shr cx, 2
-        
-        asm db 0x66;
-        asm cmp word ptr global_x, bp
-        
-        asm mov es:[di+4], cl
-        asm jb __do 
+            if (_CL <= 0xDF) {
+                _CL += 32;
+            } else {
+                _CL = 0xFB;
+            }
+
+            asm shr cx, 2
+            
+            asm mov es:[di+4], cl
+        }
 
         asm pop bp                 // riprende bp
         break;
