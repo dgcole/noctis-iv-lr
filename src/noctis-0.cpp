@@ -1276,7 +1276,7 @@ void stick (uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
             pi = riga[ya] + xp;
             pf = riga[yp + 1];
         }
-  
+
         pi += offset;
         pf += offset;
         
@@ -1293,35 +1293,34 @@ void stick (uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
             break;
         case 1:
             while (offset < pf) {
-                _CL = truncated[offset];
-                _CL &= 0x3F;
-                _CL += 0x08;
+                uint8_t mask = truncated[offset];
+                mask &= 0x3F;
+                mask += 0x08;
                 
                 truncated[offset] &= 0xC0;
                 
-                if (_CL > 0x3E) {
-                    _CL = 0x3E;
+                if (mask > 0x3E) {
+                    mask = 0x3E;
                 } 
                 
-                truncated[offset] += _CL;
+                truncated[offset] += mask;
                 offset += 320;
             }
             break;  
         case 2:
             while (offset < pf) {
-                _CL = truncated[offset];
-                _CL &= 0x3F;
-                _CL >>= 1;
+                uint8_t mask = truncated[offset];
+                mask &= 0x3F;
+                mask >>= 1;
                 
                 truncated[offset] &= 0xC0;
                 
-                truncated[offset] += _CL;
+                truncated[offset] += mask;
                 offset += 320;
             }
             break;
         case 3:
                 while (offset < pf) {
-                    //asm db 0x66, 0x26, 0xC7, 0x04, 0x0E, 0x13, 0x1E, 0x2E // mov dword ptr es:[si], 0x2E1E130E
                     truncated[offset] = 0x2E;
                     truncated[offset + 1] = 0x1E;
                     truncated[offset + 2] = 0x13;
@@ -1350,11 +1349,10 @@ void stick (uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
     a = xaTemp;
     L = xaTemp;
     
-    _CH |= _CH;
-    
     uint32_t yaTemp = ya - yp;
+    bool negateB = false;
     if (ya < yp) {
-        asm not ch
+        negateB = true;
         yaTemp = ~yaTemp + 1;
     }
     
@@ -1378,7 +1376,7 @@ void stick (uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
     b /= L;
     b &= 0xFFFF;
     
-    if (_CH != 0) {
+    if (negateB) {
         b = -b;
     }
     
