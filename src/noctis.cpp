@@ -2502,7 +2502,6 @@ void main() {
     //tweakedVGA (X320Y200C4YPAL); // INIZIALIZZAZIONE GRAFICA.
     _320_200_256 (); // INIZIALIZZAZIONE GRAFICA.
     initscanlines ();
-    init_FP_segments ();
     unfreeze ();
     pclear (adapted, 0);
     QUADWORDS -= 1440;
