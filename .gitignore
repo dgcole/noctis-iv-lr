@@ -12,5 +12,5 @@
 *.mak
 *.exe
 
-# Save Data Folder
-data/
+# Save Data
+data/current.bin

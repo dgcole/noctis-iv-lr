@@ -4197,46 +4197,36 @@ no_moons:
     }
 }
 
-/* Smussa la superficie di un pianeta: media 4x4 rapida. */
+// Smooth the surface of a planet: fast 4x4 average.
 
 void ssmooth (uint8_t far* target) {
-    asm {
-        pusha
-        push es
-        mov cx, QUADWORDS
-        shl cx, 2
-        mov ax, 360
-        shl ax, 2
-        sub cx, ax
-        les di, dword ptr target
-        add di, 360
-    }
-smooth:
-    asm {   db 0x66;
-            mov dx, es:[di-360]
-            db 0x66;
-            add dx, es:[di]
-            db 0x66;
-            add dx, es:[di+360]
-            db 0x66;
-            add dx, es:[di+720]
-            /* and edx, 11111100111111001111110011111100b */
-            db 0x66, 0x81, 0xE2, 0xFC, 0xFC, 0xFC, 0xFC
-            db 0x66;
-            shr dx, 2
-            mov al, dl
-            add al, dh
-            db 0x66;
-            shr dx, 16
-            add al, dl
-            add al, dh
-            shr al, 2
-            mov es:[di], al
-            inc di
-            dec cx
-            jnz smooth
-            pop es
-            popa }
+	uint32_t limit = ((uint32_t) QUADWORDS << 2) - (360 << 2);
+    
+	for (uint32_t i = 0; i < limit; i++) {
+        // 4 columns of 4 pixels each.
+        uint8_t col1, col2, col3, col4, average;
+        
+        col1 = target[i] + target[i + 360] 
+        + target[i + 720] + target[i + 1080];
+        
+        col2 = target[i + 1] + target[i + 361]
+        + target[i + 721] + target[i + 1081];
+        
+        col3 = target[i + 2] + target[i + 362]
+        + target[i + 722] + target[i + 1082];
+        
+        col4 = target[i + 3] + target[i + 363]
+        + target[i + 723] + target[i + 1083];
+        
+        col1 = (col1 & 0xFC) / 4;
+        col2 = (col2 & 0xFC) / 4;
+        col3 = (col3 & 0xFC) / 4;
+        col4 = (col4 & 0xFC) / 4;
+        
+        average = col1 + col2 + col3 + col4;
+        average /= 4;
+        target[i + 360] = average;
+	}
 }
 
 /* Smussa leggermente la superficie di un pianeta: media 2x2. */
