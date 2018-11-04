@@ -2632,65 +2632,45 @@ void sky (uint16_t limits) {
     // Loop over a 3D cube of l,w,h = visible_sectors.
     for (sx = 0; sx < visible_sectors; sx++) {
         for (sy = 0; sy < visible_sectors; sy++) {
-            for (sz = 0; sz < visible_sectors; sz++) {          
-                _EBX = 50000;
-                _EAX = sect_x;
-                _ECX = sect_y;
-                _EDX = sect_z;
-                
-                // The low 32-bits of the result go into ECX, the high 32-bits into EDX.
-                // TODO; Replace these imul calls once we can use longs.
-                asm db 0x66
-                asm imul cx, dx
-
-                _EAX += _EDX;
-                _ECX = _EAX;
-                _EDX = (_ECX & 0x0001FFFF) + sect_x;
-                
+            for (sz = 0; sz < visible_sectors; sz++, sect_z += advance) {          
+                uint16_t cutoff = 50000;
+				
+                temp_x = ((sect_x + sect_z) & 0x0001FFFF) + sect_x;
                 // Exclude stars with x coordinate = 0
-                if (_EDX == _EBX) {  
-                    sect_z += advance;
+                if (temp_x == cutoff) {  
                     continue;
                 }
-                
-                _EDX -= _EBX;
-                temp_x = _EDX;
-                _EAX = _ECX;
-                
+                temp_x -= cutoff;
+				
+                _EDX = temp_x;
+                _EAX = sect_x + sect_z;
                 asm db 0x66
                 asm imul dx
-                
                 _EDX += _EAX;
-                _ECX += _EDX;
-                _EDX = (_EDX & 0x001FFFF) + sect_y;
-                
+                _ECX = (sect_x + sect_z) + _EDX;
+				
+                temp_y = (_EDX & 0x001FFFF) + sect_y;
                 // Exclude stars with y coordinate = 0
-                if (_EDX == _EBX) {
-                    sect_z += advance;
+                if (temp_y == cutoff) {
                     continue;
                 }
+                temp_y -= cutoff;
                 
-                _EDX -= _EBX;
-                temp_y = _EDX;
+				_EDX = temp_y;
                 _EAX = _ECX;
-                
                 asm db 0x66
                 asm imul dx
-                
                 _EDX += _EAX;
-                _EDX = (_EDX & 0x0001FFFF) + sect_z;
-                
+				
+                temp_z = (_EDX & 0x0001FFFF) + sect_z;
                 // Exclude stars with z coordinate = 0
-                if (_EDX == _EBX) {
-                    sect_z += advance;
+                if (temp_z == cutoff) {
                     continue;
                 }
-                
-                _EDX -= _EBX;
-                temp_z = _EDX;                
+                temp_z -= cutoff;
+          
                 uint32_t netpos = temp_x + temp_y + temp_z;
                 if (netpos & rarity_factor != 0) {
-                    sect_z += advance;
                     continue;
                 }
 
@@ -2701,7 +2681,6 @@ void sky (uint16_t limits) {
                 rz = (z2 * opt_tcosalfa) + (yy * opt_tsinalfa);
         
                 if (rz < starneg) {
-                    sect_z += advance;
                     continue;
                 }
 
@@ -2710,7 +2689,6 @@ void sky (uint16_t limits) {
                 
                 index = rx + x_centro;
                 if (index <= 10 || index >= 310) {
-                    sect_z += advance;
                     continue;
                 }
                 
@@ -2718,7 +2696,6 @@ void sky (uint16_t limits) {
                 
                 uint16_t nety = ry + y_centro;
                 if (nety <= 10 || nety >= 190) {
-                    sect_z += advance;
                     continue;
                 }
 
@@ -2732,7 +2709,6 @@ void sky (uint16_t limits) {
                     uint8_t color = adapted[index];
                     if (color == 68 || color < (limits >> 8) 
                         || color > (limits & 0xFF)) {
-                        sect_z += advance;
                         continue;
                     }
                 }
@@ -2761,7 +2737,6 @@ void sky (uint16_t limits) {
                         ap_target_z = temp_z;
                     }
                 }   
-                sect_z += advance;
             }
             sect_z -= k;
             sect_y += advance;

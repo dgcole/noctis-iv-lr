@@ -4,4 +4,3 @@
 bcc -ml -3 -ISRC\ SRC\NOCTIS.CPP SRC\NOCTIS-0.CPP SRC\NOCTIS-1.CPP
 :: Clean up linker files.
 del *.OBJ
-del *.MAP
