@@ -5,6 +5,7 @@
 
 #include "noctis-d.h"
 #include "noctis-0.h"
+#include "Game.h"
 
 const double deg = M_PI / 180;
 
