@@ -47,7 +47,9 @@ The contents of this archive are subject to the WTOF Public License; you may not
 This archive (and related source code) is Copyright (©) 1996-2000 Alessandro Ghignola
 
 Portions created by Ryan J. Bury are Copyright (©) 2001-2002 Ryan J. Bury
+
 Portions created by Dyllan Cole are Copyright (©) 2018 Dyllan Cole
+
 Portions created by Bryce Clark are Copyright (©) 2018 Bryce Clark
 
 All rights reserved.
