@@ -6,7 +6,7 @@
 class Screen {
 public:
     Screen();
-    
+
     uint8_t huge* getFrontBuffer();
     uint8_t huge* getBackBuffer();
 private:

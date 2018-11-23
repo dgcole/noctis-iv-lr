@@ -1,7 +1,7 @@
 #ifndef _NOCTIS_D_INCLUDE
 #define _NOCTIS_D_INCLUDE
 
-// C++ Includes
+// C/C++ Standard Library Includes
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -55,7 +55,7 @@ typedef long        int32_t;
 //           screen update buffer.
 #define oc_bytes     40000 //   objectschart    map objects on the surface;
 //           atmospheric overlay.
-#define sc_bytes     65540 //   adapted         the hidden video page?—
+#define sc_bytes     65540 //   adapted         the hidden video page?ï¿½
 //          2 bytes (support for polymap)
 //           would give 64002. But I extended
 //          it to 64Kb + 4 bytes to avoid it

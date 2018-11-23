@@ -34,6 +34,7 @@
 */
 
 #include "noctis-d.h"
+#include "RetardAlert.h"
 
 // Date and specific functions imported from ASSEMBLY.H
 
@@ -310,39 +311,39 @@ void psmooth_grays(uint8_t far* target) {
         uint8_t smoothed;
         uint16_t col1, col2, col3, col4;
         uint32_t temp;
-        
+
         col1 = target[index];
         col2 = target[index + 1];
         col3 = target[index + 2];
         col4 = target[index + 3];
         temp = (col4 << 24) + (col3 << 16) + (col2 << 8) + col1;
-        
+
         col1 = target[index + 320];
         col2 = target[index + 321];
         col3 = target[index + 322];
         col4 = target[index + 323];
         temp += (col4 << 24) + (col3 << 16) + (col2 << 8) + col1;
-        
+
         col1 = target[index + 640];
         col2 = target[index + 641];
         col3 = target[index + 642];
         col4 = target[index + 643];
         temp += (col4 << 24) + (col3 << 16) + (col2 << 8) + col1;
-        
+
         col1 = target[index + 960];
         col2 = target[index + 961];
         col3 = target[index + 962];
         col4 = target[index + 963];
         temp += (col4 << 24) + (col3 << 16) + (col2 << 8) + col1;
-        
+
         temp &= 0xFCFCFCFC;
         temp >>= 2;
-        
+
         smoothed = temp & 0xFF;
         smoothed += temp & 0xFF00;
-        
+
         temp >>= 16;
-        
+
         smoothed += temp & 0xFF;
         smoothed += temp & 0xFF00;
         smoothed >>= 2;
@@ -451,37 +452,37 @@ void smootharound_64(uint8_t far* target, int32_t cx, int32_t cy, int32_t r,
 
         if (diffuse) {
             while (x1 <= x2) {
-                if (px * px + py * py < rs) {    
+                if (px * px + py * py < rs) {
                     uint8_t colors[4], colormasks[4];
-                    
+
                     colors[0] = target[cp];
                     colors[1] = target[cp + 1];
                     colors[2] = target[cp + 320];
                     colors[3] = target[cp + 321];
-                
+
                     memcpy(colormasks, colors, 4 * sizeof(uint8_t));
                     for (uint16_t i = 0; i < 4; i++) {
                         colormasks[i] &= 0xC0;
                     }
-                    
+
                     for (uint16_t i = 0; i < 4; i++) {
                         colors[i] &= 0x3F;
                     }
-                    
+
                     colors[0] += colors[2];
                     colors[1] += colors[3];
                     colors[0] += colors[1];
-                    
+
                     colors[0] >>= 2;
-                    
+
                     colors[1] = colors[0];
                     colors[2] = colors[0];
                     colors[3] = colors[1];
-                    
+
                     for (uint16_t i = 0; i < 4; i ++) {
                         colors[i] |= colormasks[i];
                     }
-                    
+
                     target[cp] = colors[0];
                     target[cp + 1] = colors[1];
                     target[cp + 320] = colors[2];
@@ -495,26 +496,26 @@ void smootharound_64(uint8_t far* target, int32_t cx, int32_t cy, int32_t r,
             while (x1 <= x2) {
                 if (px * px + py * py < rs) {
                     uint8_t colors[4];
-                    
+
                     colors[0] = target[cp];
                     colors[1] = target[cp + 1];
                     colors[2] = target[cp + 320];
                     colors[3] = target[cp + 321];
-                    
+
                     uint8_t temp = colors[0];
                     temp &= 0xC0;
-    
+
                     for (uint16_t i = 0; i < 4; i++) {
                         colors[i] &= 0x3F;
                     }
-                    
+
                     colors[0] += colors[2];
                     colors[1] += colors[3];
                     colors[0] += colors[1];
-                    
+
                     colors[0] >>= 2;
                     colors[0] |= temp;
-                    
+
                     target[cp] = colors[0];
                 }
 
@@ -897,7 +898,7 @@ void fast_srand (int32_t seed) {
 // TODO; Can only move to C++ with support for 64-bit integers.
 // because the multiplication overflow is added back to ax, and we can't
 // get that easily from C++.
-int32_t fast_random (int32_t mask) { 
+int32_t fast_random (int32_t mask) {
     int32_t num;
     asm {
         db 0x66;
@@ -1031,7 +1032,7 @@ void from_user () {
     change_angle_of_view ();
 }
 
-// Orients the virtual video camera to a certain point given by see_x;y;z, 
+// Orients the virtual video camera to a certain point given by see_x;y;z,
 // fractalizing the lap corner to do it more quickly.
 void watch (double cam_x, double cam_y, double cam_z,
             double see_x, double see_y, double see_z) {
@@ -1120,7 +1121,7 @@ void p_Forward (float delta) {
     pos_z += delta * opt_tcosbeta * opt_tcosalfa;
 }
 
-// Calculate the position of a certain planet in orbit around a star (the 
+// Calculate the position of a certain planet in orbit around a star (the
 // neighbouring one) based on orbital parameters (inclination, eccentricity,
 // radius and orientation of major axis), and returns i values in plx, ply, plz.
 double mox, moy, moz;
@@ -1196,7 +1197,7 @@ float rtp (int16_t n) {
 }
 
 // Calculates the longitude of the point on a planet that the user is looking
-// at, given by (plx, ply, plz). The observed is placed at (obs_x, obs_z), 
+// at, given by (plx, ply, plz). The observed is placed at (obs_x, obs_z),
 // its y is irrelevant.
 int16_t planet_viewpoint (double obs_x, double obs_z) {
     uint16_t a;
@@ -1261,7 +1262,7 @@ void resetfx ()  {
 void stick (uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
     int32_t a, b, L;
     uint16_t pi, pf;
-    
+
     uint32_t address = (uint32_t) adapted;
     uint16_t offset = address & 0xFFFF;
     unsigned char far * truncated = (unsigned char far *) (address & 0xFFFF0000);
@@ -1277,7 +1278,7 @@ void stick (uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
 
         pi += offset;
         pf += offset;
-        
+
         offset = pi;
 
         switch (flares) {
@@ -1285,7 +1286,7 @@ void stick (uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
             while(offset < pf) {
                 truncated[offset] = 0x3E;
                 truncated[offset + 1] = 0x00;
-                
+
                 offset += 320;
             }
             break;
@@ -1294,25 +1295,25 @@ void stick (uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
                 uint8_t mask = truncated[offset];
                 mask &= 0x3F;
                 mask += 0x08;
-                
+
                 truncated[offset] &= 0xC0;
-                
+
                 if (mask > 0x3E) {
                     mask = 0x3E;
-                } 
-                
+                }
+
                 truncated[offset] += mask;
                 offset += 320;
             }
-            break;  
+            break;
         case 2:
             while (offset < pf) {
                 uint8_t mask = truncated[offset];
                 mask &= 0x3F;
                 mask >>= 1;
-                
+
                 truncated[offset] &= 0xC0;
-                
+
                 truncated[offset] += mask;
                 offset += 320;
             }
@@ -1329,15 +1330,15 @@ void stick (uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
         }
         return;
     }
-  
+
     uint32_t xaTemp = xa - xp;
     if (xa < xp) {
         uint32_t swap;
-        
+
         swap = xp;
         xp = xa;
         xa = swap;
-        
+
         swap = yp;
         yp = ya;
         ya = swap;
@@ -1346,69 +1347,69 @@ void stick (uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
     }
     a = xaTemp;
     L = xaTemp;
-    
+
     uint32_t yaTemp = ya - yp;
     bool negateB = false;
     if (ya < yp) {
         negateB = true;
         yaTemp = ~yaTemp + 1;
     }
-    
+
     b = yaTemp;
-    
+
     if (yaTemp > (uint32_t) L) {
         L = yaTemp;
-    }  
+    }
     L++;
-    
+
     xa <<= 16;
 
     global_x = xp << 16;
-    global_y = yp << 16;      
-    
+    global_y = yp << 16;
+
     a <<= 16;
     a /= L;
     a &= 0xFFFF;
-    
+
     b <<= 16;
     b /= L;
     b &= 0xFFFF;
-    
+
     if (negateB) {
         b = -b;
     }
-    
+
     switch (flares) {
     case 0: // Solid sticks that "reflect" light;
         while (global_x < xa) {
             uint16_t tempB = (global_y >> 16) * 2;
             uint32_t index = global_x >> 16;
-            
+
             global_x += a;
             global_y += b;
-           
+
             uint16_t rLow, rHigh;
             rLow = ((uint8_t*) riga)[tempB];
             rHigh = ((uint8_t*) riga)[tempB + 1];
             index += (rHigh << 8) + rLow;
-            
+
             truncated[index + 4] = 0x00;
             truncated[index + 5] = 0x3E;
         }
         break;
-    case 1: // Intrinsically luminous sticks.    
+    case 1: // Intrinsically luminous sticks.
         while(global_x < xa) {
             uint16_t tempB = (global_y >> 16) * 2;
             uint32_t index = global_x >> 16;
-            
+
             global_x += a * 2;
             global_y += b * 2;
-            
+
             uint16_t rLow, rHigh;
             rLow = ((uint8_t*) riga)[tempB];
             rHigh = ((uint8_t*) riga)[tempB + 1];
             index += (rHigh << 8) + rLow;
-            
+
             uint16_t color = truncated[index + 4] << 2;
 
             if ((color & 0xFF) <= 0xDF) {
@@ -1434,29 +1435,29 @@ void stick (uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
             index += (rHigh << 8) + rLow;
 
             uint16_t color = truncated[index + 4];
-            
+
             color &= 0x3F;
             truncated[index + 4] &= 0xC0;
-            
+
             color >>= 1;
             truncated[index +4] += color;
         }
-        
+
         break;
 
     case 3: // Same as type 0, but wider.
         while(global_x < xa) {
             uint16_t tempB = (global_y >> 16) * 2;
             uint32_t index = global_x >> 16;
-            
+
             global_x += a;
             global_y += b;
-            
+
             uint16_t rLow, rHigh;
             rLow = ((uint8_t*) riga)[tempB];
             rHigh = ((uint8_t*) riga)[tempB + 1];
             index += (rHigh << 8) + rLow;
-            
+
             truncated[index + 4] = 0xCE;
             truncated[index + 5] = 0xD3;
             truncated[index + 6] = 0xDE;
@@ -1479,13 +1480,13 @@ void stick3d (float p_x, float p_y, float p_z,
     float p_z2, diff;
     float rx, ry, rz, z2, kk;
     fpx = -1;
-    
+
     p_x -= cam_x;
     p_y -= cam_y;
     p_z -= cam_z;
     p_z2 = (p_z * opt_tcosbeta) - (p_x * opt_tsinbeta);
     p_rz = (p_z2 * opt_tcosalfa) + (p_y * opt_tsinalfa);
-    
+
     x -= cam_x;
     y -= cam_y;
     z -= cam_z;
@@ -1498,7 +1499,7 @@ void stick3d (float p_x, float p_y, float p_z,
 
     p_rx = (p_x * opt_pcosbeta) + (p_z * opt_psinbeta);
     p_ry = (p_y * opt_pcosalfa) - (p_z2 * opt_psinalfa);
-    
+
     rx = (x * opt_pcosbeta) + (z * opt_psinbeta);
     ry = (y * opt_pcosalfa) - (z2 * opt_psinalfa);
 
@@ -1529,10 +1530,10 @@ void stick3d (float p_x, float p_y, float p_z,
     }
 
     // Perspective.
-    lx = rx / rz; 
+    lx = rx / rz;
     ly = ry / rz;
-    
-    fpx = p_rx / p_rz; 
+
+    fpx = p_rx / p_rz;
     fpy = p_ry / p_rz;
 
     if (fpy < stk_lby && ly < stk_lby) {
@@ -1551,7 +1552,7 @@ void stick3d (float p_x, float p_y, float p_z,
         return;
     }
 
-    /*  
+    /*
         Optimize segment tracking by cutting away parts that cannot be seen.
         This part is not effective if the departure and arrival points make it
         so that the segment does not intersect any side of the visible area:
@@ -1645,16 +1646,16 @@ void stick3d (float p_x, float p_y, float p_z,
     stick (fpx + x_centro, fpy + y_centro, lx + x_centro, ly + y_centro);
 }
 
-/*  
-    Se uno "stick" Š un "bastoncino" tridimensionale delimitato da due
-    estremit…, un "link" Š un "ponte" tra il punto iniziale dell'ultimo stick
+/*
+    Se uno "stick" ï¿½ un "bastoncino" tridimensionale delimitato da due
+    estremitï¿½, un "link" ï¿½ un "ponte" tra il punto iniziale dell'ultimo stick
     tracciato ed il punto passato a questa funzione.
     Sembrerebbe un sistema efficace per velocizzare le proiezioni 3d, ma
-    in realt… non si pu• applicare sempre: a parte il fatto che uno dei punti
-    Š sempre lo stesso, quando questo non Š risultato visibile in precedenza
+    in realtï¿½ non si puï¿½ applicare sempre: a parte il fatto che uno dei punti
+    ï¿½ sempre lo stesso, quando questo non ï¿½ risultato visibile in precedenza
     neanche i link saranno visibili.
     Attualmente, Noctis usa "link3d" per mostrare i singoli fili d'erba
-    sulla superficie di pianeti abitabili. 
+    sulla superficie di pianeti abitabili.
 */
 
 void link3d (float x, float y, float z) {
@@ -1766,8 +1767,8 @@ void fline (int32_t fx, int32_t fy,
     float kk, diff;
 
     /*  Ottimizza il tracciamento del "Segmento", tagliando via le parti
-        che di sicuro non si vedono. Questa parte non Š efficace se
-        i punti di partenza e di arrivo fanno s che il segmento non
+        che di sicuro non si vedono. Questa parte non ï¿½ efficace se
+        i punti di partenza e di arrivo fanno sï¿½ che il segmento non
         intersechi alcun lato dell'area visibile: ma in questo peculiare
         caso le linee vengono escluse dai controlli successivi. */
 
@@ -1883,7 +1884,7 @@ uint8_t map_color_c = 32;
 uint8_t map_color_d = 33;
 
 void randomic_mapper (float x0, float y0, float z0, float x1, float y1,
-                      float z1, float x2, float y2, float z2, 
+                      float z1, float x2, float y2, float z2,
                       int8_t divisions) {
     float vx[3], vy[3], vz[3];
     float e0, f0, g0;
@@ -1941,7 +1942,7 @@ void randomic_mapper (float x0, float y0, float z0, float x1, float y1,
     }
 }
 
-/*  
+/*
     Free a handle in which a polygonal graphic file was loaded: if the handle
     is already free nothing happens.
 */
@@ -1961,9 +1962,9 @@ void unloadpv (int16_t handle) {
     // aggiorna i puntatori di tutti gli handle
     // che sono memorizzati oltre quello specificato.
     // il type cast serve per convincere le cacchio di specifiche ANSI
-    // che il puntatore Š spostato byte per byte, e non come penserebbe
+    // che il puntatore ï¿½ spostato byte per byte, e non come penserebbe
     // a seconda del tipo di dati a cui punta. se trovo quello che ha
-    // definito l'ANSI cos lo faccio nero.
+    // definito l'ANSI cosï¿½ lo faccio nero.
     for (h = 0; h < handles; h++)
         if (pvfile_dataptr[h] > pvfile_dataptr[handle]) {
             (int8_t far*) pv_n_vtx[h] -= pvfile_datalen[handle];
@@ -1984,7 +1985,7 @@ void unloadpv (int16_t handle) {
         }
 
     // sposta indietro i dati per liberare memoria nell'area poligonale.
-    // (se Š necessario...)
+    // (se ï¿½ necessario...)
     eod = pvfile_dataptr[handle] + pvfile_datalen[handle];
 
     if (eod < pvfile_datatop)
@@ -1999,7 +2000,7 @@ void unloadpv (int16_t handle) {
     pvfile_datalen[handle] = 0;
 }
 
-/*  
+/*
     Free all the handles.
     (And he does not look at anyone).
 */
@@ -2023,12 +2024,12 @@ void unloadallpv () {
     depth_sort: flag che specifica se allocare spazio per il calcolo
             dei punti medi dei vertici di ogni poligono ed effettuare
             il depth-sorting quando si deve tracciare l'oggetto.
-        Ritorno: -1 se non Š possibile accedere al file;
-          0 se l'handle non Š assegnabile (non esiste),
-            oppure se non c'Š abbastanza memoria nel buffer
+        Ritorno: -1 se non ï¿½ possibile accedere al file;
+          0 se l'handle non ï¿½ assegnabile (non esiste),
+            oppure se non c'ï¿½ abbastanza memoria nel buffer
             della grafica poligonale ("pvfile") per caricare
             e/o gestire tutti i poligoni che compongono l'oggetto;
-         +1 se tutto Š andato bene. */
+         +1 se tutto ï¿½ andato bene. */
 
 int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
                float xscale, float yscale, float zscale,
@@ -2036,7 +2037,7 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
                uint8_t base_color,   int8_t depth_sort) {
     int16_t fh, c, p;
 
-    // verifica disponibilit… del file e dell'handle.
+    // verifica disponibilitï¿½ del file e dell'handle.
     if (handle >= handles) {
         return (0);
     }
@@ -2047,7 +2048,7 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
         return (-1);
     }
 
-    // verifica se l'handle Š gi… occupato. se lo Š, lo libera.
+    // verifica se l'handle ï¿½ giï¿½ occupato. se lo ï¿½, lo libera.
     if (pvfile_datalen[handle]) {
         unloadpv (handle);
     }
@@ -2070,10 +2071,10 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
     pvfile_datatop  +=  1 * pvfile_npolygs[handle];
     // azzera il primo puntatore dei dati per il depth sort
     // (sta a significare, se non viene successivamente modificato,
-    // che non Š richiesto il depth sorting per l'oggetto in questione).
+    // che non ï¿½ richiesto il depth sorting per l'oggetto in questione).
     pv_mid_x[handle] = 0;
 
-    // verifica disponibilit… memoria prima di leggere i dati.
+    // verifica disponibilitï¿½ memoria prima di leggere i dati.
     if (pvfile_datatop > pv_bytes) {
         pvfile_datatop = pvfile_dataptr[handle];
         _rtl_close (fh);
@@ -2083,7 +2084,7 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
     // lettura di tutti i dati sui poligoni, in un unico blocco.
     _rtl_read (fh, pvfile + pvfile_dataptr[handle],
                pvfile_datatop - pvfile_dataptr[handle]);
-    // dopodich‚ si pu• anche richiudere il file...
+    // dopodichï¿½ si puï¿½ anche richiudere il file...
     _rtl_close (fh);
 
     // azzeramento dati sui vertici non usati (per i triangoli)
@@ -2107,7 +2108,7 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
         pv_dep_i[handle] = (int16_t far*)   (pvfile + pvfile_datatop);
         pvfile_datatop  += 2 * pvfile_npolygs[handle];
 
-        // verifica disponibilit… memoria per i dati appena aggiunti.
+        // verifica disponibilitï¿½ memoria per i dati appena aggiunti.
         if (pvfile_datatop > pv_bytes) {
             pvfile_datatop = pvfile_dataptr[handle];
             return (0);
@@ -2193,15 +2194,15 @@ void QuickSort (int16_t far* index, float far* mdist, int16_t start,
 
 /*
     Traccia una figura poligonale.
-    handle: l'handle (da 0 a 15) che si Š attribuito al file con "loadpv";
-    mode: pu• essere -- 0 = tracciamento poligoni in tinta unita;
+    handle: l'handle (da 0 a 15) che si ï¿½ attribuito al file con "loadpv";
+    mode: puï¿½ essere -- 0 = tracciamento poligoni in tinta unita;
                 1 = tracciamento con texture mapping;
                 2 = rimappatura randomica ricorsiva dei poligoni.
     rm_iterations: viene usato solo se mode = 2, indica quante suddivisioni
             devono essere effettuate per ogni poligono rimappato;
     center_x/y/z: coordinate ove piazzare il centro dell'oggetto;
     use_depth_sort: flag per attivare il depth sort, che viene tuttavia
-            effettivamente attivato solo se Š stato incluso come
+            effettivamente attivato solo se ï¿½ stato incluso come
             opzione nella chiamata a "loadpv" per quell'handle.
 */
 
@@ -2341,7 +2342,7 @@ void drawpv (int16_t handle, int16_t mode, int16_t rm_iterations,
     cam_z += center_z;
 }
 
-/*  Replica una forma poligonale, copiandola da un'handle gi… definito
+/*  Replica una forma poligonale, copiandola da un'handle giï¿½ definito
     a uno di uguali dimensioni. In caso d'errore, non succede nulla. */
 
 void copypv (int16_t dest_handle, int16_t src_handle) {
@@ -2367,12 +2368,12 @@ void copypv (int16_t dest_handle, int16_t src_handle) {
 
 /*  Ruota una forma poligonale rispetto a uno dei suoi vertici,
     che viene assunto come centro di rotazione, applicando anche
-    un fattore di scalatura (che pu• essere 1 se non Š necessario
+    un fattore di scalatura (che puï¿½ essere 1 se non ï¿½ necessario
     cambiare le dimensioni, come possono essere 0 gli angoli se
     si stanno cambiando le dimensioni senza ruotare).
-    "vertexs_to_affect" Š un puntatore a una serie di strutture "pvlist",
+    "vertexs_to_affect" ï¿½ un puntatore a una serie di strutture "pvlist",
     nelle quali sono elencati i vertici che verranno effettivamente modificati:
-    se il puntatore "vertexs_to_affect" Š nullo, tutti i vertici lo sono.
+    se il puntatore "vertexs_to_affect" ï¿½ nullo, tutti i vertici lo sono.
     Gli angoli sono espressi in gradi. */
 
 void modpv (int16_t handle, int16_t polygon_id, int16_t vertex_id,
@@ -2564,7 +2565,7 @@ void background (uint16_t start,
             popa }
 }
 
-/*  
+/*
     Starry sky, three-of-a-kind. In the amplified view, it has 2,744 stars.
     Star magnitudes go from 0 to +13. Since the player is a cat, with scotopic
     vision, they can probably see more than normal.
@@ -2572,7 +2573,7 @@ void background (uint16_t start,
 
 void sky (uint16_t limits) {
     uint16_t debug;
-    
+
     int32_t min_xy = 1E9;
     int8_t visible_sectors = 9;
 
@@ -2592,12 +2593,12 @@ void sky (uint16_t limits) {
     int32_t sect_x, sect_y, sect_z, rx, ry;
     int32_t advance = 100000, k = 100000 * visible_sectors;
     int32_t temp_x, temp_y, temp_z, temp;
-    /*  
+    /*
         The following section changes the rarity factor of the stars as the
         distance from the galactic center increases. The scale on the Y-Axis is
         amplified 30 times, so that the galaxy has the shape of a crushed disk.
         Stars will be rarefied depending on the value of "distance_from_home".
-        This is a table that provides the number of stars eliminated (each 
+        This is a table that provides the number of stars eliminated (each
         sector contains one star, and the number of sectors visible to the
         amplified field is 14 * 14 * 14 = 2744) as distance_from_home increases
         its value:
@@ -2610,65 +2611,57 @@ void sky (uint16_t limits) {
     */
     int16_t rarity_factor;
     double distance_from_home;
-    
+
     distance_from_home = sqrt (dzat_x * dzat_x + dzat_z * dzat_z);
     distance_from_home += 30 * fabs(dzat_y);
-    
+
     rarity_factor = distance_from_home * 0.25e-8;
     rarity_factor = 1 << rarity_factor;
     rarity_factor--;
-    
+
     sect_x = (dzat_x - visible_sectors * 50000) / 100000;
     sect_x *= 100000;
-    
+
     sect_y = (dzat_y - visible_sectors * 50000) / 100000;
     sect_y *= 100000;
-    
+
     sect_z = (dzat_z - visible_sectors * 50000) / 100000;
     sect_z *= 100000;
-    
+
     uint32_t index = 0;
 
     // Loop over a 3D cube of l,w,h = visible_sectors.
     for (sx = 0; sx < visible_sectors; sx++) {
         for (sy = 0; sy < visible_sectors; sy++) {
-            for (sz = 0; sz < visible_sectors; sz++, sect_z += advance) {          
+            for (sz = 0; sz < visible_sectors; sz++, sect_z += advance) {
                 uint16_t cutoff = 50000;
-				
+
                 temp_x = ((sect_x + sect_z) & 0x0001FFFF) + sect_x;
                 // Exclude stars with x coordinate = 0
-                if (temp_x == cutoff) {  
+                if (temp_x == cutoff) {
                     continue;
                 }
                 temp_x -= cutoff;
-				
-                _EDX = temp_x;
-                _EAX = sect_x + sect_z;
-                asm db 0x66
-                asm imul dx
-                _EDX += _EAX;
-                _ECX = (sect_x + sect_z) + _EDX;
-				
-                temp_y = (_EDX & 0x001FFFF) + sect_y;
+
+                int32_t accum = carryAddMultiply(temp_x, sect_x + sect_z);
+                int32_t idkbro = (sect_x + sect_z) + accum;
+
+                temp_y = (accum & 0x001FFFF) + sect_y;
                 // Exclude stars with y coordinate = 0
                 if (temp_y == cutoff) {
                     continue;
                 }
                 temp_y -= cutoff;
-                
-				_EDX = temp_y;
-                _EAX = _ECX;
-                asm db 0x66
-                asm imul dx
-                _EDX += _EAX;
-				
-                temp_z = (_EDX & 0x0001FFFF) + sect_z;
+
+                accum = carryAddMultiply(temp_y, idkbro);
+
+                temp_z = (accum & 0x0001FFFF) + sect_z;
                 // Exclude stars with z coordinate = 0
                 if (temp_z == cutoff) {
                     continue;
                 }
                 temp_z -= cutoff;
-          
+
                 uint32_t netpos = temp_x + temp_y + temp_z;
                 if (netpos & rarity_factor != 0) {
                     continue;
@@ -2679,21 +2672,21 @@ void sky (uint16_t limits) {
                 yy = temp_y - dzat_y;
                 z2 = (zz * opt_tcosbeta) - (xx * opt_tsinbeta);
                 rz = (z2 * opt_tcosalfa) + (yy * opt_tsinalfa);
-        
+
                 if (rz < starneg) {
                     continue;
                 }
 
                 inv_rz = uno / rz;
                 rx = ((xx * opt_pcosbeta) + (zz * opt_psinbeta)) * inv_rz;
-                
+
                 index = rx + x_centro;
                 if (index <= 10 || index >= 310) {
                     continue;
                 }
-                
+
                 ry = (yy * opt_pcosalfa - z2 * opt_psinalfa) * inv_rz - 2;
-                
+
                 uint16_t nety = ry + y_centro;
                 if (nety <= 10 || nety >= 190) {
                     continue;
@@ -2704,10 +2697,10 @@ void sky (uint16_t limits) {
                 uint16_t toAddHigh = ((uint8_t*) riga)[nety + 1];
                 uint16_t toAdd = (toAddHigh << 8) + toAddLow;
                 index += toAdd;
-                
+
                 if (ap_targetting != 1) {
                     uint8_t color = adapted[index];
-                    if (color == 68 || color < (limits >> 8) 
+                    if (color == 68 || color < (limits >> 8)
                         || color > (limits & 0xFF)) {
                         continue;
                     }
@@ -2726,46 +2719,46 @@ void sky (uint16_t limits) {
                     }
                     adapted[index] |= mask;
                 }
-                
+
                 if (ap_targetting == 1) {
                     temp = (rx * rx) + (ry * ry);
-                
+
                     if (temp < min_xy) {
                         min_xy = temp;
                         ap_target_x = temp_x;
                         ap_target_y = temp_y;
                         ap_target_z = temp_z;
                     }
-                }   
+                }
             }
             sect_z -= k;
             sect_y += advance;
-        }        
+        }
         sect_y -= k;
         sect_x += advance;
-    }   
+    }
 }
 
-/*  
-    Still quicktime-vr, unfortunately it is necessary for planets. Otherwise, a 
+/*
+    Still quicktime-vr, unfortunately it is necessary for planets. Otherwise, a
     huge amount of registers and complex machine code macros would be used, b/c
     we can not use the extended registers normally. Better to recap: DS passes
     on GS, ES is the video page (usually hidden, not the adapter area) specified
     in target, FS hosts the tapestry wallpaper to map the globe, and the old DS
     points to the area of the map of the offsets, compressed with MAPS.EXE along
-    the x-y plane. In fact, they are not video offset ready, because they must 
+    the x-y plane. In fact, they are not video offset ready, because they must
     becalculated (first byte = Y, second byte = X). When the Y is 100, that means
     the original offset was 64000, and that is not a question of a point, but of
     a series of advances along the segment, indicated for accuracy by byte X.
 */
 
-uint8_t glass_bubble = 1; 
+uint8_t glass_bubble = 1;
 // If set, draw a kind of bubble transparent around the globes drawn with the
 // "globe" function. It is used to simulate the presence of the atmosphere, but
 // only for planets with considerable quantities of gas.
 
 
-/*  
+/*
     Heck, real fill managers, and they work!
     Unbelievable, in C++, and even after changing ES, FS, and GS.
 */
@@ -2775,27 +2768,27 @@ void gman1x1 () {
 }
 
 void gman2x2 () {
-    asm {   
+    asm {
         mov dh, dl
         mov es:[di+4], dx
-        mov es:[di+324], dx 
+        mov es:[di+324], dx
     }
 }
 
 void gman3x3 () {
-    asm {   
+    asm {
         mov dh, dl
         mov es:[di+4], dx
         mov es:[di+6], dl
         mov es:[di+324], dx
         mov es:[di+326], dl
         mov es:[di+644], dx
-        mov es:[di+646], dl 
+        mov es:[di+646], dl
     }
 }
 
 void gman4x4 () {
-    asm {   
+    asm {
         mov dh, dl
         mov es:[di+4], dx
         mov es:[di+6], dx
@@ -2804,7 +2797,7 @@ void gman4x4 () {
         mov es:[di+644], dx
         mov es:[di+646], dx
         mov es:[di+964], dx
-        mov es:[di+966], dx 
+        mov es:[di+966], dx
     }
 }
 
@@ -2869,7 +2862,7 @@ void globe (uint16_t start,
 
     center_x = rx + x_centro_f;
     center_y = ry + y_centro_f;
-    
+
     asm pusha
     asm push ds
     asm push ds
@@ -2882,14 +2875,14 @@ void globe (uint16_t start,
     _AX = _ES;
     asm db 0x8E, 0xE0 // mov fs, ax
     asm les ax, dword ptr target
-    asm lds si, dword ptr offsetsmap 
+    asm lds si, dword ptr offsetsmap
 
-    rigiro: 
+    rigiro:
     asm cmp byte ptr [si], 100
     asm jne pixel
     asm jmp blanket
 
-    pixel:   
+    pixel:
     asm mov al, [si]
     asm cbw
     temp = _AX;
@@ -2919,12 +2912,12 @@ void globe (uint16_t start,
     asm db 0x64, 0x8A, 0x17 // mov dl, fs:[bx]
     asm cmp dl, globe_saturation
     asm jnb asis
-    asm mov dl, globe_saturation 
+    asm mov dl, globe_saturation
 
     asis:
     _DL |= colormask;
     ((void(*)()) gman)();
-    
+
     clipout:
     _BX += 1;
     _SI += 2;
@@ -2933,7 +2926,7 @@ void globe (uint16_t start,
         goto fine;
     }
     goto rigiro;
-    
+
     blanket:
     asm mov al, [si+1];
     _AH ^= _AH;
@@ -2944,11 +2937,11 @@ void globe (uint16_t start,
         goto fine;
     }
     goto rigiro;
-        
+
     fine:
-    asm {   
+    asm {
         pop ds
-        popa 
+        popa
     }
 
     if (!glass_bubble) {
@@ -3134,11 +3127,11 @@ void whiteglobe (uint8_t far* target,
     double magsq, fgmsq;
     uint16_t pixptr;
     int8_t pix;
-    
+
     xx = x - dzat_x;
     yy = y - dzat_y;
     zz = z - dzat_z;
-    
+
     rx = xx * (double)opt_pcosbeta + zz * (double)opt_psinbeta;
     z2 = zz * (double)opt_tcosbeta - xx * (double)opt_tsinbeta;
     rz = z2 * (double)opt_tcosalfa + yy * (double)opt_tsinalfa;
@@ -3245,9 +3238,9 @@ void whiteglobe (uint8_t far* target,
 }
 
 /*  Come sopra, ma mentre quella di sopra traccia in 4x4 pixels,
-    dimezzando la risoluzione per essere pi— veloce nel tracciamento
+    dimezzando la risoluzione per essere piï¿½ veloce nel tracciamento
     di globi che possono coprire tutto lo schermo, questa traccia in 1x1,
-    Š pi— precisa ma applicabile solo alla visualizzazione delle stelle
+    ï¿½ piï¿½ precisa ma applicabile solo alla visualizzazione delle stelle
     viste dai pianeti. */
 
 double xsun_onscreen;
@@ -3458,8 +3451,8 @@ exit_local:
     resetfx ();
 }
 
-/*  
-    Distant dots, for example, planets and moons. The two functions are 
+/*
+    Distant dots, for example, planets and moons. The two functions are
     integrated: a dot is drawn if the distance is big. As you approach, the dot
     becomes a disk of 5px diameter max. We then have to pass control to another
     function to draw the planet properly.
@@ -3482,7 +3475,7 @@ void single_pixel_at_ptr (uint16_t ptr, uint8_t pixel_color) {
     uint8_t alow = shifted[0];
     alow &= 0x3F;
     alow += pixel_color;
-    
+
     uint8_t ahigh;
     switch (pixilating_effect) {
     case LIGHT_EMITTING:
@@ -3630,7 +3623,7 @@ void getsecs () {
     nepoch.tm_mday = 1;
     nepoch.tm_mon = 0;
     nepoch.tm_year = 84;
-    
+
     time_t rawtime;
     time(&rawtime);
     struct tm * timeinfo;
@@ -3638,14 +3631,14 @@ void getsecs () {
     // Have to extract info from timeinfo before doing difftime, or else
     // timeinfo will point to nepoch, for some reason...
     uint8_t currSecond = timeinfo->tm_sec;
-    
+
     secs = difftime(rawtime, mktime(&nepoch));
     // This offset should make it match up with GOESXNET and vanilla Noctis IV.
     // I don't know why it's needed. A day is 86,400 seconds so this offset
     // doesn't line up nicely with anything.
     secs -= 82801;
-    isecs = currSecond;    
-    
+    isecs = currSecond;
+
     if (p_isecs != isecs) { // Frame timing.
         if (_delay >= 10) {
             _delay--;
@@ -3666,7 +3659,7 @@ void getsecs () {
     epoc = 6011 + secs / 1e9;
 }
 
-// Extracts from the pseudo table, from 74 trillion different elements, 
+// Extracts from the pseudo table, from 74 trillion different elements,
 // information about the chosen star.
 
 void extract_ap_target_infos () {
@@ -3699,13 +3692,13 @@ float zrandom (int16_t range) {
 }
 
 /*  Parte della gestione della cartografia.
-    E' stata spostata qui perch‚ possa essere chiamata da "prepare_nearstar".
+    E' stata spostata qui perchï¿½ possa essere chiamata da "prepare_nearstar".
     -------------------------------------------------------------------------
     Cerca un codice d'identificazione (per un pianeta o per una stella)
     nel file di cartografia stellare, e riporta la posizione del record.
-    Se il risultato Š -1, il codice non esiste, ovvero non c'Š un nome
+    Se il risultato ï¿½ -1, il codice non esiste, ovvero non c'ï¿½ un nome
     per la stella o per il pianeta che corrisponde a quel codice.
-    Type pu• essere: P = Pianeta, S = Stella.
+    Type puï¿½ essere: P = Pianeta, S = Stella.
      usa come buffer di lettura "p_surfacemap". */
 
 int16_t smh;
@@ -3755,7 +3748,7 @@ int32_t search_id_code (double id_code, int8_t type) {
 }
 
 /*  Prepara le informazioni sulla stella vicina, quella attorno alla quale
-    ci si trover…: tra l'altro, prepara i pianeti estraendoli dalla
+    ci si troverï¿½: tra l'altro, prepara i pianeti estraendoli dalla
     tabella pseudo. */
 
 int16_t starnop (double star_x, double star_y, double star_z)
@@ -3798,7 +3791,7 @@ void prepare_nearstar () {
            (int32_t)nearstar_z % 10000);
     nearstar_nop = random (class_planets[nearstar_class] + 1);
 
-    /* Prima estrazione (pressoch‚ casuale, non realistica). */
+    /* Prima estrazione (pressochï¿½ casuale, non realistica). */
 
     for (n = 0; n < nearstar_nop; n++) {
         nearstar_p_owner[n]  = -1;
@@ -3830,7 +3823,7 @@ void prepare_nearstar () {
         }
     }
 
-    /* Aumento delle probabilit… di pianeti abitabili su classe zero. */
+    /* Aumento delle probabilitï¿½ di pianeti abitabili su classe zero. */
 
     if (!nearstar_class) {
         if (random(4) == 2) {
@@ -3968,13 +3961,13 @@ void prepare_nearstar () {
             r = nearstar_p_type[q];
 
             // Un oggetto substellare come luna?
-            // Ce lo pu• avere solo una stella compagna.
+            // Ce lo puï¿½ avere solo una stella compagna.
             if (r == 9 && s != 10) {
                 r = 2;
             }
 
             // Un gigante gassoso come luna?
-            // Ce lo pu• avere solo un oggetto substellare,
+            // Ce lo puï¿½ avere solo un oggetto substellare,
             // o una stella compagna in un sistema multiplo.
             if (r == 6 && s < 9) {
                 r = 5;
@@ -4003,14 +3996,14 @@ void prepare_nearstar () {
             }
 
             // Attorno ai giganti gassosi, se il test precedente
-            // Š passato (s = 6/9/10, gassoso/substellare/stella),
-            // bŠ, possono anche esserci, a certe condizioni,
-            // delle lune abitabili. Per queste, per•, la stella
+            // ï¿½ passato (s = 6/9/10, gassoso/substellare/stella),
+            // bï¿½, possono anche esserci, a certe condizioni,
+            // delle lune abitabili. Per queste, perï¿½, la stella
             // dev'essere in genere di classe zero ed il pianeta
             // gigante non dev'essere troppo lontano dalla stella.
-            // C'Š invece uguale probabilit… di trovare mondi
+            // C'ï¿½ invece uguale probabilitï¿½ di trovare mondi
             // abitabili attorno agli oggetti substellari: al di
-            // l… della distanza dalla stella, tali lune possono
+            // lï¿½ della distanza dalla stella, tali lune possono
             // essere scaldate abbastanza da una stella mancata.
             if (r == 3 && s < 9) {
                 if (n > 7) {
@@ -4028,16 +4021,16 @@ void prepare_nearstar () {
                 }
             }
 
-            // Una luna ghiacciata Š esclusa, prima di arrivare
-            // almeno alla sesta orbita planetaria, perch‚ fa
+            // Una luna ghiacciata ï¿½ esclusa, prima di arrivare
+            // almeno alla sesta orbita planetaria, perchï¿½ fa
             // comunque troppo caldo.
             if (r == 7 && n <= 5) {
                 r = 1;
             }
 
-            // Ma lune ghiacciate sono comunque molto pi—
-            // frequenti se la stella Š molto piccola e fredda:
-            // un pianeta in genere pu• avere meccanismi interni
+            // Ma lune ghiacciate sono comunque molto piï¿½
+            // frequenti se la stella ï¿½ molto piccola e fredda:
+            // un pianeta in genere puï¿½ avere meccanismi interni
             // che lo scaldano. Una luna no.
             if ((nearstar_class == 2 || nearstar_class == 5 ||
                     nearstar_class == 7 || nearstar_class == 11)
@@ -4056,8 +4049,8 @@ void prepare_nearstar () {
         normalizzazione delle orbite in base al principio di Keplero.
         Il principio di Keplero stabilisce che il raggio dell'orbita di
         un pianeta tende ad essere simile alla sommatoria dei raggi delle
-        orbite di tutti i pianeti interni ad esso. Per•, per un numero di
-        pianeti maggiore di 8, il principio non Š pi— valido. Noctis
+        orbite di tutti i pianeti interni ad esso. Perï¿½, per un numero di
+        pianeti maggiore di 8, il principio non ï¿½ piï¿½ valido. Noctis
         rinormalizza le orbite oltre l'ottava, aggiungendo a tali orbite
         il 22% circa della sommatoria delle precedenti. Ovvero:
 
@@ -4069,25 +4062,25 @@ void prepare_nearstar () {
         SE si applica l'organizzazione di Noctis, il tutto diventerebbe:
             1  2  3  6  12  24  48  96  117  143  174  212
 
-        Il 22% non Š un valore a caso: rappresenta all'incirca il rapporto
-        fra i raggi delle orbite di Plutone e di Urano. Plutone Š circa del
-        22% pi— lontano dal Sole di Urano, cioŠ l'ottava orbita. Ovvio che
-        non significa che un sistema planetario pi— vasto debba per forza
-        avere orbite organizzate in questo modo, anche perch‚ Plutone non
-        Š certo un pianeta "naturalmente" formatosi assieme agli altri, ma
-        pi— probabilmente un satellite sfuggito o un corpo della nube di
-        Oort catturato dal Sole. Per• bisogna dire che le influenze delle
+        Il 22% non ï¿½ un valore a caso: rappresenta all'incirca il rapporto
+        fra i raggi delle orbite di Plutone e di Urano. Plutone ï¿½ circa del
+        22% piï¿½ lontano dal Sole di Urano, cioï¿½ l'ottava orbita. Ovvio che
+        non significa che un sistema planetario piï¿½ vasto debba per forza
+        avere orbite organizzate in questo modo, anche perchï¿½ Plutone non
+        ï¿½ certo un pianeta "naturalmente" formatosi assieme agli altri, ma
+        piï¿½ probabilmente un satellite sfuggito o un corpo della nube di
+        Oort catturato dal Sole. Perï¿½ bisogna dire che le influenze delle
         orbite dei pianeti interni, col proseguire della successione di
         Keplero, diventano sempre meno significative. Penso che tale
         successione, semplicemente, debba essere in qualche modo limitata,
-        a un certo punto: Š improbabile che ci siano pianeti in orbita
+        a un certo punto: ï¿½ improbabile che ci siano pianeti in orbita
         stabile a distanze come quelle risultanti per le orbite oltre
         l'ottava. Noctis annovera anche stelle con ben 20 pianeti!
 
-        Come ultima annotazione, il raggio delle orbite Š influenzato
+        Come ultima annotazione, il raggio delle orbite ï¿½ influenzato
         anche dalla massa dei pianeti. Pianeti che hanno all'interno delle
-        loro orbite giganti gassosi saranno un po' pi— lontani della media
-        perch‚ altrimenti le loro orbite potrebbero essere troppo
+        loro orbite giganti gassosi saranno un po' piï¿½ lontani della media
+        perchï¿½ altrimenti le loro orbite potrebbero essere troppo
         destabilizzate dalla massa dei giganti. */
 no_moons:
     key_radius = nearstar_ray * planet_orb_scaling;
@@ -4126,7 +4119,7 @@ no_moons:
         normalizzazione orbite lunari in base al principio di Keplero,
         a sua volta rielaborato come nelle precedenti annotazioni,
         solo che la limitazione avviene per orbite oltre la terza al 12%,
-        ed Š molto pi— effettiva oltre l'ottava orbita (al 2.5%). */
+        ed ï¿½ molto piï¿½ effettiva oltre l'ottava orbita (al 2.5%). */
     n = nearstar_nop;
 
     while (n < nearstar_nob) {
@@ -4162,7 +4155,7 @@ no_moons:
 
     for (n = 0; n < nearstar_nop; n++) {
         // A meno di un raggio e mezzo dal centro del pianeta,
-        // sar… un po' difficile trovarci un anello stabile.
+        // sarï¿½ un po' difficile trovarci un anello stabile.
         nearstar_p_ring[n] = 0.75 * nearstar_p_ray[n] * (2 + random(3));
         // I pianeti piccoli raramente hanno degli anelli.
         // Non hanno abbastanza massa per frantumare
@@ -4201,28 +4194,28 @@ no_moons:
 
 void ssmooth (uint8_t far* target) {
 	uint32_t limit = ((uint32_t) QUADWORDS << 2) - (360 << 2);
-    
+
 	for (uint32_t i = 0; i < limit; i++) {
         // 4 columns of 4 pixels each.
         uint8_t col1, col2, col3, col4, average;
-        
-        col1 = target[i] + target[i + 360] 
+
+        col1 = target[i] + target[i + 360]
         + target[i + 720] + target[i + 1080];
-        
+
         col2 = target[i + 1] + target[i + 361]
         + target[i + 721] + target[i + 1081];
-        
+
         col3 = target[i + 2] + target[i + 362]
         + target[i + 722] + target[i + 1082];
-        
+
         col4 = target[i + 3] + target[i + 363]
         + target[i + 723] + target[i + 1083];
-        
+
         col1 = (col1 & 0xFC) / 4;
         col2 = (col2 & 0xFC) / 4;
         col3 = (col3 & 0xFC) / 4;
         col4 = (col4 & 0xFC) / 4;
-        
+
         average = col1 + col2 + col3 + col4;
         average /= 4;
         target[i + 360] = average;
@@ -4270,7 +4263,7 @@ uint16_t px, py;
     variabili all'uopo adibite: c, gr, r, g, b, cr, cx, cy, lave,
     crays, px, py, ed a.
 
-    kfract Š la densit… delle fratture sui pianeti.
+    kfract ï¿½ la densitï¿½ delle fratture sui pianeti.
     viene posta a 1 per fare i fulmini nel cielo.
 
     Alcune ne chiamano altre, dello stesso gruppo, per risparmiare sui
@@ -4278,20 +4271,20 @@ uint16_t px, py;
     usano, o comunque non usano solo queste.
 
     Lavorano tutte su p_background anche se, al momento della definizione
-    della superficie di una luna, p_background verr… scambiato con
-    s_background, che inizialmente Š la mappa della superficie stellare.
-    Il fatto Š che da una luna Š probabile vedere il pianeta attorno al
+    della superficie di una luna, p_background verrï¿½ scambiato con
+    s_background, che inizialmente ï¿½ la mappa della superficie stellare.
+    Il fatto ï¿½ che da una luna ï¿½ probabile vedere il pianeta attorno al
     quale quella data luna sta girando, quindi bisogna mantenere separate
     la mappa planetaria e quella lunare. Non ci si preoccupa, invece, di
-    avere pi— di due corpi visibili, perch‚:
+    avere piï¿½ di due corpi visibili, perchï¿½:
 
         - il primo e il secondo pianeta di qualsiasi stella non
           possono, per convenzione, avere lune; d'altra parte, dal
-          terzo pianeta in poi la superficie stellare non Š visibile
-          nei dettagli, e pu• essere approssimata da un "whiteglobe",
+          terzo pianeta in poi la superficie stellare non ï¿½ visibile
+          nei dettagli, e puï¿½ essere approssimata da un "whiteglobe",
           un globo bianco in tinta unita.
         - le lune visibili da un'altra luna appaiono sempre piuttosto
-          piccole, per cui non Š possibile scorgere i dettagli della
+          piccole, per cui non ï¿½ possibile scorgere i dettagli della
           superficie di una luna dal punto di vista di un'altra.
 
     Infine, le stesse considerazioni sulle mappe delle superfici,
@@ -4372,7 +4365,7 @@ void crater () { // un cratere.
     }
 }
 
-void band () /* banda scura orizzontale: pu• essere portata al chiaro
+void band () /* banda scura orizzontale: puï¿½ essere portata al chiaro
         negando la superficie sulla base del fondo scala 0x3E */
 {
     asm {   les di, dword ptr p_background
@@ -4391,7 +4384,7 @@ void band () /* banda scura orizzontale: pu• essere portata al chiaro
             jnz nvrain }
 }
 
-void wave () { // Una banda come sopra, per• ondulata.
+void wave () { // Una banda come sopra, perï¿½ ondulata.
     asm {   les di, dword ptr p_background
             mov px, 360
             mov bx, cy }
@@ -4416,7 +4409,7 @@ void wave () { // Una banda come sopra, per• ondulata.
 
 void fracture (uint8_t far* target, float max_latitude) {
     // solco scuro: tipo le linee su Europa.
-    // ha dei parametri perch‚ viene usata anche per simulare i fulmini
+    // ha dei parametri perchï¿½ viene usata anche per simulare i fulmini
     // quando piove sulla superficie dei pianeti abitabili.
     a = random (360) * deg;
     gr ++;
@@ -4559,20 +4552,20 @@ void crater_juice () {
     piuttosto che su "p_background", e a risoluzione dimezzata.
     Inoltre, MOLTO IMPORTANTE, il campo d'esistenza dell'albedo
     delle nubi non va da 0 a 0x3E ovvero da 0 a 62, MA da 0 a 0x1F,
-    ovvero da 0 a 31. Questo perch‚, al momento della discesa sulla
+    ovvero da 0 a 31. Questo perchï¿½, al momento della discesa sulla
     superficie, l'albedo media di p_background viene usata per
-    determinare, sui pianeti abitabili, qualora lo scenario Š
+    determinare, sui pianeti abitabili, qualora lo scenario ï¿½
     oceanico o no (se si scende in mare, si deve sempre trovare
-    il mare). Dato che l'albedo di p_background Š alterata da
+    il mare). Dato che l'albedo di p_background ï¿½ alterata da
     quella delle nubi contenuta in objectschart, essa viene
     ripristinata al momento della scelta del luogo di sbarco,
     dalla funzione "planets", SOTTRAENDO l'albedo delle nubi
     a quella della superficie di sbarco di p_background.
-    Se per•, si lascia l'alterazione dovuta alle nubi, alterare
-    l'albedo del territorio sottostante di oltre la met… del campo
+    Se perï¿½, si lascia l'alterazione dovuta alle nubi, alterare
+    l'albedo del territorio sottostante di oltre la metï¿½ del campo
     d'esistenza 0..62, si rischia di sottrarre un valore troppo alto
     e di ricondurre l'albedo che viene calcolata sotto al limite che
-    determina quando lo scenario Š oceanico (i mari hanno l'albedo pi—
+    determina quando lo scenario ï¿½ oceanico (i mari hanno l'albedo piï¿½
     bassa in assoluto). Il risultato sarebbe che una zona normalmente
     coperta di terra, al passaggio di una grossa nube diventerebbe mare. */
 
@@ -4633,7 +4626,7 @@ void storm () { // tempesta (una grande macchia chiara sull'atmosfera).
 /*  Calcola la superficie estrapolandola dai dati sul pianeta e dalla
     tabella pseudo-casuale assegnatagli.
     Include il terminatore giorno-notte scurendo l'emisfero notturno
-    per un angolo di 130ø, non di 180ø per via della luce diffusa e del
+    per un angolo di 130ï¿½, non di 180ï¿½ per via della luce diffusa e del
     campo ridotto ai bordi dei globi.
     "colorbase" viene assegnato a 192 per i pianeti, a 128 per le lune. */
 
@@ -4650,13 +4643,13 @@ void surface (int16_t logical_id, int16_t type,
         return;    // stella compagna: ha superficie stellare...
     }
 
-    /*  
+    /*
         Setting of the rotation period. "rotation" represents the current rotation
         of the planet, in degrees, from 0 to 359. The rotation period is extracted
         in a very wide range, with 1 second resolution.
     */
     fast_srand (seedval + 4112);
-    /*  
+    /*
         "rtperiod" is the time, in seconds, that it takes the planet to rotate
         one degree on its axis. The time taken for a complete rotation is
         therefore 360 * rtperiod.
@@ -4679,9 +4672,9 @@ void surface (int16_t logical_id, int16_t type,
 
     /*  selezione della tabella pseudo relativa a questo pianeta
         la tabella pseudo della funzione "random" propria al C++ ha
-        una discreta probabilit… di ricorrenza, ma essendo integrata
+        una discreta probabilitï¿½ di ricorrenza, ma essendo integrata
         con la "ranged_fast_random", la ricorrenza viene annullata
-        ("ranged_fast_random" ha un'enormit… in pi— di tabelle). */
+        ("ranged_fast_random" ha un'enormitï¿½ in piï¿½ di tabelle). */
     fast_srand (seedval * 10);
     seed = fast_random (0xFFFF);
     /*  preparazione di una superficie standard (random pattern 0..62):
@@ -4712,7 +4705,7 @@ void surface (int16_t logical_id, int16_t type,
     /*
         elaborazione della superficie specifica.
         l'elaborazione dell'overlay per l'atmosfera,
-        nel caso ce ne sia bisogno, Š contemporanea.
+        nel caso ce ne sia bisogno, ï¿½ contemporanea.
     */
     srand (seed);
     QUADWORDS = 16200;
@@ -5299,8 +5292,8 @@ void ring (int16_t planet_id, double ox, double oy, double oz, int16_t start,
 }
 
 /*  Visualizza appopriatamente i pianeti, come punti, barlumi di luce
-    o globi ben visibili, a seconda di distanza e raggio. C'Š un terzo
-    modo in cui un corpo planetario pu• rendersi visibile: con una falce.
+    o globi ben visibili, a seconda di distanza e raggio. C'ï¿½ un terzo
+    modo in cui un corpo planetario puï¿½ rendersi visibile: con una falce.
     L'effetto falce viene realizzato da "glowinglobe". */
 
 void planets () {
@@ -5755,20 +5748,20 @@ notaplanet:
 
     Gestione cartografia galattica.
 
-    Ad ogni stella Š assegnato un codice d'identificazione univoco,
+    Ad ogni stella ï¿½ assegnato un codice d'identificazione univoco,
     derivante dalle sue coordinate. A tale codice si fa riferimento
     per l'associazione dei nomi delle stelle. I codici identificativi
     dei pianeti vengono calcolati a partire da quello della loro stella,
-    pi— il numero (progressivo) del pianeta in ordine di distanza.
+    piï¿½ il numero (progressivo) del pianeta in ordine di distanza.
 
 */
 
 double  laststar_x, laststar_y, laststar_z;
 
 /*  Determina se una certa stella, di cui si specifica il codice
-    d'identificazione univoco, Š attualmente nel range dei sensori.
-    Ritorna 1 quando Š visibile, 0 se non lo Š.
-    Quando Š visibile, le coordinate della stella sono riportate
+    d'identificazione univoco, ï¿½ attualmente nel range dei sensori.
+    Ritorna 1 quando ï¿½ visibile, 0 se non lo ï¿½.
+    Quando ï¿½ visibile, le coordinate della stella sono riportate
     nelle variabili "laststar_x", "laststar_y" e "laststar_z". */
 
 int8_t isthere (double star_id) {
@@ -5997,12 +5990,12 @@ int8_t digimap[65 * 5] = {
     0, 0, 3, 5, 5, // 35. '#'
     2, 2, 6, 2, 2, // 36. sistro
     1, 4, 2, 1, 4, // 37. '%'
-    0, 0, 2, 0, 0, // 38. e commericale (non Š possibile visualizzarla)
+    0, 0, 2, 0, 0, // 38. e commericale (non ï¿½ possibile visualizzarla)
     0, 2, 2, 0, 0, // 39. apice
     4, 2, 2, 2, 4, // 40. '('
     1, 2, 2, 2, 1, // 41. ')'
     0, 0, 7, 2, 2, // 42. '*'
-    0, 2, 7, 2, 0, // 43. segno pi—
+    0, 2, 7, 2, 0, // 43. segno piï¿½
     0, 0, 0, 2, 1, // 44. ','
     0, 0, 7, 0, 0, // 45. '-'
     0, 0, 0, 0, 2, // 46. '.'
@@ -6058,9 +6051,9 @@ int8_t digimap[65 * 5] = {
     1, 2, 0, 0, 0  // 96. accento
 };
 
-/*  
-    Character map for the computer and operating system. The resolution is 
-    32x36 pixels. It is loaded in n_globes_map + gl_bytes and occupies 10800 
+/*
+    Character map for the computer and operating system. The resolution is
+    32x36 pixels. It is loaded in n_globes_map + gl_bytes and occupies 10800
     bytes. These 10182 bytes (gl_brest) are practically a tiny extension of
     the n_globes_map area which by itself, containing a semi-texture of 32Kb
     for the sea, has been extended from 22586 to 32768.
@@ -6367,7 +6360,7 @@ void surrounding (int8_t compass_on, int16_t openhudcount) {
     smootharound_64 (adapted, 308, 188, 5, 1);
     // Print time on outer HUD.
     sprintf (outhudbuffer, "EPOC %d & ", epoc);
-    
+
     uint16_t sinisters = fmod(secs, 1e9) / 1e6;
     // Pad with a 0.
     if (sinisters < 100) {
@@ -6375,14 +6368,14 @@ void surrounding (int8_t compass_on, int16_t openhudcount) {
     }
     strcat (outhudbuffer, alphavalue(sinisters));
     strcat (outhudbuffer, ".");
-    
+
     uint16_t medii = fmod(secs, 1e6) / 1e3;
     if (medii < 100) {
         strcat(outhudbuffer, "0");
     }
     strcat (outhudbuffer, alphavalue(medii));
     strcat (outhudbuffer, ".");
-    
+
     uint16_t dexters = fmod(secs, 1e3);
     if (dexters < 100) {
         strcat(outhudbuffer, "0");
@@ -6447,7 +6440,7 @@ void surrounding (int8_t compass_on, int16_t openhudcount) {
     tp_pressure += pp_delta;
     pp_delta = (pp_pulse - tp_pulse) * 0.01;
     tp_pulse += pp_delta;
-    //unit… di debugging dell'albedo:
+    //unitï¿½ di debugging dell'albedo:
     //sprintf (outhudbuffer, "GRAVITY %2.3f FG & TEMPERATURE %+3.1f@C & PRESSURE %2.3f ATM & PULSE %3.0f PPS", tp_gravity, tp_temp, tp_pressure, (float)albedo);
     sprintf (outhudbuffer,
              "GRAVITY %2.3f FG & TEMPERATURE %+3.1f@C & PRESSURE %2.3f ATM & PULSE %3.0f PPS",
@@ -6456,7 +6449,7 @@ void surrounding (int8_t compass_on, int16_t openhudcount) {
 }
 
 /*  Salva una fotografia dello schermo sul file "SNAPXXXX.BMP":
-    XXXX Š un numero progressivo di disambiguazione. */
+    XXXX ï¿½ un numero progressivo di disambiguazione. */
 
 extern int32_t star_label_pos;
 extern int8_t star_label[25];
@@ -6572,7 +6565,7 @@ void snapshot (int16_t forcenumber, int8_t showdata) {
 }
 
 /*
-    Consumi supplementari di litio, dal pi— dispendioso al pi— economico:
+    Consumi supplementari di litio, dal piï¿½ dispendioso al piï¿½ economico:
     - orbita vimana:            1 KD ogni 7 secondi.
     - inseguimento a punto lontano:     1 KD ogni 18 secondi.
     - inseguimento a punto fisso:       1 KD ogni 29 secondi.
