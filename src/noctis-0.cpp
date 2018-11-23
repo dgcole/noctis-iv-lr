@@ -1667,19 +1667,11 @@ void link3d (float x, float y, float z) {
         return;
     }
 
-    if (fpy <= stk_lby) {
+    if (fpy <= stk_lby || fpy >= stk_uby) {
         return;
     }
 
-    if (fpy >= stk_uby) {
-        return;
-    }
-
-    if (fpx <= stk_lbx) {
-        return;
-    }
-
-    if (fpx >= stk_ubx) {
+    if (fpx <= stk_lbx || fpx >= stk_ubx) {
         return;
     }
 
@@ -1700,21 +1692,13 @@ void link3d (float x, float y, float z) {
     // Perspective.
     lx = rx / rz;
     ly = ry / rz;
-    
+
     // Chopping.
-    if (ly <= stk_lby) {
+    if (ly <= stk_lby || ly >= stk_uby) {
         return;
     }
 
-    if (ly >= stk_uby) {
-        return;
-    }
-
-    if (lx <= stk_lbx) {
-        return;
-    }
-
-    if (lx >= stk_ubx) {
+    if (lx <= stk_lbx || lx >= stk_ubx) {
         return;
     }
 
@@ -1725,18 +1709,19 @@ void link3d (float x, float y, float z) {
     stick (fpx + x_centro, fpy + y_centro, lx + x_centro, ly + y_centro);
 }
 
-/*  Tracciamento bastoncini luminosi (in 2d, per i bagliori,
-    generalmente usata con il flag flares = 1). */
+// Tracing luminous sticks (in 2d, for the glows, generally used with the
+// flares flag = 1).
 
-void fline (int32_t fx, int32_t fy,
-            int32_t lx, int32_t ly) {
+void fline (int32_t fx, int32_t fy, int32_t lx, int32_t ly) {
     float kk, diff;
 
-    /*  Ottimizza il tracciamento del "Segmento", tagliando via le parti
-        che di sicuro non si vedono. Questa parte non � efficace se
-        i punti di partenza e di arrivo fanno s� che il segmento non
-        intersechi alcun lato dell'area visibile: ma in questo peculiare
-        caso le linee vengono escluse dai controlli successivi. */
+    /*
+        Optimize the tracking of the "Segment", cutting away the parts that
+        definitely cannot be seen. This part is not effective if the points of
+        departure and arrival make the segment not intersect any side of the
+        visible area: but in this peculiar case, the lines are excluded from
+        subsequent checks.
+    */
 
     if (fx < stk_lbx) {
         diff = fx - lx;
@@ -1819,11 +1804,11 @@ void fline (int32_t fx, int32_t fy,
     }
 
     if (fx == lx && fy == ly) {
-        return;    // Esclude le linee costituite da un punto solo.
+        return;    // Exclude lines consisting of a single point.
     }
 
     if (fy < stk_lby || ly < stk_lby) {
-        return;    // Esclude le linee che mai e poi mai si vedranno.
+        return;    // Exclude lines that have been seen before.
     }
 
     if (fy > stk_uby || ly > stk_uby) {
@@ -1841,8 +1826,10 @@ void fline (int32_t fx, int32_t fy,
     stick (fx + x_centro, fy + y_centro, lx + x_centro, ly + y_centro);
 }
 
-/*  Funzione ricorsiva che suddivide poligoni triangolari in quattro parti
-    ugualmente triangolari, casualizzandone leggermente la colorazione. */
+/*
+    Recursive function that divides triangular polygons into four parts,
+    equally triangular, slightly casualizing the color.
+*/
 
 uint8_t map_color_a = 30;
 uint8_t map_color_b = 31;
@@ -1850,8 +1837,7 @@ uint8_t map_color_c = 32;
 uint8_t map_color_d = 33;
 
 void randomic_mapper (float x0, float y0, float z0, float x1, float y1,
-                      float z1, float x2, float y2, float z2,
-                      int8_t divisions) {
+                      float z1, float x2, float y2, float z2, int8_t divisions) {
     float vx[3], vy[3], vz[3];
     float e0, f0, g0;
     float e1, f1, g1;
@@ -1925,12 +1911,12 @@ void unloadpv (int16_t handle) {
         return;
     }
 
-    // aggiorna i puntatori di tutti gli handle
-    // che sono memorizzati oltre quello specificato.
-    // il type cast serve per convincere le cacchio di specifiche ANSI
-    // che il puntatore � spostato byte per byte, e non come penserebbe
-    // a seconda del tipo di dati a cui punta. se trovo quello che ha
-    // definito l'ANSI cos� lo faccio nero.
+    /*
+        Updates the pointers of all handles which are stored beyond the
+        specified one. The type cast is used to convince those ANSI dicks
+        that the pointer is moved byte by byte, and not depending on the type
+        of data to which it is pointing.
+    */
     for (h = 0; h < handles; h++)
         if (pvfile_dataptr[h] > pvfile_dataptr[handle]) {
             (int8_t far*) pv_n_vtx[h] -= pvfile_datalen[handle];
@@ -1950,8 +1936,7 @@ void unloadpv (int16_t handle) {
             pvfile_dataptr[h] -= pvfile_datalen[handle];
         }
 
-    // sposta indietro i dati per liberare memoria nell'area poligonale.
-    // (se � necessario...)
+    // Move data back to free memory in the polyonal area (if necessary).
     eod = pvfile_dataptr[handle] + pvfile_datalen[handle];
 
     if (eod < pvfile_datatop)
@@ -1959,18 +1944,14 @@ void unloadpv (int16_t handle) {
                    pv_n_vtx[handle] + pvfile_datalen[handle],
                    pvfile_datatop - eod);
 
-    // aggiorna la cima dei dati dell'area poligonale.
+    // Update the top of the polygonal area.
     pvfile_datatop -= pvfile_datalen[handle];
-    // aggiorna la situazione della memoria per grafica poligonale,
-    // in modo che l'handle sia ora considerato libero.
+    // Update the memory situaton for polygonal graphics, to free the handle.
     pvfile_datalen[handle] = 0;
 }
 
-/*
-    Free all the handles.
-    (And he does not look at anyone).
-*/
 
+// Free all the handles.
 void unloadallpv () {
     int16_t h;
     pvfile_datatop = 0;
@@ -1980,22 +1961,24 @@ void unloadallpv () {
     }
 }
 
-/*  Carica un file di dati per la grafica poligonale.
-    Se l'handle specificato era occupato, esso viene liberato e riassegnato.
-    handle: numero della banca dati in cui ospitare il file, da 0 a 15;
-    viturtual_file_position: offset negativo dalla fine di Noctis.EXE;
-    x/y/z_scale: correzione in scala dei poligoni su tutti gli assi;
-    x/y/z_move: traslazione dei poligoni su tutti gli assi;
-    base_color: colore di base dei poligoni;
-    depth_sort: flag che specifica se allocare spazio per il calcolo
-            dei punti medi dei vertici di ogni poligono ed effettuare
-            il depth-sorting quando si deve tracciare l'oggetto.
-        Ritorno: -1 se non � possibile accedere al file;
-          0 se l'handle non � assegnabile (non esiste),
-            oppure se non c'� abbastanza memoria nel buffer
-            della grafica poligonale ("pvfile") per caricare
-            e/o gestire tutti i poligoni che compongono l'oggetto;
-         +1 se tutto � andato bene. */
+/*
+    Load a polygonal model file. If the specified handle is busy, it will be freed
+    and reassigned.
+    Parameters:
+        Handle: Number of the database in which to host the file, from 0 to 15.
+        virtual_file_position: Negative offset from the end of SUPPORTS.NCT.
+        x/y/z_scale: Scale correction of the polygons on all the axes.
+        x/y/z_move: Translation of the polygons on all the axes.
+        base_color: Basic color of the polygons.
+        depth_sort: Flag that specifies whether to allocate space for the
+            calculation of the midpoints of the vertices of each polygon and
+            carry out the depth-sorting when the object is to be traced.
+    Return:
+        -1: The file cannot be accessed.
+        0: The hndle is unassignable (does not exist), or there is not enough
+        memory in the pvfile buffer to load and / or manage the polygons.
+        +1: Everything went well.
+*/
 
 int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
                float xscale, float yscale, float zscale,
@@ -2003,7 +1986,7 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
                uint8_t base_color,   int8_t depth_sort) {
     int16_t fh, c, p;
 
-    // verifica disponibilit� del file e dell'handle.
+    // Check availability of the file and the handle.
     if (handle >= handles) {
         return (0);
     }
@@ -2014,17 +1997,17 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
         return (-1);
     }
 
-    // verifica se l'handle � gi� occupato. se lo �, lo libera.
+    // Free the handle if it is currently occupied.
     if (pvfile_datalen[handle]) {
         unloadpv (handle);
     }
 
-    // aggiornamento handle interno.
+    // Internal handle update.
     pvfile_datalen[handle] = 0;
     pvfile_dataptr[handle] = pvfile_datatop;
-    // lettura numero poligoni.
+    // Reading polygon numbers.
     _rtl_read (fh, &pvfile_npolygs[handle], 2);
-    // preparazione puntatori.
+    // Pointer preparation.
     pv_n_vtx[handle] = (int8_t far*)  (pvfile + pvfile_datatop);
     pvfile_datatop  +=  1 * pvfile_npolygs[handle];
     pvfile_x[handle] = (float far*) (pvfile + pvfile_datatop);
@@ -2035,25 +2018,26 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
     pvfile_datatop  += 16 * pvfile_npolygs[handle];
     pvfile_c[handle] = (int8_t far*)  (pvfile + pvfile_datatop);
     pvfile_datatop  +=  1 * pvfile_npolygs[handle];
-    // azzera il primo puntatore dei dati per il depth sort
-    // (sta a significare, se non viene successivamente modificato,
-    // che non � richiesto il depth sorting per l'oggetto in questione).
+    /*
+        Clear the first data pointer for the depth sort. If it is no subsequently
+        modified, then depth sorting is not required for the object in question.
+    */
     pv_mid_x[handle] = 0;
 
-    // verifica disponibilit� memoria prima di leggere i dati.
+    // Check availabity before reading the data.
     if (pvfile_datatop > pv_bytes) {
         pvfile_datatop = pvfile_dataptr[handle];
         _rtl_close (fh);
         return (0);
     }
 
-    // lettura di tutti i dati sui poligoni, in un unico blocco.
+    // Reading all the data on the polygons, in a single block.
     _rtl_read (fh, pvfile + pvfile_dataptr[handle],
                pvfile_datatop - pvfile_dataptr[handle]);
     // dopodich� si pu� anche richiudere il file...
     _rtl_close (fh);
 
-    // azzeramento dati sui vertici non usati (per i triangoli)
+    // Resetting unused vertex data (for triangles).
     for (p = 0; p < pvfile_npolygs[handle]; p++)
         if (pv_n_vtx[handle][p] == 3) {
             pvfile_x[handle][4 * p + 3] = 0;
@@ -2061,7 +2045,7 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
             pvfile_z[handle][4 * p + 3] = 0;
         }
 
-    // preparazione puntatori per la gestione del depth sorting.
+    // Prepare pointers for depth sorting management.
     if (depth_sort) {
         pv_mid_x[handle] = (float far*) (pvfile + pvfile_datatop);
         pvfile_datatop  += 4 * pvfile_npolygs[handle];
@@ -2074,14 +2058,14 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
         pv_dep_i[handle] = (int16_t far*)   (pvfile + pvfile_datatop);
         pvfile_datatop  += 2 * pvfile_npolygs[handle];
 
-        // verifica disponibilit� memoria per i dati appena aggiunti.
+        // Check available memory for newly added data.
         if (pvfile_datatop > pv_bytes) {
             pvfile_datatop = pvfile_dataptr[handle];
             return (0);
         }
     }
 
-    // adattamento scala, colore e traslazione.
+    // Scale, color, and translation adaptation.
     for (c = 0; c < 4 * pvfile_npolygs[handle]; c++) {
         pvfile_x[handle][c] *= xscale;
         pvfile_x[handle][c] += xmove;
@@ -2092,7 +2076,7 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
         pvfile_c[handle][c] += base_color;
     }
 
-    // calcolo punti medi e preparazione indici per il depth-sorting.
+    // Calculation of average points and preparation of depth-sorting indices.
     if (depth_sort) {
         for (p = 0; p < pvfile_npolygs[handle]; p++) {
             pv_dep_i[handle][p] = p;
@@ -2115,14 +2099,15 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
         }
     }
 
-    // tutto fatto: computo memoria utilizzata da questo handle.
+    // All done: Compute the memory used by this handle.
     pvfile_datalen[handle] = pvfile_datatop - pvfile_dataptr[handle];
     return (1);
 }
 
-/*  Ordinamento a ricorsione. Per mettere in ordine in fretta i poligoni.
-    Si occupa anche di altri ordinamenti per distanza... per esempio ordina
-    i pianeti e le lune... */
+/*
+    Recursive sorting. To order the polygons quickly. It also takes care of
+    other sorts by distance, the planets and moons for example.
+*/
 
 void QuickSort (int16_t far* index, float far* mdist, int16_t start,
                 int16_t end) {
