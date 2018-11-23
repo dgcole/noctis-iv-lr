@@ -18,7 +18,6 @@
 
     Definitions for Noctis.
     Many.
-
 */
 
 // Data type definitions. Will be useful for porting to 32-bit.

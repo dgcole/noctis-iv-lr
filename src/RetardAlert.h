@@ -4,17 +4,25 @@
 #include "noctis-d.h"
 
 int32_t carryAddMultiply(int32_t a, int32_t b) {
-    asm pusha;
+    int32_t result;
+    asm {
+        pusha
 
-    _EDX = a;
-    _EAX = b;
+        db 0x66
+        mov dx, word ptr a
+        db 0x66
+        mov ax, word ptr b
 
-    asm db 0x66
-    asm imul dx
-    _EDX += _EAX;
+        db 0x66
+        imul dx
+        db 0x66
+        add dx, ax
 
-    int32_t result = _EDX;
-    asm popa;
+        db 0x66
+        mov word ptr result, dx
+
+        popa
+    }
     return result;
 }
 

@@ -895,23 +895,25 @@ void fast_srand (int32_t seed) {
 }
 
 // Extraction of a number: "mask" activates the bits.
-// TODO; Can only move to C++ with support for 64-bit integers.
-// because the multiplication overflow is added back to ax, and we can't
-// get that easily from C++.
 int32_t fast_random (int32_t mask) {
     int32_t num;
     asm {
         db 0x66;
         mov ax, word ptr flat_rnd_seed;
+
         db 0x66;
         mov dx, word ptr flat_rnd_seed
+
         db 0x66;
         mul dx
         add al, dl
+
         db 0x66;
         add word ptr flat_rnd_seed, ax
+
         db 0x66;
         and ax, word ptr mask
+
         db 0x66;
         mov word ptr num, ax
     }
@@ -1647,15 +1649,14 @@ void stick3d (float p_x, float p_y, float p_z,
 }
 
 /*
-    Se uno "stick" � un "bastoncino" tridimensionale delimitato da due
-    estremit�, un "link" � un "ponte" tra il punto iniziale dell'ultimo stick
-    tracciato ed il punto passato a questa funzione.
-    Sembrerebbe un sistema efficace per velocizzare le proiezioni 3d, ma
-    in realt� non si pu� applicare sempre: a parte il fatto che uno dei punti
-    � sempre lo stesso, quando questo non � risultato visibile in precedenza
-    neanche i link saranno visibili.
-    Attualmente, Noctis usa "link3d" per mostrare i singoli fili d'erba
-    sulla superficie di pianeti abitabili.
+    If a "stick" is a three-dimensional "stick" delimited by two ends, a "link"
+    is a "bridge" between the strating point of the last stick path and the
+    point passed to this function. It seems like an effective way to speed up 3d
+    projections, but in reality it can not always be applied: apart from the
+    fact that one of the points is always the same when this has not been
+    visible previously, not even the links will be visible. Currently, Noctis
+    uses "link3d" to show the individual blades of grass on the surface of
+    habitable planets.
 */
 
 void link3d (float x, float y, float z) {
@@ -1682,60 +1683,25 @@ void link3d (float x, float y, float z) {
         return;
     }
 
-//  x -= cam_x;
-//  y -= cam_y;
-//  z -= cam_z;
-//  z2 = z * opt_tcosbeta - x * opt_tsinbeta;
-//  rz = z2 * opt_tcosalfa + y * opt_tsinalfa;
-    asm {   fld x
-            fsub cam_x
-            fst x
-            fmul opt_tsinbeta
-            fld z
-            fsub cam_z
-            fst z
-            fmul opt_tcosbeta
-            fsubrp
-            fst z2
-            fmul opt_tcosalfa
-            fld y
-            fsub cam_y
-            fst y
-            fmul opt_tsinalfa
-            faddp
-            fstp rz }
+    x -= cam_x;
+    z -= cam_z;
+    y -= cam_y;
+
+    z2 = (z * opt_tcosbeta) - (x * opt_tsinbeta);
+    rz = (y * opt_tsinalfa) + (z2 * opt_tcosalfa);
 
     if (rz < stick_uneg) {
         return;
     }
 
-//  rx = x * opt_pcosbeta + z * opt_psinbeta;
-//  ry = y * opt_pcosalfa - z2 * opt_psinalfa;
-    asm {   fld x
-            fmul opt_pcosbeta
-            fld z
-            fmul opt_psinbeta
-            faddp
-            fstp rx
-            fld y
-            fmul opt_pcosalfa
-            fld z2
-            fmul opt_psinalfa
-            fsubp
-            fstp ry }
-    // Prospettiva.
-//  lx = rx / rz;
-//  ly = ry / rz;
-    asm {   fld uno
-            fdiv rz
-            fld st(0)
-            fmul rx
-            fistp lx
-            fmul ry
-            fistp ly }
+    rx = x * opt_pcosbeta + z * opt_psinbeta;
+    ry = y * opt_pcosalfa - z2 * opt_psinalfa;
 
+    // Perspective.
+    lx = rx / rz;
+    ly = ry / rz;
+    
     // Chopping.
-
     if (ly <= stk_lby) {
         return;
     }

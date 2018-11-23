@@ -6,9 +6,9 @@ Screen::Screen() {
 }
 
 uint8_t huge* Screen::getFrontBuffer() {
-	return frontBuffer;	
+	return frontBuffer;
 }
 
 uint8_t huge* Screen::getBackBuffer() {
-	return backBuffer;	
+	return backBuffer;
 }
