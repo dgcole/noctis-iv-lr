@@ -15,7 +15,7 @@
 
     Story.
     -------
-    Complicated. The program is complciated: maybe a little too much,
+    Complicated. The program is complicated: maybe a little too much,
     certainly more than usual. If you do not find a way to compile it
     (we are at 6900 lines only with the main source), you will have to
     modularize it (Never done before, very laborious and very unpleasant).
