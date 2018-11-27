@@ -215,46 +215,6 @@ void tavola_colori (uint8_t* new_palette,
     }
 }
 
-// Variables to hold mouse readings.
-int16_t mdltx = 0, mdlty = 0, mx = 0, my = 0, mpul = 0;
-
-// Read mouse input.
-void mouse_input () {
-    union REGS regs;
-    regs.x.ax = MOUSE_READ_MOTION;
-    int86(INTERRUPT_MOUSE, &regs, &regs);
-    mdltx = regs.x.cx;
-    mdlty = regs.x.dx;
-    mx += mdltx;
-    my += mdlty;
-    regs.x.ax = MOUSE_READ_PRESS;
-    int86(INTERRUPT_MOUSE, &regs, &regs);
-
-    if (regs.x.ax != 0) {
-        mpul = regs.x.ax;
-    }
-}
-
-// Check the presence of the mouse (or the support for it).
-// And initialize the driver (empty the movement buffer).
-
-int8_t test_and_init_mouse () {
-    union REGS regs;
-    regs.x.ax = MOUSE_READ_STATUS;
-    int86(INTERRUPT_MOUSE, &regs, &regs);
-
-    if (regs.x.ax == 0) {
-        return 0;
-    } else {
-        // Here we read in the mouse data to get a clean slate.
-        regs.x.ax = MOUSE_READ_MOTION;
-        int86(INTERRUPT_MOUSE, &regs, &regs);
-        regs.x.ax = MOUSE_READ_PRESS;
-        int86(INTERRUPT_MOUSE, &regs, &regs);
-        return 1;
-    }
-}
-
 // Copies QUADWORDS * 4 bytes from the source to the destination.
 void pcopy (uint8_t far* dest, uint8_t far* source) {
     memcpy(dest, source, QUADWORDS * 4);

@@ -427,7 +427,7 @@ void run_goesnet_module () {
     // Esecuzione di un modulo eseguibile della GOES Net.
     int16_t ch;
     uint16_t bqw = QUADWORDS;
-    // Salva la situazione perch‚ alcuni moduli ne hanno bisogno.
+    // Salva la situazione perchï¿½ alcuni moduli ne hanno bisogno.
     freeze ();
     // Libera circa 60 kilobytes per il lancio del modulo eseguibile.
     farfree (adapted);
@@ -445,7 +445,7 @@ void run_goesnet_module () {
         _rtl_close (ch);
     }
 
-    // Cancella l'ultimo carattere (che Š il _ cursore) dalla command
+    // Cancella l'ultimo carattere (che ï¿½ il _ cursore) dalla command
     // line, poi aggiunge la redirezione sul file "goesfile.txt"
     goesnet_command[gnc_pos] = 0;
     strcat (goesnet_command, " >");
@@ -521,7 +521,7 @@ solong:
 /* Gruppo di tracciamento dello schermo del computer di bordo. */
 
 void squaredot (float x, float y, float size, uint8_t color) {
-    // questo Š un quadratino, un "pixel" del computer di bordo.
+    // questo ï¿½ un quadratino, un "pixel" del computer di bordo.
     float vx[4], vy[4], vz[4] = { 0, 0, 0, 0 };
     vx[0] = x - size;
     vx[1] = x + size;
@@ -546,7 +546,7 @@ long pp[32] = { 0x00000001, 0x00000002, 0x00000004, 0x00000008,
 
 void digit_at (int8_t digit, float x, float y, float size, uint8_t color,
                int8_t shader) {
-    // questo Š un carattere alfanumerico...
+    // questo ï¿½ un carattere alfanumerico...
     uint8_t huge* prev_txtr = txtr;
     float vx[4], vy[4], vz[4] = { 0, 0, 0, 0 };
     float size_x_left = size * -1.5;
@@ -775,7 +775,7 @@ void vehicle (float opencapcount) {
     }
 
     // Resto dello scafo.
-    // Se si Š in terrazza, ci si ferma qui, dopo aver disegnato
+    // Se si ï¿½ in terrazza, ci si ferma qui, dopo aver disegnato
     // la cupola superiore, che dev'essere sovraimpressa allo scafo.
 
     if (depolarize) {
@@ -1094,7 +1094,7 @@ krep2:
                     goesk_a = -1;
                 }
 
-                /*  Unit… di debugging dell'albedo
+                /*  Unitï¿½ di debugging dell'albedo
                     uint8_t far *ov=(uint8_t far*)objectschart;
                     if (c == 'b') {
                     ov[(18 + 60*360) / 2] += 4;
@@ -1598,7 +1598,7 @@ void fcs_commands () {
     }
 }
 
-/* Dispositivi di bordo: men— principale e quattro sottomen—. */
+/* Dispositivi di bordo: menï¿½ principale e quattro sottomenï¿½. */
 
 void devices () {
     double  parsis_x, parsis_y, parsis_z;
@@ -2461,7 +2461,7 @@ void main() {
         m200[ir] = ir * 200;
     }
 
-    if (!test_and_init_mouse()) {
+    if (!Game::getInstance().getMouse()->init()) {
         printf ("\nMouse not present or mouse driver not installed.\n");
         return;
     }
@@ -2507,8 +2507,7 @@ void main() {
     pclear (adapted, 0);
     QUADWORDS -= 1440;
     pqw = QUADWORDS;
-    mouse_input ();
-    mpul = 0;
+    Game::getInstance().getMouse()->poll();
     clock_t right_dblclick_timing = 0;
     dpp  = 210;
     change_camera_lens ();
@@ -2569,10 +2568,7 @@ void main() {
 
     do {
         sync_start ();
-        //
-        // Controllo del flag che indica quando ci si trova
-        // sulla "terrazza panoramica", il tetto dello stardrifter.
-        //
+        // Check the flag indicating whether you are on the roof of the ship.
         pos_y += lifter;
 
         if (lifter > 0) {
@@ -2624,15 +2620,14 @@ void main() {
             }
         }
 
-        //
-        // Risposta al reset del sistema operativo di bordo.
-        // La variabile "reset_signal" controlla la procedura
-        // di reset, che reimposta tutti i parametri operativi
-        // allo stato originario.
-        //
-        // Impostanto reset_signal a 150 si resetta tutto il sistema.
-        // Impostanto reset_signal a 60 si resetta la rete GOES.
-        //
+        /*
+            Response to reset of the on-board operating system. The
+            "reset_signal" variable controls the reset procedure, which resets
+            all operating parameters at the original state.
+            Flags:
+                reset_signal = 150  : Reset whole system.
+                reset_signal = 60   : Reset the GOES network.
+        */
         if (reset_signal) {
             switch (reset_signal) {
             case 150:
@@ -2737,21 +2732,22 @@ void main() {
         }
 
         // Mouse input for user movements.
-        p_mpul = mpul;
-        mpul = 0;
-        mouse_input();
+        Mouse* mouse = Game::getInstance().getMouse();
+        p_mpul = mouse->getButtonState();
+        mouse->poll();
+        int16_t buttonState = mouse->getButtonState();
 
-        if (mpul & 2) {
-            shift += 3 * mdltx;
-            dlt_alfa -= (float) mdlty / 8;
+        if (buttonState & 2) {
+            shift += 3 * mouse->getXDelta();
+            dlt_alfa -= (float) mouse->getYDelta() / 8;
         } else {
-            step -= 3 * mdlty;
+            step -= 3 * mouse->getYDelta();
 
-            if (abs(mdlty) > 7) {
+            if (abs(mouse->getYDelta()) > 7) {
                 dlt_alfa = -user_alfa / 6;
             }
 
-            dlt_beta -= (float) mdltx / 3;
+            dlt_beta -= (float) mouse->getXDelta() / 3;
         }
 
         // Mouse input for double left and right click.
@@ -2759,13 +2755,13 @@ void main() {
             goto nop;
         }
 
-        if ((mpul & 1) && !(p_mpul & 1)) {
+        if ((buttonState & 1) && !(p_mpul & 1)) {
             select = 1;
         } else {
             select = 0;
         }
 
-        if ((mpul & 2) && !(p_mpul & 2) && !right_dblclick) {
+        if ((buttonState & 2) && !(p_mpul & 2) && !right_dblclick) {
             if (!right_dblclick_timing) {
                 right_dblclick_timing = clock();
             } else {
@@ -3325,7 +3321,7 @@ jpr:
         //
         // ***** H.U.D. OUTER LAYER *****
         // Fornisce informazioni sullo strato esterno dell'H.U.D.
-        // Qualsiasi glifo verr… in seguito trattato con dithering.
+        // Qualsiasi glifo verrï¿½ in seguito trattato con dithering.
         //
         if (active_screen != -1) {
             goto nohud_1;
@@ -3544,8 +3540,8 @@ nohud_1:
 ext_1:   //
         // Anti-aliasing e dithering (error-diffusion).
         // E` un procedimento molto peculiare, che fornisce effetti
-        // straordinariamente belli su uno schermo che, di per s‚,
-        // Š poco risolutivo, sia fisicamente che cromaticamente.
+        // straordinariamente belli su uno schermo che, di per sï¿½,
+        // ï¿½ poco risolutivo, sia fisicamente che cromaticamente.
         //
         QUADWORDS -= 240;
         psmooth_64(adapted, 200);
@@ -3560,7 +3556,7 @@ ext_1:   //
         //
         // ***** H.U.D. INNER LAYER *****
         // Fornisce informazioni sullo strato interno dell'H.U.D.
-        // Qualsiasi glifo non verr… trattato con dithering.
+        // Qualsiasi glifo non verrï¿½ trattato con dithering.
         //
         if (datasheetscroll) {
             areaclear (adapted, 11, 85, 0, 0, 1 + datasheetscroll, 9, 72);
@@ -4023,7 +4019,7 @@ ip_drive_mode:
         //
         additional_consumes ();
         //
-        // Calcolo della distanza dalla stella pi— vicina,
+        // Calcolo della distanza dalla stella piï¿½ vicina,
         // per il controllo su radiazioni, eclissi, temperatura.
         //
         dxx = dzat_x - nearstar_x;
@@ -4044,7 +4040,7 @@ ip_drive_mode:
         //
         // Manovre di approvvigionamento litio dallo spazio
         // attorno alle stelle di classe 5 o a certe di classe 6.
-        // Le stelle di classe 6 sono pi— difficili da sfruttare,
+        // Le stelle di classe 6 sono piï¿½ difficili da sfruttare,
         // ma danno i migliori risultati. Quelle di classe 5 sono
         // sempre adatte, ma con scarsi risultati.
         //
@@ -4156,7 +4152,7 @@ ip_drive_mode:
 
         //
         // Reazione alle eclissi (oscura le tinte della navicella).
-        // E abbassa la temperatura interna. Solo un po', perch‚ Š
+        // E abbassa la temperatura interna. Solo un po', perchï¿½ ï¿½
         // contrastata dalla climatizzazione.
         //
         //
@@ -4331,7 +4327,7 @@ ip_drive_mode:
         }
 
         //
-        // Il protagonista sta sempre in una tutina... Š normale.
+        // Il protagonista sta sempre in una tutina... ï¿½ normale.
         // Vede le cose attraverso uno scafandro, non ingombrante
         // ma pur sempre uno scafandro. La funzione "surrounding"
         // disegna i bordi dello scafandro, illuminati in relazione
@@ -4339,15 +4335,15 @@ ip_drive_mode:
         //
         surrounding (0, 180);
         // riduzione stanchezza (continua, eventualmente
-        // dall'ultima volta che si Š scesi in superficie)
-        // e variazioni nelle pulsazioni, pi— verosimili...
+        // dall'ultima volta che si ï¿½ scesi in superficie)
+        // e variazioni nelle pulsazioni, piï¿½ verosimili...
         fast_srand (secs / 2);
         tiredness *= 0.9977;
         pp_pulse = (1 + tiredness) * 118;
         pp_pulse += fast_flandom () * 8;
         pp_pulse -= fast_flandom () * 8;
 
-        // se si sta per scendere o si Š appena risaliti,
+        // se si sta per scendere o si ï¿½ appena risaliti,
         // si deve trattenere il player nel mezzo della navicella,
         // in quanto si suppone che sia bloccato nella capsula.
         if (holdtomiddle || lifter) {
@@ -4357,7 +4353,7 @@ ip_drive_mode:
         }
 
         // effetto di apertura della capsula:
-        // quando Š totalmente aperta, si pu• scendere.
+        // quando ï¿½ totalmente aperta, si puï¿½ scendere.
         // LQ significa Last Quadrant (ultimo quadrante visitato)
         if (opencapdelta < 0) {
             opencapcount += opencapdelta;
@@ -4371,7 +4367,7 @@ ip_drive_mode:
         }
 
         // effetto di chiusura della capsula:
-        // quando Š totalmente sigillata, scotty beam me down.
+        // quando ï¿½ totalmente sigillata, scotty beam me down.
         // al ritorno, comincia a riaprire la capsula...
         if (opencapdelta > 0) {
             opencapcount += opencapdelta;
@@ -4431,7 +4427,7 @@ ip_drive_mode:
         //
         // Questa sezione controlla i pixels a ciclo continuo
         // che raffigurano le correnti convettive interne alle stelle,
-        // ma entra in azione solo se la stella Š abbastanza vicina,
+        // ma entra in azione solo se la stella ï¿½ abbastanza vicina,
         // altrimenti non si vede che un globo bianco: i colori
         // delle stelle non sono propriamente colori, ma solo tenui
         // sfumature; in pratica, essendo quasi tutte ben oltre il

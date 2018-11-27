@@ -13,9 +13,6 @@ extern int8_t surface_palette[768];
 extern void tavola_colori (uint8_t* nuova_tavolozza,
                            uint16_t colore_di_partenza, uint16_t nr_colori,
                            int8_t filtro_rosso, int8_t filtro_verde, int8_t filtro_blu);
-extern int16_t mdltx, mdlty, mx, my, mpul;
-extern void mouse_input (void);
-extern int8_t test_and_init_mouse (void);
 extern void pcopy (uint8_t far* dest, uint8_t far* sorg);
 extern void pclear (uint8_t far* target, uint8_t pattern);
 extern void areacopy (uint8_t far* dest, uint8_t far* sorg,
