@@ -2483,8 +2483,6 @@ void background (uint16_t start,
 */
 
 void sky (uint16_t limits) {
-    uint16_t debug;
-
     int32_t min_xy = 1E9;
     int8_t visible_sectors = 9;
 
@@ -2542,8 +2540,8 @@ void sky (uint16_t limits) {
     uint32_t index = 0;
 
     // Loop over a 3D cube of l,w,h = visible_sectors.
-    for (sx = 0; sx < visible_sectors; sx++) {
-        for (sy = 0; sy < visible_sectors; sy++) {
+    for (sx = 0; sx < visible_sectors; sx++, sect_x += advance, sect_y -= k) {
+        for (sy = 0; sy < visible_sectors; sy++, sect_y += advance, sect_z -= k) {
             for (sz = 0; sz < visible_sectors; sz++, sect_z += advance) {
                 uint16_t cutoff = 50000;
 
@@ -2603,7 +2601,7 @@ void sky (uint16_t limits) {
                     continue;
                 }
 
-                nety <<= 1;
+                nety *= 2;
                 uint16_t toAddLow = ((uint8_t*) riga)[nety];
                 uint16_t toAddHigh = ((uint8_t*) riga)[nety + 1];
                 uint16_t toAdd = (toAddHigh << 8) + toAddLow;
@@ -2642,11 +2640,7 @@ void sky (uint16_t limits) {
                     }
                 }
             }
-            sect_z -= k;
-            sect_y += advance;
         }
-        sect_y -= k;
-        sect_x += advance;
     }
 }
 
@@ -4133,33 +4127,39 @@ void ssmooth (uint8_t far* target) {
 	}
 }
 
-/* Smussa leggermente la superficie di un pianeta: media 2x2. */
-
+/* Slightly blunt the surface of a planet: 2x2 average. */
 void lssmooth (uint8_t far* target) {
-    asm {   pusha
-            push es
-            mov cx, QUADWORDS
-            sub cx, 80
-            shl cx, 2
-            les di, dword ptr target }
+    int16_t offsetmaybe = (QUADWORDS - 80) << 2;
+    asm {
+        pusha
+        push es
+        mov cx, offsetmaybe
+        les di, dword ptr target
+    }
     smooth:
-    asm {   mov dx, es:[di]
-            mov al, dl
-            and dx, 0011111100111111b
-            mov bx, es:[di+360]
-            add dl, dh
-            and bx, 0011111100111111b
-            add dl, bl
-            and al, 11000000b
-            add dl, bh
-            shr dl, 2
-            or al, dl
-            mov es:[di], al
-            inc di
-            dec cx
-            jnz smooth
-            pop es
-            popa }
+    asm {
+        mov dx, es:[di]
+        mov al, dl
+    }
+    _DX &= 0x3F3F;
+    asm {
+        mov bx, es:[di+360]
+        add dl, dh
+    }
+    _BX &= 0x3F3F;
+    asm {
+        add dl, bl
+        and al, 11000000b
+        add dl, bh
+        shr dl, 2
+        or al, dl
+        mov es:[di], al
+        inc di
+        dec cx
+        jnz smooth
+        pop es
+        popa
+    }
 }
 
 int16_t      c, gr, r, g, b, cr, cx, cy;
@@ -5569,9 +5569,7 @@ void planets () {
                         test = poffs + ptr;
 
                         if (test > 0 && test < 64800) {
-                            _AL = p_background[test];
-                            asm xor al, 0x1E;
-                            p_background[test] = _AL;
+                            p_background[test] = p_background[test] ^ 0x1E;
                         }
                     }
 
@@ -5580,9 +5578,7 @@ void planets () {
                             test = 360 * poffs + ptr;
 
                             if (test > 0 && test < 64800) {
-                                _AL = p_background[test];
-                                asm xor al, 0x1E;
-                                p_background[test] = _AL;
+                                p_background[test] = p_background[test] ^ 0x1E;
                             }
                         }
                     }
@@ -5605,9 +5601,7 @@ void planets () {
                         test = poffs + ptr;
 
                         if (test > 0 && test < 64800) {
-                            _AL = p_background[test];
-                            asm xor al, 0x1E;
-                            p_background[test] = _AL;
+                            p_background[test] = p_background[test] ^ 0x1E;
                         }
                     }
 
@@ -5616,9 +5610,7 @@ void planets () {
                             test = 360 * poffs + ptr;
 
                             if (test > 0 && test < 64800) {
-                                _AL = p_background[test];
-                                asm xor al, 0x1E;
-                                p_background[test] = _AL;
+                                p_background[test] = p_background[test] ^ 0x1E;
                             }
                         }
                     }
