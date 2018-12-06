@@ -14,3 +14,7 @@
 
 # Save Data
 data/CURRENT.BIN
+
+# Doxygen Files
+doc/html
+doc/latex
