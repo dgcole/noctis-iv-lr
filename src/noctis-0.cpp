@@ -34,7 +34,7 @@
 */
 
 #include "noctis-d.h"
-#include "RetardAlert.h"
+#include "ASMHacks.h"
 
 // Date and specific functions imported from ASSEMBLY.H
 
@@ -315,11 +315,7 @@ void psmooth_grays(uint8_t far* target) {
 void pfade (uint8_t far* target, uint16_t segshift, uint8_t speed) {
     // Don't know why count is set as it is.
     uint16_t count = (QUADWORDS - 80) << 2;
-    uint32_t address = (uint32_t) target;
-    address += ((uint32_t) segshift) << 16;
-    // Clear offset of address.
-    address &= 0xFFFF0000;
-    uint8_t far* shifted = (uint8_t far*) address;
+    uint8_t far* shifted = clearOffset(shiftSegment(target, segshift));
 
     for (int16_t i = 0; i < count; i++) {
         uint8_t color = shifted[i];
@@ -339,35 +335,20 @@ void pfade (uint8_t far* target, uint16_t segshift, uint8_t speed) {
 void psmooth_64(uint8_t far* target, uint16_t segshift) {
     // Who knows why this is offset as it is... Definitely not me.
     uint16_t count = (QUADWORDS - 80) << 2;
-    uint32_t address = (uint32_t) target;
-    // Add segshift to the segment portion of the address by shifting up 16 bits.
-    address += ((uint32_t) segshift) << 16;
-    // Clear offset of address.
-    address &= 0xFFFF0000;
-    uint8_t far* shifted = (uint8_t far*) address;
+    uint8_t far* shifted = clearOffset(shiftSegment(target, segshift));
 
     for (uint16_t i = 0; i < count; i++) {
-        uint8_t alow = shifted[i + 320];
-        uint8_t ahigh = shifted[i + 321];
-        uint8_t bhigh = shifted[i + 640];
-        uint8_t blow = shifted[i + 641];
-        uint8_t clow = alow;
-        // Bitwise AND with 63 for some reason...
-        ahigh &= 0x3F;
-        alow &= 0x3F;
-        bhigh &= 0x3F;
-        blow &= 0x3F;
-        // Ideally these shouldn't overflow.
-        ahigh += bhigh;
-        alow += blow;
-        // No idea why we do this.
-        clow &= 0xC0;
-        alow += ahigh;
-        // This will drop the low 2 bits of alow.
-        alow >>= 2;
-        // Who knows why italy man does this...
-        alow |= clow;
-        shifted[i] = alow;
+        uint8_t col1 = shifted[i + 320] & 0x3F;
+        uint8_t col2 = shifted[i + 321] & 0x3F;
+        uint8_t col3 = shifted[i + 640] & 0x3F;
+        uint8_t col4 = shifted[i + 641] & 0x3F;
+
+        uint8_t sample = shifted[i + 320] & 0xC0;
+
+        col1 = (col1 + col2 + col3 + col4) / 4;
+        col1 |= sample;
+        
+        shifted[i] = col1;
     }
 }
 

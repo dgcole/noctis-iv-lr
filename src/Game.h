@@ -6,9 +6,13 @@
 
 class Game {
 public:
+    /** Initializes a Game object if one has not
+    *   already been initialized, and returns it */
     static Game& getInstance();
 
+    /// Returns a pointer to the \ref Screen.
 	Screen* getScreen();
+    /// Returns a pointer to the \ref Mouse.
     Mouse* getMouse();
 
 private:
