@@ -1,4 +1,4 @@
-# Borland Files
+# Build Files
 *.prj
 *.ide
 *.obj
@@ -11,6 +11,7 @@
 *.mrt
 *.mak
 *.exe
+*.EXE
 
 # Save Data
 data/CURRENT.BIN
