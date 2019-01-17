@@ -8,6 +8,14 @@
  * to the high 32 bits of the result, returning that.
  */
 
+uint16_t hi(uint32_t x) {
+    return (x >> 16);
+}
+
+uint16_t lo(uint32_t x) {
+    return (x & 0xFFFF);
+}
+
 int32_t carryAddMultiply(int32_t a, int32_t b) {
     int32_t result;
     asm {

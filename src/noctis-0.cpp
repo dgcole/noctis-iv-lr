@@ -347,7 +347,7 @@ void psmooth_64(uint8_t far* target, uint16_t segshift) {
 
         col1 = (col1 + col2 + col3 + col4) / 4;
         col1 |= sample;
-        
+
         shifted[i] = col1;
     }
 }
@@ -858,8 +858,7 @@ int32_t fast_random (int32_t mask) {
         db 0x66;
         mov word ptr num, ax
     }
-
-    return (num);
+    return num;
 }
 
 int16_t ranged_fast_random (int16_t range) {
@@ -2085,24 +2084,25 @@ void QuickSort (int16_t far* index, float far* mdist, int16_t start,
 }
 
 /*
-    Traccia una figura poligonale.
-    handle: l'handle (da 0 a 15) che si � attribuito al file con "loadpv";
-    mode: pu� essere -- 0 = tracciamento poligoni in tinta unita;
-                1 = tracciamento con texture mapping;
-                2 = rimappatura randomica ricorsiva dei poligoni.
-    rm_iterations: viene usato solo se mode = 2, indica quante suddivisioni
-            devono essere effettuate per ogni poligono rimappato;
-    center_x/y/z: coordinate ove piazzare il centro dell'oggetto;
-    use_depth_sort: flag per attivare il depth sort, che viene tuttavia
-            effettivamente attivato solo se � stato incluso come
-            opzione nella chiamata a "loadpv" per quell'handle.
+    Draw a polygon.
+    handle: The handle (from 0 to 15) for the "loadpv" file.
+    mode: One of the following:
+                0 = Solid color
+                1 = Tracking with texture mapping
+                2 = Random recursive remapping
+    rm_iterations: Only used for mode 2, inidicates how many subdivisions must
+        be made for each remapped polygon.
+    center_x/y/z: Coordinates for the center of the object.
+    use_depth_sort: Flag to activate depth sorting, however it is only actually
+        activated if it was included as an option in the call to "loadpv" for
+        that handle.
 */
 
 void drawpv (int16_t handle, int16_t mode, int16_t rm_iterations,
              float center_x, float center_y, float center_z,
              int8_t use_depth_sort) {
     float dx, dy, dz;
-    uint16_t p, c, i, k;
+    uint16_t p, c, i, k, kTemp;
 
     if (handle >= handles) {
         return;
@@ -2112,14 +2112,14 @@ void drawpv (int16_t handle, int16_t mode, int16_t rm_iterations,
         return;
     }
 
-    // traslazione intero spazio all'origine dell'oggetto.
+    // Translate space to the origin of the object.
     cam_x -= center_x;
     cam_y -= center_y;
     cam_z -= center_z;
 
     if (use_depth_sort && pv_mid_x[handle]) {
-        // tracciamento con depth sorting.
-        // fase 1: calcolo distanza punti medi.
+        // Tracing with depth sorting.
+        // Phase 1: Calculating average point distance.
         for (p = 0; p < pvfile_npolygs[handle]; p++) {
             dx                  = pv_mid_x[handle][p] - cam_x;
             dy                  = pv_mid_y[handle][p] - cam_y;
@@ -2127,11 +2127,11 @@ void drawpv (int16_t handle, int16_t mode, int16_t rm_iterations,
             pv_mid_d[handle][p] = dx * dx + dy * dy + dz * dz;
         }
 
-        // fase 2: ordinamento poligoni in base alla distanza.
+        // Phase 2: Sorting polygons based on distance.
         QuickSort (pv_dep_i[handle], pv_mid_d[handle],
                    0, pvfile_npolygs[handle] - 1);
 
-        // fase 3: tracciamento, nell'ordine specificato sopra.
+        // Phase 3: Tracking, in the order specified above.
         for (p = 0; p < pvfile_npolygs[handle]; p++) {
             c = pv_dep_i[handle][p];
             i = c * 4;
@@ -2147,13 +2147,13 @@ void drawpv (int16_t handle, int16_t mode, int16_t rm_iterations,
 
             case 1:
                 k = pvfile_c[handle][c];
-                asm {   push    ax
-                        mov     ax, k
-                        and     ax, 0x3F
-                        and     k,  0xC0
-                        shr     ax, 1
-                        or  k,  ax
-                        pop ax }
+
+                kTemp = k;
+                kTemp &= 0x3F;
+                k &= 0xC0;
+                kTemp /= 2;
+                k |= kTemp;
+
                 polymap (pvfile_x[handle] + i,
                          pvfile_y[handle] + i,
                          pvfile_z[handle] + i,
@@ -2180,9 +2180,8 @@ void drawpv (int16_t handle, int16_t mode, int16_t rm_iterations,
             }
         }
     } else {
-        // tracciamento senza depth sorting.
-        // in queso caso traccia i poligoni nell'ordine in cui
-        // sono stati salvati nel file di grafica di "PolyVert".
+        // Tracking without depth sorting, in this case tracing the polygons in
+        // the order in which they were saved in the NCC file.
         for (p = 0, i = 0; p < pvfile_npolygs[handle]; p++, i += 4)
             switch (mode) {
             case 0:
@@ -2195,13 +2194,13 @@ void drawpv (int16_t handle, int16_t mode, int16_t rm_iterations,
 
             case 1:
                 k = pvfile_c[handle][p];
-                asm {   push    ax
-                        mov     ax, k
-                        and     ax, 0x3F
-                        and     k,  0xC0
-                        shr     ax, 1
-                        or  k,  ax
-                        pop ax }
+
+                kTemp = k;
+                kTemp &= 0x3F;
+                k &= 0xC0;
+                kTemp /= 2;
+                k |= kTemp;
+
                 polymap (pvfile_x[handle] + i,
                          pvfile_y[handle] + i,
                          pvfile_z[handle] + i,
@@ -2228,15 +2227,16 @@ void drawpv (int16_t handle, int16_t mode, int16_t rm_iterations,
             }
     }
 
-    // traslazione intero spazio all'origine precedente.
+    // Translate space back to previous source.
     cam_x += center_x;
     cam_y += center_y;
     cam_z += center_z;
 }
 
-/*  Replica una forma poligonale, copiandola da un'handle gi� definito
-    a uno di uguali dimensioni. In caso d'errore, non succede nulla. */
-
+/**
+* Replicates a polygon, copying it from a defined handle to another of an equal
+* size. In case of error, nothing happens.
+*/
 void copypv (int16_t dest_handle, int16_t src_handle) {
     if (src_handle >= handles) {
         return;
@@ -2258,16 +2258,14 @@ void copypv (int16_t dest_handle, int16_t src_handle) {
                pvfile_datalen[src_handle]);
 }
 
-/*  Ruota una forma poligonale rispetto a uno dei suoi vertici,
-    che viene assunto come centro di rotazione, applicando anche
-    un fattore di scalatura (che pu� essere 1 se non � necessario
-    cambiare le dimensioni, come possono essere 0 gli angoli se
-    si stanno cambiando le dimensioni senza ruotare).
-    "vertexs_to_affect" � un puntatore a una serie di strutture "pvlist",
-    nelle quali sono elencati i vertici che verranno effettivamente modificati:
-    se il puntatore "vertexs_to_affect" � nullo, tutti i vertici lo sono.
-    Gli angoli sono espressi in gradi. */
-
+/**
+* Rotate a polygonal shape relative to one of its vertices, which is used as the
+* center of rotation. Also applies a scale factor (which can be 1 if not needed,
+* just as angles can be 0 if not needed). "vertexs_to_affect" is a pointer to a
+* series of "pvlist" structures in which the vertices that will actually be
+* modified are listed: if the "vertexs_to_affect" pointer is null, all vertices
+* are. Angles are in degrees.
+*/
 void modpv (int16_t handle, int16_t polygon_id, int16_t vertex_id,
             float x_scale, float y_scale, float z_scale,
             float x_angle, float y_angle, float z_angle,
@@ -2325,39 +2323,28 @@ void modpv (int16_t handle, int16_t polygon_id, int16_t vertex_id,
             v = 0;
 
             do {
-                if (v == 0 && vertexs_to_affect[p].vtxflag_0) {
-                    j = i;
-                    goto perform;
+                if ((v == 3 && vertexs_to_affect[p].vtxflag_3)
+                    || (v == 2 && vertexs_to_affect[p].vtxflag_2)
+                    || (v == 1 && vertexs_to_affect[p].vtxflag_1)
+                    || (v == 0 && vertexs_to_affect[p].vtxflag_0)) {
+                    j = i + v;
+
+                    x1 = (pvfile_x[handle][j] - cx) * cos_y +
+                        (pvfile_z[handle][j] - cz) * sin_y;
+
+                    z1 = (pvfile_z[handle][j] - cz) * cos_y -
+                        (pvfile_x[handle][j] - cx) * sin_y;
+
+                    pvfile_z[handle][j] = z_scale * (z1 * cos_x +
+                        (pvfile_y[handle][j] - cy) * sin_x) + cz;
+
+                    y1 = (pvfile_y[handle][j] - cy) * cos_x - z1 * sin_x;
+                    pvfile_x[handle][j] = x_scale * (x1 * cos_z + y1 * sin_z) + cx;
+                    pvfile_y[handle][j] = y_scale * (y1 * cos_z - x1 * sin_z) + cy;
                 }
 
-                if (v == 1 && vertexs_to_affect[p].vtxflag_1) {
-                    j = i + 1;
-                    goto perform;
-                }
-
-                if (v == 2 && vertexs_to_affect[p].vtxflag_2) {
-                    j = i + 2;
-                    goto perform;
-                }
-
-                if (v == 3 && vertexs_to_affect[p].vtxflag_3) {
-                    j = i + 3;
-                    goto perform;
-                }
-
-                goto next;
-perform:
-                x1 = (pvfile_x[handle][j] - cx) * cos_y + (pvfile_z[handle][j] - cz) * sin_y;
-                z1 = (pvfile_z[handle][j] - cz) * cos_y - (pvfile_x[handle][j] - cx) * sin_y;
-                pvfile_z[handle][j] = z_scale * (z1 * cos_x + (pvfile_y[handle][j] - cy) *
-                                                 sin_x) + cz;
-                y1 = (pvfile_y[handle][j] - cy) * cos_x - z1 * sin_x;
-                pvfile_x[handle][j] = x_scale * (x1 * cos_z + y1 * sin_z) + cx;
-                pvfile_y[handle][j] = y_scale * (y1 * cos_z - x1 * sin_z) + cy;
-next:
-                v ++;
+                v++;
             } while (v < pv_n_vtx[handle][c]);
-
             p ++;
         }
     }
@@ -2397,64 +2384,73 @@ void background (uint16_t start,
                  uint8_t far* offsetsmap,
                  uint16_t total_map_bytes,
                  uint16_t screenshift) {
-    asm {   pusha
-            push ds
-            les ax, dword ptr target
-            add screenshift, ax
-            mov dx, screenshift
-            mov ax, es
-            les bx, dword ptr background
-            mov bx, es
-            mov cx, total_map_bytes
-            shr cx, 1
-            lds si, dword ptr offsetsmap
-            mov bp, start
-            add bp, 4
-            db 0x8E, 0xE3 // mov fs, bx
-            mov es, ax }
+    asm {
+        pusha
+        push ds
+        les ax, dword ptr target
+        add screenshift, ax
+        mov dx, screenshift
+        mov ax, es
+        les bx, dword ptr background
+        mov bx, es
+        mov cx, total_map_bytes
+        shr cx, 1
+        lds si, dword ptr offsetsmap
+        mov bp, start
+        add bp, 4
+        db 0x8E, 0xE3 // mov fs, bx
+        mov es, ax
+    }
+
     rigiro:
-    asm {   cmp word ptr [si], 64000
-            jnb blanket
-            mov di, [si]
-            add di, dx
-            db 0x64, 0x8A, 0x46, 0x00 // mov al, fs:[bp]
-            mov ah, al
-            db 0x66;
-            shl ax, 8
-            mov al, ah
-            db 0x66;
-            shl ax, 8
-            mov al, ah
-            db 0x66;
-            mov es:[di], ax
-            mov es:[di+4], al
-            db 0x66;
-            mov es:[di+320], ax
-            mov es:[di+324], al
-            db 0x66;
-            mov es:[di+640], ax
-            mov es:[di+644], al
-            db 0x66;
-            mov es:[di+960], ax
-            mov es:[di+964], al
-            db 0x66;
-            mov es:[di+1280], ax
-            mov es:[di+1284], al
-            add bp, 1
-            add si, 2
-            dec cx
-            jnz rigiro
-            jmp fine }
+    asm {
+        cmp word ptr [si], 64000
+        jnb blanket
+        mov di, [si]
+        add di, dx
+        db 0x64, 0x8A, 0x46, 0x00 // mov al, fs:[bp]
+        mov ah, al
+        db 0x66;
+        shl ax, 8
+        mov al, ah
+        db 0x66;
+        shl ax, 8
+        mov al, ah
+        db 0x66;
+        mov es:[di], ax
+        mov es:[di+4], al
+        db 0x66;
+        mov es:[di+320], ax
+        mov es:[di+324], al
+        db 0x66;
+        mov es:[di+640], ax
+        mov es:[di+644], al
+        db 0x66;
+        mov es:[di+960], ax
+        mov es:[di+964], al
+        db 0x66;
+        mov es:[di+1280], ax
+        mov es:[di+1284], al
+        add bp, 1
+        add si, 2
+        dec cx
+        jnz rigiro
+        jmp fine
+    }
     blanket:
-    asm {   mov bx, [si]
-            sub bx, 64000
-            add bp, bx
-            add si, 2
-            dec cx
-            jnz rigiro }
+    asm {
+        mov bx, [si]
+        sub bx, 64000
+        add bp, bx
+        add si, 2
+        dec cx
+        jnz rigiro
+    }
     fine:
-    asm {   pop ds
-            popa }
+    asm {
+        pop ds
+        popa
+    }
 }
 
 /*
@@ -2625,67 +2621,25 @@ void sky (uint16_t limits) {
     }
 }
 
-/*
-    Still quicktime-vr, unfortunately it is necessary for planets. Otherwise, a
-    huge amount of registers and complex machine code macros would be used, b/c
-    we can not use the extended registers normally. Better to recap: DS passes
-    on GS, ES is the video page (usually hidden, not the adapter area) specified
-    in target, FS hosts the tapestry wallpaper to map the globe, and the old DS
-    points to the area of the map of the offsets, compressed with MAPS.EXE along
-    the x-y plane. In fact, they are not video offset ready, because they must
-    becalculated (first byte = Y, second byte = X). When the Y is 100, that means
-    the original offset was 64000, and that is not a question of a point, but of
-    a series of advances along the segment, indicated for accuracy by byte X.
-*/
-
-uint8_t glass_bubble = 1;
 // If set, draw a kind of bubble transparent around the globes drawn with the
 // "globe" function. It is used to simulate the presence of the atmosphere, but
 // only for planets with considerable quantities of gas.
+uint8_t glass_bubble = 1;
 
 
-/*
-    Heck, real fill managers, and they work!
-    Unbelievable, in C++, and even after changing ES, FS, and GS.
+
+/**
+*   Still quicktime-vr, unfortunately it is necessary for planets. Otherwise, a
+*   huge amount of registers and complex machine code macros would be used, b/c
+*   we can not use the extended registers normally. Better to recap: DS passes
+*   on GS, ES is the video page (usually hidden, not the adapter area) specified
+*   in target, FS hosts the tapestry wallpaper to map the globe, and the old DS
+*   points to the area of the map of the offsets, compressed with MAPS.EXE along
+*   the x-y plane. In fact, they are not video offset ready, because they must
+*   becalculated (first byte = Y, second byte = X). When the Y is 100, that means
+*   the original offset was 64000, and that is not a question of a point, but of
+*   a series of advances along the segment, indicated for accuracy by byte X.
 */
-
-void gman1x1 () {
-    asm mov es:[di+4], dl
-}
-
-void gman2x2 () {
-    asm {
-        mov dh, dl
-        mov es:[di+4], dx
-        mov es:[di+324], dx
-    }
-}
-
-void gman3x3 () {
-    asm {
-        mov dh, dl
-        mov es:[di+4], dx
-        mov es:[di+6], dl
-        mov es:[di+324], dx
-        mov es:[di+326], dl
-        mov es:[di+644], dx
-        mov es:[di+646], dl
-    }
-}
-
-void gman4x4 () {
-    asm {
-        mov dh, dl
-        mov es:[di+4], dx
-        mov es:[di+6], dx
-        mov es:[di+324], dx
-        mov es:[di+326], dx
-        mov es:[di+644], dx
-        mov es:[di+646], dx
-        mov es:[di+964], dx
-        mov es:[di+966], dx
-    }
-}
 
 void globe (uint16_t start,
             uint8_t far* target,
@@ -2694,7 +2648,6 @@ void globe (uint16_t start,
             uint16_t total_map_bytes,
             double x, double y, double z,
             float mag_factor, int8_t colormask, int8_t globe_saturation) {
-    void*    gman;
     int16_t center_x, center_y, temp;
     double  xx, yy, zz, z2, rx, ry, rz;
     xx = x - dzat_x;
@@ -2710,22 +2663,22 @@ void globe (uint16_t start,
     }
 
     mag_factor /= rz;
-    gman = gman1x1;
+    uint8_t gman = 1;
 
     if (mag_factor < 0.01) {
         mag_factor = 0.001;
     }
 
     if (mag_factor > 0.33) {
-        gman = gman2x2;
+        gman = 2;
     }
 
     if (mag_factor > 0.66) {
-        gman = gman3x3;
+        gman = 3;
     }
 
     if (mag_factor > 0.99) {
-        gman = gman4x4;
+        gman = 4;
     }
 
     if (mag_factor > 1.32) {
@@ -2753,12 +2706,16 @@ void globe (uint16_t start,
     asm push ds
     asm push ds
     asm db 0x0F, 0xA9 // pop gs
+
     _CX = total_map_bytes;
     _CX >>= 1;
+
     asm les ax, dword ptr tapestry
+
     start += _AX;
     _BX = start;
     _AX = _ES;
+
     asm db 0x8E, 0xE0 // mov fs, ax
     asm les ax, dword ptr target
     asm lds si, dword ptr offsetsmap
@@ -2785,9 +2742,11 @@ void globe (uint16_t start,
     asm db 0x65, 0x8B, 0xBD /* mov di, gs:riga[di] - prima parte */
     asm dw offset riga      /* mov di, gs:riga[di] - 2nda parte */
     asm mov temp, ax        // istruzione di caricamento x #3
+
     asm fild word ptr temp
     asm fmul dword ptr mag_factor
     asm fistp word ptr temp
+    
     asm mov ax, temp
     asm add ax, center_x
     asm cmp ax, 6
@@ -2802,7 +2761,40 @@ void globe (uint16_t start,
 
     asis:
     _DL |= colormask;
-    ((void(*)()) gman)();
+
+    if (gman == 1) {
+        asm {
+            mov es:[di+4], dl
+        }
+    } else if (gman == 2) {
+        asm {
+            mov dh, dl
+            mov es:[di+4], dx
+            mov es:[di+324], dx
+        }
+    } else if (gman == 3) {
+        asm {
+            mov dh, dl
+            mov es:[di+4], dx
+            mov es:[di+6], dl
+            mov es:[di+324], dx
+            mov es:[di+326], dl
+            mov es:[di+644], dx
+            mov es:[di+646], dl
+        }
+    } else if (gman == 4) {
+        asm {
+            mov dh, dl
+            mov es:[di+4], dx
+            mov es:[di+6], dx
+            mov es:[di+324], dx
+            mov es:[di+326], dx
+            mov es:[di+644], dx
+            mov es:[di+646], dx
+            mov es:[di+964], dx
+            mov es:[di+966], dx
+        }
+    }
 
     clipout:
     _BX += 1;
