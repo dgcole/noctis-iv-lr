@@ -2594,7 +2594,27 @@ void sky (uint16_t limits) {
                 }
                 temp_x -= cutoff;
 
-                int32_t accum = carryAddMultiply(temp_x, sect_x + sect_z);
+                int32_t abc123 = (sect_x + sect_z);
+                int32_t accum = 0;
+                asm {
+                    pusha
+
+                    db 0x66
+                    mov dx, word ptr temp_x
+                    db 0x66
+                    mov ax, word ptr abc123
+
+                    db 0x66
+                    imul dx
+                    db 0x66
+                    add dx, ax
+
+                    db 0x66
+                    mov word ptr accum, dx
+
+                    popa
+                }
+
                 int32_t idkbro = (sect_x + sect_z) + accum;
 
                 temp_y = (accum & 0x001FFFF) + sect_y;
