@@ -34,16 +34,15 @@
 */
 
 #include "noctis-d.h"
-#include "RetardAlert.h"
 
 // Date and specific functions imported from ASSEMBLY.H
 
 int16_t QUADWORDS = 16000;
 
 // Adaptor points to the main video memory, which should be 64kb.
-uint8_t far* adaptor    = (uint8_t far*) 0xA0000000;
+uint8_t adaptor    = (uint8_t) 0xA0000000;
 // Adapted points to some other vga memory. I think it's used as a back buffer.
-uint8_t far* adapted    = (uint8_t far*) 0xB0000000;
+uint8_t adapted    = (uint8_t) 0xB0000000;
 
 uint8_t     tmppal[768];
 int8_t      return_palette[768];
@@ -66,79 +65,24 @@ int16_t lstri(int8_t* stri) {
     return (0);
 }
 
-void reach_your_dir() {
-    /*
-        NOTE: There was a comment here saying something about this being
-        used to reach beyond the current directory.
-    */
-    int16_t c;
-    int8_t d;
-    c = lstri(_argv[0]) - 1;
-
-    while (c >= 0 && tmppal[c] != '\\') {
-        c--;
-    }
-
-    if (c >= 0) {
-        if (tmppal[c - 1] != ':') {
-            tmppal[c] = 0;
-        } else {
-            tmppal[c + 1] = 0;
-        }
-    }
-
-    if (_argv[0][0] >= 'a' && _argv[0][0] <= 'z') {
-        d = _argv[0][0] - 'a';
-    } else {
-        d = _argv[0][0] - 'A';
-    }
-
-    union REGS regs;
-
-    regs.h.ah = DOS_SELECT_DRIVE;
-    regs.h.dl = d;
-
-    intdos(&regs, &regs);
-
-    regs.h.ah = DOS_SET_WORKING_DIR;
-    regs.x.dx = *tmppal;
-
-    intdos(&regs, &regs);
-}
+void reach_your_dir () STUB
 
 // Initialize the 320x200x256 graphics mode.
-void _320_200_256 () {
-    union REGS regs;
-    regs.x.ax = VIDEO_MODE_VGA;
-    int86(INTERRUPT_VIDEO_MODE, &regs, &regs);
-}
+void _320_200_256 () STUB
 
 // Initialize the 80x25 text mode.
-void _80_25_C () {
-    union REGS regs;
-    regs.x.ax = VIDEO_MODE_TEXT;
-    int86(INTERRUPT_VIDEO_MODE, &regs, &regs);
-}
+void _80_25_C () STUB
 
 // Wait for a key?
 int16_t attendi_pressione_tasto () {
-    union REGS regs;
-    regs.h.ah = DOS_CHAR_READ_NO_ECHO;
-    intdos(&regs, &regs);
-    return regs.h.al;
+    STUB
+    return 0;
 }
 
 // Return 1 if there is a key press to be processed.
 int16_t tasto_premuto () {
-    union REGS regs;
-    regs.h.ah = DOS_GET_STDIN_STATUS;
-    intdos(&regs, &regs);
-
-    if (regs.h.al == 0xff) {
-        return 1;
-    } else {
-        return 0;
-    }
+    STUB
+    return 0;
 }
 
 uint8_t range8088[64 * 3] = {
@@ -206,6 +150,7 @@ void tavola_colori (uint8_t* new_palette,
         c++;
     }
 
+#if 0
     // Port 0x3c8 takes the index of the first color.
     outp(0x3c8, 0);
 
@@ -213,62 +158,38 @@ void tavola_colori (uint8_t* new_palette,
         // Port 0x3c9 takes up to 255 consecutive r, g, b, colors.
         outp(0x3c9, tmppal[i]);
     }
+#endif
+    STUB
 }
 
 // Variables to hold mouse readings.
 int16_t mdltx = 0, mdlty = 0, mx = 0, my = 0, mpul = 0;
 
 // Read mouse input.
-void mouse_input () {
-    union REGS regs;
-    regs.x.ax = MOUSE_READ_MOTION;
-    int86(INTERRUPT_MOUSE, &regs, &regs);
-    mdltx = regs.x.cx;
-    mdlty = regs.x.dx;
-    mx += mdltx;
-    my += mdlty;
-    regs.x.ax = MOUSE_READ_PRESS;
-    int86(INTERRUPT_MOUSE, &regs, &regs);
-
-    if (regs.x.ax != 0) {
-        mpul = regs.x.ax;
-    }
-}
+void mouse_input () STUB
 
 // Check the presence of the mouse (or the support for it).
 // And initialize the driver (empty the movement buffer).
 
 int8_t test_and_init_mouse () {
-    union REGS regs;
-    regs.x.ax = MOUSE_READ_STATUS;
-    int86(INTERRUPT_MOUSE, &regs, &regs);
-
-    if (regs.x.ax == 0) {
-        return 0;
-    } else {
-        // Here we read in the mouse data to get a clean slate.
-        regs.x.ax = MOUSE_READ_MOTION;
-        int86(INTERRUPT_MOUSE, &regs, &regs);
-        regs.x.ax = MOUSE_READ_PRESS;
-        int86(INTERRUPT_MOUSE, &regs, &regs);
-        return 1;
-    }
+    STUB
+    return 1;
 }
 
 // Copies QUADWORDS * 4 bytes from the source to the destination.
-void pcopy (uint8_t far* dest, uint8_t far* source) {
+void pcopy (uint8_t* dest, uint8_t* source) {
     memcpy(dest, source, QUADWORDS * 4);
 }
 
 // Clears QUADWORDS * 4 bytes starting at the target.
-void pclear (uint8_t far* target, uint8_t pattern) {
+void pclear (uint8_t* target, uint8_t pattern) {
     memset(target, pattern, QUADWORDS * 4);
 }
 
 // Clears a rectangular region of the video memory.
 // Either x2 & y2 OR l and h must be specified.
 // This may or may not work.
-void areaclear (uint8_t far* dest, int16_t x, int16_t y,
+void areaclear (uint8_t* dest, int16_t x, int16_t y,
                 int16_t x2, int16_t y2, int16_t l, int16_t h, uint8_t pattern) {
     if (l == 0 || h == 0) {
         l = x2 - x;
@@ -304,7 +225,7 @@ void areaclear (uint8_t far* dest, int16_t x, int16_t y,
 
 */
 
-void psmooth_grays(uint8_t far* target) {
+void psmooth_grays(uint8_t* target) {
     uint16_t count = (QUADWORDS << 2) - (320 << 2);
     int index = 0;
     for (uint16_t i = 0; i < count ; i++, index++) {
@@ -352,7 +273,8 @@ void psmooth_grays(uint8_t far* target) {
 }
 
 // Produces the fading effect seen during vimana flight.
-void pfade (uint8_t far* target, uint16_t segshift, uint8_t speed) {
+void pfade (uint8_t* target, uint16_t segshift, uint8_t speed) {
+#if 0
     // Don't know why count is set as it is.
     uint16_t count = (QUADWORDS - 80) << 2;
     uint32_t address = (uint32_t) target;
@@ -373,10 +295,13 @@ void pfade (uint8_t far* target, uint16_t segshift, uint8_t speed) {
 
         shifted[i] = color;
     }
+#endif
+    STUB
 }
 
 // Color version: 4 shades of 64 intensity each.
-void psmooth_64(uint8_t far* target, uint16_t segshift) {
+void psmooth_64(uint8_t* target, uint16_t segshift) {
+#if 0
     // Who knows why this is offset as it is... Definitely not me.
     uint16_t count = (QUADWORDS - 80) << 2;
     uint32_t address = (uint32_t) target;
@@ -409,12 +334,14 @@ void psmooth_64(uint8_t far* target, uint16_t segshift) {
         alow |= clow;
         shifted[i] = alow;
     }
+#endif
+    STUB
 }
 
 
 // Circular version of the smoothing process.
 // Used on the white corners on the hud and on planets.
-void smootharound_64(uint8_t far* target, int32_t cx, int32_t cy, int32_t r,
+void smootharound_64(uint8_t* target, int32_t cx, int32_t cy, int32_t r,
                      int8_t diffuse) {
     int32_t x1 = cx - r, y1 = cy - r;
     int32_t x2 = cx + r, y2 = cy + r;
@@ -531,7 +458,7 @@ void smootharound_64(uint8_t far* target, int32_t cx, int32_t cy, int32_t r,
 }
 
 // Using 64 levels in 4 shades, bring the screen to a single gradient.
-void mask_pixels(uint8_t far* target, uint8_t mask) {
+void mask_pixels(uint8_t* target, uint8_t mask) {
     uint8_t cap = 0x3F;
 
     // If QUADWORDS is not cast to a long here it overflows and the loop hangs.
@@ -545,14 +472,14 @@ void mask_pixels(uint8_t far* target, uint8_t mask) {
 
 // HSP Inclusions.
 
-#include <tdpolygs.h> // 3D Engine.
+#include "tdpolygs.h" // 3D Engine.
 
 // Support files
 
-int8_t*   situation_file  = "data\\Current.BIN";
-int8_t*   starmap_file    = "data\\StarMap.BIN";
-int8_t*   goesoutputfile  = "data\\GOESfile.TXT";
-int8_t*   surface_file    = "data\\Surface.BIN";
+const char*   situation_file  = "data\\Current.BIN";
+const char*   starmap_file    = "data\\StarMap.BIN";
+const char*   goesoutputfile  = "data\\GOESfile.TXT";
+const char*   surface_file    = "data\\Surface.BIN";
 int16_t     sfh; // Surface situation file handle.
 
 // Global variables that are saved.
@@ -677,14 +604,14 @@ int16_t         datasheetdelta  = 0;
 // Constant data in the global segment.
 
 // Some ordinals (from 0 to 20) for certain representations.
-int8_t* ord[21] = { "zeroth", "first", "second", "third", "fourth", "fifth",
+const char* ord[21] = { "zeroth", "first", "second", "third", "fourth", "fifth",
                     "sixth", "seventh", "eight", "nineth", "tenth", "eleventh",
                     "twelveth", "thiteenth", "fourteenth",
                     "fifteenth", "sixteenth", "seventeenth",
                     "eighteenth", "nineteenth", "twentyth"
                   };
 
-int8_t* star_description[star_classes] = {
+const char* star_description[star_classes] = {
     "medium size, yellow star, suitable for planets having indigenous lifeforms.",
     "very large, blue giant star, high energy radiations around.",
     "white dwarf star, possible harmful radiations.",
@@ -766,7 +693,7 @@ int16_t    nearstar_p_term_end   [maxbodies];
 int16_t    nearstar_p_qsortindex [maxbodies];
 float  nearstar_p_qsortdist  [maxbodies];
 
-int8_t* planet_description[] = {
+const char* planet_description[] = {
     "medium size, internally hot, unstable surface, no atmosphere.",
     "small, solid, dusty, craterized, no atmosphere.",
     "medium size, solid, thick atmosphere, fully covered by clouds.",
@@ -820,15 +747,14 @@ float mindiff = 0.01;
 
 // Physical and logical video matrices, cartography, and other memory blocks.
 
-uint8_t far*  s_background;
-uint8_t far*  p_background;
-uint8_t huge* p_surfacemap;
-quadrant      far*  objectschart;
-uint8_t far*  ruinschart; // As objectschart, but declared in bytes.
-uint8_t far*  pvfile;
-
-uint8_t far*  n_offsets_map;
-int8_t far*           n_globes_map;
+uint8_t*    s_background;
+uint8_t*    p_background;
+uint8_t*    p_surfacemap;
+quadrant*   objectschart;
+uint8_t*    ruinschart; // As objectschart, but declared in bytes.
+uint8_t*    pvfile;
+uint8_t*    n_offsets_map;
+int8_t*     n_globes_map;
 
 // Planetary surface adjustment data.
 
@@ -873,16 +799,16 @@ uint16_t    pvfile_dataptr[handles] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 uint16_t    pvfile_datalen[handles] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 uint16_t    pvfile_npolygs[handles] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-int8_t      far* pv_n_vtx[handles]; // Number of vertices for each polygon (3 or 4).
-float       far* pvfile_x[handles]; // X coordinate (four vertices) of each polygon.
-float       far* pvfile_y[handles]; // Y coordinate (four vertices) of each polygon.
-float       far* pvfile_z[handles]; // Z coordinate (four vertices) of each polygon.
-int8_t      far* pvfile_c[handles]; // Intensity of the color of each polygon (0 to 63).
-float       far* pv_mid_x[handles]; // X coordinate of the midpoint of each polygon.
-float       far* pv_mid_y[handles]; // Y coordinate of the midpoint of each polygon.
-float       far* pv_mid_z[handles]; // Z coordinate of the midpoint of each polygon.
-float       far* pv_mid_d[handles]; // Buffer distance of average points from the observer.
-int16_t     far* pv_dep_i[handles]; // Distance index (sorting of polygons).
+int8_t* pv_n_vtx[handles]; // Number of vertices for each polygon (3 or 4).
+float* pvfile_x[handles]; // X coordinate (four vertices) of each polygon.
+float* pvfile_y[handles]; // Y coordinate (four vertices) of each polygon.
+float* pvfile_z[handles]; // Z coordinate (four vertices) of each polygon.
+int8_t* pvfile_c[handles]; // Intensity of the color of each polygon (0 to 63).
+float* pv_mid_x[handles]; // X coordinate of the midpoint of each polygon.
+float* pv_mid_y[handles]; // Y coordinate of the midpoint of each polygon.
+float* pv_mid_z[handles]; // Z coordinate of the midpoint of each polygon.
+float* pv_mid_d[handles]; // Buffer distance of average points from the observer.
+int16_t* pv_dep_i[handles]; // Distance index (sorting of polygons).
 
 // Pseudo-random number generation procedures.
 
@@ -896,6 +822,7 @@ void fast_srand (int32_t seed) {
 
 // Extraction of a number: "mask" activates the bits.
 int32_t fast_random (int32_t mask) {
+#if 0
     int32_t num;
     asm {
         db 0x66;
@@ -919,6 +846,9 @@ int32_t fast_random (int32_t mask) {
     }
 
     return (num);
+#endif
+    FIXME
+    return 0;
 }
 
 int16_t ranged_fast_random (int16_t range) {
@@ -930,7 +860,10 @@ int16_t ranged_fast_random (int16_t range) {
 }
 
 float flandom () {
+#if 0
     return ((float) random(32767) * 0.000030518);
+#endif
+    FIXME
 }
 
 float fast_flandom () {
@@ -940,7 +873,8 @@ float fast_flandom () {
 // Loads virtual file handles from supports.nct
 int16_t sa_open (int32_t offset_of_virtual_file) {
     int16_t fh;
-    fh = _rtl_open ("res/supports.nct", 0);
+#if 0
+    fh = _open ("res/supports.nct", 0);
 
     if (fh == -1) {
         return (-1);
@@ -952,11 +886,13 @@ int16_t sa_open (int32_t offset_of_virtual_file) {
         _rtl_close (fh);
         return (-1);
     }
+#endif
+    STUB
 }
 
 // Defines a part of the color table so that a gradual gradient goes from one
 // color to another, within a certain number of intermediate colors.
-void shade (uint8_t far* palette_buffer,
+void shade (uint8_t* palette_buffer,
             int16_t first_color, int16_t number_of_colors,
             float start_r,  float start_g,  float start_b,
             float finish_r, float finish_g, float finish_b) {
@@ -1265,9 +1201,11 @@ void stick (uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
     int32_t a, b, L;
     uint16_t pi, pf;
 
+#if 0
+
     uint32_t address = (uint32_t) adapted;
     uint16_t offset = address & 0xFFFF;
-    unsigned char far * truncated = (unsigned char far *) (address & 0xFFFF0000);
+    unsigned char* truncated = (unsigned char far *) (address & 0xFFFF0000);
 
     if (xp == xa) {
         if (ya >= yp) {
@@ -1466,6 +1404,8 @@ void stick (uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
             truncated[index + 7] = 0xEE;
         }
     }
+#endif
+    STUB
 }
 
 /* Tracing sticks (3D Part). */
@@ -1900,6 +1840,7 @@ void randomic_mapper (float x0, float y0, float z0, float x1, float y1,
 */
 
 void unloadpv (int16_t handle) {
+#if 0
     int16_t      h;
     uint16_t eod;
 
@@ -1948,6 +1889,8 @@ void unloadpv (int16_t handle) {
     pvfile_datatop -= pvfile_datalen[handle];
     // Update the memory situaton for polygonal graphics, to free the handle.
     pvfile_datalen[handle] = 0;
+#endif
+    FIXME;
 }
 
 
@@ -1984,6 +1927,7 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
                float xscale, float yscale, float zscale,
                float xmove,  float ymove,  float zmove,
                uint8_t base_color,   int8_t depth_sort) {
+#if 0
     int16_t fh, c, p;
 
     // Check availability of the file and the handle.
@@ -2102,6 +2046,9 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
     // All done: Compute the memory used by this handle.
     pvfile_datalen[handle] = pvfile_datatop - pvfile_dataptr[handle];
     return (1);
+#endif
+    FIXME;
+    return 1;
 }
 
 /*
@@ -2109,7 +2056,7 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
     other sorts by distance, the planets and moons for example.
 */
 
-void QuickSort (int16_t far* index, float far* mdist, int16_t start,
+void QuickSort (int16_t* index, float* mdist, int16_t start,
                 int16_t end) {
     int16_t   tq;
     int16_t   jq = end;
@@ -2160,6 +2107,7 @@ void QuickSort (int16_t far* index, float far* mdist, int16_t start,
 void drawpv (int16_t handle, int16_t mode, int16_t rm_iterations,
              float center_x, float center_y, float center_z,
              int8_t use_depth_sort) {
+#if 0
     float dx, dy, dz;
     uint16_t p, c, i, k;
 
@@ -2291,12 +2239,15 @@ void drawpv (int16_t handle, int16_t mode, int16_t rm_iterations,
     cam_x += center_x;
     cam_y += center_y;
     cam_z += center_z;
+#endif
+    FIXME
 }
 
 /*  Replica una forma poligonale, copiandola da un'handle gi� definito
     a uno di uguali dimensioni. In caso d'errore, non succede nulla. */
 
 void copypv (int16_t dest_handle, int16_t src_handle) {
+#if 0
     if (src_handle >= handles) {
         return;
     }
@@ -2315,6 +2266,8 @@ void copypv (int16_t dest_handle, int16_t src_handle) {
 
     _fmemmove (pv_n_vtx[dest_handle], pv_n_vtx[src_handle],
                pvfile_datalen[src_handle]);
+#endif
+    FIXME
 }
 
 /*  Ruota una forma poligonale rispetto a uno dei suoi vertici,
@@ -2444,18 +2397,22 @@ next:
 
 // Returns the alphabetic correspondent of integers and / or real numbers.
 
-int8_t* alphavalue (double value) {
+char* alphavalue (double value) {
+#if 0
     gcvt (value, 15, dec);
     return (dec);
+#endif
+    FIXME
 }
 
 // Draws the background, with the map offsets.map.
 void background (uint16_t start,
-                 uint8_t far* target,
-                 uint8_t far* background,
-                 uint8_t far* offsetsmap,
+                 uint8_t* target,
+                 uint8_t* background,
+                 uint8_t* offsetsmap,
                  uint16_t total_map_bytes,
                  uint16_t screenshift) {
+#if 0
     asm {   pusha
             push ds
             les ax, dword ptr target
@@ -2514,6 +2471,8 @@ void background (uint16_t start,
     fine:
     asm {   pop ds
             popa }
+#endif
+    FIXME
 }
 
 /*
@@ -2523,6 +2482,7 @@ void background (uint16_t start,
 */
 
 void sky (uint16_t limits) {
+#if 0
     uint16_t debug;
 
     int32_t min_xy = 1E9;
@@ -2708,6 +2668,8 @@ void sky (uint16_t limits) {
         sect_y -= k;
         sect_x += advance;
     }
+#endif
+    STUB
 }
 
 /*
@@ -2734,6 +2696,7 @@ uint8_t glass_bubble = 1;
     Unbelievable, in C++, and even after changing ES, FS, and GS.
 */
 
+#if 0
 void gman1x1 () {
     asm mov es:[di+4], dl
 }
@@ -2771,14 +2734,16 @@ void gman4x4 () {
         mov es:[di+966], dx
     }
 }
+#endif
 
 void globe (uint16_t start,
-            uint8_t far* target,
-            uint8_t far* tapestry,
-            uint8_t far* offsetsmap,
+            uint8_t* target,
+            uint8_t* tapestry,
+            uint8_t* offsetsmap,
             uint16_t total_map_bytes,
             double x, double y, double z,
             float mag_factor, int8_t colormask, int8_t globe_saturation) {
+#if 0
     void*    gman;
     int16_t center_x, center_y, temp;
     double  xx, yy, zz, z2, rx, ry, rz;
@@ -2936,6 +2901,8 @@ void globe (uint16_t start,
                          center_y + z2 * sin(rz), temp, 1);
         rz += ry;
     }
+#endif
+    STUB
 }
 
 /*  Come precedente, modificata per fare globi luminosi, senza dettagli
@@ -2943,12 +2910,13 @@ void globe (uint16_t start,
     Viene usata per i pianeti in media distanza. */
 
 void glowinglobe (int16_t start,
-                  uint8_t far* target,
-                  uint8_t far* offsetsmap,
+                  uint8_t* target,
+                  uint8_t* offsetsmap,
                   uint16_t total_map_bytes,
                   double x, double y, double z, float mag_factor,
                   int16_t terminator_start, int16_t terminator_arc,
                   uint8_t color) {
+#if 0
     uint16_t center_x, center_y, temp;
     double xx, yy, zz, z2, rx, ry, rz;
     xx = x - dzat_x;
@@ -3082,6 +3050,8 @@ clipout:asm {   add dx, 1
     fine:
     asm {   pop ds
             popa }
+#endif
+    STUB
 }
 
 
@@ -3090,9 +3060,10 @@ clipout:asm {   add dx, 1
     the corona. It does not need a globe map. Takes a color from between 0 and
     0x3F, b/c it should only work on the first shade for speed.
 */
-void whiteglobe (uint8_t far* target,
+void whiteglobe (uint8_t* target,
                  double x, double y, double z,
                  float mag_factor, float fgm_factor) {
+#if 0
     double center_x, center_y, mag, fgm, shade_ext, ise;
     double xx, yy, zz, z2, rx, ry, rz, xa, ya, xb, yb;
     double magsq, fgmsq;
@@ -3206,6 +3177,8 @@ void whiteglobe (uint8_t far* target,
         ya += 2.4;
         yy += 2;
     }
+#endif
+    STUB
 }
 
 /*  Come sopra, ma mentre quella di sopra traccia in 4x4 pixels,
@@ -3216,9 +3189,10 @@ void whiteglobe (uint8_t far* target,
 
 double xsun_onscreen;
 
-void whitesun (uint8_t far* target,
+void whitesun (uint8_t* target,
                double x, double y, double z,
                float mag_factor, float fgm_factor) {
+#if 0
     double center_x, center_y, mag, fgm, shade_ext, ise;
     double xx, yy, zz, z2, rx, ry, rz, xa, ya, xb, yb;
     double magsq, fgmsq;
@@ -3312,6 +3286,8 @@ void whitesun (uint8_t far* target,
         ya += 1.2;
         yy ++;
     }
+#endif
+    STUB
 }
 
 // Glow aroun dthe most intense lights.
@@ -3319,8 +3295,8 @@ void whitesun (uint8_t far* target,
 /*  float far *lft_sin = (float far *) farmalloc (361*4);
     float far *lft_cos = (float far *) farmalloc (361*4);*/
 
-float far lft_sin[361];
-float far lft_cos[361];
+float lft_sin[361];
+float lft_cos[361];
 
 int8_t lens_flares_init () {
     int16_t c;
@@ -3343,6 +3319,7 @@ void lens_flares_for (double cam_x, double cam_y, double cam_z,
                       double xlight, double ylight, double zlight,
                       double step, int16_t added, int8_t on_hud, int8_t condition,
                       int16_t xshift, int16_t yshift) {
+#if 0
     double k = 10 / step, l = 1, u = 1.5;
     double xx, yy, zz, z2, rx, ry, rz;
     int32_t xs, ys, dx, dy;
@@ -3420,6 +3397,8 @@ void lens_flares_for (double cam_x, double cam_y, double cam_z,
 
 exit_local:
     resetfx ();
+#endif
+    STUB
 }
 
 /*
@@ -3429,18 +3408,19 @@ exit_local:
     function to draw the planet properly.
 */
 
-const double  pix_dst_scale = 0.384;
-const double  pix_rad_scale = 1228.8;
+const double    pix_dst_scale =     0.384;
+const double    pix_rad_scale =     1228.8;
 
-#define       LIGHT_EMITTING    0
-#define       LIGHT_ABSORBING   1
-#define       MULTICOLOUR   2
+#define         LIGHT_EMITTING      0
+#define         LIGHT_ABSORBING     1
+#define         MULTICOLOUR         2
 
 int8_t          pixilating_effect = LIGHT_EMITTING;
-int8_t          pixel_spreads = 1;
-uint8_t multicolourmask = 0xC0;
+int8_t          pixel_spreads     = 1;
+uint8_t         multicolourmask   = 0xC0;
 
 void single_pixel_at_ptr (uint16_t ptr, uint8_t pixel_color) {
+# if 0
     // Add ptr shift to the offset.
     uint8_t far* shifted = adapted + ptr;
     uint8_t alow = shifted[0];
@@ -3479,6 +3459,8 @@ void single_pixel_at_ptr (uint16_t ptr, uint8_t pixel_color) {
         }
         break;
     }
+#endif
+    STUB
 }
 
 int8_t far_pixel_at (double xlight, double ylight, double zlight,
@@ -3634,6 +3616,7 @@ void getsecs () {
 // information about the chosen star.
 
 void extract_ap_target_infos () {
+#if 0
     srand (ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z / 100000);
     ap_target_class = random (star_classes);
     ap_target_ray = ((float)class_ray[ap_target_class] + (float)random(
@@ -3654,12 +3637,18 @@ void extract_ap_target_infos () {
     if (ap_target_class == 2) {
         ap_target_spin = random (4) + 1;
     }
+#endif
+    STUB
 }
 
 // Extracts a whole-type pseudo-random number by converting it to f-p.
 
 float zrandom (int16_t range) {
+#if 0
     return (random(range) - random(range));
+#endif
+    FIXME
+    return 0;
 }
 
 /*  Parte della gestione della cartografia.
@@ -3676,11 +3665,12 @@ int16_t smh;
 double  idscale = 0.00001;
 
 int32_t search_id_code (double id_code, int8_t type) {
+#if 0
     int32_t        pos = 4;
     int8_t        found = 0;
     uint16_t    n, ptr, index;
-    int8_t far*    buffer_ascii = (int8_t far*)p_surfacemap;
-    double far*  buffer_double = (double far*)p_surfacemap;
+    int8_t*    buffer_ascii = (int8_t*)p_surfacemap;
+    double*  buffer_double = (double*)p_surfacemap;
     double      id_low = id_code - idscale;
     double      id_high = id_code + idscale;
     smh = _rtl_open (starmap_file, 0);
@@ -3716,6 +3706,8 @@ int32_t search_id_code (double id_code, int8_t type) {
     } else {
         return (-1);
     }
+#endif
+    FIXME
 }
 
 /*  Prepara le informazioni sulla stella vicina, quella attorno alla quale
@@ -3725,6 +3717,7 @@ int32_t search_id_code (double id_code, int8_t type) {
 int16_t starnop (double star_x, double star_y, double star_z)
 // stima il numero di pianeti maggiori associato alle coord. di una stella
 {
+#if 0
     int16_t r;
     srand ((int32_t)star_x % 10000 * (int32_t)star_y % 10000 *
            (int32_t)star_z % 10000);
@@ -3737,9 +3730,13 @@ int16_t starnop (double star_x, double star_y, double star_z)
     }
 
     return (r);
+#endif
+    FIXME
+    return 0;
 }
 
 void prepare_nearstar () {
+#if 0
     int16_t    n, c, q, r, s, t;
     double key_radius;
 
@@ -4159,11 +4156,13 @@ no_moons:
     for (n = 0; n < nearstar_nob; n++) {
         nearstar_p_rtperiod[n] = 0;
     }
+#endif
+    FIXME
 }
 
 // Smooth the surface of a planet: fast 4x4 average.
 
-void ssmooth (uint8_t far* target) {
+void ssmooth (uint8_t* target) {
 	uint32_t limit = ((uint32_t) QUADWORDS << 2) - (360 << 2);
 
 	for (uint32_t i = 0; i < limit; i++) {
@@ -4195,7 +4194,8 @@ void ssmooth (uint8_t far* target) {
 
 /* Smussa leggermente la superficie di un pianeta: media 2x2. */
 
-void lssmooth (uint8_t far* target) {
+void lssmooth (uint8_t* target) {
+#if 0
     asm {   pusha
             push es
             mov cx, QUADWORDS
@@ -4220,6 +4220,8 @@ void lssmooth (uint8_t far* target) {
             jnz smooth
             pop es
             popa }
+#endif
+    STUB
 }
 
 int16_t      c, gr, r, g, b, cr, cx, cy;
@@ -4265,6 +4267,7 @@ uint16_t px, py;
 */
 
 void spot () { // una piccola macchia chiara sulla superficie.
+#if 0
     asm {   les di, dword ptr p_background
             add di, py
             add di, px
@@ -4275,6 +4278,8 @@ void spot () { // una piccola macchia chiara sulla superficie.
             mov al, 0x3E }
     min:
     asm     mov es:[di], al
+#endif
+    STUB
 }
 
 void permanent_storm () { // tempesta permanente (una macchia colossale).
@@ -4289,6 +4294,7 @@ void permanent_storm () { // tempesta permanente (una macchia colossale).
 }
 
 void crater () { // un cratere.
+#if 0
     for (a = 0; a < 2 * M_PI; a += 4 * deg) {
         for (gr = 0; gr < cr; gr++) {
             px = cx + cos (a) * gr;
@@ -4334,11 +4340,14 @@ void crater () { // un cratere.
             }
         }
     }
+#endif
+    STUB
 }
 
 void band () /* banda scura orizzontale: pu� essere portata al chiaro
         negando la superficie sulla base del fondo scala 0x3E */
 {
+#if 0
     asm {   les di, dword ptr p_background
             add di, py
             mov cx, cr
@@ -4353,9 +4362,12 @@ void band () /* banda scura orizzontale: pu� essere portata al chiaro
             inc di
             dec cx
             jnz nvrain }
+#endif
+    STUB
 }
 
 void wave () { // Una banda come sopra, per� ondulata.
+#if 0
     asm {   les di, dword ptr p_background
             mov px, 360
             mov bx, cy }
@@ -4376,9 +4388,12 @@ void wave () { // Una banda come sopra, per� ondulata.
             mov byte ptr es:[di], 0
             dec px
             jnz nvrain }
+#endif
+    STUB
 }
 
-void fracture (uint8_t far* target, float max_latitude) {
+void fracture (uint8_t* target, float max_latitude) {
+#if 0
     // solco scuro: tipo le linee su Europa.
     // ha dei parametri perch� viene usata anche per simulare i fulmini
     // quando piove sulla superficie dei pianeti abitabili.
@@ -4413,6 +4428,8 @@ void fracture (uint8_t far* target, float max_latitude) {
         target[vptr] >>= (uint8_t) b;
         gr--;
     } while (gr);
+#endif
+    STUB
 }
 
 void volcano () { // un krakatoa volcano con Gedeone il gigante coglione.
@@ -4463,6 +4480,7 @@ void contrast (float kt, float kq, float thrshld) {
 }
 
 void randoface (int16_t range, int16_t upon) {
+#if 0
     uint16_t c;
 
     for (c = 0; c < 64800; c++) {
@@ -4483,9 +4501,12 @@ void randoface (int16_t range, int16_t upon) {
             p_background[c] = gr;
         }
     }
+#endif
+    STUB
 }
 
 void negate () {
+#if 0
     asm {   les di, p_background
             mov cx, 64800 }
     negat:
@@ -4495,9 +4516,12 @@ void negate () {
             inc di
             dec cx
             jnz negat }
+#endif
+    STUB
 }
 
 void crater_juice () {
+#if 0
     lave = random (3);
     crays = random (3) * 2;
 
@@ -4516,6 +4540,8 @@ void crater_juice () {
             lssmooth (p_background);
         }
     }
+#endif
+    STUB
 }
 
 /*  Funzioni di mappatura dell'atmosfera.
@@ -4541,6 +4567,7 @@ void crater_juice () {
     coperta di terra, al passaggio di una grossa nube diventerebbe mare. */
 
 void cirrus () { // una piccola macchia chiara (nube brillante).
+#if 0
     asm {   les di, dword ptr objectschart
             mov bx, py
             add bx, px
@@ -4552,9 +4579,12 @@ void cirrus () { // una piccola macchia chiara (nube brillante).
             mov al, 0x1F }
     min:
     asm     mov es:[bx+di], al
+#endif
+    STUB
 }
 
 void atm_cyclon () { // ciclone atmosferico: un'ammasso di nubi a spirale.
+#if 0
     b = 0;
 
     while (cr > 0) {
@@ -4581,6 +4611,8 @@ void atm_cyclon () { // ciclone atmosferico: un'ammasso di nubi a spirale.
 
         a += 6 * deg;
     }
+#endif
+    STUB
 }
 
 void storm () { // tempesta (una grande macchia chiara sull'atmosfera).
@@ -4603,12 +4635,13 @@ void storm () { // tempesta (una grande macchia chiara sull'atmosfera).
 
 void surface (int16_t logical_id, int16_t type,
               double seedval, uint8_t colorbase) {
+#if 0
     int16_t         plwp;
     uint16_t        seed;
     int8_t            knot1 = 0, brt;
     int16_t             QW = QUADWORDS;
     float           r1, r2, r3, g1, g2, g3, b1, b2, b3;
-    uint8_t far*   overlay = (uint8_t far*)objectschart;
+    uint8_t*   overlay = (uint8_t*)objectschart;
 
     if (type == 10) {
         return;    // stella compagna: ha superficie stellare...
@@ -5193,6 +5226,8 @@ void surface (int16_t logical_id, int16_t type,
 
     tavola_colori (tmppal + 3 * colorbase, colorbase, 64, brt, brt, brt);
     QUADWORDS = QW;
+#endif
+    STUB
 }
 
 /* Tracciamento degli anelli (eventuali). */
@@ -5268,8 +5303,9 @@ void ring (int16_t planet_id, double ox, double oy, double oz, int16_t start,
     L'effetto falce viene realizzato da "glowinglobe". */
 
 void planets () {
-    int8_t far* atmosphere = (int8_t far*) objectschart;
-    uint8_t far* surface_backup = (uint8_t far*)p_background;
+#if 0
+    int8_t* atmosphere = (int8_t*) objectschart;
+    uint8_t* surface_backup = (uint8_t*)p_background;
     int8_t is_moon;
     int32_t poffs;
     int32_t test;
@@ -5713,6 +5749,8 @@ notaplanet:
     }
 
     p_background = surface_backup;
+#endif
+    STUB
 }
 
 /*
@@ -5736,6 +5774,7 @@ double  laststar_x, laststar_y, laststar_z;
     nelle variabili "laststar_x", "laststar_y" e "laststar_z". */
 
 int8_t isthere (double star_id) {
+#if 0
     int8_t        visible_sectors = 9;
     int32_t        sect_x, sect_y, sect_z;
     int32_t        k, advance = 100000;
@@ -5860,6 +5899,9 @@ int8_t isthere (double star_id) {
     return (0);
 y_end:
     return (1);
+#endif
+    STUB
+    return 0;
 }
 
 /*  Ricerca tutte le stelle note visibili, fino a 50 contemporaneamente.
@@ -5881,10 +5923,11 @@ double      targets_table_py[50];
 double      targets_table_pz[50];
 
 void collect_targets () {
+#if 0
     int16_t     local_smh;
     uint16_t    n, ptr, index, toread;
-    int8_t far*    buffer_ascii = (int8_t far*)p_surfacemap;
-    double far*  buffer_double = (double far*)p_surfacemap;
+    int8_t*    buffer_ascii = (int8_t*)p_surfacemap;
+    double*  buffer_double = (double*)p_surfacemap;
     local_smh = _rtl_open (starmap_file, 0);
 
     if (local_smh > -1) {
@@ -5942,13 +5985,15 @@ void collect_targets () {
 stop:
         _rtl_close (local_smh);
     }
+#endif
+    STUB
 }
 
 /* Cambia lo stato visualizzato dall'FCS sull'Head-Up-Display. */
 
-void status (int8_t* status_description, int16_t message_delay) {
+void status (const char* status_description, int16_t message_delay) {
     if (message_delay >= fcs_status_delay) {
-        strcpy (fcs_status, status_description);
+        strcpy((char*) fcs_status, status_description);
         fcs_status_delay = message_delay;
     }
 }
@@ -6030,7 +6075,7 @@ int8_t digimap[65 * 5] = {
     for the sea, has been extended from 22586 to 32768.
 */
 
-uint32_t far* digimap2; // Will be assigned to n_globes_map + gl_bytes.
+uint32_t* digimap2; // Will be assigned to n_globes_map + gl_bytes.
 
 // Panoramic dome.
 
@@ -6188,6 +6233,7 @@ double dsd;         // To measure distances.
 
 // Load the bitmap for the star surface.
 void load_starface () {
+#if 0
     uint16_t seed = nearstar_identity * 12345;
     asm {   les di, dword ptr s_background
             mov cx, 64800
@@ -6215,9 +6261,12 @@ void load_starface () {
         ssmooth (s_background);
         smoothcount--;
     }
+#endif
+    STUB
 }
 
 void load_QVRmaps () {
+#if 0
     int16_t fh;
     fh = sa_open (offsets_map);
 
@@ -6232,9 +6281,12 @@ void load_QVRmaps () {
         _rtl_read (fh, n_globes_map, gl_bytes);
         _rtl_close (fh);
     }
+#endif
+    FIXME
 }
 
 void load_digimap2 () {
+#if 0
     int16_t fh;
     fh = sa_open (off_digimap2);
 
@@ -6242,10 +6294,12 @@ void load_digimap2 () {
         _rtl_read (fh, digimap2, dm2_bytes);
         _rtl_close (fh);
     }
+#endif
+    FIXME
 }
 
 int8_t    outhudbuffer[81];
-int8_t*    compass =
+const char *    compass =
     "N.........E.........S.........W.........N.........E.........S.......";
 
 float   tp_gravity = 1, pp_gravity = 1;
@@ -6253,7 +6307,8 @@ float   tp_temp = 22, pp_temp = 22;
 float   tp_pressure = 1, pp_pressure = 1;
 float   tp_pulse = 118, pp_pulse = 118;
 
-void wrouthud (uint16_t x, uint16_t y, uint16_t l, int8_t* text) {
+void wrouthud (uint16_t x, uint16_t y, uint16_t l, char* text) {
+#if 0
     int16_t j, i, n;
     uint16_t spot;
     n = 0;
@@ -6287,9 +6342,12 @@ void wrouthud (uint16_t x, uint16_t y, uint16_t l, int8_t* text) {
         spot += 4;
         n++;
     }
+#endif
+    STUB
 }
 
 void surrounding (int8_t compass_on, int16_t openhudcount) {
+#if 0
     int16_t cpos, crem;
     int32_t    lsecs, lptr;
     float   pp_delta, ccom;
@@ -6417,6 +6475,8 @@ void surrounding (int8_t compass_on, int16_t openhudcount) {
              "GRAVITY %2.3f FG & TEMPERATURE %+3.1f@C & PRESSURE %2.3f ATM & PULSE %3.0f PPS",
              tp_gravity, tp_temp, tp_pressure, tp_pulse);
     wrouthud (2, 192, NULL, outhudbuffer);
+#endif
+    STUB
 }
 
 /*  Salva una fotografia dello schermo sul file "SNAPXXXX.BMP":
@@ -6429,6 +6489,7 @@ extern int8_t planet_label[25];
 
 int8_t snapfilename[24];
 void snapshot (int16_t forcenumber, int8_t showdata) {
+#if 0
     int16_t prog;
     uint16_t pqw;
     double parsis_x, parsis_y, parsis_z;
@@ -6533,6 +6594,8 @@ void snapshot (int16_t forcenumber, int8_t showdata) {
 
         _rtl_close (ih);
     }
+#endif
+    STUB
 }
 
 /*

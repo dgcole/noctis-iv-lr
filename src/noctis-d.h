@@ -1,34 +1,20 @@
-#ifndef _NOCTIS_D_INCLUDE
-#define _NOCTIS_D_INCLUDE
+#pragma once
 
 // C/C++ Standard Library Includes
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <conio.h>
-#include <string.h>
-#include <alloc.h>
-#include <stdio.h>
-#include <time.h>
-#include <math.h>
-#include <dos.h>
-#include <io.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <ctime>
+#include <cmath>
+#include <cassert>
+#include <memory>
 
 /*
 
     Definitions for Noctis.
     Many.
 */
-
-// Data type definitions. Will be useful for porting to 32-bit.
-
-typedef unsigned    char    uint8_t;
-typedef unsigned    int     uint16_t;
-typedef unsigned    long    uint32_t;
-
-typedef char        int8_t;
-typedef int         int16_t;
-typedef long        int32_t;
 
 // Data Area:   Length:     Pointer:        Description:
 
@@ -172,35 +158,11 @@ struct pvlist {
     uint16_t vtxflag_3  : 1;
 };
 
-// Definitions for software interrupts.
-
-#define INTERRUPT_VIDEO_MODE    0x10
-#define INTERRUPT_TIME          0x1A
-#define INTERRUPT_DOS_API       0x21
-#define INTERRUPT_MOUSE         0x33
-
-// Definitions for DOS API calls.
-
-#define DOS_CHAR_READ_NO_ECHO   0x08
-#define DOS_GET_STDIN_STATUS    0x0b
-#define DOS_SELECT_DRIVE        0x0e
-#define DOS_SET_WORKING_DIR     0x3b
-
-// Definitions for video modes.
-
-#define VIDEO_MODE_TEXT     0x03
-#define VIDEO_MODE_VGA      0x13
-
-// Definitions for mouse interrupt codes.
-#define MOUSE_READ_STATUS   0x00
-#define MOUSE_READ_PRESS    0x05
-#define MOUSE_READ_MOTION   0x0b
-
-// Definitions for time interrupt codes.
-#define TIME_GET_TIME       0x02
-#define TIME_GET_DATE       0x04
-
 // Processor time cutoff for double left and right clicks.
 #define DBL_CLICK_CUTOFF 500
 
-#endif
+// Defines to help with porting.
+
+#define FIXME { printf("FIXME: %s\n", __FUNCTION__); assert(false); }
+
+#define STUB { printf("STUB: %s\n", __FUNCTION__); }

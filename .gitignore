@@ -1,16 +1,11 @@
-# Borland Files
-*.prj
-*.ide
-*.obj
-*.bak
-*.dws
-*.~de
-*.r$p
-*.csm
-*.mbt
-*.mrt
-*.mak
-*.exe
+# Build Files
+cmake-build-debug/
+
+# CLion Files
+.idea/
+*.iml
+*.ipr
+*.iws
 
 # Save Data
 data/current.bin

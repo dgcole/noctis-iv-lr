@@ -1,6 +1,6 @@
 extern int16_t QUADWORDS;
-extern uint8_t far* adaptor;
-extern uint8_t far* adapted;
+extern uint8_t* adaptor;
+extern uint8_t* adapted;
 extern void reach_your_dir (void);
 extern void _320_200_256 (void);
 extern void _80_25_C (void);
@@ -16,28 +16,28 @@ extern void tavola_colori (uint8_t* nuova_tavolozza,
 extern int16_t mdltx, mdlty, mx, my, mpul;
 extern void mouse_input (void);
 extern int8_t test_and_init_mouse (void);
-extern void pcopy (uint8_t far* dest, uint8_t far* sorg);
-extern void pclear (uint8_t far* target, uint8_t pattern);
-extern void areacopy (uint8_t far* dest, uint8_t far* sorg,
+extern void pcopy (uint8_t*  dest, uint8_t*  sorg);
+extern void pclear (uint8_t*  target, uint8_t pattern);
+extern void areacopy (uint8_t*  dest, uint8_t  sorg,
                       int16_t x, int16_t y, int16_t l, int16_t h);
-extern void areaclear (uint8_t far* dest, int16_t x, int16_t y,
+extern void areaclear (uint8_t*  dest, int16_t x, int16_t y,
                        int16_t x2, int16_t y2, int16_t l, int16_t h, uint8_t pattern);
-extern void psmooth_grays (uint8_t far* target);
-extern void pfade (uint8_t far* target, uint16_t segshift, uint8_t speed);
-extern void psmooth_64 (uint8_t far* target, uint16_t segshift);
-extern void smootharound_64 (uint8_t far* target, long cx, long cy, long r,
+extern void psmooth_grays (uint8_t*  target);
+extern void pfade (uint8_t*  target, uint16_t segshift, uint8_t speed);
+extern void psmooth_64 (uint8_t*  target, uint16_t segshift);
+extern void smootharound_64 (uint8_t*  target, long cx, long cy, long r,
                              int8_t diffuse);
-extern void mask_pixels (uint8_t far* target, uint8_t mask);
+extern void mask_pixels (uint8_t*  target, uint8_t mask);
 
-const TEXTURE_XSIZE = 256; // Larghezza delle BMP.
-const TEXTURE_YSIZE = 256; // Altezza delle BMP.
-extern long XSIZE, YSIZE; // calibrazione BMP.
+const uint16_t TEXTURE_XSIZE = 256; // Larghezza delle BMP.
+const uint16_t TEXTURE_YSIZE = 256; // Altezza delle BMP.
+extern int32_t XSIZE, YSIZE; // calibrazione BMP.
 extern float uneg;
-extern float alfa, beta, gamma;
 extern float cam_x, cam_y, cam_z;
 extern float dpp;
-extern long H_MATRIXS, V_MATRIXS;
+extern int32_t H_MATRIXS, V_MATRIXS;
 extern uint16_t riga[200];
+extern float alfa, beta, ngamma;
 extern void initscanlines (void);
 extern uint16_t ptr;
 extern uint32_t xp, yp, xa, ya;
@@ -46,10 +46,10 @@ extern void Segmento (void);
 extern int8_t flares;
 extern float x2, y2, z2;
 extern float xx, yy, zz;
-extern long lbxl;
-extern long ubxl;
-extern long lbyl;
-extern long ubyl;
+extern int32_t lbxl;
+extern int32_t ubxl;
+extern int32_t lbyl;
+extern int32_t ubyl;
 extern float lbxf;
 extern float ubxf;
 extern float lbyf;
@@ -73,8 +73,8 @@ extern void poly3d (float* x, float* y, float* z,
 extern void Forward (float delta);
 extern float pnx, pny, pnz;
 extern void pnorm (float* x, float* y, float* z);
-extern uint8_t huge* txtr;
-extern uint16_t  huge* wtxtr;
+extern uint8_t* txtr;
+extern uint16_t*  wtxtr;
 extern float x_antialias, y_antialias, z_antialias;
 extern int8_t culling_needed, halfscan_needed;
 extern uint8_t escrescenze;
@@ -143,7 +143,7 @@ extern double ip_target_initial_d;
 extern double requested_approach_coefficient;
 extern double current_approach_coefficient;
 extern double reaction_time;
-extern int8_t   fcs_status[11];
+extern char   fcs_status[11];
 extern int16_t    fcs_status_delay;
 extern int16_t    psys;
 extern double ap_target_initial_d;
@@ -165,7 +165,7 @@ extern int16_t    landing_pt_lat;
 extern int16_t    rotation;
 extern int16_t  epoc;
 extern uint8_t cyclon[384];
-extern int8_t          ctb[512];
+extern char          ctb[512];
 extern int8_t       _delay;
 extern int8_t          stspeed;
 extern int8_t          bright;
@@ -225,14 +225,14 @@ extern int8_t* planet_description[10];
 extern uint8_t planet_rgb_and_var[40];
 extern int16_t planet_possiblemoons[10];
 extern float mindiff;
-extern uint8_t far*  p_background;
-extern uint8_t far*  s_background;
-extern uint8_t huge* p_surfacemap;
-extern quadrant      far*  objectschart;
-extern uint8_t far*  ruinschart; // come objectschart, ma dichiarato in bytes
-extern uint8_t far*  pvfile;
-extern uint8_t far*  n_offsets_map;
-extern int8_t far*           n_globes_map;
+extern uint8_t*   p_background;
+extern uint8_t*   s_background;
+extern uint8_t*   p_surfacemap;
+extern quadrant*        objectschart;
+extern uint8_t*   ruinschart; // come objectschart, ma dichiarato in bytes
+extern uint8_t*   pvfile;
+extern uint8_t*   n_offsets_map;
+extern int8_t*            n_globes_map;
 extern int8_t sky_red_filter;
 extern int8_t sky_grn_filter;
 extern int8_t sky_blu_filter;
@@ -256,24 +256,24 @@ extern int8_t landed;
 extern long atl_x, atl_z, atl_x2, atl_z2;
 extern double qid;
 extern int16_t fn;
-extern uint8_t far* fnv, *fcolor;
-extern float far* fx, *inv_fx, *fy, *fz;
+extern uint8_t  fnv, *fcolor;
+extern float  fx, *inv_fx, *fy, *fz;
 extern int16_t vhn;
-extern float far* vhx, *vhy, *vhz;
-extern float far* vhxm, *vhym, *vhzm, *vh_mdq;
-extern uint8_t far* vhnv, *vhcolor, *vhindex;
+extern float  vhx, *vhy, *vhz;
+extern float  vhxm, *vhym, *vhzm, *vh_mdq;
+extern uint8_t  vhnv, *vhcolor, *vhindex;
 extern int16_t in;
-extern float far* ix, *iy, *iz;
-extern uint8_t far* inv, *icolor;
+extern float  ix, *iy, *iz;
+extern uint8_t  inv, *icolor;
 extern int16_t alpha_n;
-extern uint8_t far* alpha_nv;
-extern float far* alpha_x, *alpha_y, *alpha_z;
+extern uint8_t  alpha_nv;
+extern float  alpha_x, *alpha_y, *alpha_z;
 extern long flat_rnd_seed;
-extern void fast_srand (long seed);
-extern long fast_random (long mask);
+extern void fast_srand (int32_t seed);
+extern long fast_random (int32_t mask);
 extern int16_t ranged_fast_random (int16_t range);
-extern int16_t sa_open (long offset_of_virtual_file);
-extern void shade (uint8_t far* palette_buffer,
+extern int16_t sa_open (int32_t offset_of_virtual_file);
+extern void shade (uint8_t* palette_buffer,
                    int16_t first_color, int16_t number_of_colors,
                    float start_r,  float start_g,  float start_b,
                    float finish_r, float finish_g, float finish_b);
@@ -289,7 +289,7 @@ extern void watch (double cam_x, double cam_y, double cam_z,
 extern int8_t xy (double cam_x, double cam_y, double cam_z,
                   double point_x, double point_y, double point_z);
 extern void p_Forward (float delta);
-extern void copia (uint8_t far* dest, uint8_t far* sorg, uint16_t x, uint16_t y,
+extern void copia (uint8_t  dest, uint8_t  sorg, uint16_t x, uint16_t y,
                    int16_t l, int16_t a);
 extern void setfx (int8_t fx);
 extern void chgfx (int8_t fx);
@@ -322,11 +322,11 @@ extern void randomic_mapper (float x0,
                              int8_t divisions);
 extern void unloadpv (int16_t handle);
 extern void unloadallpv (void);
-extern int8_t loadpv (int16_t   handle, long virtual_file_position,
+extern int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
                       float xscale, float yscale, float zscale,
                       float xmove,  float ymove,  float zmove,
                       uint8_t base_color,   int8_t depth_sort);
-extern void QuickSort (int16_t far* index, float far* mdist, int16_t start,
+extern void QuickSort (int16_t  index, float  mdist, int16_t start,
                        int16_t end);
 extern void drawpv (int16_t handle, int16_t mode, int16_t rm_iterations,
                     float center_x, float center_y, float center_z,
@@ -337,11 +337,11 @@ extern void modpv (int16_t handle, int16_t polygon_id, int16_t vertex_id,
                    float x_angle, float y_angle, float z_angle,
                    pvlist* vertexs_to_affect);
 //--------------------------------------------------------------------------//
-extern int8_t* alphavalue (double value);
+extern char* alphavalue (double value);
 extern void background (uint16_t start,
-                        uint8_t far* target,
-                        uint8_t far* background,
-                        uint8_t far* offsetsmap,
+                        uint8_t  target,
+                        uint8_t  background,
+                        uint8_t  offsetsmap,
                         uint16_t total_map_bytes,
                         uint16_t screenshift);
 extern void sky (uint16_t limits);
@@ -349,28 +349,28 @@ extern double laststar_x, laststar_y, laststar_z;
 extern int8_t isthere (double star_id);
 extern int8_t glass_bubble;
 extern void globe (uint16_t start,
-                   uint8_t far* target,
-                   uint8_t far* tapestry,
-                   uint8_t far* offsetsmap,
+                   uint8_t*  target,
+                   uint8_t*  tapestry,
+                   uint8_t*  offsetsmap,
                    uint16_t total_map_bytes,
                    double x, double y, double z,
                    float mag_factor, int8_t colormask,
                    int8_t globe_saturation);
 extern void glowinglobe (int16_t start,
-                         uint8_t far* target,
-                         uint8_t far* offsetsmap,
+                         uint8_t*  target,
+                         uint8_t*  offsetsmap,
                          uint16_t total_map_bytes,
                          double x, double y, double z, float mag_factor,
                          int16_t terminator_start, int16_t terminator_end, uint8_t color);
-extern void whiteglobe (uint8_t far* target,
+extern void whiteglobe (uint8_t*  target,
                         double x, double y, double z,
                         float mag_factor, float fgm_factor);
 extern double xsun_onscreen;
-extern void whitesun (uint8_t far* target,
+extern void whitesun (uint8_t*  target,
                       double x, double y, double z,
                       float mag_factor, float fgm_factor);
-extern float far lft_sin[361];
-extern float far lft_cos[361];
+extern float lft_sin[361];
+extern float lft_cos[361];
 extern int8_t lens_flares_init (void);
 extern void lens_flares_for (double cam_x, double cam_y, double cam_z,
                              double xlight, double ylight, double zlight,
@@ -379,7 +379,7 @@ extern void lens_flares_for (double cam_x, double cam_y, double cam_z,
 extern void single_pixel_at_ptr (uint16_t ptr, uint8_t pixel_color);
 extern int8_t far_pixel_at (double xlight, double ylight, double zlight,
                             double radii, uint8_t unconditioned_color);
-extern uint32_t far* digimap2;
+extern uint32_t*  digimap2;
 extern void cupola (float y_or, float brk);
 extern void polycupola (float y_or, int8_t textured);
 //extern void alogena (void);
@@ -412,8 +412,8 @@ extern void extract_ap_target_infos (void);
 extern float zrandom (int16_t range);
 extern int16_t starnop (double star_x, double star_y, double star_z);
 extern void prepare_nearstar (void);
-extern void ssmooth (uint8_t far* target);
-extern void lssmooth (uint8_t far* target);
+extern void ssmooth (uint8_t  target);
+extern void lssmooth (uint8_t  target);
 extern int16_t      c, gr, r, g, b, cr, cx, cy;
 extern int8_t     lave, crays;
 extern float    kfract;
@@ -424,7 +424,7 @@ extern void permanent_storm (void);
 extern void crater (void);
 extern void band (void);
 extern void wave (void);
-extern void fracture (uint8_t far* target, float max_latitude);
+extern void fracture (uint8_t  target, float max_latitude);
 extern void volcano (void);
 extern void contrast (float kt, float kq, float thrshld);
 extern void randoface (int16_t range, int16_t upon);
@@ -458,7 +458,7 @@ extern double targets_table_px[50];
 extern double targets_table_py[50];
 extern double targets_table_pz[50];
 extern void collect_targets (void);
-extern void status (int8_t* status_description, int16_t message_delay);
+extern void status (const char* status_description, int16_t message_delay);
 
 extern float flandom ();
 extern float fast_flandom ();
@@ -476,7 +476,7 @@ extern void load_QVRmaps ();
 extern void load_digimap2 ();
 
 extern int8_t outhudbuffer[81];
-extern void wrouthud (uint16_t x, uint16_t y, uint16_t l, int8_t* text);
+extern void wrouthud (uint16_t x, uint16_t y, uint16_t l, char* text);
 extern void surrounding (int8_t compass_on, int16_t openhudcount);
 
 extern float    pp_gravity;

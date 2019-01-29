@@ -5,44 +5,32 @@
     Full-3D Graphic Engine.
 
     Funzioni a 32-bit per disegnare poligoni 3d riempiti di colore
-    in grafica 320x200x256. Sul Pentium ä una cannonata: una media
+    in grafica 320x200x256. Sul Pentium ÔøΩ una cannonata: una media
     di 12000 poligoni al secondo, da workstation, con 75 MhZ.
 
     - Non si deve mai usare il colore nr. 255 per
       tracciare qualcosa nell'area di lavoro, quando si usa questa
-      routine, perchÇ lo utilizza solo lei per delimitare i poligoni.
+      routine, perchÔøΩ lo utilizza solo lei per delimitare i poligoni.
       Se si vuole usare un altro colore per delimitarli, bisogna
       cambiare tutti i valori 255 nelle funzioni "Segmento" e "poly3d".
 
-    Chiamare initscanlines prima di tracciare alcunchä,
-    sennï non traccia una bella sega.
+    Chiamare initscanlines prima di tracciare alcunchÔøΩ,
+    sennÔøΩ non traccia una bella sega.
 
     Nato (incredibile a dirsi) per Alpha Dream.
     Ultima revisione 21 Dicembre 1997.
 
     Aggiunte: ottimizzazione conversioni 3d-2d, 23.6.1997;
           ciclo di fast-load dei vertici quando sono tutti di fronte
-          alla videocamera (cioä quasi sempre), 23.6.1997;
+          alla videocamera (cioÔøΩ quasi sempre), 23.6.1997;
           clipping intelligente, ottobre '97;
           texture mapping, febbraio '98.
 
 */
 
-#ifndef __FLOAT_H
-#include <float.h>
-#endif
-
-#ifndef __ALLOC_H
-#include <alloc.h>
-#endif
-
-#ifndef __MATH_H
-#include <math.h>
-#endif
-
-#ifndef __IO_H
-#include <io.h>
-#endif
+#include <memory>
+#include <cmath>
+#include <cstdio>
 
 #include "noctis-d.h"
 
@@ -78,20 +66,20 @@
 
 float uneg = 100; /* Un fatto particolarmente curioso: uneg rappresenta
            la distanza minima alla quale un certo punto non viene
-           considerato alle spalle dell'osservatore. Il bello ä
+           considerato alle spalle dell'osservatore. Il bello ÔøΩ
            che l'ideazione di questa sigla (ricordo che si
-           pronuncia u-neg) risale a cosç tanto tempo fa
+           pronuncia u-neg) risale a cosÔøΩ tanto tempo fa
            (si parla della prima versione di Smallest, ovvero
-           dell'aprile '92, attualmente pió di 5 anni fa)
+           dell'aprile '92, attualmente piÔøΩ di 5 anni fa)
            che non ricordo assolutamente che cosa significhi
-           quest'acronimo (era un acronimo, ma chissÖ come mi
+           quest'acronimo (era un acronimo, ma chissÔøΩ come mi
            venne in mente, forse da user-neg, negativo all'utente,
            in riferimento all'effetto di inversione del segno
            dato dalle funzioni prospettiche quando, per l'appunto,
            una tripletta di coordinate ha la distanza normale
            dallo schermo in negativo, ma non sono affatto sicuro. */
 
-float alfa = 0, beta = 0, gamma = 0;
+float alfa = 0, beta = 0, ngamma = 0;
 float cam_x = 0, cam_y = 0, cam_z = 0;
 
 const double deg = M_PI / 180;
@@ -103,21 +91,21 @@ float inv_dpp = 1 / dpp;
 
 /*  Costanti e variabili di controllo del texture mapping.
     H_MATRIXS e V_MATRIXS specificano le ripetizioni della stessa
-    texture sui poligoni, ma per avere la possibilitÖ di dimezzare
+    texture sui poligoni, ma per avere la possibilitÔøΩ di dimezzare
     la texture o di disegnarne solo un quarto, sono state assunte
     come rappresentanti di "quarti di texture". Significa che
-    per avere un texturing normale, senza ripetizioni nÇ
+    per avere un texturing normale, senza ripetizioni nÔøΩ
     dimezzamenti, bisogna assegnare le due variabili a 4,
     non a 1 (che rappresenterebbe un solo quarto).
-    E cosç via... se si mette 8, si ottiene la ripetizione
+    E cosÔøΩ via... se si mette 8, si ottiene la ripetizione
     della texture per due volte sul corrispondente asse,
     se si mette a 12 si ottengono tre ripetizioni, eccetera...
     (ps ho cambiato la base a 16, sedicesimi di texture). */
 
-const   MPIX          =                 319; // Massimo PIXEL su X.
-const   MPIY          =                         199; // Massimo PIXEL su Y.
-const   TEXTURE_XSIZE =                 256; // Larghezza delle BMP.
-const   TEXTURE_YSIZE =                 256; // Altezza delle BMP.
+const uint16_t  MPIX          =                 319; // Massimo PIXEL su X.
+const uint16_t  MPIY          =                         199; // Massimo PIXEL su Y.
+const uint16_t  TEXTURE_XSIZE =                 256; // Larghezza delle BMP.
+const uint16_t  TEXTURE_YSIZE =                 256; // Altezza delle BMP.
 
 float   EMU_K         =                      16; // Cost. di emulaz. FPU
 int32_t    H_MATRIXS     =                  16; // Nr. ripetizioni. 16-128
@@ -132,6 +120,7 @@ float   YCOEFF        =                 EMU_K / dpp; // Coefficente di comodo.
 uint16_t riga[200];
 
 void initscanlines () {
+#if 0
     uint16_t c;
 
     for (c = 0; c < 200; c++) {
@@ -139,15 +128,17 @@ void initscanlines () {
     }
 
     _control87 (MCW_EM, MCW_EM); // disattiva i Floating Point Errors.
+#endif
+    FIXME
 }
 
-// Traccia un segmento senza effettuare controlli sui limiti. Pió veloce.
+// Traccia un segmento senza effettuare controlli sui limiti. PiÔøΩ veloce.
 // Traccia con colore 255.
 // Non effettua controlli, e quindi non va utilizzata per altre cose,
 // o per lo meno bisogna stare attenti a far rientrare gli estremi del
 // segmento nell'area video utilizzabile.
 // Quella che effettua i controlli si trova nella funzione waveline di
-// Liquid Player, ed ä sicura al 1000 per mille.
+// Liquid Player, ed ÔøΩ sicura al 1000 per mille.
 
 uint16_t ptr;
 
@@ -155,6 +146,7 @@ uint32_t xp, yp, xa, ya;
 uint32_t global_x, global_y;
 
 void Segmento () {
+#if 0
     int32_t a, b, L;
     uint16_t pi, pf;
 
@@ -267,10 +259,10 @@ void Segmento () {
 
             Tutte le operazioni precedute dal prefisso 0x66
             vanno considerate con operandi di dimensioni doppie.
-            Difatti, poichÇ l'assemblatore in-line non supporta
-            i registri a 32 bit, ä necessario aggiungere i
+            Difatti, poichÔøΩ l'assemblatore in-line non supporta
+            i registri a 32 bit, ÔøΩ necessario aggiungere i
             prefissi d'estensione manualmente.
-            Cosç facendo, i puntatori di tipo word (word ptr)
+            CosÔøΩ facendo, i puntatori di tipo word (word ptr)
             vanno considerati come dword ptr, mentre i registri
             sono tutti estesi (per esempio, ax diventa eax).
 
@@ -294,15 +286,17 @@ void Segmento () {
             db 0x66;
             cmp word ptr global_x, cx
             jb  _do }
+#endif
+    STUB
 }
 
 // La funzione di tracciamento viene principalmente usata da Noctis,
-// ed una delle sue caratteristiche ä di poter fare poligoni semitrasparenti
+// ed una delle sue caratteristiche ÔøΩ di poter fare poligoni semitrasparenti
 // che simulano degli aloni luminosi: si attiva con il flag "flares".
-// PerchÇ il disegno dei bordi (dei segmenti) non interferisca con tale
+// PerchÔøΩ il disegno dei bordi (dei segmenti) non interferisca con tale
 // operazione, serve una pagina sana, priva di bordi, diversa da quella su
 // cui si va a tracciare.
-// Per default, ä la seguente, posta a nulla perchÇ tdpolygs non si
+// Per default, ÔøΩ la seguente, posta a nulla perchÔøΩ tdpolygs non si
 // prepara subito a questa particolare funzione.
 
 int8_t flares = 0;
@@ -323,13 +317,13 @@ float xx, yy, zz;
 
 /*
 
-    Voglio annotarmi le sigle complicate, sennï finisce come per u-neg.
+    Voglio annotarmi le sigle complicate, sennÔøΩ finisce come per u-neg.
 
     doflag   = DO-(or-not)-for-each-polygon-FLAG.
-           da quando c'ä il fast-load funge anche come contatore
+           da quando c'ÔøΩ il fast-load funge anche come contatore
            per i vertici da non ritagliare a livello 3d.
            infatti, se sono tutti in doflag, il poligono non
-           interseca lo schermo e si puï lasciare com'ä, almeno
+           interseca lo schermo e si puÔøΩ lasciare com'ÔøΩ, almeno
            a livello 3d.
     x2,y2,z2 = variabili di transito nelle rotazioni.
     pvert    = Previous-VERTex.
@@ -339,15 +333,15 @@ float xx, yy, zz;
     zk       = Zeta-Constant... costante derivata dal calcolo della
            differenza tra coordinate zeta normalizzate allo schermo,
            viene usata nel clipping a livello 3d dalla funz. "poly3d".
-           in realtÖ ä una costante solo per due equazioni,
-           ma ä meglio calcolarla una volta sola che due.
+           in realtÔøΩ ÔøΩ una costante solo per due equazioni,
+           ma ÔøΩ meglio calcolarla una volta sola che due.
 
     xx,yy,zz = in questa inclusione non sono mai usate, ma ci sono sempre
-           state perchÇ una volta servivano a qualcosa (non ricordo
-           per nulla a cosa). attualmente, devono rimanerci perchÇ
+           state perchÔøΩ una volta servivano a qualcosa (non ricordo
+           per nulla a cosa). attualmente, devono rimanerci perchÔøΩ
            molti programmi le usano come variabili temporanee.
 
-    pun = PUNto, ä un contatore/non esiste pió dacchÇ ho tradotto in asm.
+    pun = PUNto, ÔøΩ un contatore/non esiste piÔøΩ dacchÔøΩ ho tradotto in asm.
     rxf = Rototraslated-X-Floating-point-value.
     rwf = Rototraslated-vieW-(or-not)-Flag.
     mp  = Matrice Punti.
@@ -397,8 +391,8 @@ float opt_psinalfa = 0;
 float opt_tcosalfa = 1;
 float opt_tsinalfa = 0;
 
-float opt_tcosgamma = 1;
-float opt_tsingamma = 0;
+float opt_tcosngamma = 1;
+float opt_tsinngamma = 0;
 
 void change_angle_of_view () {
     opt_pcosbeta = cos (beta * deg) * dpp;
@@ -409,8 +403,8 @@ void change_angle_of_view () {
     opt_psinalfa = sin (alfa * deg) * dpp; // 0.833
     opt_tcosalfa = cos (alfa * deg);
     opt_tsinalfa = sin (alfa * deg);
-    opt_tcosgamma = cos (gamma * deg);
-    opt_tsingamma = sin (gamma * deg);
+    opt_tcosngamma = cos (ngamma * deg);
+    opt_tsinngamma = sin (ngamma * deg);
 }
 
 // Chiamare dopo aver cambiato dpp.
@@ -431,24 +425,25 @@ void change_txm_repeating_mode () {
     YSIZE = TEXTURE_YSIZE * V_MATRIXS;
 }
 
-/*  Questa ä la funzione da invocare per ogni poligono da tracciare.
+/*  Questa ÔøΩ la funzione da invocare per ogni poligono da tracciare.
 
     E` un vero capolavoro: nessun problema, massima ottimizzazione,
     al 99% puro assembly per coprocessori da 387 in su e codice 32-bit,
-    probabilmente la pió complessa e bella funzione ch'io abbia mai
+    probabilmente la piÔøΩ complessa e bella funzione ch'io abbia mai
     partorito.
 
-    Chiunque tenterÖ di capirci qualcosa rimarrÖ molto scoraggiato.
+    Chiunque tenterÔøΩ di capirci qualcosa rimarrÔøΩ molto scoraggiato.
     Lungo e complesso, ma provate ad eseguirlo ed a monitorarne il flusso:
-    vi accorgerete della sua enorme agilitÖ. */
+    vi accorgerete della sua enorme agilitÔøΩ. */
 
-float uno = 1; // sempre uno: ä una costante di comodo.
+float uno = 1; // sempre uno: ÔøΩ una costante di comodo.
 
-uint8_t entity = 1; /* controlla quantitÖ generiche nel riempimento
+uint8_t entity = 1; /* controlla quantitÔøΩ generiche nel riempimento
                  dei poligoni con alcuni effetti speciali. */
 
 void poly3d (float* x, float* y, float* z,
              uint16_t nrv, uint8_t colore) {
+#if 0
     uint16_t _8n;
     uint8_t ent = entity;
     // Matrici 3d: tutto sullo stack.
@@ -777,12 +772,12 @@ convert:      asm { add si, 4
 
     // Queste sono le proiezioni prospettiche da 3d a 2d.
     // E` stato incluso in data 6.12.97 anche un piccolo esame
-    // dei minimi e massimi grafici. Questo fa sç che i poligoni
+    // dei minimi e massimi grafici. Questo fa sÔøΩ che i poligoni
     // che rientrano nei limiti del video non vengano esaminati
-    // dalle funzioni di clipping 2-d. E` pió intelligente.
+    // dalle funzioni di clipping 2-d. E` piÔøΩ intelligente.
     // Prima d'ora, il ciclo di ricerca minimi-massimi era in fondo,
-    // e veniva eseguito dopo il clipping 2d, che perï ä lungo
-    // e complicato: non ä quindi una cosa da fare sempre.
+    // e veniva eseguito dopo il clipping 2d, che perÔøΩ ÔøΩ lungo
+    // e complicato: non ÔøΩ quindi una cosa da fare sempre.
 to_2d:
     asm {   db 0x66;
             mov ax, word ptr lbxl
@@ -2043,6 +2038,8 @@ drawb:
                     jbe fil4a
                     popa }
         }
+#endif
+    STUB
 }
 
 /*
@@ -2054,10 +2051,11 @@ drawb:
 #define OK                     1 // Ritorno positivo.
 #define NOT_OK                     0 // Ritorno negativo.
 
-uint8_t huge* txtr; /* Area della texture (FLS a livelli di intensitÖ,
+uint8_t* txtr; /* Area della texture (FLS a livelli di intensitÔøΩ,
                  64 livelli per pixel, senza header).*/
 
 int8_t init_texture_mapping () {
+#if 0
     _control87 (MCW_EM, MCW_EM); // disattiva i Floating Point Errors.
     txtr = (uint8_t huge*)
            farmalloc ((int32_t)TEXTURE_YSIZE * 256 + 16);
@@ -2067,6 +2065,8 @@ int8_t init_texture_mapping () {
     } else {
         return (NOT_OK);
     }
+#endif
+    STUB
 }
 
 int8_t load_texture (int8_t* fname, int32_t offset)
@@ -2074,6 +2074,7 @@ int8_t load_texture (int8_t* fname, int32_t offset)
     formato FLS a livelli di luminanza,
     64 livelli per pixel, senza header. */
 {
+#if 0
     int16_t fh, sl;
     uint32_t p;
     fh = _rtl_open (fname, 0);
@@ -2104,9 +2105,12 @@ int8_t load_texture (int8_t* fname, int32_t offset)
     } else {
         return (NOT_OK);
     }
+#endif
+    STUB
 }
 
 int8_t fast_load_texture (int8_t* fname) { /* Solo per bitmaps 256 x 256. */
+#if 0
     int16_t fh;
     uint32_t p;
     fh = _rtl_open (fname, 0);
@@ -2121,6 +2125,8 @@ int8_t fast_load_texture (int8_t* fname) { /* Solo per bitmaps 256 x 256. */
     } else {
         return (NOT_OK);
     }
+#endif
+    STUB
 }
 
 /*  Variabili e funzioni per i procedimenti di shading.
@@ -2129,7 +2135,7 @@ int8_t fast_load_texture (int8_t* fname) { /* Solo per bitmaps 256 x 256. */
 
     int8_t    shade = 0;        // in che modo i poligoni intercettano la luce
 
-    #define NORMAL       0x00 // luminositÖ non curata
+    #define NORMAL       0x00 // luminositÔøΩ non curata
 
               /* sezione spotlight */
 #define SPOTLIGHT    0x10 // torcia elettrica o faro, con centro su <xl, yl>
@@ -2142,7 +2148,7 @@ int16_t     lt_range = 30;    // ampiezza zona illumin.: 0 = infinita
 int16_t     absorption = 45;  // assorbimento della superficie, da 0 a 63
 
 /* sezione radiosity semplificata */
-#define RADIOSITY    0x20 // luminositÖ regolabile orizzontalmente o vertic.
+#define RADIOSITY    0x20 // luminositÔøΩ regolabile orizzontalmente o vertic.
 int8_t    shadymask = 1;
 int16_t shady_aux = 0;
 
@@ -2186,16 +2192,16 @@ void pnorm (float* x, float* y, float* z)
 
 /*  Se si desidera una texture sui poligoni, invocare quest'altra funzione.
     Il parametro "tinta" permette di specificare il colore meno luminoso
-    di una sequenza di sue copie pió intense: il numero di queste
-    gradazioni non ä importante per polymap.
+    di una sequenza di sue copie piÔøΩ intense: il numero di queste
+    gradazioni non ÔøΩ importante per polymap.
 
-    E` leggermente pió lenta nel riempimento, ma non ä grave.
+    E` leggermente piÔøΩ lenta nel riempimento, ma non ÔøΩ grave.
     N.B. Il poligono deve avere sempre 4 vertici, anche se specificare il
     numero di vertici effettivi con il parametro "nv" aggiusta la
     texture in modo che i bordi coincidano.
 
-    P.S. Sulla pagina nascosta, bisogna prevedere un byte in pió (64001),
-    perchÇ vi viene conservato il numero del primo colore della texture,
+    P.S. Sulla pagina nascosta, bisogna prevedere un byte in piÔøΩ (64001),
+    perchÔøΩ vi viene conservato il numero del primo colore della texture,
     dato che i parametri sullo stack non sono raggiungibili nel ciclo
     di tracciamento principale, per ragioni di ottimizzazione. */
 
@@ -2212,6 +2218,7 @@ int8_t    halfscan_needed = 0; // flag: traccia due linee per volta.
 uint8_t escrescenze = 0xE0; // primo colore dei bumps (escrescenze)
 
 void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
+#if 0
     float ultima_x[2 * VERTICI_PER_POLIGONO];
     float ultima_y[2 * VERTICI_PER_POLIGONO];
     float ultima_z[2 * VERTICI_PER_POLIGONO];
@@ -2247,11 +2254,11 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
 
     // Rototraslazione dei vertici; i dati rimangono ancora 3d.
     asm mov doflag, 0
-    asm {// if (gamma)
+    asm {// if (ngamma)
         db 0x66;
         mov ax, word ptr _0
         db 0x66;
-        cmp ax, word ptr gamma
+        cmp ax, word ptr ngamma
         jne t_axis
         jmp no_t_axis }
     t_axis:
@@ -2292,15 +2299,15 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
             fmul opt_tsinalfa
             fsubp
             fst my
-            fmul opt_tcosgamma
+            fmul opt_tcosngamma
             fld dword ptr rxf[si]
-            fmul opt_tsingamma
+            fmul opt_tsinngamma
             fsubp
             fstp dword ptr ryf[si]
             fld my
-            fmul opt_tsingamma
+            fmul opt_tsinngamma
             fld dword ptr rxf[si]
-            fmul opt_tcosgamma
+            fmul opt_tcosngamma
             faddp
             fstp dword ptr rxf[si]
             sahf
@@ -3095,7 +3102,7 @@ noifor:
         fsub x_centro_f
         fadd uno
         fld st(0) // duplica (ipart[i] - x_centro + 1)
-        fld st(0) // due volte, ä lo stesso per tre calcoli
+        fld st(0) // due volte, ÔøΩ lo stesso per tre calcoli
         fmul vz
         fild i
         fsub y_centro_f
@@ -3135,7 +3142,7 @@ noifor:
         fistp u
         // sections = fpart[i] - ipart[i]; // Sequenza stabile.
         // _DI = i * 320 + ipart[i];       // Moltiplicazione per 320 in tabella.
-        // SI ä giÖ caricato con I * 2.
+        // SI ÔøΩ giÔøΩ caricato con I * 2.
         mov dx, word ptr ipart[si]
         mov ax, word ptr fpart[si]
         mov di, word ptr riga[si]
@@ -3508,11 +3515,13 @@ row:
             jb trace_end
             jmp trace }
     trace_end:      // Fine tracciamento.
+#endif
+    STUB
 }
 
 void Forward (float delta) /* Provoca l'avanzamento dell'osservatore
                   nella direzione di volo di <delta>
-                  unitÖ virtuali. */
+                  unitÔøΩ virtuali. */
 {
     cam_x -= delta * opt_tsinbeta * opt_tcosalfa;
     cam_z += delta * opt_tcosbeta * opt_tcosalfa;
@@ -3522,18 +3531,19 @@ void Forward (float delta) /* Provoca l'avanzamento dell'osservatore
 int32_t _x_, _y_;
 
 int8_t getcoords (float x, float y, float z) {
+#if 0
     // calcola le coordinate sullo schermo di un punto nello spazio,
     // usando lo stesso nucleo di calcolo di poly3d e di polymap,
     // se il punto rientra nello schermo ritorna 1, altrimenti ritorna 0.
     // le coordinate sono poi trasferite nelle variabili _x_ e _y_.
-    // il punto non andrebbe tracciato se non ä visibile, perchÇ
+    // il punto non andrebbe tracciato se non ÔøΩ visibile, perchÔøΩ
     // le coordinate risulterebbero, in tal caso, indeterminabili.
     float rx, ry, rz, my;
-    asm {// if (gamma != 0) goto t_axis;
+    asm {// if (ngamma != 0) goto t_axis;
         db 0x66;
         mov ax, word ptr _0
         db 0x66;
-        cmp ax, word ptr gamma
+        cmp ax, word ptr ngamma
         jne t_axis
         jmp no_t_axis }
 t_axis:
@@ -3568,15 +3578,15 @@ t_axis:
             fmul opt_tsinalfa
             fsubp
             fst my
-            fmul opt_tcosgamma
+            fmul opt_tcosngamma
             fld rx
-            fmul opt_tsingamma
+            fmul opt_tsinngamma
             fsubp
             fstp ry
             fld my
-            fmul opt_tsingamma
+            fmul opt_tsinngamma
             fld rx
-            fmul opt_tcosgamma
+            fmul opt_tcosngamma
             faddp
             fstp rx
             sahf
@@ -3641,11 +3651,14 @@ convert: //my  = dpp / rz;
     } else {
         return (0);
     }
+#endif
+    STUB
 }
 
 int8_t facing (float* x, float* y, float* z) {
-    /*  Controlla se un poligono a una sola faccia ä visibile o meno.
-        Certo che come procedimento non ä poi tanto semplice: va calcolata,
+#if 0
+    /*  Controlla se un poligono a una sola faccia ÔøΩ visibile o meno.
+        Certo che come procedimento non ÔøΩ poi tanto semplice: va calcolata,
         anche approssimativamente, la normale alla superficie; comunque,
         sempre meglio che calcolare tutto il poligono... */
     float x1, y1, z1, x2, y2, z2, xr, yr, zr;
@@ -3707,4 +3720,5 @@ int8_t facing (float* x, float* y, float* z) {
             not dl }
     _zero:
     return (_DL);
+#endif
 }

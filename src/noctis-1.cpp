@@ -8,13 +8,13 @@ float   refx, refy, refz;
 float   sp_x, sp_y, sp_z;
 
 /*  Funzioni e variabili globali di tracciamento e gestione
-    delle superfici planetarie, in poligonale (h! ce la farï?)
+    delle superfici planetarie, in poligonale (h! ce la farÔøΩ?)
 
     Si, ce l'ho fatta, ahem... dunque...
     per tracciare in tempo utile una superficie di 40000 quadranti,
     ovvero 80000 triangoli, su una matrice di 200x200 (un po' tantino
     in effetti) ho applicato un procedimento di, boh...
-    "focalizzazione" diciamo. Pió probabilmente puï chiamarsi
+    "focalizzazione" diciamo. PiÔøΩ probabilmente puÔøΩ chiamarsi
     "depth culling"... inclusi i riflessi, la funzione "fragment"
     passa al vaglio 160.000 poligoni per fotogramma, disegnandone
     comunque circa un decimo. E' importante ottimizzare quella,
@@ -50,9 +50,10 @@ float base_pp_temp;
 float base_pp_pressure;
 
 float hpoint (int32_t px, int32_t pz) {
+#if 0
     // Trova l'altezza di un punto sulla superficie.
     // Per migliorare la risoluzione, usa un procedimento d'interpolazione
-    // bi-lineare, con 16384 gradazioni intermedie, tante quante le unitÖ
+    // bi-lineare, con 16384 gradazioni intermedie, tante quante le unitÔøΩ
     // logiche che compongono il lato di un quadrante; considera anche
     // la divisione dei quadranti in due triangoli isosceli.
     int32_t cpos;
@@ -74,6 +75,9 @@ float hpoint (int32_t px, int32_t pz) {
     }
 
     return (py);
+#endif
+    STUB
+    return 0;
 }
 
 /*
@@ -86,7 +90,7 @@ float hpoint (int32_t px, int32_t pz) {
 */
 
 int8_t  groundflares = 0;     // tipo di tracciamento del suolo.
-int32_t  mushscaling = 8191;   // range variabilitÖ (in bitmask) "greenmush"
+int32_t  mushscaling = 8191;   // range variabilitÔøΩ (in bitmask) "greenmush"
 float treescaling = 4096;   // scalatura alberi, di solito mushscaling/2
 float treespreads = 0.75;   // scalatura rami ad ogni ricorsione
 float treepeaking = 1.25;   // passa come "distance_from_perfection"
@@ -98,7 +102,7 @@ int8_t  leafflares  = 0x00;       // tipo di tracciamento foglie.
 
 float rockscaling = 500;    // dimensioni delle rocce.
 float rockpeaking = 250;    // altezza delle rocce.
-int16_t   rockdensity = 15;     // densitÖ gruppi di rocce (bitmask).
+int16_t   rockdensity = 15;     // densitÔøΩ gruppi di rocce (bitmask).
 int8_t  quartz      = 0;      // traccia quarzi trasparenti, se impostato.
 
 int16_t   detail_seed = 12345;
@@ -107,8 +111,9 @@ void greenmush (float x, float y, float z,
                 uint8_t mask_1, uint8_t mask_2,
                 int32_t scaling, uint8_t colorgrade,
                 uint8_t colormask, int8_t noseed) {
+#if 0
     // produce una serie di gruppi di minuscole sagome verdi, studiate per
-    // fornire l'impressione delle fronde degli alberi pió distanti.
+    // fornire l'impressione delle fronde degli alberi piÔøΩ distanti.
     int32_t    correction;
     int16_t n1, m1, n2, m2;
     correction = scaling >> 1;
@@ -132,14 +137,16 @@ void greenmush (float x, float y, float z,
                 _DI = riga[_y_ + fast_random(7)] + _x_ + fast_random(7);
                 _CL = colorgrade + fast_random (colormask);
                 asm {   les ax, adapted
-                        mov es:[di+4], cl
-                        mov es:[di+5], cl
-                        mov es:[di+3], cl
-                        mov es:[di+324], cl
-                        mov es:[di-316], cl
-                        mov es:[di-636], cl }
+                mov es:[di+4], cl
+                mov es:[di+5], cl
+                mov es:[di+3], cl
+                mov es:[di+324], cl
+                mov es:[di-316], cl
+                mov es:[di-636], cl }
             }
         }
+#endif
+    STUB
 }
 
 void build_fractal_tree (float x, float y, float z,
@@ -147,8 +154,9 @@ void build_fractal_tree (float x, float y, float z,
                          int32_t layers, int32_t divisions, float distance_from_perfection,
                          uint8_t rootcolormask, uint8_t leafcolormask,
                          float branchdetail, int8_t isrootnode, int8_t occurrence) {
+#if 0
     // funzione ricorsiva: eventualmente traccia l'intero albero pseudo-casuale,
-    // con una struttura multilivello, ma va usata con parsimonia perchÇ ä
+    // con una struttura multilivello, ma va usata con parsimonia perchÔøΩ ÔøΩ
     // ovviamente una cosa piuttosto laboriosa in termini di tempo.
     //
     // serve qualche spiegazione per i parametri, che sono davvero tantini...
@@ -160,30 +168,30 @@ void build_fractal_tree (float x, float y, float z,
     // globalwidth - coefficiente che determina la larghezza dei rami,
     //           calcolata rispetto alla loro lunghezza
     // layers  - numero di processi ricorsivi di suddivisione del tronco
-    //           una buona tattica per disegnare ciuffi d'erba ä porre
+    //           una buona tattica per disegnare ciuffi d'erba ÔøΩ porre
     //           questo parametro E il successivo entrambi a zero...
     // divisions   - maschera delle ramificazioni della cima di ogni ramo
     // branchdetail- step di rotazione nel tracciamento dei rami
     //           (p.es. 120 traccia 360/120 = 3 poligoni per ramo)...
-    //           il minimo livello di dettaglio ä 360, un poligono per ramo,
+    //           il minimo livello di dettaglio ÔøΩ 360, un poligono per ramo,
     //           180 fa i rami piatti ma visibili da ogni lato,
     //           e infine 120 approssima piuttosto bene...
     // isrootnode  - chiamare la funzione con questo parametro impostato a 1
     //           per ottenere un albero normale, anche se si possono
     //           agevolmente disegnare dei cespugli semplicemente ponendo
-    //           questo flag a zero, poichÇ un cespuglio puï essere anche
+    //           questo flag a zero, poichÔøΩ un cespuglio puÔøΩ essere anche
     //           approssimato, in effetti, come un albero senza tronco
-    // occurrence  - ä un contatore, va semplicemente posto a zero.
+    // occurrence  - ÔøΩ un contatore, va semplicemente posto a zero.
     //
-    // rootcolormask ä il colore di base per il tronco e per i rami.
-    // leafcolormask ä il colore di base per le foglie.
+    // rootcolormask ÔøΩ il colore di base per il tronco e per i rami.
+    // leafcolormask ÔøΩ il colore di base per le foglie.
     //
-    // distance_from_perfection, infine, ä un coefficiente in gradi, che
+    // distance_from_perfection, infine, ÔøΩ un coefficiente in gradi, che
     // esprime di quanto i rami "figli" possono divaricarsi ad ogni ulteriore
     // suddivisione dei rami "padri": in pratica, distance_from_perfection
-    // rappresenta l'irregolaritÖ generale dell'albero - ad esempio, per le
+    // rappresenta l'irregolaritÔøΩ generale dell'albero - ad esempio, per le
     // latifoglie bisognerebbe impostare questo parametro ad un valore alto
-    // (diciamo all'incirca 1.25), mentre per qualcosa di pió simile ad una
+    // (diciamo all'incirca 1.25), mentre per qualcosa di piÔøΩ simile ad una
     // conifera questo valore andrebbe abbassato all'incirca a 0.3 .. 0.4
     // (ponendolo a zero si otterrebbero rami in una colonna verticale).
     int16_t   subdivs;
@@ -195,7 +203,7 @@ void build_fractal_tree (float x, float y, float z,
     float b_angle, b_angle_delta, range, rotation, rlimit;
     float rot2, rot3;
     int32_t hm, vm, lseed;
-    uint8_t huge* previoustexture;
+    uint8_t* previoustexture;
     widthscale1 = scaling * globalwidth;
     widthscale2 = reduction * scaling * globalwidth;
 
@@ -328,6 +336,8 @@ void build_fractal_tree (float x, float y, float z,
     }
 
     flares = pf;
+#endif
+    STUB
 }
 
 #define FORCE_LAT   11
@@ -411,48 +421,48 @@ void cespuglio (float x, float y, float z, int32_t depth) {
     }
 
     switch (depth) {
-    case 2: // 32 -- 48 mt: visibili i ramoscelli pió grandi.
-        build_fractal_tree (x, y, z, 3000, 0.75, 0.15, 1, 1, 1.5, 0x00, 0xC0, 180, 0,
-                            0);
-        break;
+        case 2: // 32 -- 48 mt: visibili i ramoscelli piÔøΩ grandi.
+            build_fractal_tree (x, y, z, 3000, 0.75, 0.15, 1, 1, 1.5, 0x00, 0xC0, 180, 0,
+                                0);
+            break;
 
-    case 1: // 16 -- 32 mt: visibili il 50% delle ramificazioni.
-        build_fractal_tree (x, y, z, 3000, 0.75, 0.15, 1, 2, 1.5, 0x00, 0xC0, 120, 0,
-                            0);
-        break;
+        case 1: // 16 -- 32 mt: visibili il 50% delle ramificazioni.
+            build_fractal_tree (x, y, z, 3000, 0.75, 0.15, 1, 2, 1.5, 0x00, 0xC0, 120, 0,
+                                0);
+            break;
 
-    case 0: //  0 -- 16 mt: cespuglio completo.
-        build_fractal_tree (x, y, z, 3000, 0.75, 0.15, 1, 3, 1.5, 0x00, 0xC0, 120, 0,
-                            0);
+        case 0: //  0 -- 16 mt: cespuglio completo.
+            build_fractal_tree (x, y, z, 3000, 0.75, 0.15, 1, 3, 1.5, 0x00, 0xC0, 120, 0,
+                                0);
     }
 }
 
 void ciuffo (float x, float y, float z, int32_t depth) {
     // disegna un ciuffo d'erba.
 
-    // da 64 mt in poi, non ä visibile.
+    // da 64 mt in poi, non ÔøΩ visibile.
     if (depth >= 4) {
         return;
     }
 
     switch (depth) {
-    case 3: // 48 -- 64 mt: qualche macchietta.
-        greenmush (x, y, z, 3, 7, 1023, 216, 31, 0);
-        break;
+        case 3: // 48 -- 64 mt: qualche macchietta.
+            greenmush (x, y, z, 3, 7, 1023, 216, 31, 0);
+            break;
 
-    case 2: // 32 -- 48 mt: visibile un filo d'erba.
-        build_fractal_tree (x, y, z, 1000, 1.00, 0.25, 0, 0, 1.0, 0x00, 0xC0, 120, 0,
-                            0);
-        break;
+        case 2: // 32 -- 48 mt: visibile un filo d'erba.
+            build_fractal_tree (x, y, z, 1000, 1.00, 0.25, 0, 0, 1.0, 0x00, 0xC0, 120, 0,
+                                0);
+            break;
 
-    case 1: // 16 -- 32 mt: visibili il 50% dei fili d'erba.
-        build_fractal_tree (x, y, z, 1000, 1.00, 0.25, 0, 7, 1.0, 0x00, 0xC0,  90, 0,
-                            0);
-        break;
+        case 1: // 16 -- 32 mt: visibili il 50% dei fili d'erba.
+            build_fractal_tree (x, y, z, 1000, 1.00, 0.25, 0, 7, 1.0, 0x00, 0xC0,  90, 0,
+                                0);
+            break;
 
-    case 0: //  0 -- 16 mt: un ciuffo completo.
-        build_fractal_tree (x, y, z, 1000, 1.00, 0.25, 0, 7, 1.0, 0x00, 0xC0,  60, 0,
-                            0);
+        case 0: //  0 -- 16 mt: un ciuffo completo.
+            build_fractal_tree (x, y, z, 1000, 1.00, 0.25, 0, 7, 1.0, 0x00, 0xC0,  60, 0,
+                                0);
     }
 }
 
@@ -506,7 +516,7 @@ void roccia (float x, float y, float z, int32_t depth) {
     // da 0 a 16 mt: con texture, e sassolini multipli se necessari.
     rockscaling *= 5;
     setfx (quartz);
-rockrep:
+    rockrep:
     px[0] = x - fast_flandom () * rockscaling;
     pz[0] = z - fast_flandom () * rockscaling;
     px[1] = x;
@@ -606,9 +616,9 @@ float ani_x    [LFS];       // posizione (X)
 float ani_quote[LFS];       // quota rispetto al suolo.
 float ani_z    [LFS];       // posizione (Z)
 float ani_pitch[LFS];       // direzione in cui si spostano.
-float ani_speed[LFS];       // velocitÖ attuale.
+float ani_speed[LFS];       // velocitÔøΩ attuale.
 float tgt_quote[LFS];       // quota che vogliono raggiungere.
-float tgt_speed[LFS];       // velocitÖ che vogliono raggiungere.
+float tgt_speed[LFS];       // velocitÔøΩ che vogliono raggiungere.
 float tgt_pitch[LFS];       // direzione che vogliono acquisire.
 int8_t  ani_lcount[LFS];      // contatempo di vicinanza.
 uint16_t ani_sqc[LFS];      // sub-quadrant coordinates (attuali).
@@ -637,67 +647,67 @@ pvlist bird_legs[3]  = { { 18, 0, 0, 1, 0 }, { 19, 0, 1, 0, 0 }, {0xFFF, 0, 0, 0
 // dati di definizione - classe mammiferi - relativo PVfile: "mammal_ncc"
 
 pvlist mamm_ears[5] = {
-    { 42, 0, 1, 0, 0 },
-    { 45, 0, 0, 1, 0 },
-    { 43, 1, 0, 0, 0 },
-    { 44, 0, 0, 1, 0 },
-    {0xFFF, 0, 0, 0, 0}
+        { 42, 0, 1, 0, 0 },
+        { 45, 0, 0, 1, 0 },
+        { 43, 1, 0, 0, 0 },
+        { 44, 0, 0, 1, 0 },
+        {0xFFF, 0, 0, 0, 0}
 };
 
 const int16_t mamm_wrap_center_p  = 16;
 const int16_t mamm_wrap_center_v  = 2;
 
 pvlist mamm_reartoto[19] = {
-    {  7, 0, 0, 1, 1 },
-    {  8, 1, 1, 1, 1 },
-    {  9, 1, 1, 1, 1 },
-    { 14, 1, 1, 1, 1 },
-    { 18, 0, 1, 1, 0 },
-    { 12, 1, 1, 1, 1 },
-    { 19, 1, 0, 0, 1 },
-    { 21, 0, 0, 1, 1 },
-    { 10, 1, 1, 1, 1 },
-    { 15, 1, 1, 1, 1 },
-    { 13, 1, 1, 1, 1 },
-    { 11, 1, 1, 1, 1 },
-    { 46, 1, 1, 1, 1 },
-    { 47, 1, 1, 1, 1 },
-    { 50, 1, 1, 1, 1 },
-    { 51, 1, 1, 1, 1 },
-    { 48, 1, 1, 1, 0 },
-    { 49, 1, 1, 1, 0 },
-    {0xFFF, 0, 0, 0, 0}
+        {  7, 0, 0, 1, 1 },
+        {  8, 1, 1, 1, 1 },
+        {  9, 1, 1, 1, 1 },
+        { 14, 1, 1, 1, 1 },
+        { 18, 0, 1, 1, 0 },
+        { 12, 1, 1, 1, 1 },
+        { 19, 1, 0, 0, 1 },
+        { 21, 0, 0, 1, 1 },
+        { 10, 1, 1, 1, 1 },
+        { 15, 1, 1, 1, 1 },
+        { 13, 1, 1, 1, 1 },
+        { 11, 1, 1, 1, 1 },
+        { 46, 1, 1, 1, 1 },
+        { 47, 1, 1, 1, 1 },
+        { 50, 1, 1, 1, 1 },
+        { 51, 1, 1, 1, 1 },
+        { 48, 1, 1, 1, 0 },
+        { 49, 1, 1, 1, 0 },
+        {0xFFF, 0, 0, 0, 0}
 };
 
 pvlist mamm_legs[15] = {
-    {  0, 1, 1, 1, 1 }, // F-L
-    {  2, 1, 1, 0, 0 },
-    { 22, 1, 0, 0, 0 },
-    {  1, 1, 1, 1, 1 }, // F-R
-    {  3, 1, 1, 0, 0 },
-    { 23, 0, 1, 0, 0 },
-    {  8, 0, 0, 1, 1 }, // R-L
-    { 10, 1, 1, 1, 1 },
-    { 14, 0, 1, 1, 0 },
-    { 15, 1, 1, 1, 1 },
-    { 12, 0, 0, 1, 1 }, // R-R
-    { 13, 1, 1, 1, 1 },
-    {  9, 0, 0, 1, 1 },
-    { 11, 1, 1, 1, 1 },
-    {0xFFF, 0, 0, 0, 0}
+        {  0, 1, 1, 1, 1 }, // F-L
+        {  2, 1, 1, 0, 0 },
+        { 22, 1, 0, 0, 0 },
+        {  1, 1, 1, 1, 1 }, // F-R
+        {  3, 1, 1, 0, 0 },
+        { 23, 0, 1, 0, 0 },
+        {  8, 0, 0, 1, 1 }, // R-L
+        { 10, 1, 1, 1, 1 },
+        { 14, 0, 1, 1, 0 },
+        { 15, 1, 1, 1, 1 },
+        { 12, 0, 0, 1, 1 }, // R-R
+        { 13, 1, 1, 1, 1 },
+        {  9, 0, 0, 1, 1 },
+        { 11, 1, 1, 1, 1 },
+        {0xFFF, 0, 0, 0, 0}
 };
 
 const int16_t mamm_tail_center_p  = 46;
 const int16_t mamm_tail_center_v  = 1;
 
 pvlist mamm_tail[7] = {
-    { 46, 1, 1, 1, 1 },
-    { 47, 1, 1, 1, 1 },
-    { 50, 1, 1, 1, 1 },
-    { 51, 1, 1, 1, 1 },
-    { 48, 1, 1, 1, 0 },
-    { 49, 1, 1, 1, 0 },
-    {0xFFF, 0, 0, 0, 0}
+        { 46, 1, 1, 1, 1 },
+        { 47, 1, 1, 1, 1 },
+        { 50, 1, 1, 1, 1 },
+        { 51, 1, 1, 1, 1 },
+        { 48, 1, 1, 1, 0 },
+        { 49, 1, 1, 1, 0 },
+        {0xFFF, 0, 0, 0, 0}
 };
 
 /* Funzione di tracciamento ed animazione delle forme di vita animali. */
@@ -822,7 +832,7 @@ void live_animal (int16_t n) {
         quote = 0;
     }
 
-end_far:
+    end_far:
 
     if (quote < 0) {
         quote = 0;
@@ -846,7 +856,7 @@ end_far:
         ani_pitch[n] += 180;
     }
 
-inactive:
+    inactive:
     dx = ax - cam_x;
     dy = ay - cam_y;
     dz = az - cam_z;
@@ -913,8 +923,8 @@ inactive:
 
         // modifiche alla forma di base:
         if (ani_lcount[n] < 0) {
-            // bä, questo non ä pió vivo:
-            // ä stato catturato e giace legato
+            // bÔøΩ, questo non ÔøΩ piÔøΩ vivo:
+            // ÔøΩ stato catturato e giace legato
             // ad alcune cordicelle, mentre viene
             // trascinato dietro al player...
             dz = 180 / (float)ani_lcount[n];
@@ -923,7 +933,7 @@ inactive:
 
         if (ani_quote[n] < 500) {
             // si inclina all'indietro, prima di
-            // atterrare o decollare. ä normale.
+            // atterrare o decollare. ÔøΩ normale.
             dz = -0.1 * fabs (250 - ani_quote[n]);
         } else {
             dz = 0;
@@ -932,9 +942,9 @@ inactive:
         if (ay < 0 || sctype != OCEAN) {
             if (ani_quote[n] < 50) {
                 // modello di comportamento:
-                // quando ä a terra. ali chiuse o semiaperte.
+                // quando ÔøΩ a terra. ali chiuse o semiaperte.
                 // non succede quando al posto della terraferma
-                // c'ä l'acqua...
+                // c'ÔøΩ l'acqua...
                 dy = 1 - (ani_quote[n] * reaction);
 
                 if (dy < 0) {
@@ -969,22 +979,22 @@ inactive:
         }
 
         // visualizzazione:
-bird_trace:
+        bird_trace:
         modpv (bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1,
                dz, 0, 0, 0);
         modpv (bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1,
                0, ani_pitch[n], 0, 0);
         drawpv (bird_result, texture_skin_map, 3, ax, ay
-                - 9 * ani_scale[n], az, perform_depth_sort);
+                                                      - 9 * ani_scale[n], az, perform_depth_sort);
 
         // reazioni alla vicinanza.
-        // bä, gli uccelli tendono a scappare,
+        // bÔøΩ, gli uccelli tendono a scappare,
         // a meno che non ci si avvicini ad essi
         // con molta cautela. tuttavia, si possono
-        // catturare: concettualmente, ä semplice,
+        // catturare: concettualmente, ÔøΩ semplice,
         // dato che basta tender loro un agguato,
         // e saltargli addosso da molto vicino.
-        // praticamente ä piuttosto difficile...
+        // praticamente ÔøΩ piuttosto difficile...
         if (ani_lcount[n] >= 0) {
             if (animal_distance < 5000 && step > 250) {
                 tgt_quote[n] += 2500;
@@ -1013,7 +1023,7 @@ bird_trace:
 
         if (ay > -10 && sctype == OCEAN) {
             // nell'acqua...
-            // se alcuni ci si avventurano, bä,
+            // se alcuni ci si avventurano, bÔøΩ,
             // possono sempre nuotare...
             modpv (mamm_result, -1, -1, 1, 0.7, 1, 0, 0, 0, NULL);
             modpv (mamm_result, -1, -1, 1, 0.0, 1, 0, 0, 0, mamm_legs);
@@ -1114,11 +1124,10 @@ bird_trace:
         modpv (mamm_result, mamm_wrap_center_p, mamm_wrap_center_v,
                1, 1, 1, 0, ani_pitch[n] + 180, 0, NULL);
         // visualizzazione:
-mamm_trace:
+        mamm_trace:
         drawpv (mamm_result, 1, 0, ax, ay, az, perform_depth_sort);
     }
 
-end_vicinity:
 }
 
 /*
@@ -1138,34 +1147,35 @@ end_vicinity:
 void srf_detail (float x, float y, float z, int32_t depth, int8_t _class_) {
     // disegna un oggetto sulla superficie di un pianeta.
     switch (_class_) {
-    case ROCKS: // rocce, sassi, massi, pietre, pietruzze etc...
-        roccia (x, y, z, depth);
-        break;
+        case ROCKS: // rocce, sassi, massi, pietre, pietruzze etc...
+            roccia (x, y, z, depth);
+            break;
 
-    case VEGET: // vegetali che non rientrano nella classe alberi.
-        ciuffo (x, y + 150, z, depth);
-        break;
+        case VEGET: // vegetali che non rientrano nella classe alberi.
+            ciuffo (x, y + 150, z, depth);
+            break;
 
-    case TREES: // alberi, appunto. e cespugli quasi-alberi.
-        if (y > -15000) {
-            cespuglio (x, y, z, depth);
-        } else {
-            albero (x, y, z, depth);
-        }
+        case TREES: // alberi, appunto. e cespugli quasi-alberi.
+            if (y > -15000) {
+                cespuglio (x, y, z, depth);
+            } else {
+                albero (x, y, z, depth);
+            }
 
-        break;
+            break;
 
-    case NOTHING: // una parte non coperta dalla texture (rovine).
-        break;
+        case NOTHING: // una parte non coperta dalla texture (rovine).
+            break;
     }
 }
 
 int8_t gtx; // se attivo, traccia il livello del suolo con texture specifica
 int16_t  ipfx,
-         ipfz; // centro di tracciamento (coordinate SQC dell'osservatore).
+        ipfz; // centro di tracciamento (coordinate SQC dell'osservatore).
 int8_t nearest_fragment_already_traced; // flag di lavoro.
 
 void fragment (int32_t x, int32_t z) {
+#if 0
     // traccia un quadrante della superficie.
     int8_t  poly1, poly2;
     int16_t   c1, count, id, cl;
@@ -1180,11 +1190,11 @@ void fragment (int32_t x, int32_t z) {
 
     if (x == ipfx && z == ipfz) {
         // si assicura di tracciare una sola volta
-        // il frammento pió vicino (quello che sta
+        // il frammento piÔøΩ vicino (quello che sta
         // "sotto ai piedi" dell'esploratore),
         // per evitare eventuali ridondanze che
         // sarebbero alquanto gravi in termini di
-        // velocitÖ.
+        // velocitÔøΩ.
         if (nearest_fragment_already_traced) {
             return;
         } else {
@@ -1192,13 +1202,13 @@ void fragment (int32_t x, int32_t z) {
         }
     } else {
         // esegue un rapido calcolo per
-        // dare un'occhiata alla profonditÖ
+        // dare un'occhiata alla profonditÔøΩ
         // del frammento (distanza dall'osservatore)
         // calibrando i frammenti possibilmente visibili
         // rispetto a un range di 64 * radice di 2,
-        // cioä 90. 64 infatti ä il limite di visibilitÖ
+        // cioÔøΩ 90. 64 infatti ÔøΩ il limite di visibilitÔøΩ
         // corrente, applicato al valore della distanza
-        // pió preciso che viene calcolato dopo (depth).
+        // piÔøΩ preciso che viene calcolato dopo (depth).
         c1 = x - ipfx;
 
         if (c1 < 0) {
@@ -1228,12 +1238,12 @@ void fragment (int32_t x, int32_t z) {
     float hpdep = sqrt (dx * dx + dz * dz);
     int32_t  depth = (int32_t)(hpdep) >> 14;
 
-    // limita la visibilitÖ in diagonale, pió che altro per fare
-    // uno sfondo su pianta rotonda, invece che quadrata, perchÇ cosç
+    // limita la visibilitÔøΩ in diagonale, piÔøΩ che altro per fare
+    // uno sfondo su pianta rotonda, invece che quadrata, perchÔøΩ cosÔøΩ
     // si ottiene una sorta di curvatura dell'orizzonte, ormai alla
-    // Terra piatta non ci crede pió nessuno...
+    // Terra piatta non ci crede piÔøΩ nessuno...
     // Poi: in Noctis IV ho deciso di tracciare in massima precisione,
-    // quindi la limitazione deve essere presente, altrimenti ä lento.
+    // quindi la limitazione deve essere presente, altrimenti ÔøΩ lento.
     if (depth > 64) {
         return;
     }
@@ -1251,7 +1261,7 @@ void fragment (int32_t x, int32_t z) {
     vz2[2] = z2 << 14;
     vx2[3] = vx2[2]  ;
     vz2[3] = vz2[2]  ;
-    // Considera pió quadranti circostanti come i pió vicini
+    // Considera piÔøΩ quadranti circostanti come i piÔøΩ vicini
     depth -= 1;
 
     if (depth < 0) {
@@ -1275,16 +1285,16 @@ void fragment (int32_t x, int32_t z) {
         // luce incidente
         c1 = p_surfacemap[h1] - p_surfacemap[h1 + sh_delta];
     } else {
-        // sole pressochÇ a perpendicolo, luce diffusa
+        // sole pressochÔøΩ a perpendicolo, luce diffusa
         fast_srand (h1 + global_surface_seed);
         c1 = 8 + fast_random (7);
     }
 
     // lieve effetto atmosferico sui quadranti a grande distanza
-    // l'effetto "nebbia" ä aumentato per via della riduzione di
-    // visibilitÖ in diagonale (da 80 quadranti a 64) in conseguenza
+    // l'effetto "nebbia" ÔøΩ aumentato per via della riduzione di
+    // visibilitÔøΩ in diagonale (da 80 quadranti a 64) in conseguenza
     // della decisione di tracciare in massima precisione.
-    // ä passato da depth / 3 a depth / 2 (con uno shift, fra l'altro).
+    // ÔøΩ passato da depth / 3 a depth / 2 (con uno shift, fra l'altro).
     if (c1 < 00) {
         c1 = 00;
     }
@@ -1296,9 +1306,9 @@ void fragment (int32_t x, int32_t z) {
     }
 
     // depth culling dei territori lontani (per velocizzare).
-    // Nei deserti, c'ä in genere sabbia, e questo costituisce
-    // una piccola eccezione al culling: i granelli pió lontani
-    // dovrebbero apparire con grana pió fine di quelli vicini,
+    // Nei deserti, c'ÔøΩ in genere sabbia, e questo costituisce
+    // una piccola eccezione al culling: i granelli piÔøΩ lontani
+    // dovrebbero apparire con grana piÔøΩ fine di quelli vicini,
     // e il culling ha l'effetto collaterale di fare andare le
     // cose esattamente al contrario.
     if (sctype == DESERT) {
@@ -1317,7 +1327,7 @@ void fragment (int32_t x, int32_t z) {
 
     // tracciamento del suolo.
     if (!mirror) {
-        // verifica visibilitÖ poligoni.
+        // verifica visibilitÔøΩ poligoni.
         poly1 = 0;
 
         if (facing(vx1, vy1, vz1))
@@ -1375,10 +1385,10 @@ void fragment (int32_t x, int32_t z) {
             }
         }
 
-        // traccia la capsuletta con cui si ä discesi: essa
+        // traccia la capsuletta con cui si ÔøΩ discesi: essa
         // emette una sorta di "raggio intrinsecamente luminoso",
-        // che ä molto utile per ritrovarla, dato che il territorio
-        // esplorabile ä molto vasto (ci si puï allontanare fino
+        // che ÔøΩ molto utile per ritrovarla, dato che il territorio
+        // esplorabile ÔøΩ molto vasto (ci si puÔøΩ allontanare fino
         // a coprire un raggio di 3 chilometri dal punto di sbarco).
         if (landed && atl_x == x && atl_z == z) {
             px = cam_x;
@@ -1421,7 +1431,7 @@ void fragment (int32_t x, int32_t z) {
             cam_z = pz;
         }
     } else {
-        // verifica visibilitÖ poligoni.
+        // verifica visibilitÔøΩ poligoni.
         poly1 = 0;
         vy1[0] = -vy1[0];
         vy1[1] = -vy1[1];
@@ -1482,22 +1492,22 @@ void fragment (int32_t x, int32_t z) {
             }
         }
 
-        // evita riflessi di oggetti perchÇ sarebbe davvero troppo.
+        // evita riflessi di oggetti perchÔøΩ sarebbe davvero troppo.
         return;
     }
 
     /* -2- tracciamento forme di vita animali. */
 
-    // oltre 1 Km, nÇ animali nÇ oggetti sono visibili.
+    // oltre 1 Km, nÔøΩ animali nÔøΩ oggetti sono visibili.
     if (depth > 40) {
         return;
     }
 
-    // verifica la visibilitÖ delle superfici del frammento.
-    // (approssima in questo modo, perï, soltanto in profonditÖ,
-    // perchÇ potrebbe accadere, per i frammenti pió vicini,
+    // verifica la visibilitÔøΩ delle superfici del frammento.
+    // (approssima in questo modo, perÔøΩ, soltanto in profonditÔøΩ,
+    // perchÔøΩ potrebbe accadere, per i frammenti piÔøΩ vicini,
     // che la superficie del suolo non sia visibile, mentre gli
-    // oggetti che vi si ergono o gli animali che vi camminano sç...)
+    // oggetti che vi si ergono o gli animali che vi camminano sÔøΩ...)
     if (depth > 8 && poly1 + poly2 == 0) {
         return;
     }
@@ -1507,26 +1517,26 @@ void fragment (int32_t x, int32_t z) {
               live_animal (id);*/
     ani_sqc_temp = ani_sqc;
     asm {   mov cx, animals
-            cmp cx, 0
-            jle nat
-            mov si, word ptr ani_sqc_temp
-            mov ax, word ptr h1 }
+    cmp cx, 0
+    jle nat
+    mov si, word ptr ani_sqc_temp
+    mov ax, word ptr h1 }
     lfa:
     asm {   cmp word ptr [si], ax
-            jne nah
-            push ax
-            push cx
-            push si
-            mov dx, animals
-            sub dx, cx }
+    jne nah
+    push ax
+    push cx
+    push si
+    mov dx, animals
+    sub dx, cx }
     live_animal (_DX);
     asm {   pop si
-            pop cx
-            pop ax }
+    pop cx
+    pop ax }
     nah:
     asm {   add si, 2
-            dec cx
-            jnz lfa }
+    dec cx
+    jnz lfa }
     /* -3- Traccia gli oggetti presenti sulla superficie. */
     // se non sono previsti oggetti su questa superficie, lascia...
     nat:
@@ -1536,8 +1546,8 @@ void fragment (int32_t x, int32_t z) {
     }
 
     // diminuisce in generale il numero di oggetti visibili
-    // nella distanza... eh, bä, anche la velocitÖ vuole la
-    // sua parte, ä assurdo ma consigliabile. E si nota poco.
+    // nella distanza... eh, bÔøΩ, anche la velocitÔøΩ vuole la
+    // sua parte, ÔøΩ assurdo ma consigliabile. E si nota poco.
     if (depth > 16) {
         count >>= 1;
 
@@ -1592,16 +1602,16 @@ void fragment (int32_t x, int32_t z) {
         detail_seed = h1;
 
         switch (id) {
-        case 0:
-            srf_detail (px, py, pz, depth, objectschart[h1].object0_class);
-            break;
+            case 0:
+                srf_detail (px, py, pz, depth, objectschart[h1].object0_class);
+                break;
 
-        case 1:
-            srf_detail (px, py, pz, depth, objectschart[h1].object1_class);
-            break;
+            case 1:
+                srf_detail (px, py, pz, depth, objectschart[h1].object1_class);
+                break;
 
-        case 2:
-            srf_detail (px, py, pz, depth, objectschart[h1].object2_class);
+            case 2:
+                srf_detail (px, py, pz, depth, objectschart[h1].object2_class);
         }
 
         // passa al prossimo oggetto...
@@ -1613,11 +1623,13 @@ void fragment (int32_t x, int32_t z) {
 
         count--;
     }
+#endif
+    STUB
 }
 
 void iperficie (int16_t additional_quadrants) {
     // Traccia i poligoni della superficie, dirigendo la funzione precedente.
-    // questa funzione ä centrata su ipfx;ipfz, e si prende cura di tracciare
+    // questa funzione ÔøΩ centrata su ipfx;ipfz, e si prende cura di tracciare
     // i poligoni nell'ordine corretto rispetto alla distanza.
     int16_t       b = beta;
     int16_t   x, z;
@@ -1700,7 +1712,7 @@ void iperficie (int16_t additional_quadrants) {
         goto backoff;
     }
 
-backoff:
+    backoff:
     flares = 0;
     H_MATRIXS = 16;
     V_MATRIXS = 16;
@@ -1714,26 +1726,27 @@ backoff:
     profili orografici di un'area di un pianeta. I pianeti sono
     principalmente suddivisi in aree e quadranti, come segue:
 
-        - il lato di un'area ä di 6 Km e 552 metri;
-        - il lato di ogni quadrante ä di 32 mt. e 768 mm.
+        - il lato di un'area ÔøΩ di 6 Km e 552 metri;
+        - il lato di ogni quadrante ÔøΩ di 32 mt. e 768 mm.
 
-    La superficie esplorabile di un pianeta ä costituita
+    La superficie esplorabile di un pianeta ÔøΩ costituita
     da 43200 aree, organizzate in una matrice di 360 x 120,
     una diversa dall'altra per caratteristiche orografiche
-    e termografiche. Di un pianeta si puï arrivare ad esplorare
+    e termografiche. Di un pianeta si puÔøΩ arrivare ad esplorare
     una superficie totale di 1.855.424 chilometri quadrati, il che
-    significa, sç, molto meno della reale estensione di un pianeta,
-    ma di certo abbastanza perchÇ ben pochi se ne possano accorgere.
+    significa, sÔøΩ, molto meno della reale estensione di un pianeta,
+    ma di certo abbastanza perchÔøΩ ben pochi se ne possano accorgere.
     -----------------------------------------------------------------
 
 */
 
 void round_hill (int16_t cx, int16_t cz, uint16_t r, float h, float hmax,
                  int8_t allowcanyons) {
+#if 0
     // Una collina rotonda, o una montagna molto erosa (se la si fa grossa).
-    // hmax entra in gioco se il flag "allowcanyons" ä a zero:
+    // hmax entra in gioco se il flag "allowcanyons" ÔøΩ a zero:
     //      quando l'altezza puntuale supera "hmax", per allowcanyons=0
-    //      la funzione costruisce un altopiano sulla sommitÖ della collina,
+    //      la funzione costruisce un altopiano sulla sommitÔøΩ della collina,
     //      mentre allowcanyons=1 fa ignorare il parametro "hmax" e, quando
     //      l'altezza supera il limite massimo globale (127), scava un canyon
     //      al centro della collina.
@@ -1766,9 +1779,12 @@ void round_hill (int16_t cx, int16_t cz, uint16_t r, float h, float hmax,
                 }
             }
         }
+#endif
+    STUB
 }
 
 void smoothterrain (int16_t rounding) {
+#if 0
     // Smussa il profilo del terreno.
     int16_t n;
 
@@ -1783,10 +1799,13 @@ void smoothterrain (int16_t rounding) {
 
         rounding--;
     }
+#endif
+    STUB
 }
 
 void rockyground (int16_t roughness, int16_t rounding, int8_t level) {
-    // Produce una superficie pió o meno accidentata.
+#if 0
+    // Produce una superficie piÔøΩ o meno accidentata.
     for (ptr = 0; ptr < 40000; ptr++) {
         p_surfacemap[ptr] = random (roughness);
     }
@@ -1804,167 +1823,182 @@ void rockyground (int16_t roughness, int16_t rounding, int8_t level) {
             p_surfacemap[ptr] = 0;
         }
     }
+#endif
+    STUB
 }
 
-void std_crater (uint8_t huge* map, int16_t cx, int16_t cz, int16_t r,
-                 int16_t lim_h, float h_factor, float h_raiser, int32_t align) {
-    // Un cratere.
-    int16_t x, z;
-    float dx, dz, d, y, h, fr;
-    h = (float)r * h_factor;
-    r = abs (r);
-    fr = r;
+void std_crater (uint8_t* map, int16_t cx, int16_t cz, int16_t r,
+        int16_t lim_h, float h_factor, float h_raiser, int32_t align) {
+#if 0
+// Un cratere.
+int16_t x, z;
+float dx, dz, d, y, h, fr;
+h = (float)r * h_factor;
+r = abs (r);
+fr = r;
 
-    for (x = cx - r; x < cx + r; x++)
-        for (z = cz - r; z < cz + r; z++) {
-            if (x > -1 && z > -1 && x < align && z < align) {
-                dx = x - cx;
-                dz = z - cz;
-                d  = sqrt (dx * dx + dz * dz);
+for (x = cx - r; x < cx + r; x++)
+for (z = cz - r; z < cz + r; z++) {
+if (x > -1 && z > -1 && x < align && z < align) {
+dx = x - cx;
+dz = z - cz;
+d  = sqrt (dx * dx + dz * dz);
 
-                if (d <= fr) {
-                    y  = sin (M_PI * (d / fr)) * h;
-                    y  = pow (y, h_raiser);
-                    y += map[align * (int32_t)z + x];
+if (d <= fr) {
+y  = sin (M_PI * (d / fr)) * h;
+y  = pow (y, h_raiser);
+y += map[align * (int32_t)z + x];
 
-                    if (y < 0) {
-                        y = 0;
-                    }
-
-                    if (y > lim_h) {
-                        y = lim_h;
-                    }
-
-                    map[align * (int32_t)z + x] = y;
-                }
-            }
-        }
+if (y < 0) {
+y = 0;
 }
 
-void srf_darkline (uint8_t huge* map, int16_t length,
-                   int16_t x_trend, int16_t z_trend, int32_t align) {
-    // Una crepa scura (versione principalmente per textures).
-    int16_t fx = random(align), fz = random(align);
-    int32_t mapsize = align * align;
-    uint16_t location;
-
-    //
-    while (length) {
-        fx += random(3) + x_trend;
-        fz += random(3) + z_trend;
-        location = align * (int32_t)fz + fx;
-
-        if (location > 0 && location < mapsize) {
-            map[location] >>= 1;
-        }
-
-        length--;
-    }
+if (y > lim_h) {
+y = lim_h;
 }
 
-void felisian_srf_darkline (uint8_t huge* map, int16_t length,
-                            int16_t x_trend, int16_t z_trend, int32_t align) {
-    // Un crepaccio (versione principalmente per superfici).
-    int16_t fx = random(align), fz = random(align);
-    int16_t peak, deviation, variability;
-    int32_t mapsize = align * align;
-    uint16_t location;
-    //
-    deviation = random(25) - 50;
-    variability = 2 + random(10);
-
-    while (length) {
-        fx += random(3) + x_trend;
-        fz += random(3) + z_trend;
-        deviation += random(variability) - (variability >> 1);
-        location = align * (int32_t)fz + fx;
-
-        if (location > 0 && location < mapsize) {
-            peak = map[location];
-            peak += deviation;
-
-            if (peak < 0) {
-                peak = 0;
-            }
-
-            if (peak > 127) {
-                peak = 127;
-            }
-
-            map[location] = peak;
-            map[location + 1] = peak;
-            map[location - 1] = peak;
-            map[location + align] = peak;
-            map[location - align] = peak;
-        }
-
-        length--;
-    }
+map[align * (int32_t)z + x] = y;
+}
+}
+}
+#endif
+STUB
 }
 
-void asterism (uint8_t huge* map, int16_t x, int16_t y,
-               int16_t base, int16_t variation, int16_t density,
-               int16_t size, int32_t align) {
-    // Simile a un asterisco variabile. Viene usata per i ceppi d'erba.
-    if (density <= 0) {
-        return;
-    }
+void srf_darkline (uint8_t* map, int16_t length,
+        int16_t x_trend, int16_t z_trend, int32_t align) {
+#if 0
+// Una crepa scura (versione principalmente per textures).
+int16_t fx = random(align), fz = random(align);
+int32_t mapsize = align * align;
+uint16_t location;
 
-    float ad  = M_PI * 2 / (float)density;
-    float ang = 0;
-    float shift_d;
-    int32_t  shift_x;
-    int32_t  shift_y;
-    int32_t  shift_p;
-    float color, var;
+//
+while (length) {
+fx += random(3) + x_trend;
+fz += random(3) + z_trend;
+location = align * (int32_t)fz + fx;
 
-    while (ang < M_PI * 2) {
-        shift_d  = (float)random(1000) / 1000;
-        shift_d *= size;
+if (location > 0 && location < mapsize) {
+map[location] >>= 1;
+}
 
-        if (shift_d >= 1) {
-            var = (float)variation / shift_d;
-            color = base;
+length--;
+}
+#endif
+STUB
+}
 
-            while (shift_d > 0) {
-                shift_x = cos (ang) * shift_d + x;
-                shift_y = sin (ang) * shift_d + y;
+void felisian_srf_darkline (uint8_t* map, int16_t length,
+        int16_t x_trend, int16_t z_trend, int32_t align) {
+#if 0
+// Un crepaccio (versione principalmente per superfici).
+int16_t fx = random(align), fz = random(align);
+int16_t peak, deviation, variability;
+int32_t mapsize = align * align;
+uint16_t location;
+//
+deviation = random(25) - 50;
+variability = 2 + random(10);
 
-                if (shift_x > 0 && shift_y > 0 && shift_x < align && shift_y < align) {
-                    shift_p = shift_y * align + shift_x;
-                    map[shift_p] = color;
-                }
+while (length) {
+fx += random(3) + x_trend;
+fz += random(3) + z_trend;
+deviation += random(variability) - (variability >> 1);
+location = align * (int32_t)fz + fx;
 
-                color += var;
-                shift_d--;
-            }
-        }
+if (location > 0 && location < mapsize) {
+peak = map[location];
+peak += deviation;
 
-        ang += ad;
-    }
+if (peak < 0) {
+peak = 0;
+}
+
+if (peak > 127) {
+peak = 127;
+}
+
+map[location] = peak;
+map[location + 1] = peak;
+map[location - 1] = peak;
+map[location + align] = peak;
+map[location - align] = peak;
+}
+
+length--;
+}
+#endif
+STUB
+}
+
+void asterism (uint8_t* map, int16_t x, int16_t y,
+int16_t base, int16_t variation, int16_t density,
+        int16_t size, int32_t align) {
+#if 0
+// Simile a un asterisco variabile. Viene usata per i ceppi d'erba.
+if (density <= 0) {
+return;
+}
+
+float ad  = M_PI * 2 / (float)density;
+float ang = 0;
+float shift_d;
+int32_t  shift_x;
+int32_t  shift_y;
+int32_t  shift_p;
+float color, var;
+
+while (ang < M_PI * 2) {
+shift_d  = (float)random(1000) / 1000;
+shift_d *= size;
+
+if (shift_d >= 1) {
+var = (float)variation / shift_d;
+color = base;
+
+while (shift_d > 0) {
+shift_x = cos (ang) * shift_d + x;
+shift_y = sin (ang) * shift_d + y;
+
+if (shift_x > 0 && shift_y > 0 && shift_x < align && shift_y < align) {
+shift_p = shift_y * align + shift_x;
+map[shift_p] = color;
+}
+
+color += var;
+shift_d--;
+}
+}
+
+ang += ad;
+}
+#endif
+STUB
 }
 
 /* Funzioni per la mappatura dei cieli planetari. */
 
 void nebular_sky () {
+#if 0
     // Cielo nebuloso, piuttosto alieno, con piccoli ammassi sparsi o striati.
     uint16_t pqw = QUADWORDS;
     uint16_t seed = random (10000);
     QUADWORDS = st_bytes / 4;
     asm {   les di, dword ptr s_background
-            mov cx, st_bytes
-            mov ax, seed }
+    mov cx, st_bytes
+    mov ax, seed }
     rndpat:
     asm {   add ax, cx
-            xor dx, dx
-            imul ax
-            add ax, dx
-            mov bl, al
-            and bl, 0x3F
-            mov es:[di], bl
-            inc di
-            dec cx
-            jnz rndpat }
+    xor dx, dx
+    imul ax
+    add ax, dx
+    mov bl, al
+    and bl, 0x3F
+    mov es:[di], bl
+    inc di
+    dec cx
+    jnz rndpat }
     lssmooth (s_background);
 
     if (random(2)) {
@@ -1976,9 +2010,12 @@ void nebular_sky () {
     }
 
     QUADWORDS = pqw;
+#endif
+    STUB
 }
 
 void cloudy_sky (int16_t density, int16_t smooths) {
+#if 0
     // Cielo con nuvole sparse, di tipo terrestre.
     int16_t      n = random (density + albedo);
     float    x, y, cx, cy, r, b;
@@ -2018,12 +2055,14 @@ void cloudy_sky (int16_t density, int16_t smooths) {
     }
 
     QUADWORDS = pqw;
+#endif
+    STUB
 }
 
 /*  Funzioni che costruiscono rovine sulle superfici dei pianeti "storici",
     quali Felysia, le lune abitabili di Fal Galmatrifal ed pianeti Feniani.
     Viene chiamata tramite "build_surface" e quindi i semi random sono stati
-    giÖ impostati rispetto al global_surface_seed. Gli stili possibili sono:
+    giÔøΩ impostati rispetto al global_surface_seed. Gli stili possibili sono:
     ------------------------------------------------------------------------
     0 - grattacieli
     1 - edifici quadrati senza tetto (solo resti di mura)
@@ -2033,6 +2072,7 @@ void cloudy_sky (int16_t density, int16_t smooths) {
     5 - edifici coloniali con tetto a cupola (stile Suricrasiano) */
 
 int16_t average_of_y (int16_t ic, int16_t jc, int16_t ra) {
+#if 0
     int16_t av = 0;
     int16_t ai = 1;
     int16_t ip, jp, pt;
@@ -2046,37 +2086,41 @@ int16_t average_of_y (int16_t ic, int16_t jc, int16_t ra) {
 
     av /= ai;
     return (av);
+#endif
+    STUB
+    return 0;
 }
 
 void make_ruins (int8_t style1, int8_t style2, int8_t style3,
                  int8_t style4, int8_t style5, int16_t density) {
+#if 0
     int16_t buildings = 0;
 
     switch (sctype) {
-    case OCEAN:
-        buildings = random(4);
+        case OCEAN:
+            buildings = random(4);
 
-        if (!random(10)) {
-            buildings *= 2 + random(2);
-        }
+            if (!random(10)) {
+                buildings *= 2 + random(2);
+            }
 
-        break;
+            break;
 
-    case PLAINS:
-        buildings = random(8);
+        case PLAINS:
+            buildings = random(8);
 
-        if (!random(5)) {
-            buildings *= 3 + random(2);
-        }
+            if (!random(5)) {
+                buildings *= 3 + random(2);
+            }
 
-        break;
+            break;
 
-    case DESERT:
-        buildings = random(3);
-        break;
+        case DESERT:
+            buildings = random(3);
+            break;
 
-    case ICY:
-        buildings = random(2);
+        case ICY:
+            buildings = random(2);
     }
 
     int16_t peak;
@@ -2088,226 +2132,229 @@ void make_ruins (int8_t style1, int8_t style2, int8_t style3,
         ai = random(5);
 
         switch (ai) {
-        case 0:
-            bstyle = style1;
-            break;
+            case 0:
+                bstyle = style1;
+                break;
 
-        case 1:
-            bstyle = style2;
-            break;
+            case 1:
+                bstyle = style2;
+                break;
 
-        case 2:
-            bstyle = style3;
-            break;
+            case 2:
+                bstyle = style3;
+                break;
 
-        case 3:
-            bstyle = style4;
-            break;
+            case 3:
+                bstyle = style4;
+                break;
 
-        case 4:
-            bstyle = style5;
+            case 4:
+                bstyle = style5;
         }
 
         switch (bstyle) {
-        // Stili Felisiani antichi.
-        case 0:
-            // grossi grattacieli
-            hr = 10 + random(25);
-            ic = 20 + random(160);
-            jc = 20 + random(160);
-            ra =  1 + random(3);
-like0:
-            av = average_of_y (ic, jc, ra);
+            // Stili Felisiani antichi.
+            case 0:
+                // grossi grattacieli
+                hr = 10 + random(25);
+                ic = 20 + random(160);
+                jc = 20 + random(160);
+                ra =  1 + random(3);
+            like0:
+                av = average_of_y (ic, jc, ra);
 
-            for (jp = jc - ra; jp < jc + ra; jp++) {
-                for (ip = ic - ra; ip < ic + ra; ip++) {
-                    pt = m200[jp] + ip;
-                    p_surfacemap[pt] = av + hr;
+                for (jp = jc - ra; jp < jc + ra; jp++) {
+                    for (ip = ic - ra; ip < ic + ra; ip++) {
+                        pt = m200[jp] + ip;
+                        p_surfacemap[pt] = av + hr;
 
-                    if (!random(5)) {
-                        p_surfacemap[pt]--;
-                    }
+                        if (!random(5)) {
+                            p_surfacemap[pt]--;
+                        }
 
-                    ruinschart[pt] = AF1;
-                }
-            }
-
-            break;
-
-        case 1:
-            // edifici crollati (senza tetto)
-            hr = random(8);
-            ic = 20 + random(160);
-            jc = 20 + random(160);
-            ra =  3 + random(5);
-
-            for (ip = ic - ra; ip < ic + ra; ip++) {
-                pt = m200[jc - ra] + ip;
-                av = hr + random(2);
-                p_surfacemap[pt] += av;
-
-                if (av) {
-                    ruinschart[pt] = AF1;
-                }
-
-                pt = m200[jc + ra] + ip;
-                av = hr + random(3);
-                p_surfacemap[pt] += av;
-
-                if (av) {
-                    ruinschart[pt] = AF1;
-                }
-            }
-
-            for (jp = jc - ra; jp < jc + ra; jp++) {
-                pt = m200[jp] + ic - ra;
-                av = hr + random(2);
-                p_surfacemap[pt] += av;
-
-                if (av) {
-                    ruinschart[pt] = AF1;
-                }
-
-                pt = m200[jp] + ic + ra;
-                av = hr + random(3);
-                p_surfacemap[pt] += av;
-
-                if (av) {
-                    ruinschart[pt] = AF1;
-                }
-            }
-
-            break;
-
-        case 2:
-            // piazzali e colonnati
-            hr = 5 + random(10);
-            ic = 30 + random(140);
-            jc = 30 + random(140);
-            ra = 15 + random(15);
-            av = average_of_y (ic, jc, ra);
-
-            for (jp = jc - ra; jp < jc + ra; jp++) {
-                for (ip = ic - ra; ip < ic + ra; ip++) {
-                    pt = m200[jp] + ip;
-                    p_surfacemap[pt] = av;
-                }
-            }
-
-            ra /= 2;
-
-            if (!random(3)) {
-                ai = 2 + random(3);
-
-                for (ip = ic - ra; ip < ic + ra; ip += ai) {
-                    pt = m200[jc - ra] + ip;
-                    p_surfacemap[pt] = av + hr + random(2);
-                    ruinschart[pt] = AF1;
-                    pt = m200[jc + ra] + ip;
-                    p_surfacemap[pt] = av + hr + random(3);
-                    ruinschart[pt] = AF1;
-                }
-            }
-
-            if (!random(3)) {
-                ai = 2 + random(3);
-
-                for (jp = jc - ra; jp < jc + ra; jp += ai) {
-                    pt = m200[jp] + ic - ra;
-                    p_surfacemap[pt] = av + hr + random(2);
-                    ruinschart[pt] = AF1;
-                    pt = m200[jp] + ic + ra;
-                    p_surfacemap[pt] = av + hr + random(3);
-                    ruinschart[pt] = AF1;
-                }
-            }
-
-            break;
-
-        // Stili Felisiani coloniali.
-        case 3:
-            // palazzine e piccoli grattacieli
-            hr = 10 + random(10);
-            ic = 20 + random(160);
-            jc = 20 + random(160);
-            ra =  1 + random(2);
-            goto like0;
-
-        case 4:
-            // edifici coloniali moderni, a forma di X
-            hr =  1 + random(3);
-            ic = 25 + random(150);
-            jc = 25 + random(150);
-            ra =  5 + random(5);
-
-            if (!random(5)) {
-                ra *= 2;
-            }
-
-            for (ip = ic - ra; ip < ic + ra; ip++) {
-                pt = m200[jc] + ip;
-                p_surfacemap[pt] += hr * (ra - abs(ip - ic) + 1);
-                ruinschart[pt] = AF1;
-            }
-
-            for (jp = jc - ra; jp < jc + ra; jp++) {
-                pt = m200[jp] + ic;
-                p_surfacemap[pt] += hr * (ra - abs(jp - jc) + 1);
-                ruinschart[pt] = AF1;
-            }
-
-            break;
-
-        case 5:
-            // edifici coloniali di Suricrasia (Ylastravenia)
-            // sono quadrati, ma hanno una cupoletta sul tetto
-            hr = 10 + random(10);
-            ic = 20 + random(160);
-            jc = 20 + random(160);
-            ra = 12 + random(8);
-            av = average_of_y (ic, jc, ra);
-
-            for (jp = jc - ra; jp < jc + ra; jp++) {
-                for (ip = ic - ra; ip < ic + ra; ip++) {
-                    pt = m200[jp] + ip;
-                    p_surfacemap[pt] = av + hr;
-                    ruinschart[pt] = AF1;
-                }
-            }
-
-            ra *= 2;
-            ra /= 3;
-            bstyle = random(2);
-
-            for (jp = jc - ra; jp < jc + ra; jp++) {
-                for (ip = ic - ra; ip < ic + ra; ip++) {
-                    pt   = m200[jp] + ip;
-                    ai   = (jp - jc) * (jp - jc);
-                    ai  += (ip - ic) * (ip - ic);
-                    ai   = sqrt (ai);
-                    peak = 3 * hr * cos (M_PI_2 * (double)ai / (double)ra);
-
-                    if (peak > 0) {
-                        p_surfacemap[pt] = av + peak + 1;
-                    }
-
-                    if (bstyle) {
                         ruinschart[pt] = AF1;
-                    } else {
-                        ruinschart[pt] = 0;
                     }
                 }
-            }
+
+                break;
+
+            case 1:
+                // edifici crollati (senza tetto)
+                hr = random(8);
+                ic = 20 + random(160);
+                jc = 20 + random(160);
+                ra =  3 + random(5);
+
+                for (ip = ic - ra; ip < ic + ra; ip++) {
+                    pt = m200[jc - ra] + ip;
+                    av = hr + random(2);
+                    p_surfacemap[pt] += av;
+
+                    if (av) {
+                        ruinschart[pt] = AF1;
+                    }
+
+                    pt = m200[jc + ra] + ip;
+                    av = hr + random(3);
+                    p_surfacemap[pt] += av;
+
+                    if (av) {
+                        ruinschart[pt] = AF1;
+                    }
+                }
+
+                for (jp = jc - ra; jp < jc + ra; jp++) {
+                    pt = m200[jp] + ic - ra;
+                    av = hr + random(2);
+                    p_surfacemap[pt] += av;
+
+                    if (av) {
+                        ruinschart[pt] = AF1;
+                    }
+
+                    pt = m200[jp] + ic + ra;
+                    av = hr + random(3);
+                    p_surfacemap[pt] += av;
+
+                    if (av) {
+                        ruinschart[pt] = AF1;
+                    }
+                }
+
+                break;
+
+            case 2:
+                // piazzali e colonnati
+                hr = 5 + random(10);
+                ic = 30 + random(140);
+                jc = 30 + random(140);
+                ra = 15 + random(15);
+                av = average_of_y (ic, jc, ra);
+
+                for (jp = jc - ra; jp < jc + ra; jp++) {
+                    for (ip = ic - ra; ip < ic + ra; ip++) {
+                        pt = m200[jp] + ip;
+                        p_surfacemap[pt] = av;
+                    }
+                }
+
+                ra /= 2;
+
+                if (!random(3)) {
+                    ai = 2 + random(3);
+
+                    for (ip = ic - ra; ip < ic + ra; ip += ai) {
+                        pt = m200[jc - ra] + ip;
+                        p_surfacemap[pt] = av + hr + random(2);
+                        ruinschart[pt] = AF1;
+                        pt = m200[jc + ra] + ip;
+                        p_surfacemap[pt] = av + hr + random(3);
+                        ruinschart[pt] = AF1;
+                    }
+                }
+
+                if (!random(3)) {
+                    ai = 2 + random(3);
+
+                    for (jp = jc - ra; jp < jc + ra; jp += ai) {
+                        pt = m200[jp] + ic - ra;
+                        p_surfacemap[pt] = av + hr + random(2);
+                        ruinschart[pt] = AF1;
+                        pt = m200[jp] + ic + ra;
+                        p_surfacemap[pt] = av + hr + random(3);
+                        ruinschart[pt] = AF1;
+                    }
+                }
+
+                break;
+
+                // Stili Felisiani coloniali.
+            case 3:
+                // palazzine e piccoli grattacieli
+                hr = 10 + random(10);
+                ic = 20 + random(160);
+                jc = 20 + random(160);
+                ra =  1 + random(2);
+                goto like0;
+
+            case 4:
+                // edifici coloniali moderni, a forma di X
+                hr =  1 + random(3);
+                ic = 25 + random(150);
+                jc = 25 + random(150);
+                ra =  5 + random(5);
+
+                if (!random(5)) {
+                    ra *= 2;
+                }
+
+                for (ip = ic - ra; ip < ic + ra; ip++) {
+                    pt = m200[jc] + ip;
+                    p_surfacemap[pt] += hr * (ra - abs(ip - ic) + 1);
+                    ruinschart[pt] = AF1;
+                }
+
+                for (jp = jc - ra; jp < jc + ra; jp++) {
+                    pt = m200[jp] + ic;
+                    p_surfacemap[pt] += hr * (ra - abs(jp - jc) + 1);
+                    ruinschart[pt] = AF1;
+                }
+
+                break;
+
+            case 5:
+                // edifici coloniali di Suricrasia (Ylastravenia)
+                // sono quadrati, ma hanno una cupoletta sul tetto
+                hr = 10 + random(10);
+                ic = 20 + random(160);
+                jc = 20 + random(160);
+                ra = 12 + random(8);
+                av = average_of_y (ic, jc, ra);
+
+                for (jp = jc - ra; jp < jc + ra; jp++) {
+                    for (ip = ic - ra; ip < ic + ra; ip++) {
+                        pt = m200[jp] + ip;
+                        p_surfacemap[pt] = av + hr;
+                        ruinschart[pt] = AF1;
+                    }
+                }
+
+                ra *= 2;
+                ra /= 3;
+                bstyle = random(2);
+
+                for (jp = jc - ra; jp < jc + ra; jp++) {
+                    for (ip = ic - ra; ip < ic + ra; ip++) {
+                        pt   = m200[jp] + ip;
+                        ai   = (jp - jc) * (jp - jc);
+                        ai  += (ip - ic) * (ip - ic);
+                        ai   = sqrt (ai);
+                        peak = 3 * hr * cos (M_PI_2 * (double)ai / (double)ra);
+
+                        if (peak > 0) {
+                            p_surfacemap[pt] = av + peak + 1;
+                        }
+
+                        if (bstyle) {
+                            ruinschart[pt] = AF1;
+                        } else {
+                            ruinschart[pt] = 0;
+                        }
+                    }
+                }
         }
 
         buildings--;
     }
+#endif
+    STUB
 }
 
 /*  Funzione che costruisce la superficie del pianeta.
     Regolata dal seme global_surface_seed, per ottenere risultati coerenti. */
 
 void build_surface () {
+#if 0
     int16_t cx, cz, cr, n, incl;
     float hf, hr, ht;
     uint16_t ptr1;
@@ -2330,7 +2377,7 @@ void build_surface () {
     // del pianeta, e indipendente dalla superficie.
     fast_srand (global_surface_seed);
     srand (global_surface_seed);
-    // normalmente, la superficie non ä trasparente o traslucida...
+    // normalmente, la superficie non ÔøΩ trasparente o traslucida...
     groundflares = 0;
     // potrebbe esserlo? mah, per esempio in caso di ghiacci molto
     // particolari, o di interi pianeti fatti di sostanze trasparenti.
@@ -2348,7 +2395,7 @@ void build_surface () {
         }
     }
 
-    // normalmente, la superficie ä pió o meno rocciosa...
+    // normalmente, la superficie ÔøΩ piÔøΩ o meno rocciosa...
     liquid_water = 0;
 
     for (ptr = 0; ptr < oc_bytes; ptr ++) {
@@ -2357,10 +2404,10 @@ void build_surface () {
         objectschart[ptr].object2_class = ROCKS;
     }
 
-    // gli alberi: quando ä possibile la loro presenza,
+    // gli alberi: quando ÔøΩ possibile la loro presenza,
     // vengono influenzati dalla latitudine della zona di sbarco.
-    // ä piuttosto logico che ci siano delle latifoglie ai climi pió
-    // miti, e delle conifere a quelli pió rigidi.
+    // ÔøΩ piuttosto logico che ci siano delle latifoglie ai climi piÔøΩ
+    // miti, e delle conifere a quelli piÔøΩ rigidi.
     if (latitude > 45) {
         treepeaking = flandom() * 0.9 + 0.1;
     } else {
@@ -2370,57 +2417,57 @@ void build_surface () {
     // un dettaglio raro ma possibile: alberi fibrosi, con il tronco
     // simile a un grosso stelo... tanto si parla di ambienti alieni...
     switch (random(3)) {
-    case 0:
-        rootshade = 0x00;
-        break;
+        case 0:
+            rootshade = 0x00;
+            break;
 
-    case 1:
-        rootshade = 0x80;
-        break;
+        case 1:
+            rootshade = 0x80;
+            break;
 
-    case 2:
-        rootshade = 0xC0;
-        break;
+        case 2:
+            rootshade = 0xC0;
+            break;
     }
 
-    // altro dettaglio parecchio insolito, che perï conviene sia
+    // altro dettaglio parecchio insolito, che perÔøΩ conviene sia
     // davvero molto raro: alberi trasparenti (e chi lo sa? magari...)
     switch (random(30)) {
-    case 7:
-        treeflares = 1;
-        break;
+        case 7:
+            treeflares = 1;
+            break;
 
-    case 8:
-        treeflares = 2;
-        break;
+        case 8:
+            treeflares = 2;
+            break;
 
-    case 9:
-        treeflares = 4;
-        break;
+        case 9:
+            treeflares = 4;
+            break;
 
-    default:
-        treeflares = 0;
+        default:
+            treeflares = 0;
     }
 
-    // pió probabile... foglie trasparenti... credo sia pió plausibile.
+    // piÔøΩ probabile... foglie trasparenti... credo sia piÔøΩ plausibile.
     switch (random(15)) {
-    case 7:
-        leafflares = 1;
-        break;
+        case 7:
+            leafflares = 1;
+            break;
 
-    case 8:
-        leafflares = 2;
-        break;
+        case 8:
+            leafflares = 2;
+            break;
 
-    case 9:
-        leafflares = 4;
-        break;
+        case 9:
+            leafflares = 4;
+            break;
 
-    default:
-        leafflares = 0;
+        default:
+            leafflares = 0;
     }
 
-    // gli altri parametri degli alberi, bä... sono piuttosto casuali.
+    // gli altri parametri degli alberi, bÔøΩ... sono piuttosto casuali.
     treescaling = 3000 + flandom() * 3000 - flandom() * 1500;
     treespreads = 0.75 + flandom() * 0.50 - flandom() * 0.50;
     branchwidth = 0.05 + flandom() * 0.15;
@@ -2432,7 +2479,7 @@ void build_surface () {
     }
 
     // bump mapping di superficie:
-    // ä spesso coperta d'escrescenze erbose nel caso si tratti di un
+    // ÔøΩ spesso coperta d'escrescenze erbose nel caso si tratti di un
     // pianeta abitabile e lo scenario non sia un ghiacciaio/deserto...
     if (nearstar_p_type[ip_targetted] == 3) {
         if (sctype != ICY && sctype != DESERT) {
@@ -2448,682 +2495,682 @@ void build_surface () {
     srand (landing_pt_lat * landing_pt_lon);
 
     switch (nearstar_p_type[ip_targetted]) {
-    // case 0: ATTUALMENTE non considerato: ä un pianeta vulcanico.
-    case 1: // rocciosi (stile luna)
-        // terreno molto liscio ed estremamente arrotondato.
-        // ma ci sono casi in cui ä tutto l'opposto.
-        n = random(5);
+        // case 0: ATTUALMENTE non considerato: ÔøΩ un pianeta vulcanico.
+        case 1: // rocciosi (stile luna)
+            // terreno molto liscio ed estremamente arrotondato.
+            // ma ci sono casi in cui ÔøΩ tutto l'opposto.
+            n = random(5);
 
-        if (n <= 2) {
-            rockyground (25, 4 + random (4), 0);
-        }
-
-        if (n == 3) {
-            rockyground (5 + random(5), 1, 1);
-        }
-
-        if (n == 4) {
-            rockyground (10, 2, -random(5));
-        }
-
-        n = random(48) + 32 - albedo;
-
-        if (n > 30) {
-            n = 30;
-        }
-
-        if (n < 0) {
-            n = 0;
-        }
-
-        while (n) {
-            hf = (float)random(32) * 0.01;
-            hr = (float)(random(20) + 5) * 0.075;
-            std_crater (p_surfacemap,
-                        random(200), random(200),
-                        random(50) + 5, 127, hf, hr, 200);
-            n--;
-        }
-
-        n = random(48) + 64 - albedo;
-
-        if (n < 0) {
-            n = 0;
-        }
-
-        hf = 0.35;
-
-        if (nightzone) {
-            hf = 0.1;
-        }
-
-        while (n) {
-            cx = random (200);
-            cz = random (200);
-            cr = random (32) + 10;
-            std_crater (txtr, cx, cz, cr, 31, hf, 1, 256);
-
-            if (cr % 2) {
-                std_crater (txtr, cx + cr / 3, cz + cr / 3, -cr, 31, hf, 1, 256);
+            if (n <= 2) {
+                rockyground (25, 4 + random (4), 0);
             }
 
-            n--;
-        }
+            if (n == 3) {
+                rockyground (5 + random(5), 1, 1);
+            }
 
-        n = random(100);
+            if (n == 4) {
+                rockyground (10, 2, -random(5));
+            }
 
-        while (n) {
-            srf_darkline (txtr, random(1000), -1, -1, 256);
-            n--;
-        }
+            n = random(48) + 32 - albedo;
 
-        // molte piccole rocce aguzze, o nulla...
-        rockdensity = (15 + 16 * random(2)) * random(2);
-        rockscaling = 150 + random (500);
-        rockpeaking = 100 + random (300);
-        break;
-
-    case 2: // con spessa atmosfera (pianeti "venusiani")
-        rockyground (10, 1, 0);
-        n = albedo + random (100);
-
-        while (n) { // basse colline e frequenti altipiani,
-            // oceani e mari sono rari ma possibili...
-            round_hill (random(200),
-                        random(200),
-                        random(100) + 50,
-                        random( 50) + 10, 0, 1);
-            n--;
-        }
-
-        // per i dettagli di superficie, due scenari possibili:
-        switch (random(2)) {
-        case 0: // questo nebuloso, indefinito.
-            n = albedo + random(200) - random (100);
-            hf = (float)random(10) * 0.02;
+            if (n > 30) {
+                n = 30;
+            }
 
             if (n < 0) {
                 n = 0;
             }
 
             while (n) {
-                cx = random (256);
-                cz = random (256);
-                cr = random (8) + 8;
+                hf = (float)random(32) * 0.01;
+                hr = (float)(random(20) + 5) * 0.075;
+                std_crater (p_surfacemap,
+                            random(200), random(200),
+                            random(50) + 5, 127, hf, hr, 200);
+                n--;
+            }
 
-                if (random(2)) {
-                    std_crater (txtr, cx, cz, -cr, 31, hf, 1, 256);
-                } else {
-                    std_crater (txtr, cx, cz, cr, 31, hf, 1, 256);
+            n = random(48) + 64 - albedo;
+
+            if (n < 0) {
+                n = 0;
+            }
+
+            hf = 0.35;
+
+            if (nightzone) {
+                hf = 0.1;
+            }
+
+            while (n) {
+                cx = random (200);
+                cz = random (200);
+                cr = random (32) + 10;
+                std_crater (txtr, cx, cz, cr, 31, hf, 1, 256);
+
+                if (cr % 2) {
+                    std_crater (txtr, cx + cr / 3, cz + cr / 3, -cr, 31, hf, 1, 256);
                 }
 
                 n--;
             }
 
+            n = random(100);
+
+            while (n) {
+                srf_darkline (txtr, random(1000), -1, -1, 256);
+                n--;
+            }
+
+            // molte piccole rocce aguzze, o nulla...
+            rockdensity = (15 + 16 * random(2)) * random(2);
+            rockscaling = 150 + random (500);
+            rockpeaking = 100 + random (300);
             break;
 
-        case 1: // e questo con irregolaritÖ sparse...
-            n = albedo + random(500);
-            ptr = random (2000);
+        case 2: // con spessa atmosfera (pianeti "venusiani")
+            rockyground (10, 1, 0);
+            n = albedo + random (100);
+
+            while (n) { // basse colline e frequenti altipiani,
+                // oceani e mari sono rari ma possibili...
+                round_hill (random(200),
+                            random(200),
+                            random(100) + 50,
+                            random( 50) + 10, 0, 1);
+                n--;
+            }
+
+            // per i dettagli di superficie, due scenari possibili:
+            switch (random(2)) {
+                case 0: // questo nebuloso, indefinito.
+                    n = albedo + random(200) - random (100);
+                    hf = (float)random(10) * 0.02;
+
+                    if (n < 0) {
+                        n = 0;
+                    }
+
+                    while (n) {
+                        cx = random (256);
+                        cz = random (256);
+                        cr = random (8) + 8;
+
+                        if (random(2)) {
+                            std_crater (txtr, cx, cz, -cr, 31, hf, 1, 256);
+                        } else {
+                            std_crater (txtr, cx, cz, cr, 31, hf, 1, 256);
+                        }
+
+                        n--;
+                    }
+
+                    break;
+
+                case 1: // e questo con irregolaritÔøΩ sparse...
+                    n = albedo + random(500);
+                    ptr = random (2000);
+
+                    while (n) {
+                        srf_darkline (txtr, random(ptr), -1, -1, 256);
+                        n--;
+                    }
+            }
+
+            // di solito poche grosse rocce erose
+            rockscaling = 500 + random (500);
+            rockdensity = 7 + 8 * random(2);
+            rockpeaking = 50 + random (150);
+            break;
+
+        case 3: // abitabili
+            gtx = 0; // puÔøΩ esserci acqua liquida,
+
+            // quindi non tracciare i poligoni
+            // al livello del suolo a meno che
+            // non sia un particolare scenario
+            // tra quelli descritti sotto.
+
+            switch (sctype) {
+                case OCEAN:
+                    waves_in = 1;
+                    waves_out = 1;
+
+                    // se non ÔøΩ proprio mare aperto,
+                    // si puÔøΩ considerare un paesaggio
+                    // "in riva al mare", usando il
+                    // codice delle PLAINS.
+                    if (albedo > 20) {
+                        waswet = 1;
+                        waves_in = 0;
+                        goto revert;
+                    }
+
+                    // albedo piÔøΩ basse, ma comunque piÔøΩ
+                    // alte di quella del mare aperto(16):
+                    // scogli sparsi che rompono le onde,
+                    // nel qual caso il mare ÔøΩ calmo...
+                    if (albedo > 16 && random(2)) {
+                        rockyground (10, random(2), -5);
+                        waves_in = 0;
+                    }
+
+                    // mentre in pieno oceano,
+                    // al limite potrebbe esserci
+                    // un'isoletta... raro, ma possibile.
+                    if (!random(3)) {
+                        cx = random(100) + 50;
+                        cz = random(100) + 50;
+                        round_hill (cx + random(15),
+                                    cz + random(15),
+                                    random(100) + 25,
+                                    random(10) + 1, 0, 1);
+                        round_hill (cx, cz,
+                                    random(100) + 25,
+                                    random(100) +  1, 0, 1);
+                        waswet = 1;
+                        goto addtrees;
+                    }
+
+                    // texture sabbiosa, direi...
+                    T_SCALE = 128;
+                    n = random (30) + 2;
+                    ptr = 65535;
+
+                    while (ptr) {
+                        txtr[ptr] = random(n);
+                        ptr--;
+                    }
+
+                    // moltissimi sassolini, se ci sono.
+                    rockscaling = 50 + random (75);
+                    rockpeaking = 30 + random (25);
+
+                    if (random(3)) {
+                        rockdensity = 31;
+                    } else {
+                        rockdensity = 0;
+                    }
+
+                    // ma aspetta un attimo: non possono
+                    // esserci dei sassi galleggianti.
+                    liquid_water = 1;
+                    break;
+
+                case PLAINS:
+                    // basse colline, oppure montagne
+                    // vere e proprie (in effetti, tutte
+                    // le zone ricche di vegetazione
+                    // rientrano in questo scenario),
+                    // allora diciamo cosÔøΩ...
+                revert:
+                    if (random(2)) {
+                        // nell'un caso, le pianure.
+                        ptr = random(50) + 5;
+
+                        while (ptr) {
+                            round_hill (random(200),
+                                        random(200),
+                                        random(200) + 1,
+                                        random( 30) + 1, 0, 1);
+                            ptr--;
+                        }
+                    } else {
+                        // nell'altro caso, i monti.
+                        ptr = random(25) + 10;
+
+                        while (ptr) {
+                            round_hill (random(200),
+                                        random(200),
+                                        random(200) + 1,
+                                        random(100) + 1, 0, 1);
+                            ptr--;
+                        }
+                    }
+
+                addtrees: // alberi sui rilievi...
+                    // in certi casi, pianure steppose...
+                    n = random (6);
+
+                    for (ptr = 0; ptr < oc_bytes; ptr ++) {
+                        switch (p_surfacemap[ptr] / 25) {
+                            case 0:
+                                objectschart[ptr].object1_class = VEGET;
+                                objectschart[ptr].object2_class = VEGET;
+                                break;
+
+                            case 1:
+                                objectschart[ptr].object1_class = VEGET;
+                                objectschart[ptr].object2_class = TREES;
+                                break;
+
+                            case 2:
+                                objectschart[ptr].object1_class = TREES;
+                                objectschart[ptr].object2_class = TREES;
+                                break;
+
+                            default:
+                                objectschart[ptr].object0_class = TREES;
+                                objectschart[ptr].object1_class = TREES;
+                                objectschart[ptr].object2_class = TREES;
+                        }
+                    }
+
+                    // e texture con erba brada...
+                    T_SCALE = 128;
+                    n = random (15) + 2;
+                    ptr = 65535;
+
+                    while (ptr) {
+                        txtr[ptr] = random(n);
+                        ptr--;
+                    }
+
+                    n = 100 + random (500);
+
+                    while (n) {
+                        asterism (txtr, random(256), random(256),
+                                  random(16), random(16), random(25) + 6,
+                                  random(15) + 6, 256);
+                        n--;
+                    }
+
+                    // quasi mai si rende visibile
+                    // il livello dell'orizzonte
+                    // (ÔøΩ troppo piatto, indecorato)
+                    // ma a meno che non sia una localitÔøΩ
+                    // di mare abbastanza scoperta...
+                    // in tal caso l'orizzonte ÔøΩ quasi
+                    // sempre costituito dal mare stesso:
+                    // in un caso su 5, si troverÔøΩ uno
+                    // scenario strano ma interessante:
+                    // pozze d'acqua tra i cespugli,
+                    // un luogo "paludoso"...
+                    if (!waswet || (waswet && !random(5))) {
+                        for (ptr = 0; ptr < oc_bytes; ptr ++) {
+                            p_surfacemap[ptr] += fast_random (3);
+                        }
+                    }
+
+                    // qualche sasso tanto per dire...
+                    rockscaling = 100 + random (200);
+                    rockpeaking = 100 + random (200);
+                    rockdensity = 3 + 4 * random(2);
+
+                    // a ogni modo, togli tutti gli
+                    // oggetti dagli specchi d'acqua.
+                    if (waswet) {
+                        liquid_water = 1;
+                    } else {
+                        gtx = 1;
+                    }
+
+                    break;
+
+                case DESERT:
+                    // beh, dune... e un palo
+                    // per andarci ovviamente a sbattere
+                    // (scherzavo, per il palo)
+                    // piÔøΩ alti i dislivelli,
+                    // maggiore lo smoothing,
+                    // cosÔøΩ vengono fuori dune
+                    // arrotondate dal vento...
+                    n = random(100);
+                    rockyground (50 + n, 5 + (n >> 4), 0);
+                    // texture a grana grossa, ghiozza.
+                    T_SCALE = 128;
+                    ptr = 65535;
+
+                    while (ptr) {
+                        txtr[ptr] = random(32);
+                        ptr--;
+                    }
+
+                    // qui ÔøΩ tutta sabbia:
+                    rockdensity = 0; // niente sassi
+                    gtx = 1; // suolo texturizzato
+                    break;
+
+                case ICY:
+                    snowy = 0;
+                    frosty = 0;
+
+                    // mah, quattro tipi di orografia.
+                    switch (random(4)) {
+                        case 0: // praticamente piana,
+                            // distesa nevosa...
+                            rockyground (15, 5, 0);
+                            snowy = 1;
+                            break;
+
+                        case 1: // brulla distesa di
+                            // ghiaccio permanente
+                            rockyground (10 + random(10), 1 + random(2), 0);
+                            frosty = 1;
+                            break;
+
+                        case 2: // colline di neve...
+                            ptr = random (50) + 50;
+
+                            while (ptr) {
+                                round_hill (random(200),
+                                            random(200),
+                                            random(200) + 1,
+                                            random( 75) + 1, 0, 1);
+                                ptr--;
+                            }
+
+                            snowy = 1;
+                            break;
+
+                        case 3: // e anche icebergs...
+                            rockyground (50 + random(50), 3 + random(3), -(random(40) + 20));
+                            frosty = 1;
+                            break;
+                    }
+
+                    // qualche sasso? raro e grosso.
+                    rockscaling = 200 + random (500);
+                    rockpeaking = 150 + random (250);
+                    rockdensity = 2 * random(2);
+                similar:
+
+                    if (snowy || frosty) { // textures "nevose"
+                        T_SCALE = 32;
+                        n = random (16) + 16;
+                        ptr = 65535;
+
+                        while (ptr) {
+                            txtr[ptr] = random(n);
+                            ptr--;
+                        }
+
+                        n = 1 + random(3);
+
+                        while (n) {
+                            ptr = 65535 - 257;
+
+                            while (ptr) {
+                                cx = txtr[ptr] + txtr[ptr + 1] + txtr[ptr + 256] + txtr[ptr + 257];
+                                txtr[ptr] = cx >> 2;
+                                ptr--;
+                            }
+
+                            n--;
+                        }
+                    }
+
+                    if (frosty) { // textures "ghiacciate"
+                        T_SCALE = 16 + random(48);
+                        n = random (250);
+
+                        while (n) {
+                            srf_darkline (txtr, 100 + random(200), -random(2), 0, 256);
+                            n--;
+                        }
+                    }
+
+                    break;
+            }
+
+            // I quarzi si possono trovare anche sui pianeti
+            // abitabili, ma solo a volte...
+            if (!random(5)) {
+                quartz = 1;
+            }
+
+            break;
+
+        case 4: // descritto come "di medie dimensioni, pietroso
+            // (petroso) e corrugato". ÔøΩ un pianeta roccioso
+            // che non ha pressochÔøΩ nessun cratere d'impatto,
+            // ma la cui superficie ÔøΩ disseminata di enormi
+            // massi grandi come case. nel sistema solare
+            // un possibile corrispondente ÔøΩ la superficie
+            // di phobos, ma per certi versi lo sarebbe anche
+            // la Luna, se non avesse crateri...
+            // il terreno ÔøΩ piuttosto liscio, di per sÔøΩ,
+            // con dislivelli simili a colline molto schiacciate,
+            // che possono essere inframezzate da ampie pianure...
+            rockyground (15, 3 + random (3), -random(5));
+            // e ora si aggiungono i pietroni della descrizione.
+            // puÔøΩ anche non essercene nessuno, in un quadrante...
+            n = random (15);
+
+            while (n) {
+                hf = random (15) + 7;
+                hr = hf * (flandom() * 3.5 + 3.5);
+                ht = hr * (flandom() * 0.2 + 0.3);
+
+                if (ht > 127) {
+                    ht = 127;
+                }
+
+                round_hill (random(200),
+                            random(200),
+                            hf, hr, ht, 0);
+                n--;
+            }
+
+            // vanno perÔøΩ arrotondati un po', perchÔøΩ in effetti
+            // ÔøΩ presumibile che siano coperti di polvere...
+            smoothterrain (1 + random(2));
+            // qui disegna dei piccolissimi crateri sulla texture
+            // di superficie... che piÔøΩ che altro rappresentano
+            // macchie e avvallamenti nelle zone a albedo bassa.
+            n = 64 - albedo;
+
+            if (nightzone) {
+                hf = 0.50;
+            } else {
+                hf = 0.25;
+            }
+
+            while (n) {
+                cx = random (150) + 25;
+                cz = random (150) + 25;
+                cr = random ( 10) + 15;
+                std_crater (txtr, cx, cz, -cr, 31, hf, 1, 256);
+                n--;
+            }
+
+            // piccoli sassi a grappoli, frammenti dei grandi
+            // massi e polveri addensate..
+            rockscaling = 100 + random (200);
+            rockdensity = 3 + 4 * random(2);
+            rockpeaking = 100 + random (200);
+            break;
+
+        case 5: // con atmosfera sottile (marte etc...)
+
+            // possono avere un terreno piuttosto accidentato,
+            // e raramente liscio: ÔøΩ anche prevista la possibilitÔøΩ
+            // di pozze d'acqua date dalla presenza del permafrost,
+            // perÔøΩ sono gelate e ci si puÔøΩ viaggiare sopra...
+            // scenari principali: pianure, territori accidentati.
+            if (random(2)) {
+                n = 5 + random(10);
+
+                if (albedo > 48) {
+                    n /= 2;
+                }
+
+                rockyground (n, 1, 0);
+            } else {
+                n = 15 + random(32);
+
+                if (albedo > 48) {
+                    n /= 2;
+                }
+
+                rockyground (n, 1, -random(24));
+            }
+
+            // va incluso qualche cratere eroso: ÔøΩ possibile...
+            n = random(68) - albedo;
+
+            if (n > 10) {
+                n = 10;
+            }
+
+            if (n < 1) {
+                n = 1;
+            }
+
+            while (n) {
+                hf = (float)random(5) * 0.015;
+                hr = (float)(random(10) + 10) * 0.27;
+                std_crater (p_surfacemap,
+                            random(200), random(200),
+                            random(35) + 5, 127, hf, hr, 200);
+                n--;
+            }
+
+            // molte pietre e pietruzze... sÔøΩ, sÔøΩ...
+            // perÔøΩ non ÔøΩ detto che siano tantissime, e
+            // in certi punti il terreno potrebbe essere sgombro.
+            rockscaling = 50 + random (400);
+            rockpeaking = 50 + random (250);
+            rockdensity = 1 + 30 * random(2);
+
+            // zone ad albedo alta sono coperte di nubi brillanti
+            if (albedo > 50) {
+                sky_brightness *= 2;
+
+                if (sky_brightness > 63) {
+                    sky_brightness = 63;
+                }
+            }
+
+            // zone ad albedo medio-alta: si tratta di vulcani,
+            // ci sono molte rocce grandi e la superficie ÔøΩ
+            // fatta "a padella", descrive ampie curve.
+            if (albedo > 40 && albedo <= 50) {
+                rockscaling *= 2;
+                rockdensity = 15 + 16 * random(2);
+                hf = (float)random(5) * 0.01;
+                hr = (float)(random(5) + 5) * 0.5;
+                std_crater (p_surfacemap,
+                            90 + random(20), 90 + random(20),
+                            100 + random(10), 127, hf, hr, 200);
+            }
+
+            // e per quanto riguarda i dettagli sulla superficie,
+            // roba molto irregolare: crepe, sassi e buche...
+            ptr = random (1500) + 500;
+            n = albedo * 5;
 
             while (n) {
                 srf_darkline (txtr, random(ptr), -1, -1, 256);
                 n--;
             }
-        }
 
-        // di solito poche grosse rocce erose
-        rockscaling = 500 + random (500);
-        rockdensity = 7 + 8 * random(2);
-        rockpeaking = 50 + random (150);
-        break;
-
-    case 3: // abitabili
-        gtx = 0; // puï esserci acqua liquida,
-
-        // quindi non tracciare i poligoni
-        // al livello del suolo a meno che
-        // non sia un particolare scenario
-        // tra quelli descritti sotto.
-
-        switch (sctype) {
-        case OCEAN:
-            waves_in = 1;
-            waves_out = 1;
-
-            // se non ä proprio mare aperto,
-            // si puï considerare un paesaggio
-            // "in riva al mare", usando il
-            // codice delle PLAINS.
-            if (albedo > 20) {
-                waswet = 1;
-                waves_in = 0;
-                goto revert;
-            }
-
-            // albedo pió basse, ma comunque pió
-            // alte di quella del mare aperto(16):
-            // scogli sparsi che rompono le onde,
-            // nel qual caso il mare ä calmo...
-            if (albedo > 16 && random(2)) {
-                rockyground (10, random(2), -5);
-                waves_in = 0;
-            }
-
-            // mentre in pieno oceano,
-            // al limite potrebbe esserci
-            // un'isoletta... raro, ma possibile.
-            if (!random(3)) {
-                cx = random(100) + 50;
-                cz = random(100) + 50;
-                round_hill (cx + random(15),
-                            cz + random(15),
-                            random(100) + 25,
-                            random(10) + 1, 0, 1);
-                round_hill (cx, cz,
-                            random(100) + 25,
-                            random(100) +  1, 0, 1);
-                waswet = 1;
-                goto addtrees;
-            }
-
-            // texture sabbiosa, direi...
-            T_SCALE = 128;
-            n = random (30) + 2;
-            ptr = 65535;
-
-            while (ptr) {
-                txtr[ptr] = random(n);
-                ptr--;
-            }
-
-            // moltissimi sassolini, se ci sono.
-            rockscaling = 50 + random (75);
-            rockpeaking = 30 + random (25);
-
-            if (random(3)) {
-                rockdensity = 31;
-            } else {
-                rockdensity = 0;
-            }
-
-            // ma aspetta un attimo: non possono
-            // esserci dei sassi galleggianti.
-            liquid_water = 1;
             break;
 
-        case PLAINS:
-            // basse colline, oppure montagne
-            // vere e proprie (in effetti, tutte
-            // le zone ricche di vegetazione
-            // rientrano in questo scenario),
-            // allora diciamo cosç...
-revert:
-            if (random(2)) {
-                // nell'un caso, le pianure.
-                ptr = random(50) + 5;
+        case 7: // gelidi, solcati di strie.
+            rockyground (10 - (albedo / 8), 0, 20 + random(100));
+            n = albedo - random(albedo) + 10;
 
-                while (ptr) {
-                    round_hill (random(200),
-                                random(200),
-                                random(200) + 1,
-                                random( 30) + 1, 0, 1);
-                    ptr--;
-                }
-            } else {
-                // nell'altro caso, i monti.
-                ptr = random(25) + 10;
-
-                while (ptr) {
-                    round_hill (random(200),
-                                random(200),
-                                random(200) + 1,
-                                random(100) + 1, 0, 1);
-                    ptr--;
-                }
-            }
-
-addtrees: // alberi sui rilievi...
-            // in certi casi, pianure steppose...
-            n = random (6);
-
-            for (ptr = 0; ptr < oc_bytes; ptr ++) {
-                switch (p_surfacemap[ptr] / 25) {
-                case 0:
-                    objectschart[ptr].object1_class = VEGET;
-                    objectschart[ptr].object2_class = VEGET;
-                    break;
-
-                case 1:
-                    objectschart[ptr].object1_class = VEGET;
-                    objectschart[ptr].object2_class = TREES;
-                    break;
-
-                case 2:
-                    objectschart[ptr].object1_class = TREES;
-                    objectschart[ptr].object2_class = TREES;
-                    break;
-
-                default:
-                    objectschart[ptr].object0_class = TREES;
-                    objectschart[ptr].object1_class = TREES;
-                    objectschart[ptr].object2_class = TREES;
-                }
-            }
-
-            // e texture con erba brada...
-            T_SCALE = 128;
-            n = random (15) + 2;
-            ptr = 65535;
-
-            while (ptr) {
-                txtr[ptr] = random(n);
-                ptr--;
-            }
-
-            n = 100 + random (500);
-
-            while (n) {
-                asterism (txtr, random(256), random(256),
-                          random(16), random(16), random(25) + 6,
-                          random(15) + 6, 256);
+            while (n) { // fai qualche crepaccio nella superficie
+                srf_darkline (p_surfacemap, random(500), -1, -1, 200);
                 n--;
             }
 
-            // quasi mai si rende visibile
-            // il livello dell'orizzonte
-            // (ä troppo piatto, indecorato)
-            // ma a meno che non sia una localitÖ
-            // di mare abbastanza scoperta...
-            // in tal caso l'orizzonte ä quasi
-            // sempre costituito dal mare stesso:
-            // in un caso su 5, si troverÖ uno
-            // scenario strano ma interessante:
-            // pozze d'acqua tra i cespugli,
-            // un luogo "paludoso"...
-            if (!waswet || (waswet && !random(5))) {
-                for (ptr = 0; ptr < oc_bytes; ptr ++) {
-                    p_surfacemap[ptr] += fast_random (3);
-                }
+            n = albedo + random(200) - random (100);
+
+            if (n < 0) {
+                n = 0;
             }
 
-            // qualche sasso tanto per dire...
-            rockscaling = 100 + random (200);
-            rockpeaking = 100 + random (200);
+            while (n) { // e aggiungi piccoli crateri "a macchia"
+                cx = random (192) + 32;
+                cz = random (192) + 32;
+                cr = random ( 16) + 16;
+                std_crater (txtr, cx, cz, -cr, 31, 0.15, 1, 256);
+                n--;
+            }
+
+            n = albedo + random(100) - random (50);
+
+            if (n < 0) {
+                n = 0;
+            }
+
+            n /= 2;
+
+            while (n) { // ma sÔøΩ, anche qualche crepetta piÔøΩ piccola, sparsa...
+                srf_darkline (txtr, random(100), -random(2), -random(2), 256);
+                n--;
+            }
+
+            // pietre? poche. qualcuna, di media taglia...
+            rockscaling = 50 + random (400);
+            rockpeaking = 50 + random (200);
             rockdensity = 3 + 4 * random(2);
-
-            // a ogni modo, togli tutti gli
-            // oggetti dagli specchi d'acqua.
-            if (waswet) {
-                liquid_water = 1;
-            } else {
-                gtx = 1;
-            }
-
             break;
 
-        case DESERT:
-            // beh, dune... e un palo
-            // per andarci ovviamente a sbattere
-            // (scherzavo, per il palo)
-            // pió alti i dislivelli,
-            // maggiore lo smoothing,
-            // cosç vengono fuori dune
-            // arrotondate dal vento...
-            n = random(100);
-            rockyground (50 + n, 5 + (n >> 4), 0);
-            // texture a grana grossa, ghiozza.
-            T_SCALE = 128;
-            ptr = 65535;
+        case 8: // lattiginosi (pianeti al quarzo).
+
+            // le zone piÔøΩ scure sono coperte di strutture
+            // piuttosto allungate, simili a duomi tettonici.
+            if (albedo < 20) {
+                ptr = 100 - albedo;
+
+                while (ptr) {
+                    hr = random (300);
+                    round_hill (random(150) + 25,
+                                random(150) + 25,
+                                random(  5) + 2,
+                                hr + 1, 127, 0);
+                    ptr--;
+                }
+
+                smoothterrain (2 + random(3));
+            }
+
+            // altrove, sono normalmente coperti di montagnole,
+            // o da agglomerati informi...
+            ptr = (100 - albedo) * 2;
 
             while (ptr) {
-                txtr[ptr] = random(32);
+                round_hill (random(200),
+                            random(200),
+                            random( 25) + 1,
+                            random( 25) + 1, 0, 1);
                 ptr--;
             }
 
-            // qui ä tutta sabbia:
-            rockdensity = 0; // niente sassi
-            gtx = 1; // suolo texturizzato
-            break;
+            // abbastanza roccioso, sÔøΩ... direi.
+            // quarziti molto irregolari, ÔøΩ ovvio...
+            quartz = 1;
+            rockscaling = 50 + random (300);
+            rockpeaking = 50 + random (300);
+            rockdensity = 7 + 8 * random(2);
 
-        case ICY:
+            // le macchie chiare sono zone piÔøΩ pianeggianti...
+            // quarzo fuso e successivamente risolidificato
+            // da estrusioni calde dall'interno: meno sassi qui.
+            if (albedo > 40) {
+                rockscaling *= 0.5;
+                rockpeaking = rockscaling;
+                rockdensity = 3 + 4 * random(2);
+                smoothterrain (1 + random(10));
+            }
+
+            // ripeti una texture "nevosa" o "ghiacciata".
+            // non ci stanno male.
             snowy = 0;
             frosty = 0;
 
-            // mah, quattro tipi di orografia.
-            switch (random(4)) {
-            case 0: // praticamente piana,
-                // distesa nevosa...
-                rockyground (15, 5, 0);
+            if (random(2)) {
                 snowy = 1;
-                break;
-
-            case 1: // brulla distesa di
-                // ghiaccio permanente
-                rockyground (10 + random(10), 1 + random(2), 0);
+            } else {
                 frosty = 1;
-                break;
-
-            case 2: // colline di neve...
-                ptr = random (50) + 50;
-
-                while (ptr) {
-                    round_hill (random(200),
-                                random(200),
-                                random(200) + 1,
-                                random( 75) + 1, 0, 1);
-                    ptr--;
-                }
-
-                snowy = 1;
-                break;
-
-            case 3: // e anche icebergs...
-                rockyground (50 + random(50), 3 + random(3), -(random(40) + 20));
-                frosty = 1;
-                break;
             }
 
-            // qualche sasso? raro e grosso.
-            rockscaling = 200 + random (500);
-            rockpeaking = 150 + random (250);
-            rockdensity = 2 * random(2);
-similar:
-
-            if (snowy || frosty) { // textures "nevose"
-                T_SCALE = 32;
-                n = random (16) + 16;
-                ptr = 65535;
-
-                while (ptr) {
-                    txtr[ptr] = random(n);
-                    ptr--;
-                }
-
-                n = 1 + random(3);
-
-                while (n) {
-                    ptr = 65535 - 257;
-
-                    while (ptr) {
-                        cx = txtr[ptr] + txtr[ptr + 1] + txtr[ptr + 256] + txtr[ptr + 257];
-                        txtr[ptr] = cx >> 2;
-                        ptr--;
-                    }
-
-                    n--;
-                }
-            }
-
-            if (frosty) { // textures "ghiacciate"
-                T_SCALE = 16 + random(48);
-                n = random (250);
-
-                while (n) {
-                    srf_darkline (txtr, 100 + random(200), -random(2), 0, 256);
-                    n--;
-                }
-            }
-
-            break;
-        }
-
-        // I quarzi si possono trovare anche sui pianeti
-        // abitabili, ma solo a volte...
-        if (!random(5)) {
-            quartz = 1;
-        }
-
-        break;
-
-    case 4: // descritto come "di medie dimensioni, pietroso
-        // (petroso) e corrugato". ä un pianeta roccioso
-        // che non ha pressochÇ nessun cratere d'impatto,
-        // ma la cui superficie ä disseminata di enormi
-        // massi grandi come case. nel sistema solare
-        // un possibile corrispondente ä la superficie
-        // di phobos, ma per certi versi lo sarebbe anche
-        // la Luna, se non avesse crateri...
-        // il terreno ä piuttosto liscio, di per sÇ,
-        // con dislivelli simili a colline molto schiacciate,
-        // che possono essere inframezzate da ampie pianure...
-        rockyground (15, 3 + random (3), -random(5));
-        // e ora si aggiungono i pietroni della descrizione.
-        // puï anche non essercene nessuno, in un quadrante...
-        n = random (15);
-
-        while (n) {
-            hf = random (15) + 7;
-            hr = hf * (flandom() * 3.5 + 3.5);
-            ht = hr * (flandom() * 0.2 + 0.3);
-
-            if (ht > 127) {
-                ht = 127;
-            }
-
-            round_hill (random(200),
-                        random(200),
-                        hf, hr, ht, 0);
-            n--;
-        }
-
-        // vanno perï arrotondati un po', perchÇ in effetti
-        // ä presumibile che siano coperti di polvere...
-        smoothterrain (1 + random(2));
-        // qui disegna dei piccolissimi crateri sulla texture
-        // di superficie... che pió che altro rappresentano
-        // macchie e avvallamenti nelle zone a albedo bassa.
-        n = 64 - albedo;
-
-        if (nightzone) {
-            hf = 0.50;
-        } else {
-            hf = 0.25;
-        }
-
-        while (n) {
-            cx = random (150) + 25;
-            cz = random (150) + 25;
-            cr = random ( 10) + 15;
-            std_crater (txtr, cx, cz, -cr, 31, hf, 1, 256);
-            n--;
-        }
-
-        // piccoli sassi a grappoli, frammenti dei grandi
-        // massi e polveri addensate..
-        rockscaling = 100 + random (200);
-        rockdensity = 3 + 4 * random(2);
-        rockpeaking = 100 + random (200);
-        break;
-
-    case 5: // con atmosfera sottile (marte etc...)
-
-        // possono avere un terreno piuttosto accidentato,
-        // e raramente liscio: ä anche prevista la possibilitÖ
-        // di pozze d'acqua date dalla presenza del permafrost,
-        // perï sono gelate e ci si puï viaggiare sopra...
-        // scenari principali: pianure, territori accidentati.
-        if (random(2)) {
-            n = 5 + random(10);
-
-            if (albedo > 48) {
-                n /= 2;
-            }
-
-            rockyground (n, 1, 0);
-        } else {
-            n = 15 + random(32);
-
-            if (albedo > 48) {
-                n /= 2;
-            }
-
-            rockyground (n, 1, -random(24));
-        }
-
-        // va incluso qualche cratere eroso: ä possibile...
-        n = random(68) - albedo;
-
-        if (n > 10) {
-            n = 10;
-        }
-
-        if (n < 1) {
-            n = 1;
-        }
-
-        while (n) {
-            hf = (float)random(5) * 0.015;
-            hr = (float)(random(10) + 10) * 0.27;
-            std_crater (p_surfacemap,
-                        random(200), random(200),
-                        random(35) + 5, 127, hf, hr, 200);
-            n--;
-        }
-
-        // molte pietre e pietruzze... sç, sç...
-        // perï non ä detto che siano tantissime, e
-        // in certi punti il terreno potrebbe essere sgombro.
-        rockscaling = 50 + random (400);
-        rockpeaking = 50 + random (250);
-        rockdensity = 1 + 30 * random(2);
-
-        // zone ad albedo alta sono coperte di nubi brillanti
-        if (albedo > 50) {
-            sky_brightness *= 2;
-
-            if (sky_brightness > 63) {
-                sky_brightness = 63;
-            }
-        }
-
-        // zone ad albedo medio-alta: si tratta di vulcani,
-        // ci sono molte rocce grandi e la superficie ä
-        // fatta "a padella", descrive ampie curve.
-        if (albedo > 40 && albedo <= 50) {
-            rockscaling *= 2;
-            rockdensity = 15 + 16 * random(2);
-            hf = (float)random(5) * 0.01;
-            hr = (float)(random(5) + 5) * 0.5;
-            std_crater (p_surfacemap,
-                        90 + random(20), 90 + random(20),
-                        100 + random(10), 127, hf, hr, 200);
-        }
-
-        // e per quanto riguarda i dettagli sulla superficie,
-        // roba molto irregolare: crepe, sassi e buche...
-        ptr = random (1500) + 500;
-        n = albedo * 5;
-
-        while (n) {
-            srf_darkline (txtr, random(ptr), -1, -1, 256);
-            n--;
-        }
-
-        break;
-
-    case 7: // gelidi, solcati di strie.
-        rockyground (10 - (albedo / 8), 0, 20 + random(100));
-        n = albedo - random(albedo) + 10;
-
-        while (n) { // fai qualche crepaccio nella superficie
-            srf_darkline (p_surfacemap, random(500), -1, -1, 200);
-            n--;
-        }
-
-        n = albedo + random(200) - random (100);
-
-        if (n < 0) {
-            n = 0;
-        }
-
-        while (n) { // e aggiungi piccoli crateri "a macchia"
-            cx = random (192) + 32;
-            cz = random (192) + 32;
-            cr = random ( 16) + 16;
-            std_crater (txtr, cx, cz, -cr, 31, 0.15, 1, 256);
-            n--;
-        }
-
-        n = albedo + random(100) - random (50);
-
-        if (n < 0) {
-            n = 0;
-        }
-
-        n /= 2;
-
-        while (n) { // ma sç, anche qualche crepetta pió piccola, sparsa...
-            srf_darkline (txtr, random(100), -random(2), -random(2), 256);
-            n--;
-        }
-
-        // pietre? poche. qualcuna, di media taglia...
-        rockscaling = 50 + random (400);
-        rockpeaking = 50 + random (200);
-        rockdensity = 3 + 4 * random(2);
-        break;
-
-    case 8: // lattiginosi (pianeti al quarzo).
-
-        // le zone pió scure sono coperte di strutture
-        // piuttosto allungate, simili a duomi tettonici.
-        if (albedo < 20) {
-            ptr = 100 - albedo;
-
-            while (ptr) {
-                hr = random (300);
-                round_hill (random(150) + 25,
-                            random(150) + 25,
-                            random(  5) + 2,
-                            hr + 1, 127, 0);
-                ptr--;
-            }
-
-            smoothterrain (2 + random(3));
-        }
-
-        // altrove, sono normalmente coperti di montagnole,
-        // o da agglomerati informi...
-        ptr = (100 - albedo) * 2;
-
-        while (ptr) {
-            round_hill (random(200),
-                        random(200),
-                        random( 25) + 1,
-                        random( 25) + 1, 0, 1);
-            ptr--;
-        }
-
-        // abbastanza roccioso, sç... direi.
-        // quarziti molto irregolari, ä ovvio...
-        quartz = 1;
-        rockscaling = 50 + random (300);
-        rockpeaking = 50 + random (300);
-        rockdensity = 7 + 8 * random(2);
-
-        // le macchie chiare sono zone pió pianeggianti...
-        // quarzo fuso e successivamente risolidificato
-        // da estrusioni calde dall'interno: meno sassi qui.
-        if (albedo > 40) {
-            rockscaling *= 0.5;
-            rockpeaking = rockscaling;
-            rockdensity = 3 + 4 * random(2);
-            smoothterrain (1 + random(10));
-        }
-
-        // ripeti una texture "nevosa" o "ghiacciata".
-        // non ci stanno male.
-        snowy = 0;
-        frosty = 0;
-
-        if (random(2)) {
-            snowy = 1;
-        } else {
-            frosty = 1;
-        }
-
-        goto similar;
+            goto similar;
     }
 
     n = random (5);
@@ -3147,8 +3194,8 @@ similar:
         }
     }
 
-    // gli oggetti, ovviamente, tendono a distribuirsi pió numerosi
-    // sulle zone pianeggianti, rotolando gió dai rilievi:
+    // gli oggetti, ovviamente, tendono a distribuirsi piÔøΩ numerosi
+    // sulle zone pianeggianti, rotolando giÔøΩ dai rilievi:
     // questo vale anche per i vegetali, anche se le erbacce
     // potrebbero rimanere attaccate, ma vengono gestite
     // separatamente dal codice dello scenario "plains".
@@ -3169,8 +3216,8 @@ similar:
         }
     }
 
-    // se c'ä acqua liquida sulla superficie, non possono esserci
-    // oggetti che vi galleggiano: ä opinabile, ma per ora lasciamo
+    // se c'ÔøΩ acqua liquida sulla superficie, non possono esserci
+    // oggetti che vi galleggiano: ÔøΩ opinabile, ma per ora lasciamo
     // perdere eventuali alghe, pezzi di legno...
     if (liquid_water) {
         for (ptr = 0; ptr < oc_bytes; ptr ++) {
@@ -3186,20 +3233,20 @@ similar:
     // qualche pezzo di codice precedente sembra influire
     // sulla distribuzione delle rovine. Sospetto si tratti
     // del frammento che ridistribuisce gli oggetti a seconda
-    // delle zone pió o meno pianeggianti, in quanto qualche
+    // delle zone piÔøΩ o meno pianeggianti, in quanto qualche
     // byte dell'orografia del territorio sembra cambiare
     // (a volte, errori di sconfinamento dovuti a procedimenti
-    // di arrotondamento, ecc...) l'orografia, perï, se cambia,
-    // di certo cambia in minuscoli particolari, perchÇ si direbbe
+    // di arrotondamento, ecc...) l'orografia, perÔøΩ, se cambia,
+    // di certo cambia in minuscoli particolari, perchÔøΩ si direbbe
     // generalmente costante.
     fast_srand (landing_pt_lat * landing_pt_lon);
     srand (landing_pt_lat * landing_pt_lon);
 
     if ((int32_t)(nearstar_identity * 1E6) == -37828) {
-        // Questa stella ä Balastrackonastreya
+        // Questa stella ÔøΩ Balastrackonastreya
         if (ip_targetted == 3) {
-            // Questo mondo ä Felysia:
-            // la gravitÖ ä giÖ regolata da una costante
+            // Questo mondo ÔøΩ Felysia:
+            // la gravitÔøΩ ÔøΩ giÔøΩ regolata da una costante
             // in modo che Felysia abbia 1 FG (Felysian G),
             // ma la pressione va regolata; per estrazione
             // pseudo-casuale altrimenti sarebbe circa 1.2 ATM.
@@ -3211,7 +3258,7 @@ similar:
             // attorno a Balastrackonastreya. In particolare si
             // tratta delle due lune di Fal Galmatrifal.
             // Squallide palazzine, qualche rimasuglio di
-            // edifici pió grandi, e tardi edifici coloniali.
+            // edifici piÔøΩ grandi, e tardi edifici coloniali.
             if (nearstar_p_type[ip_targetted] == 3) {
                 make_ruins (3, 3, 3, 1, 4, 1);
             }
@@ -3219,7 +3266,7 @@ similar:
     }
 
     if ((int32_t)(nearstar_identity * 1E5) == 1599551984L) {
-        // Questa stella ä Fenia
+        // Questa stella ÔøΩ Fenia
         // Peach, base navale storica:
         // molti grattacieli, grossi edifici rovinati (industrie).
         if (ip_targetted == 2) {
@@ -3240,8 +3287,8 @@ similar:
     }
 
     if ((int32_t)(nearstar_identity * 1E8) == -11543634L) {
-        // Questa stella ä Ylastravenia, fu esplorata
-        // per prima (ä vicinissima a Balastrackonastreya)
+        // Questa stella ÔøΩ Ylastravenia, fu esplorata
+        // per prima (ÔøΩ vicinissima a Balastrackonastreya)
         // ed il quarto pianeta, Suricrasia, venne colonizzato
         // con uno stile tutto particolare...
         if (ip_targetted == 3) {
@@ -3250,7 +3297,7 @@ similar:
             // Il "Suricrasian Cube" era l'unica formazione
             // nota prima che riaggiustassi i semi per le
             // rovine. Dopo la normalizzazione di tali semi,
-            // ä sparito. Si tratta semplicemente di un grosso
+            // ÔøΩ sparito. Si tratta semplicemente di un grosso
             // cubo, e questo frammento si occupa di
             // ripristinarlo come appariva nella vecchia
             // fotografia SNAP0106, o almeno all'incirca
@@ -3295,23 +3342,26 @@ similar:
             sh_delta -= 200;
         }
     }
+#endif
+    STUB
 }
 
 /*  Funzione che definisce il cielo visto da un pianeta.
     Oltretutto, definisce anche: tavola colori, temperatura e pressione. */
 
 void create_sky (int8_t atmosphere) {
+#if 0
     // filtri colorati di base.
     float br = (float)sky_red_filter / 64,
-          bg = (float)sky_grn_filter / 64,
-          bb = (float)sky_blu_filter / 64;
+            bg = (float)sky_grn_filter / 64,
+            bb = (float)sky_blu_filter / 64;
     float tr = (float)gnd_red_filter / 64,
-          tg = (float)gnd_grn_filter / 64,
-          tb = (float)gnd_blu_filter / 64;
+            tg = (float)gnd_grn_filter / 64,
+            tb = (float)gnd_blu_filter / 64;
     float fr[4], fg[4], fb[4];  // filtri colorati per 4 sfumature.
     float al = (albedo / 64);   // costante di albedo
-    // calcola il fattore "distanza dal sole" per l'intensitÖ della luce
-    // ä infuenzato anche dal tipo di stella.
+    // calcola il fattore "distanza dal sole" per l'intensitÔøΩ della luce
+    // ÔøΩ infuenzato anche dal tipo di stella.
     float sb, dfs;
     int16_t   owner = nearstar_p_owner[ip_targetted];
 
@@ -3338,53 +3388,53 @@ void create_sky (int8_t atmosphere) {
     }
 
     switch (nearstar_class) {
-    case  0:
-        dfs *= 1.0;
-        break;
+        case  0:
+            dfs *= 1.0;
+            break;
 
-    case  1:
-        dfs *= 1.5;
-        break;
+        case  1:
+            dfs *= 1.5;
+            break;
 
-    case  2:
-        dfs *= 0.5;
-        break;
+        case  2:
+            dfs *= 0.5;
+            break;
 
-    case  3:
-        dfs *= 0.8;
-        break;
+        case  3:
+            dfs *= 0.8;
+            break;
 
-    case  4:
-        dfs *= 1.2;
-        break;
+        case  4:
+            dfs *= 1.2;
+            break;
 
-    case  5:
-        dfs *= 0.1;
-        break;
+        case  5:
+            dfs *= 0.1;
+            break;
 
-    case  6:
-        dfs *= 0.1;
-        break;
+        case  6:
+            dfs *= 0.1;
+            break;
 
-    case  7:
-        dfs *= 0.4;
-        break;
+        case  7:
+            dfs *= 0.4;
+            break;
 
-    case  8:
-        dfs *= 0.9;
-        break;
+        case  8:
+            dfs *= 0.9;
+            break;
 
-    case  9:
-        dfs *= 1.3;
-        break;
+        case  9:
+            dfs *= 1.3;
+            break;
 
-    case 10:
-        dfs *= 0.5;
-        break;
+        case 10:
+            dfs *= 0.5;
+            break;
 
-    case 11:
-        dfs *= 0.2;
-        break;
+        case 11:
+            dfs *= 0.2;
+            break;
     }
 
     // calcola il fattore di saturazione (influenza i pianeti abitabili
@@ -3395,220 +3445,220 @@ void create_sky (int8_t atmosphere) {
     srand (global_surface_seed);
 
     switch (nearstar_p_type[ip_targetted]) {
-    // case 0: ATTUALMENTE non considerato: ä un pianeta vulcanico.
-    case 1: // rocciosi (stile luna)
-        pp_pressure = 0;
-like1: // colori per le terre emerse.
-        // simili a quelli della superficie vista dallo
-        // spazio, che tendono a essere alquanto grigiastri.
-        fr[0] = tr;// * 0.5 + 0.5 * al;
-        fg[0] = tg;// * 0.5 + 0.5 * al;
-        fb[0] = tb;// * 0.5 + 0.5 * al;
-        // colori per il cielo.
-        // non c'ä il cielo. non c'ä aria.
-        // ma servono per le stelle, belle brillanti.
-        fr[1] = 1.5;
-        fg[1] = 1.5;
-        fb[1] = 1.5;
-        // colori per l'orizzonte.
-        // come quelli delle terre emerse, ma pió sbiaditi.
-        fr[2] = 2 * fr[0];
-        fg[2] = 2 * fg[0];
-        fb[2] = 2 * fb[0];
-        // colori per la vegetazione.
-        // non c'ä vegetazione, quindi per ora nulli.
-        fr[3] = 0.0;
-        fg[3] = 0.0;
-        fb[3] = 0.0;
-        break;
+        // case 0: ATTUALMENTE non considerato: ÔøΩ un pianeta vulcanico.
+        case 1: // rocciosi (stile luna)
+            pp_pressure = 0;
+        like1: // colori per le terre emerse.
+            // simili a quelli della superficie vista dallo
+            // spazio, che tendono a essere alquanto grigiastri.
+            fr[0] = tr;// * 0.5 + 0.5 * al;
+            fg[0] = tg;// * 0.5 + 0.5 * al;
+            fb[0] = tb;// * 0.5 + 0.5 * al;
+            // colori per il cielo.
+            // non c'ÔøΩ il cielo. non c'ÔøΩ aria.
+            // ma servono per le stelle, belle brillanti.
+            fr[1] = 1.5;
+            fg[1] = 1.5;
+            fb[1] = 1.5;
+            // colori per l'orizzonte.
+            // come quelli delle terre emerse, ma piÔøΩ sbiaditi.
+            fr[2] = 2 * fr[0];
+            fg[2] = 2 * fg[0];
+            fb[2] = 2 * fb[0];
+            // colori per la vegetazione.
+            // non c'ÔøΩ vegetazione, quindi per ora nulli.
+            fr[3] = 0.0;
+            fg[3] = 0.0;
+            fb[3] = 0.0;
+            break;
 
-    case 2: // con spessa atmosfera (pianeti "venusiani")
-        // colori per tutto.
-        // per questo specifico tipo di pianeta,
-        // quelli del cielo sono pressochÇ uguali
-        // a quelli delle nubi. quelli del terreno
-        // sono il negativo fotografico, perchÇ il
-        // cielo filtra interamente i colori opposti.
-        fr[0] = 1.2 - tr;
-        fr[1] = tr + flandom() * 0.15 - flandom() * 0.15 + 0.3;
-        fr[2] = tr + flandom() * 0.30 - flandom() * 0.30 + 0.2;
-        fr[3] = tr + flandom() * 0.45 - flandom() * 0.45 + 0.1;
-        fg[0] = 1.2 - tg;
-        fg[1] = tg + flandom() * 0.15 - flandom() * 0.15 + 0.3;
-        fg[2] = tg + flandom() * 0.30 - flandom() * 0.30 + 0.2;
-        fg[3] = tg + flandom() * 0.45 - flandom() * 0.45 + 0.1;
-        fb[0] = 1.2 - tb;
-        fb[1] = tb + flandom() * 0.15 - flandom() * 0.15 + 0.3;
-        fb[2] = tb + flandom() * 0.30 - flandom() * 0.30 + 0.2;
-        fb[3] = tb + flandom() * 0.45 - flandom() * 0.45 + 0.1;
-        nebular_sky (); // cielo adatto all'uopo.
-        pp_pressure = fast_flandom() * 20 + albedo + 1;
-        break;
+        case 2: // con spessa atmosfera (pianeti "venusiani")
+            // colori per tutto.
+            // per questo specifico tipo di pianeta,
+            // quelli del cielo sono pressochÔøΩ uguali
+            // a quelli delle nubi. quelli del terreno
+            // sono il negativo fotografico, perchÔøΩ il
+            // cielo filtra interamente i colori opposti.
+            fr[0] = 1.2 - tr;
+            fr[1] = tr + flandom() * 0.15 - flandom() * 0.15 + 0.3;
+            fr[2] = tr + flandom() * 0.30 - flandom() * 0.30 + 0.2;
+            fr[3] = tr + flandom() * 0.45 - flandom() * 0.45 + 0.1;
+            fg[0] = 1.2 - tg;
+            fg[1] = tg + flandom() * 0.15 - flandom() * 0.15 + 0.3;
+            fg[2] = tg + flandom() * 0.30 - flandom() * 0.30 + 0.2;
+            fg[3] = tg + flandom() * 0.45 - flandom() * 0.45 + 0.1;
+            fb[0] = 1.2 - tb;
+            fb[1] = tb + flandom() * 0.15 - flandom() * 0.15 + 0.3;
+            fb[2] = tb + flandom() * 0.30 - flandom() * 0.30 + 0.2;
+            fb[3] = tb + flandom() * 0.45 - flandom() * 0.45 + 0.1;
+            nebular_sky (); // cielo adatto all'uopo.
+            pp_pressure = fast_flandom() * 20 + albedo + 1;
+            break;
 
-    case 3: // abitabili
-        // colori per il cielo.
-        fr[1] = br * 0.5 + 0.5 * flandom();
-        fg[1] = bg * 0.5 + 0.5 * flandom();
-        fb[1] = bb * 0.5 + 0.5 * flandom();
+        case 3: // abitabili
+            // colori per il cielo.
+            fr[1] = br * 0.5 + 0.5 * flandom();
+            fg[1] = bg * 0.5 + 0.5 * flandom();
+            fb[1] = bb * 0.5 + 0.5 * flandom();
 
-        switch (sctype) {
-        case OCEAN:
-            // albedo bassa (32-39): oceani liquidi
-            // ------------------------------------
-            // colori per le terre emerse.
-            fr[0] = 0.65 + 0.5 * flandom();
-            fg[0] = 0.45 + 0.4 * flandom();
-            fb[0] = 0.25 + 0.3 * flandom();
+            switch (sctype) {
+                case OCEAN:
+                    // albedo bassa (32-39): oceani liquidi
+                    // ------------------------------------
+                    // colori per le terre emerse.
+                    fr[0] = 0.65 + 0.5 * flandom();
+                    fg[0] = 0.45 + 0.4 * flandom();
+                    fb[0] = 0.25 + 0.3 * flandom();
 
-            if (fg[0] < 0.6) {
-                fg[0] *= 2;
+                    if (fg[0] < 0.6) {
+                        fg[0] *= 2;
+                    }
+
+                    // colori per il mare.
+                    fr[2] = 0.8 * flandom();
+                    fg[2] = 0.8 * flandom();
+                    fb[2] = fb[0] * 2 + 0.4;
+                    // colori per la vegetazione.
+                    fr[3] = 0.2 + flandom();
+                    fg[3] = 0.4 + flandom();
+                    fb[3] = flandom() * 0.6;
+                    // cielo (solitamente) gremito di nubi.
+                    cloudy_sky (50, 1);
+                    break;
+
+                case PLAINS: // albedo media (40-47): prateria stepposa e zone "verdi".
+                    // ------------------------------------
+                    // colori per le terre emerse.
+                    fr[0] = 0.25 + 0.5 * flandom();
+                    fg[0] = 0.50 + 0.4 * flandom();
+                    fb[0] = 0.25 + 0.3 * flandom();
+
+                    if (fg[0] < 0.75) {
+                        fg[0] *= 1.5;
+                    }
+
+                    // colori per l'orizzonte.
+                    fr[2] = (flandom() * 0.4) + fr[0] * 0.3;
+                    fr[2] = (flandom() * 0.7) + fg[0] * 0.3;
+                    fr[2] = (flandom() * 0.2) + fb[0] * 0.3;
+                    // colori per la vegetazione.
+                    fr[3] = flandom();
+                    fg[3] = flandom();
+                    fb[3] = flandom();
+                    // cielo mediamente nuvoloso, pioggie in normali quantitÔøΩ...
+                    cloudy_sky (33, 1);
+                    break;
+
+                case DESERT: // albedo medio-alta (48-55): aree (semi)desertiche
+                    // ------------------------------------
+                    // colori per le terre emerse.
+                    fr[0] = tr + flandom() * 0.33;
+                    fg[0] = tg + flandom() * 0.25;
+                    fb[0] = tb + flandom() * 0.12;
+                    // colori per l'orizzonte.
+                    fr[2] = tr;
+                    fg[2] = tg;
+                    fb[2] = tb;
+                    // colori per la vegetazione.
+                    fr[3] = 0.50 * flandom();
+                    fg[3] = 0.90 * flandom();
+                    fb[3] = 0.40 * flandom();
+                    // cielo molto pulito, pioggie molto scarse...
+                    cloudy_sky (10, 1);
+                    break;
+
+                case ICY: // albedo alta (56-63): nevi perenni e ghiacciai.
+                    // ------------------------------------
+                    // colori per le terre emerse.
+                    fr[0] = 0.25 + flandom ();
+                    fg[0] = 0.55 + flandom ();
+                    fb[0] = 1.00 + flandom ();
+                    // colori per l'orizzonte.
+                    fr[2] = fr[0] * 0.6;
+                    fg[2] = fg[0] * 0.8;
+                    fb[2] = fb[0];
+                    // colori per la vegetazione.
+                    fr[3] = 0.95 * flandom ();
+                    fg[3] = 0.95 * flandom ();
+                    fb[3] = 0.95 * flandom ();
+                    // cielo pulito (poca umiditÔøΩ nell'aria)
+                    cloudy_sky (15, 1);
+                    break;
             }
 
-            // colori per il mare.
-            fr[2] = 0.8 * flandom();
-            fg[2] = 0.8 * flandom();
-            fb[2] = fb[0] * 2 + 0.4;
-            // colori per la vegetazione.
-            fr[3] = 0.2 + flandom();
-            fg[3] = 0.4 + flandom();
-            fb[3] = flandom() * 0.6;
-            // cielo (solitamente) gremito di nubi.
-            cloudy_sky (50, 1);
+            pp_pressure = fast_flandom() * 0.8 + 0.6;
             break;
 
-        case PLAINS: // albedo media (40-47): prateria stepposa e zone "verdi".
-            // ------------------------------------
+        case 4: // pietrosi e corrugati...
+            pp_pressure = fast_flandom() * 0.1;
+            goto like1;
+
+        case 5: // con atmosfera sottile (marte etc...)
             // colori per le terre emerse.
-            fr[0] = 0.25 + 0.5 * flandom();
-            fg[0] = 0.50 + 0.4 * flandom();
-            fb[0] = 0.25 + 0.3 * flandom();
-
-            if (fg[0] < 0.75) {
-                fg[0] *= 1.5;
-            }
-
+            // mah... in genere simili a quelli della superficie
+            // vista dallo spazio, ma qualche variazione ÔøΩ
+            // possibile, plausibile... dovuta ai componenti
+            // del suolo locale.
+            fr[0] = tr + 0.33 * flandom() * al;
+            fg[0] = tg + 0.33 * flandom() * al;
+            fb[0] = tb + 0.33 * flandom() * al;
+            // colori per il cielo.
+            // sono pressochÔøΩ ininfluenti, ma quasi costanti.
+            fr[1] = 0.8 * tb + 0.2 * flandom() * al;
+            fg[1] = 0.8 * tg + 0.2 * flandom() * al;
+            fb[1] = 0.8 * tr + 0.2 * flandom() * al;
             // colori per l'orizzonte.
-            fr[2] = (flandom() * 0.4) + fr[0] * 0.3;
-            fr[2] = (flandom() * 0.7) + fg[0] * 0.3;
-            fr[2] = (flandom() * 0.2) + fb[0] * 0.3;
+            // come quelli delle terre emerse, ma piÔøΩ sbiaditi.
+            fr[2] = 0.5 + fr[0] * 0.5 * al;
+            fg[2] = 0.5 + fg[0] * 0.5 * al;
+            fb[2] = 0.5 + fb[0] * 0.5 * al;
             // colori per la vegetazione.
-            fr[3] = flandom();
-            fg[3] = flandom();
-            fb[3] = flandom();
-            // cielo mediamente nuvoloso, pioggie in normali quantitÖ...
-            cloudy_sky (33, 1);
+            // non c'ÔøΩ vegetazione, quindi per ora nulli.
+            fr[3] = 0.0;
+            fg[3] = 0.0;
+            fb[3] = 0.0;
+            // l'atmosfera lascia vedere le stelle
+            // per quasi tutto il giorno, di solito...
+            sky_brightness = (float)sky_brightness * 0.65;
+            // l'aspetto del cielo, anche qui, puÔøΩ essere nuvoloso,
+            // ma con subi sottili e poco marcate, e foschia appena percepibile.
+            cloudy_sky (10, 2);
+            pp_pressure = fast_flandom() * 0.05 + 0.01;
             break;
 
-        case DESERT: // albedo medio-alta (48-55): aree (semi)desertiche
-            // ------------------------------------
-            // colori per le terre emerse.
-            fr[0] = tr + flandom() * 0.33;
-            fg[0] = tg + flandom() * 0.25;
-            fb[0] = tb + flandom() * 0.12;
+            // case 6: non considerato: ÔøΩ un gigante gassoso.
+
+        case 7: // gelido, solcato di strie (tipo Europa)
+            pp_pressure = fast_flandom() * 0.02;
+        like7: // colori per le terre emerse. molto chiari.
+            // simili a quelli della superficie vista dallo
+            // spazio, che tendono a essere alquanto grigiastri.
+            fr[0] = tr + flandom() * al;
+            fg[0] = tg + flandom() * al;
+            fb[0] = tb + flandom() * al;
+            // colori per il cielo.
+            // non c'ÔøΩ il cielo. non c'ÔøΩ aria.
+            // ma servono per le stelle, brillanti.
+            fr[1] = 1.3;
+            fg[1] = 1.4;
+            fb[1] = 1.5;
             // colori per l'orizzonte.
-            fr[2] = tr;
-            fg[2] = tg;
-            fb[2] = tb;
+            // come quelli delle terre emerse, ma piÔøΩ sbiaditi.
+            fr[2] = 0.5 + fr[0];
+            fg[2] = 0.5 + fg[0];
+            fb[2] = 0.5 + fb[0];
             // colori per la vegetazione.
-            fr[3] = 0.50 * flandom();
-            fg[3] = 0.90 * flandom();
-            fb[3] = 0.40 * flandom();
-            // cielo molto pulito, pioggie molto scarse...
-            cloudy_sky (10, 1);
+            // non c'ÔøΩ vegetazione, quindi per ora nulli.
+            fr[3] = 0.0;
+            fg[3] = 0.0;
+            fb[3] = 0.0;
             break;
 
-        case ICY: // albedo alta (56-63): nevi perenni e ghiacciai.
-            // ------------------------------------
-            // colori per le terre emerse.
-            fr[0] = 0.25 + flandom ();
-            fg[0] = 0.55 + flandom ();
-            fb[0] = 1.00 + flandom ();
-            // colori per l'orizzonte.
-            fr[2] = fr[0] * 0.6;
-            fg[2] = fg[0] * 0.8;
-            fb[2] = fb[0];
-            // colori per la vegetazione.
-            fr[3] = 0.95 * flandom ();
-            fg[3] = 0.95 * flandom ();
-            fb[3] = 0.95 * flandom ();
-            // cielo pulito (poca umiditÖ nell'aria)
-            cloudy_sky (15, 1);
-            break;
-        }
-
-        pp_pressure = fast_flandom() * 0.8 + 0.6;
-        break;
-
-    case 4: // pietrosi e corrugati...
-        pp_pressure = fast_flandom() * 0.1;
-        goto like1;
-
-    case 5: // con atmosfera sottile (marte etc...)
-        // colori per le terre emerse.
-        // mah... in genere simili a quelli della superficie
-        // vista dallo spazio, ma qualche variazione ä
-        // possibile, plausibile... dovuta ai componenti
-        // del suolo locale.
-        fr[0] = tr + 0.33 * flandom() * al;
-        fg[0] = tg + 0.33 * flandom() * al;
-        fb[0] = tb + 0.33 * flandom() * al;
-        // colori per il cielo.
-        // sono pressochÇ ininfluenti, ma quasi costanti.
-        fr[1] = 0.8 * tb + 0.2 * flandom() * al;
-        fg[1] = 0.8 * tg + 0.2 * flandom() * al;
-        fb[1] = 0.8 * tr + 0.2 * flandom() * al;
-        // colori per l'orizzonte.
-        // come quelli delle terre emerse, ma pió sbiaditi.
-        fr[2] = 0.5 + fr[0] * 0.5 * al;
-        fg[2] = 0.5 + fg[0] * 0.5 * al;
-        fb[2] = 0.5 + fb[0] * 0.5 * al;
-        // colori per la vegetazione.
-        // non c'ä vegetazione, quindi per ora nulli.
-        fr[3] = 0.0;
-        fg[3] = 0.0;
-        fb[3] = 0.0;
-        // l'atmosfera lascia vedere le stelle
-        // per quasi tutto il giorno, di solito...
-        sky_brightness = (float)sky_brightness * 0.65;
-        // l'aspetto del cielo, anche qui, puï essere nuvoloso,
-        // ma con subi sottili e poco marcate, e foschia appena percepibile.
-        cloudy_sky (10, 2);
-        pp_pressure = fast_flandom() * 0.05 + 0.01;
-        break;
-
-    // case 6: non considerato: ä un gigante gassoso.
-
-    case 7: // gelido, solcato di strie (tipo Europa)
-        pp_pressure = fast_flandom() * 0.02;
-like7: // colori per le terre emerse. molto chiari.
-        // simili a quelli della superficie vista dallo
-        // spazio, che tendono a essere alquanto grigiastri.
-        fr[0] = tr + flandom() * al;
-        fg[0] = tg + flandom() * al;
-        fb[0] = tb + flandom() * al;
-        // colori per il cielo.
-        // non c'ä il cielo. non c'ä aria.
-        // ma servono per le stelle, brillanti.
-        fr[1] = 1.3;
-        fg[1] = 1.4;
-        fb[1] = 1.5;
-        // colori per l'orizzonte.
-        // come quelli delle terre emerse, ma pió sbiaditi.
-        fr[2] = 0.5 + fr[0];
-        fg[2] = 0.5 + fg[0];
-        fb[2] = 0.5 + fb[0];
-        // colori per la vegetazione.
-        // non c'ä vegetazione, quindi per ora nulli.
-        fr[3] = 0.0;
-        fg[3] = 0.0;
-        fb[3] = 0.0;
-        break;
-
-    case 8: // lattiginoso.
-        pp_pressure = fast_flandom() + 0.2;
-        goto like7;
-        // case 9: non considerato: ä un oggetto substellare.
-        // case 10: non considerato: ä una stella compagna.
+        case 8: // lattiginoso.
+            pp_pressure = fast_flandom() + 0.2;
+            goto like7;
+            // case 9: non considerato: ÔøΩ un oggetto substellare.
+            // case 10: non considerato: ÔøΩ una stella compagna.
     }
 
     // evita gradienti negativi, non hanno senso.
@@ -3649,7 +3699,7 @@ like7: // colori per le terre emerse. molto chiari.
     fg[3] *= 64 * dfs;
     fb[3] *= 64 * dfs;
 
-    // se non c'ä atmosfera, stelle sempre ben visibili.
+    // se non c'ÔøΩ atmosfera, stelle sempre ben visibili.
     // alternativamente, si rendono visibili di notte.
     if (!atmosphere) {
         shade (surface_palette, 64, 64, 0, 0, 0, 100, 110, 120);
@@ -3689,7 +3739,7 @@ like7: // colori per le terre emerse. molto chiari.
     shade (surface_palette, 192, 10,     0,     0,     0, fr[0], fg[0], fb[0]);
     shade (surface_palette, 202, 44, fr[0], fg[0], fb[0], fr[3], fg[3], fb[3]);
     shade (surface_palette, 246, 10, fr[3], fg[3], fb[3], fr[1], fg[1], fb[1]);
-nightcolors:
+    nightcolors:
     // calcolo della temperatura.
     pp_temp = 90 - dsd1 * 0.33;
 
@@ -3722,57 +3772,60 @@ nightcolors:
 
     if (nearstar_p_type[ip_targetted] == 3) {
         switch (sctype) {
-        case OCEAN:
-            while (pp_temp < +10) {
-                pp_temp += fast_flandom() * 5;
-            }
+            case OCEAN:
+                while (pp_temp < +10) {
+                    pp_temp += fast_flandom() * 5;
+                }
 
-            while (pp_temp > +60) {
-                pp_temp -= fast_flandom() * 5;
-            }
+                while (pp_temp > +60) {
+                    pp_temp -= fast_flandom() * 5;
+                }
 
-            break;
+                break;
 
-        case PLAINS:
-            while (pp_temp < -10) {
-                pp_temp += fast_flandom() * 5;
-            }
+            case PLAINS:
+                while (pp_temp < -10) {
+                    pp_temp += fast_flandom() * 5;
+                }
 
-            while (pp_temp > +45) {
-                pp_temp -= fast_flandom() * 5;
-            }
+                while (pp_temp > +45) {
+                    pp_temp -= fast_flandom() * 5;
+                }
 
-            break;
+                break;
 
-        case DESERT:
-            while (pp_temp < +20) {
-                pp_temp += fast_flandom() * 5;
-            }
+            case DESERT:
+                while (pp_temp < +20) {
+                    pp_temp += fast_flandom() * 5;
+                }
 
-            while (pp_temp > +80) {
-                pp_temp -= fast_flandom() * 5;
-            }
+                while (pp_temp > +80) {
+                    pp_temp -= fast_flandom() * 5;
+                }
 
-            break;
+                break;
 
-        case ICY:
-            while (pp_temp < -120) {
-                pp_temp += fast_flandom() * 5;
-            }
+            case ICY:
+                while (pp_temp < -120) {
+                    pp_temp += fast_flandom() * 5;
+                }
 
-            while (pp_temp >  +4) {
-                pp_temp -= fast_flandom() * 5;
-            }
+                while (pp_temp >  +4) {
+                    pp_temp -= fast_flandom() * 5;
+                }
         }
     }
 
     base_pp_temp = pp_temp;
     base_pp_pressure = pp_pressure;
+#endif
+    STUB
 }
 
 /* Funzione che definisce le forme di vita proprie ai pianeti abitabili. */
 
 void setup_animals () {
+#if 0
     int16_t n, p, x;
     int16_t bird_probability;
     int16_t reptil_probability;
@@ -3780,7 +3833,7 @@ void setup_animals () {
 
     // impostazione numero animali.
     // questo parametro dipende dal tipo di scenario.
-    // non sono assolutamente considerate possibilitÖ di vita
+    // non sono assolutamente considerate possibilitÔøΩ di vita
     // su pianeti non classificati come abitabili.
 
     if (nearstar_p_type[ip_targetted] != 3) {
@@ -3789,21 +3842,21 @@ void setup_animals () {
     }
 
     switch (sctype) {
-    case OCEAN:
-        animals = LFS / 5  + random (LFS - LFS / 5);
-        break;
+        case OCEAN:
+            animals = LFS / 5  + random (LFS - LFS / 5);
+            break;
 
-    case PLAINS:
-        animals = LFS / 2  + random (LFS - LFS / 2);
-        break;
+        case PLAINS:
+            animals = LFS / 2  + random (LFS - LFS / 2);
+            break;
 
-    case DESERT:
-        animals = LFS / 10 + random (LFS / 5);
-        break;
+        case DESERT:
+            animals = LFS / 10 + random (LFS / 5);
+            break;
 
-    case ICY:
-        animals = LFS / 10 + random (LFS / 2);
-        break;
+        case ICY:
+            animals = LFS / 10 + random (LFS / 2);
+            break;
     }
 
     // impostazione seme pseudo e scala.
@@ -3820,28 +3873,28 @@ void setup_animals () {
     // questo parametro dipende dal seme globale e dal tipo di scenario.
 
     switch (sctype) {
-    case OCEAN:
-        bird_probability   = 1 + random(9);
-        reptil_probability = 0;
-        mammal_probability = 0;
-        break;
+        case OCEAN:
+            bird_probability   = 1 + random(9);
+            reptil_probability = 0;
+            mammal_probability = 0;
+            break;
 
-    case PLAINS:
-        bird_probability   = 5 + random(9);
-        reptil_probability = 3 + random(3);
-        mammal_probability = 5 + random(4);
-        break;
+        case PLAINS:
+            bird_probability   = 5 + random(9);
+            reptil_probability = 3 + random(3);
+            mammal_probability = 5 + random(4);
+            break;
 
-    case DESERT:
-        bird_probability   = 1 + random(2);
-        reptil_probability = 9 + random(9);
-        mammal_probability = 1 + random(2);
-        break;
+        case DESERT:
+            bird_probability   = 1 + random(2);
+            reptil_probability = 9 + random(9);
+            mammal_probability = 1 + random(2);
+            break;
 
-    case ICY:
-        bird_probability   = 2 + random(2);
-        reptil_probability = 0 + random(2);
-        mammal_probability = 0 + random(2);
+        case ICY:
+            bird_probability   = 2 + random(2);
+            reptil_probability = 0 + random(2);
+            mammal_probability = 0 + random(2);
     }
 
     for (n = 0; n < animals; n++) {
@@ -3865,12 +3918,12 @@ void setup_animals () {
             }
         }
 
-anitypeselected:
+        anitypeselected:
     }
 
     // impostazione posizione attuale e dati accessori sugli animali.
     // questi parametri sono del tutto casuali: certo, solo insetti
-    // e uccelli possono volare, e quindi c'ä da tenerne conto.
+    // e uccelli possono volare, e quindi c'ÔøΩ da tenerne conto.
     srand (secs);
     fast_srand (secs);
 
@@ -3910,6 +3963,8 @@ anitypeselected:
             1, 0.3 + flandom(), 0.75 + flandom(),
             0, 0, 0, fast_random(0xC0), 1);
     loadpv (bird_result, birdy_ncc, 1, 1, 1, 0, 0, 0, 0x80, 1);
+#endif
+    STUB
 }
 
 /*  Questa funzione aggiorna sp_x;y;z in modo da tener conto della distanza
@@ -3917,6 +3972,7 @@ anitypeselected:
     alla superficie in quel punto. sp_x;y;z stanno per "stepping pos x;y;z" */
 
 void add_height (int32_t px, int32_t pz, float height) {
+#if 0
     int32_t cpos;
     float x[3], y[3], z[3];
     float h1, h2, h3, h4, icx, icz;
@@ -3954,6 +4010,8 @@ void add_height (int32_t px, int32_t pz, float height) {
     sp_x += (pnx * height - sp_x) * 0.25;
     sp_y += (pny * height - sp_y) * 0.25;
     sp_z += (pnz * height - sp_z) * 0.25;
+#endif
+    STUB
 }
 
 /* Ciclo principale nell'esplorazione delle superfici planetarie. */
@@ -3961,12 +4019,13 @@ void add_height (int32_t px, int32_t pz, float height) {
 float tiredness = 0;
 
 int8_t exitflag = 0; // flag: se settato al ritorno di planetary_main,
-// significa che c'ä stato un quit sulla superficie.
+// significa che c'ÔøΩ stato un quit sulla superficie.
 int8_t entryflag = 0;// flag: se settato all'ingresso di planetary_main,
 // significa che si sta recuperando la situazione
 // di superficie.
 
 void planetary_main () {
+#if 0
     const int16_t widesnappingangle = 71;
     uint16_t pqw = QUADWORDS;
     int32_t     cpos;
@@ -3991,8 +4050,8 @@ void planetary_main () {
     float    secondary_nearstar_x;
     float    secondary_nearstar_z;
     float    pri_to_sec_distance, compdist;
-    // Questo pezzo controlla se c'ä una stella molto vicina a parte
-    // la primaria (in sistemi multipli). La pió vicina delle compagne
+    // Questo pezzo controlla se c'ÔøΩ una stella molto vicina a parte
+    // la primaria (in sistemi multipli). La piÔøΩ vicina delle compagne
     // viene mostrata anche sulla superficie. E' chiamata qui il
     // "sole secondario".
     dsd1 = dsd;
@@ -4025,12 +4084,12 @@ void planetary_main () {
     // Se invece si tratta di un pianeta che gira attorno ad una
     // delle stelle compagne della primaria, il sole secondario
     // diventa il primario, dato che i fattori di esposizione
-    // (crepzone e nightzone) erano giÖ stati calcolati per la
+    // (crepzone e nightzone) erano giÔøΩ stati calcolati per la
     // stella compagna cui il pianeta appartiene, per via dei
     // controlli svolti dalla f. "cplx_planet_viewpoint".
 
     if (nearstar_p_owner[ip_targetted] != -1 &&
-            nearstar_p_type[nearstar_p_owner[ip_targetted]] == 10) {
+        nearstar_p_type[nearstar_p_owner[ip_targetted]] == 10) {
         dsd1 = nearstar_p_qsortdist[nearstar_p_owner[ip_targetted]];
         nray1 = nearstar_p_ray[nearstar_p_owner[ip_targetted]];
         dsd2 = dsd;
@@ -4076,7 +4135,7 @@ void planetary_main () {
         while (ll == clock());
     }
 
-    // regolazione della forza di gravitÖ.
+    // regolazione della forza di gravitÔøΩ.
     gravity = nearstar_p_ray[ip_targetted];
     planet_grav = gravity * 2000;
     pp_gravity = gravity * 38.26;
@@ -4115,35 +4174,35 @@ void planetary_main () {
     field_amplificator = 0;
     flashed            = 0;
     landed         = 0;
-    // "latitude" andrÖ da 0 a 90.
+    // "latitude" andrÔøΩ da 0 a 90.
     // il range di "landing_pt_lat" va da -60 a +60.
     // quindi moltiplicando il valore assoluto per 1.5 si ottiene
-    // un range da 0 a 90 gradi. 0 ä l'equatore, 90 sono i poli.
+    // un range da 0 a 90 gradi. 0 ÔøΩ l'equatore, 90 sono i poli.
     latitude       = (float)(abs (landing_pt_lat - 60)) * 1.5;
     // "exposure" segnala l'esposizione alla stella che fa da sole.
-    // la variabile "crepzone" ha un range di variabilitÖ che,
+    // la variabile "crepzone" ha un range di variabilitÔøΩ che,
     // nell'area diurna, abbraccia 230 gradi in longitudine, dato che
     // i due terminatori sono calcolati a partire da +35 e +165 gradi
     // dal punto che rappresenta il punto al bordo destro del disco
-    // planetario visto dalla stella. Il range di 230 gradi ä perï
+    // planetario visto dalla stella. Il range di 230 gradi ÔøΩ perÔøΩ
     // normalizzato in modo da far coincidere i terminatori con zero
-    // e il sole a perpendicolo con la sua metÖ, quindi con 115 gradi.
+    // e il sole a perpendicolo con la sua metÔøΩ, quindi con 115 gradi.
     // Normalmente il range diurno come quello notturno dovrebbero
-    // occupare entrambi 180 gradi. Perï, per via delle funzioni che
+    // occupare entrambi 180 gradi. PerÔøΩ, per via delle funzioni che
     // tracciano i globi e delle loro estreme ottimizzazioni, il range
-    // notturno ä stato rimpicciolito perchÇ i terminatori coincidano
+    // notturno ÔøΩ stato rimpicciolito perchÔøΩ i terminatori coincidano
     // effettivamente con i bordi del disco planetario quando lo si
     // osserva "in controluce" stagliantesi contro la sua stella.
     // Il trucco in genere non si nota; si ha l'effettiva impressione
     // che l'area diurna copra un'area considerevolmente maggiore, ma
     // dato che i terminatori coincidono sembra tutto regolare...
-    // d'altronde, le sfere non posso tracciarle che cosç, se voglio
-    // abbastanza velocitÖ.
+    // d'altronde, le sfere non posso tracciarle che cosÔøΩ, se voglio
+    // abbastanza velocitÔøΩ.
     // "exposure" viene normalizzato per l'area diurna fra 0 e 90 gradi,
     // e in pratica rappresenta la declinazione del sole locale: zero
-    // significa che il sole ä all'orizzonte.
+    // significa che il sole ÔøΩ all'orizzonte.
     exposure       = (float)(crepzone) * 0.7826; // 90/115
-    // "sun_x_factor" prende il valore -1 quando il sole ä verso il lato
+    // "sun_x_factor" prende il valore -1 quando il sole ÔøΩ verso il lato
     // ovest (tramonto), altrimenti prende il valore +1. Per calcolare
     // le tre coordinate del sole si parte dalle coordinate come
     // sarebbero se entrambi gli angoli (latitude ed exposure) fossero
@@ -4153,13 +4212,13 @@ void planetary_main () {
     //  rx = -d * cos(beta);
     //  ry = -d * sin(beta) * sin(alfa);
     //  rz = d * sin(beta) * cos(alfa);
-    // dove la "x" di partenza ä la distanza del sole,
-    // "alfa" ä la latitudine e "beta" l'angolo d'incidenza
+    // dove la "x" di partenza ÔøΩ la distanza del sole,
+    // "alfa" ÔøΩ la latitudine e "beta" l'angolo d'incidenza
     // orizzontale altrimenti chiamato "exposure".
     // Infine bisogna tener conto della direzione da cui viene
     // la luce del sole (verso l'alba/verso il tramonto), che non
     // viene considerata da "exposure" ("exposure" non ha segno).
-    // Per questo c'ä la variabile "sun_x_factor".
+    // Per questo c'ÔøΩ la variabile "sun_x_factor".
     // Il tutto viene implementato come:
     alfa = deg * (90 - latitude);
     beta = deg * exposure;
@@ -4218,12 +4277,12 @@ void planetary_main () {
     //
     if (ts > te) {
         if (ll >= ts
-                || ll < te) {
+            || ll < te) {
             pri_nightzone = 1;
         }
     } else {
         if (ll >= ts
-                && ll < te) {
+            && ll < te) {
             pri_nightzone = 1;
         }
     }
@@ -4298,7 +4357,7 @@ void planetary_main () {
     }
 
     // E con questo si sono finiti i calcoli fatti normalmente dalla
-    // funzione "planets". Perï resta da ripetere i calcoli di prima,
+    // funzione "planets". PerÔøΩ resta da ripetere i calcoli di prima,
     // su altre variabili col prefisso "pri_".
     // Oh, naturalmente bisogna usare "dsd2" al posto di "dsd1".
     pri_exposure = (float)(pri_crepzone) * 0.7826; // 90/115
@@ -4307,86 +4366,86 @@ void planetary_main () {
     pri_x = -dsd2 * cos(beta) * pri_sun_x_factor;
     pri_y = -dsd2 * sin(beta) * sin(alfa);
     pri_z = +dsd2 * sin(beta) * cos(alfa);
-nosecondarysun:
+    nosecondarysun:
     // regolazione della direzione del vento.
     wdir = flandom() * 2 * M_PI;
-    // regolazione dell'intensitÖ del vento.
+    // regolazione dell'intensitÔøΩ del vento.
     iwp = flandom () * 0.5 - flandom() * 0.5;
     rwp = flandom () * 50 - flandom() * 50;
 
     /* operazioni preliminari per ogni tipo di pianeta. */
 
     switch (nearstar_p_type[ip_targetted]) {
-    case 1:
-        sky_brightness = 0;
-        atmosphere = 0;
-        break;
-
-    case 2:
-        sky_brightness = 63 - nightzone * 31;
-        break;
-
-    case 3: // attribuzione pseudo-casuale degli scenari
-        // per le caratteristiche generali del pianeta...
-        srand (landing_pt_lon * landing_pt_lat);
-
-        if (random(100) > 5) {
-            cpos   = 555 * nearstar_p_orb_orient[ip_targetted];
-            sctype = (cpos % 4) + 1;
-        } else {
-            sctype = random (4) + 1;
-        }
-
-        // correzioni per le regioni oceaniche
-        if (albedo < 25) {
-            sctype = OCEAN;
-        }
-
-        // correzioni per le regioni polari
-        if (latitude > 75) {
-            sctype = ICY;
-        }
-
-        if (latitude > 60 && random (3)) {
-            sctype = ICY;
-        }
-
-        // correzioni casuali guidate all'umiditÖ del cielo
-        // (specie in caso di deserti e ghiacciai, dove
-        // praticamente non puï piovere)
-        switch (sctype) {
-        case DESERT:
-            rainy /= random(4) + 1;
+        case 1:
+            sky_brightness = 0;
+            atmosphere = 0;
             break;
 
-        case ICY:
-            rainy /= random(3) + 2;
+        case 2:
+            sky_brightness = 63 - nightzone * 31;
             break;
-        }
 
-        if (rainy < 0) {
-            rainy = 0;
-        }
+        case 3: // attribuzione pseudo-casuale degli scenari
+            // per le caratteristiche generali del pianeta...
+            srand (landing_pt_lon * landing_pt_lat);
 
-        if (rainy > 5) {
-            rainy = 5;
-        }
+            if (random(100) > 5) {
+                cpos   = 555 * nearstar_p_orb_orient[ip_targetted];
+                sctype = (cpos % 4) + 1;
+            } else {
+                sctype = random (4) + 1;
+            }
 
-        break;
+            // correzioni per le regioni oceaniche
+            if (albedo < 25) {
+                sctype = OCEAN;
+            }
 
-    case 4:
-        sky_brightness = 0;
-        atmosphere = 0;
-        break;
+            // correzioni per le regioni polari
+            if (latitude > 75) {
+                sctype = ICY;
+            }
 
-    case 7:
-        sky_brightness = 0;
-        atmosphere = 0;
-        break;
+            if (latitude > 60 && random (3)) {
+                sctype = ICY;
+            }
+
+            // correzioni casuali guidate all'umiditÔøΩ del cielo
+            // (specie in caso di deserti e ghiacciai, dove
+            // praticamente non puÔøΩ piovere)
+            switch (sctype) {
+                case DESERT:
+                    rainy /= random(4) + 1;
+                    break;
+
+                case ICY:
+                    rainy /= random(3) + 2;
+                    break;
+            }
+
+            if (rainy < 0) {
+                rainy = 0;
+            }
+
+            if (rainy > 5) {
+                rainy = 5;
+            }
+
+            break;
+
+        case 4:
+            sky_brightness = 0;
+            atmosphere = 0;
+            break;
+
+        case 7:
+            sky_brightness = 0;
+            atmosphere = 0;
+            break;
     }
 
     /*  selezione della tabella pseudo valida per tutto il pianeta
-        (cambia solo con la latitudine, ma ä previsto che sia cosç, dato
+        (cambia solo con la latitudine, ma ÔøΩ previsto che sia cosÔøΩ, dato
         che bisogna differenziare gli ambienti caldi da quelli freddi). */
     global_surface_seed = (nearstar_p_ray[ip_targetted]
                            + nearstar_p_orb_ray[ip_targetted]
@@ -4460,7 +4519,7 @@ nosecondarysun:
             goto nosurfacefile;
         }
     } else {
-nosurfacefile:
+        nosurfacefile:
         srand (clock());
         pos_x = 1638400;
         pos_z = 1638400;
@@ -4487,13 +4546,13 @@ nosurfacefile:
         // calcolo delle costanti trigonometriche degli effetti vento
         wdirsin = 10 * sin (wdir) * wp;
         wdircos = 10 * cos (wdir) * wp;
-        // riduzione stanchezza (semprechÇ si stia fermi)
+        // riduzione stanchezza (semprechÔøΩ si stia fermi)
         tiredness *= 0.9977;
         pp_pulse = (1 + tiredness) * 118;
         pp_pulse += fast_flandom () * 8;
         pp_pulse -= fast_flandom () * 8;
 
-        // variazioni atmosferiche (se c'ä, l'atmosfera)
+        // variazioni atmosferiche (se c'ÔøΩ, l'atmosfera)
         if (atmosphere) {
             pp_pressure = base_pp_pressure;
             pp_temp += pos_y * 0.000001;
@@ -4561,9 +4620,9 @@ nosurfacefile:
 
         // causa una scivolata su pareti ripide discese rapidamente,
         // mentre in circostanze normali aggiorna la direzione di
-        // avanzamento (che puï non coincidere con quella in cui si
+        // avanzamento (che puÔøΩ non coincidere con quella in cui si
         // guarda, appunto durante le scivolate o per brevi voli su
-        // pianeti con scarsa gravitÖ).
+        // pianeti con scarsa gravitÔøΩ).
         if (pos_y < crcy) {
             shift = bkshift;
             step = bkstep;
@@ -4571,7 +4630,7 @@ nosurfacefile:
             directional_beta = user_beta;
         }
 
-        // nella capsula non puï muoversi autonomamente.
+        // nella capsula non puÔøΩ muoversi autonomamente.
         if (opencapdelta) {
             shift = 0;
             step = 0;
@@ -4726,7 +4785,7 @@ nosurfacefile:
             flashed = 1;
         }
 
-        // tracciamento del cielo (che ovviamente ä lo sfondo).
+        // tracciamento del cielo (che ovviamente ÔøΩ lo sfondo).
         alfa = user_alfa;
         beta = user_beta;
         ptr = ((int16_t)(5 * beta) % 5) - 320 * ((int16_t)(4 * (alfa + 180)) % 4) - 4;
@@ -4746,8 +4805,8 @@ nosurfacefile:
             }
         }
 
-        // disegna le stelle, se ä il caso di farlo.
-        // il punto di vista ä dell'astrozattera,
+        // disegna le stelle, se ÔøΩ il caso di farlo.
+        // il punto di vista ÔøΩ dell'astrozattera,
         // ma gli angoli sono quelli del protagonista.
         if (sky_brightness < 32 && rainy < 2.0) {
             cam_x = backup_dzat_x;
@@ -4760,8 +4819,8 @@ nosurfacefile:
         }
 
         // tracciamento del "sole" locale.
-        // qui il punto di vista ä fittizio:
-        // ä l'origine degli assi perchÇ il
+        // qui il punto di vista ÔøΩ fittizio:
+        // ÔøΩ l'origine degli assi perchÔøΩ il
         // sole ha delle coordinate proiettate
         // rispetto a molti fattori...
         // e vengono calcolate prima di entrare
@@ -4814,16 +4873,16 @@ nosurfacefile:
         // tracciamento dell'orizzonte.
         // punto di vista: all'incirca quello dell'utente,
         // ma l'angolo beta (orientamento) viene
-        // sempre impostato a zero perchÇ la superficie
-        // ä tracciata con una semi-texture e comunque
+        // sempre impostato a zero perchÔøΩ la superficie
+        // ÔøΩ tracciata con una semi-texture e comunque
         // non cambia girandosi attorno: cambia solo se
         // si guarda verso l'alto o verso il basso.
         // inoltre, le coordinate X/Z dell'utente non
         // influiscono sull'aspetto dell'orizzonte,
-        // mentre la y ä amplificata per far coincidere
+        // mentre la y ÔøΩ amplificata per far coincidere
         // l'orizzonte con il bordo del landscape (che
-        // in realtÖ ä pió vicino perchÇ altrimenti sarebbe
-        // problematico disegnare qualcosa di pió lontano).
+        // in realtÔøΩ ÔøΩ piÔøΩ vicino perchÔøΩ altrimenti sarebbe
+        // problematico disegnare qualcosa di piÔøΩ lontano).
         cam_x = 0;
         cam_y = pos_y - 1E4;
         cam_z = 0;
@@ -4886,12 +4945,12 @@ nosurfacefile:
                     change_angle_of_view ();
                 }
 
-                // luccichçi generici
+                // luccichÔøΩi generici
                 if (sctype == ICY) {
                     // appaiono semisolidificati, sul ghiaccio
                     fast_srand ( ((int32_t)(pos_x) >> 10) + ((int32_t)(pos_z) >> 10) );
                 } else {
-                    // e molto pió variabili sull'acqua
+                    // e molto piÔøΩ variabili sull'acqua
                     fast_srand (pos_x + pos_z + clock() * 3);
                 }
 
@@ -4901,7 +4960,7 @@ nosurfacefile:
                     n_globes_map[fast_random(32767)] = 16 + fast_random(15);
                 }
 
-                // luccichçi mirati (in riflesso diretto della luce della stella)
+                // luccichÔøΩi mirati (in riflesso diretto della luce della stella)
                 if (!nightzone) {
                     fshift = xsun_onscreen - x_centro_f;
                     fshift = (float)fshift * -0.34;
@@ -4977,7 +5036,7 @@ nosurfacefile:
 
         // variazioni alla posizione:
         // attribuisce "consistenza" al suolo ed ai suoi dislivelli,
-        // e controlla gli effetti del vento quando si ä sospesi
+        // e controlla gli effetti del vento quando si ÔøΩ sospesi
         // a mezz'aria (durante un grosso salto o scendendo con la
         // capsula). inoltre controlla l'accelerazione gravitazionale.
         crcy = hpoint (pos_x, pos_z);
@@ -5005,7 +5064,7 @@ nosurfacefile:
                 }
 
                 if (!opencapdelta && gravity < 250
-                        && (compdist < 512 || bounces > 10)) {
+                    && (compdist < 512 || bounces > 10)) {
                     pos_x   = ((((int32_t)pos_x) >> 14) << 14) + 8192;
                     pos_z   = ((((int32_t)pos_z) >> 14) << 14) + 8192;
                     pos_y   = hpoint (pos_x, pos_z);
@@ -5035,7 +5094,7 @@ nosurfacefile:
             }
         }
 
-        // controlla se si ä tornati alla capsula.
+        // controlla se si ÔøΩ tornati alla capsula.
         if (landed) {
             drop_x = pos_x - ((atl_x << 14) + atl_x2);
             drop_z = pos_z - ((atl_z << 14) + atl_z2);
@@ -5069,7 +5128,7 @@ nosurfacefile:
                 n_globes_map[ptr] = n_globes_map[ptr - 256] >> 1;
             }
 
-            // usa i primi 32K, dove c'ä la sfumatura del mare...
+            // usa i primi 32K, dove c'ÔøΩ la sfumatura del mare...
             V_MATRIXS = 8;
             change_txm_repeating_mode();
             // ora attiva poligoni brillanti...
@@ -5117,7 +5176,7 @@ nosurfacefile:
                 yy[2] = wy[w];
                 drop_z = 18 * deg;
                 cpos = 0;
-redo:
+                redo:
 
                 while (drop_x < 2 * M_PI) {
                     drop_y = wr[w] - wl[w];
@@ -5139,7 +5198,7 @@ redo:
                     goto redo;
                 }
 
-dontdo:
+                dontdo:
                 wr[w] += wd[w];
             }
 
@@ -5153,7 +5212,7 @@ dontdo:
         }
 
         // qui disegna tutto il landscape.
-        mirror = 0; // non ä un riflesso.
+        mirror = 0; // non ÔøΩ un riflesso.
         ipfx = ((int32_t)(cam_x)) >> 14;
         ipfz = ((int32_t)(cam_z)) >> 14;
 
@@ -5195,7 +5254,7 @@ dontdo:
             // prodotti dal fatto che si sta nuotando, o comunque
             // annaspando da fermi, per rimanere a galla...
             txtr = n_globes_map;
-            // usa i primi 32K, dove c'ä la sfumatura del mare...
+            // usa i primi 32K, dove c'ÔøΩ la sfumatura del mare...
             V_MATRIXS = 8;
             change_txm_repeating_mode();
             // ora attiva poligoni brillanti...
@@ -5226,9 +5285,9 @@ dontdo:
             // ciclo di tracciamento delle onde in partenza.
             // queste sono quelle prodotte dal protagonista,
             // e le differenze sono le seguenti:
-            // - la cresta ä orientata verso l'esterno.
+            // - la cresta ÔøΩ orientata verso l'esterno.
             // - l'onda si espande, non si restringe.
-            // - l'onda si appiattisce sempre pió e,
+            // - l'onda si appiattisce sempre piÔøΩ e,
             //   dopo un po' di tempo, svanisce.
             w = now;
 
@@ -5269,7 +5328,7 @@ dontdo:
 
                 wr[w] += wd[w];
                 wh[w] /= 1.025;
-prox:
+                prox:
             }
 
             // reimpostazione dei normali parametri
@@ -5314,7 +5373,7 @@ prox:
         //          effetti di un'atmosfera particolarmente densa.
         if (atmosphere) {
             // effetti del vento, che si fanno sentire quandunque
-            // ci sia un'atmosfera, al di lÖ del fatto che essa
+            // ci sia un'atmosfera, al di lÔøΩ del fatto che essa
             // sia respirabile o meno.
             iwp  += (float)(random(albedo)) * 0.020;
             iwp  -= (float)(random(albedo)) * 0.020;
@@ -5377,8 +5436,8 @@ prox:
                 // Nuota a pelo d'acqua (ove possibile).
                 // Quindi fa delle piccole onde...
                 if (nearstar_p_type[ip_targetted] == 3
-                        && (sctype == PLAINS || sctype == DESERT)) {
-                    goto ends;    // non c'ä acqua su deserti e prati.
+                    && (sctype == PLAINS || sctype == DESERT)) {
+                    goto ends;    // non c'ÔøΩ acqua su deserti e prati.
                 }
 
                 waveratio = 10 - fabs(step) / 5;
@@ -5407,8 +5466,8 @@ prox:
         }
 
         // annebbiamento della vista (eventuale),
-        // subito dopo che si ä stati bagnati da un'onda...
-ends:
+        // subito dopo che si ÔøΩ stati bagnati da un'onda...
+        ends:
 
         if (waveblur) {
             ptr = waveblur;
@@ -5426,7 +5485,7 @@ ends:
             QUADWORDS = pqw;
         }
 
-        // il fotogramma ä finito. ora lo visualizza.
+        // il fotogramma ÔøΩ finito. ora lo visualizza.
         surrounding (1, openhudcount);
         QUADWORDS = 16000;
 
@@ -5437,7 +5496,7 @@ ends:
         QUADWORDS = pqw;
 
         // effetto di apertura della capsula:
-        // quando ä totalmente aperta, si puï scendere.
+        // quando ÔøΩ totalmente aperta, si puÔøΩ scendere.
         if (opencapdelta < 0) {
             opencapcount += opencapdelta;
 
@@ -5448,7 +5507,7 @@ ends:
         }
 
         // effetto di chiusura della capsula:
-        // quando ä totalmente sigillata, scotty beam me up.
+        // quando ÔøΩ totalmente sigillata, scotty beam me up.
         if (opencapdelta > 0) {
             opencapcount += opencapdelta;
 
@@ -5603,7 +5662,7 @@ ends:
                 //
                 _rtl_close (oh);
                 //
-wserror:
+                wserror:
                 remove ("..\\GALLERY\\SNAP9997.BMP");
                 remove ("..\\GALLERY\\SNAP9998.BMP");
                 remove ("..\\GALLERY\\SNAP9999.BMP");
@@ -5789,7 +5848,7 @@ wserror:
         while (ll == clock());
     }
 
-nodissolve:
+    nodissolve:
     pclear (adapted, 0);
     pclear (adaptor, 0);
     dzat_x = backup_dzat_x;
@@ -5811,4 +5870,6 @@ nodissolve:
     load_starface ();
     load_digimap2 ();
     npcs = -12345;
+#endif
+    FIXME
 }
