@@ -83,13 +83,13 @@ extern long _x_, _y_;
 extern int8_t getcoords (float x, float y, float z);
 extern int8_t facing (float* x, float* y, float* z);
 
-extern int8_t*   situation_file;
-extern int8_t*   starmap_file;
-extern int8_t*   goesoutputfile;
-extern int8_t*   surface_file;
+extern const char*   situation_file;
+extern const char*   starmap_file;
+extern const char*   goesoutputfile;
+extern const char*   surface_file;
 extern int16_t    sfh;
 
-extern int8_t   sync;
+extern int8_t   nsync;
 extern int8_t   anti_rad;
 extern int8_t   pl_search;
 extern int8_t   field_amplificator;
@@ -272,7 +272,7 @@ extern long flat_rnd_seed;
 extern void fast_srand (int32_t seed);
 extern long fast_random (int32_t mask);
 extern int16_t ranged_fast_random (int16_t range);
-extern int16_t sa_open (int32_t offset_of_virtual_file);
+extern int32_t sa_open(int32_t offset_of_virtual_file);
 extern void shade (uint8_t* palette_buffer,
                    int16_t first_color, int16_t number_of_colors,
                    float start_r,  float start_g,  float start_b,

@@ -419,7 +419,7 @@ void freeze () {
         return;
     }
 
-    _rtl_write (fh, &sync, 245);
+    _rtl_write (fh, &nsync, 245);
     _rtl_write (fh, &gnc_pos, 1);
     _rtl_write (fh, &goesfile_pos, 4);
     _rtl_write (fh, goesnet_command, 120);
@@ -1658,7 +1658,7 @@ void devices () {
             other ("high-radiation fields are ignored.");
         }
 
-        if (sync) {
+        if (nsync) {
             if (ip_targetted != -1 && ip_reached) {
                 sp = 0;
 
@@ -1670,50 +1670,50 @@ void devices () {
 
                 cline (1, "tracking status: performing ");
 
-                if (sync == 1) {
+                if (nsync == 1) {
                     other ("fixed-point chase.");
                     command (2, "fixed-point chase");
                 }
 
-                if (sync == 2) {
+                if (nsync == 2) {
                     other ("far chase.");
                     command (2, "far chase");
                 }
 
-                if (sync == 3) {
+                if (nsync == 3) {
                     other ("syncrone orbit.");
                     command (2, "syncrone orbit");
                 }
 
-                if (sync == 4) {
+                if (nsync == 4) {
                     other ("high-speed orbit.");
                     command (2, "high-speed orbit");
                 }
 
-                if (sync == 5) {
+                if (nsync == 5) {
                     other ("near chase.");
                     command (2, "near chase");
                 }
             } else {
                 cline (2, "tracking status: disconnected.");
 
-                if (sync == 1) {
+                if (nsync == 1) {
                     command (2, "fixed-point chase");
                 }
 
-                if (sync == 2) {
+                if (nsync == 2) {
                     command (2, "far chase");
                 }
 
-                if (sync == 3) {
+                if (nsync == 3) {
                     command (2, "syncrone orbit");
                 }
 
-                if (sync == 4) {
+                if (nsync == 4) {
                     command (2, "high-speed orbit");
                 }
 
-                if (sync == 5) {
+                if (nsync == 5) {
                     command (2, "near chase");
                 }
             }
@@ -1931,10 +1931,10 @@ void dev_commands () {
             break;
 
         case 3:
-            sync++;
-            sync %= 6;
+            nsync++;
+            nsync %= 6;
 
-            if (!sync) {
+            if (!nsync) {
                 status ("IDLE", 50);
                 ip_reaching = 0;
                 ip_reached = 1;
@@ -2348,7 +2348,7 @@ void unfreeze() {
     fh = _rtl_open (situation_file, 0);
 
     if (fh > -1) {
-        _rtl_read (fh, &sync, 245);
+        _rtl_read (fh, &nsync, 245);
         _rtl_read (fh, &gnc_pos, 1);
         _rtl_read (fh, &goesfile_pos, 4);
         _rtl_read (fh, goesnet_command, 120);
@@ -2403,23 +2403,23 @@ void unfreeze() {
     }
 
     if (ip_targetted != -1 && ip_reached) {
-        if (sync == 1) { // fixed-point chase
+        if (nsync == 1) { // fixed-point chase
             dpwr -= elapsed / 29;
         }
 
-        if (sync == 2) { // far chase
+        if (nsync == 2) { // far chase
             dpwr -= elapsed / 18;
         }
 
-        if (sync == 3) { // syncrone orbit
+        if (nsync == 3) { // syncrone orbit
             dpwr -= elapsed / 58;
         }
 
-        if (sync == 4) { // vimana orbit
+        if (nsync == 4) { // vimana orbit
             dpwr -= elapsed / 7;
         }
 
-        if (sync == 5) { // near chase
+        if (nsync == 5) { // near chase
             dpwr -= elapsed / 33;
         }
     }
@@ -2497,6 +2497,7 @@ int main() {
     objectschart  = (quadrant*) malloc (oc_bytes);
     ruinschart    = (uint8_t*) objectschart;   // oc alias
     pvfile        = (uint8_t*) malloc (pv_bytes);
+    adaptor       = (uint8_t*) malloc(sc_bytes);
     adapted       = (uint8_t*) malloc (sc_bytes);
     txtr          = (uint8_t*) p_background;  // txtr alias
     digimap2      = (uint32_t*) &n_globes_map[gl_bytes];  // font alias
@@ -2545,19 +2546,13 @@ int main() {
     // di output della GOES command net
     force_update = 1;
     // recupero della situazione di superficie
-    #if 0
-    sfh = _rtl_open (surface_file, 0);
-    #endif
-    STUB
+    sfh = open(surface_file, 0);
 
     if (sfh > -1) {
         // lettura precedenti coordinate di sbarco
-        #if 0
-        _rtl_read (sfh, &landing_pt_lon, 2);
-        _rtl_read (sfh, &landing_pt_lat, 2);
-        _rtl_close (sfh);
-        #endif
-        STUB
+        read (sfh, &landing_pt_lon, 2);
+        read (sfh, &landing_pt_lat, 2);
+        close (sfh);
         // recupero labels del pianeta e della stella-bersaglio
         update_star_label ();
         update_planet_label ();
@@ -2682,7 +2677,7 @@ int main() {
 
             case 120:
                 gburst         = 0;
-                sync           = 1;
+                nsync           = 1;
                 anti_rad       = 1;
                 pl_search      = 0;
                 field_amplificator     = 0;
@@ -2748,7 +2743,7 @@ int main() {
         //
         if (pwr <= 15000 && !charge) {
             elight = 1;
-            sync = 0;
+            nsync = 0;
             anti_rad = 0;
             pl_search = 0;
             field_amplificator = 0;
@@ -3960,30 +3955,30 @@ resynctoplanet:
             dyy = dzat_y - ply;
             dzz = dzat_z - plz;
 
-            if (ip_reached && sync) {
+            if (ip_reached && nsync) {
                 status ("TRACKING", 0);
 
-                if (sync == 1) { // fixed-point chase
+                if (nsync == 1) { // fixed-point chase
                     ang = (double)deg * (double)navigation_beta;
                     hold_z = 1.8;
                 }
 
-                if (sync == 2) { // far chase
+                if (nsync == 2) { // far chase
                     ang = (double)deg * (double)navigation_beta;
                     hold_z = 5.4;
                 }
 
-                if (sync == 3) { // syncrone orbit
+                if (nsync == 3) { // syncrone orbit
                     ang = (double)nearstar_p_rotation[ip_targetted] * (double)deg;
                     hold_z = 1.8 + 0.1 * nearstar_p_ray[ip_targetted];
                 }
 
-                if (sync == 4) { // vimana orbit
+                if (nsync == 4) { // vimana orbit
                     ang = 7 * secs * (double)deg;
                     hold_z = 3.6;
                 }
 
-                if (sync == 5) { // near chase
+                if (nsync == 5) { // near chase
                     ang = (double)deg * (double)navigation_beta;
                     hold_z = 1.2;
                 }

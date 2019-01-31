@@ -9,6 +9,9 @@
 #include <cmath>
 #include <cassert>
 #include <memory>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 /*
 
@@ -164,5 +167,5 @@ struct pvlist {
 // Defines to help with porting.
 
 #define FIXME { printf("FIXME: %s\n", __FUNCTION__); assert(false); }
-
 #define STUB { printf("STUB: %s\n", __FUNCTION__); }
+#define SKETCH { printf("SKETCH: %s\n", __FUNCTION__); }

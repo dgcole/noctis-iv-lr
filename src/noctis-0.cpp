@@ -39,10 +39,10 @@
 
 int16_t QUADWORDS = 16000;
 
-// Adaptor points to the main video memory, which should be 64kb.
-uint8_t adaptor    = (uint8_t) 0xA0000000;
-// Adapted points to some other vga memory. I think it's used as a back buffer.
-uint8_t adapted    = (uint8_t) 0xB0000000;
+// Main video memory.
+uint8_t adaptor;
+// Back buffer.
+uint8_t adapted;
 
 uint8_t     tmppal[768];
 int8_t      return_palette[768];
@@ -484,7 +484,7 @@ int16_t     sfh; // Surface situation file handle.
 
 // Global variables that are saved.
 
-int8_t   sync               = 1;      // 0
+int8_t   nsync               = 1;      // 0
 int8_t   anti_rad           = 1;          // 1
 int8_t   pl_search          = 0;          // 2
 int8_t   field_amplificator = 0;          // 3
@@ -822,33 +822,18 @@ void fast_srand (int32_t seed) {
 
 // Extraction of a number: "mask" activates the bits.
 int32_t fast_random (int32_t mask) {
-#if 0
-    int32_t num;
-    asm {
-        db 0x66;
-        mov ax, word ptr flat_rnd_seed;
+    auto eax = static_cast<uint32_t>(flat_rnd_seed);
+    auto edx = static_cast<uint32_t>(flat_rnd_seed);
 
-        db 0x66;
-        mov dx, word ptr flat_rnd_seed
+    uint64_t result = eax * edx;
+    edx = static_cast<uint32_t>(result >> 32);
+    eax = static_cast<uint32_t>(result & 0xFFFFFFFF);
+    eax += (edx >> 24);
 
-        db 0x66;
-        mul dx
-        add al, dl
+    flat_rnd_seed += eax;
 
-        db 0x66;
-        add word ptr flat_rnd_seed, ax
-
-        db 0x66;
-        and ax, word ptr mask
-
-        db 0x66;
-        mov word ptr num, ax
-    }
-
-    return (num);
-#endif
-    FIXME
-    return 0;
+    SKETCH
+    return eax & mask;
 }
 
 int16_t ranged_fast_random (int16_t range) {
@@ -871,10 +856,9 @@ float fast_flandom () {
 }
 
 // Loads virtual file handles from supports.nct
-int16_t sa_open (int32_t offset_of_virtual_file) {
-    int16_t fh;
-#if 0
-    fh = _open ("res/supports.nct", 0);
+int32_t sa_open(int32_t offset_of_virtual_file) {
+    int32_t fh;
+    fh = open ("res/supports.nct", 0);
 
     if (fh == -1) {
         return (-1);
@@ -883,11 +867,9 @@ int16_t sa_open (int32_t offset_of_virtual_file) {
     if (lseek (fh, offset_of_virtual_file, SEEK_END) > -1) {
         return (fh);
     } else {
-        _rtl_close (fh);
+        close (fh);
         return (-1);
     }
-#endif
-    STUB
 }
 
 // Defines a part of the color table so that a gradual gradient goes from one
@@ -1927,7 +1909,6 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
                float xscale, float yscale, float zscale,
                float xmove,  float ymove,  float zmove,
                uint8_t base_color,   int8_t depth_sort) {
-#if 0
     int16_t fh, c, p;
 
     // Check availability of the file and the handle.
@@ -1950,17 +1931,17 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
     pvfile_datalen[handle] = 0;
     pvfile_dataptr[handle] = pvfile_datatop;
     // Reading polygon numbers.
-    _rtl_read (fh, &pvfile_npolygs[handle], 2);
+    read (fh, &pvfile_npolygs[handle],  2);
     // Pointer preparation.
-    pv_n_vtx[handle] = (int8_t far*)  (pvfile + pvfile_datatop);
+    pv_n_vtx[handle] = (int8_t*)  (pvfile + pvfile_datatop);
     pvfile_datatop  +=  1 * pvfile_npolygs[handle];
-    pvfile_x[handle] = (float far*) (pvfile + pvfile_datatop);
+    pvfile_x[handle] = (float*) (pvfile + pvfile_datatop);
     pvfile_datatop  += 16 * pvfile_npolygs[handle];
-    pvfile_y[handle] = (float far*) (pvfile + pvfile_datatop);
+    pvfile_y[handle] = (float*) (pvfile + pvfile_datatop);
     pvfile_datatop  += 16 * pvfile_npolygs[handle];
-    pvfile_z[handle] = (float far*) (pvfile + pvfile_datatop);
+    pvfile_z[handle] = (float*) (pvfile + pvfile_datatop);
     pvfile_datatop  += 16 * pvfile_npolygs[handle];
-    pvfile_c[handle] = (int8_t far*)  (pvfile + pvfile_datatop);
+    pvfile_c[handle] = (int8_t*)  (pvfile + pvfile_datatop);
     pvfile_datatop  +=  1 * pvfile_npolygs[handle];
     /*
         Clear the first data pointer for the depth sort. If it is no subsequently
@@ -1971,15 +1952,15 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
     // Check availabity before reading the data.
     if (pvfile_datatop > pv_bytes) {
         pvfile_datatop = pvfile_dataptr[handle];
-        _rtl_close (fh);
+        close (fh);
         return (0);
     }
 
     // Reading all the data on the polygons, in a single block.
-    _rtl_read (fh, pvfile + pvfile_dataptr[handle],
+    read (fh, pvfile + pvfile_dataptr[handle],
                pvfile_datatop - pvfile_dataptr[handle]);
     // dopodich� si pu� anche richiudere il file...
-    _rtl_close (fh);
+    close (fh);
 
     // Resetting unused vertex data (for triangles).
     for (p = 0; p < pvfile_npolygs[handle]; p++)
@@ -1991,15 +1972,15 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
 
     // Prepare pointers for depth sorting management.
     if (depth_sort) {
-        pv_mid_x[handle] = (float far*) (pvfile + pvfile_datatop);
+        pv_mid_x[handle] = (float*) (pvfile + pvfile_datatop);
         pvfile_datatop  += 4 * pvfile_npolygs[handle];
-        pv_mid_y[handle] = (float far*) (pvfile + pvfile_datatop);
+        pv_mid_y[handle] = (float*) (pvfile + pvfile_datatop);
         pvfile_datatop  += 4 * pvfile_npolygs[handle];
-        pv_mid_z[handle] = (float far*) (pvfile + pvfile_datatop);
+        pv_mid_z[handle] = (float*) (pvfile + pvfile_datatop);
         pvfile_datatop  += 4 * pvfile_npolygs[handle];
-        pv_mid_d[handle] = (float far*) (pvfile + pvfile_datatop);
+        pv_mid_d[handle] = (float*) (pvfile + pvfile_datatop);
         pvfile_datatop  += 4 * pvfile_npolygs[handle];
-        pv_dep_i[handle] = (int16_t far*)   (pvfile + pvfile_datatop);
+        pv_dep_i[handle] = (int16_t*)   (pvfile + pvfile_datatop);
         pvfile_datatop  += 2 * pvfile_npolygs[handle];
 
         // Check available memory for newly added data.
@@ -2046,9 +2027,6 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
     // All done: Compute the memory used by this handle.
     pvfile_datalen[handle] = pvfile_datatop - pvfile_dataptr[handle];
     return (1);
-#endif
-    FIXME;
-    return 1;
 }
 
 /*
@@ -6233,24 +6211,21 @@ double dsd;         // To measure distances.
 
 // Load the bitmap for the star surface.
 void load_starface () {
-#if 0
-    uint16_t seed = nearstar_identity * 12345;
-    asm {   les di, dword ptr s_background
-            mov cx, 64800
-            mov ax, seed }
-    rndpat:
-    asm {   add ax, cx
-            xor dx, dx
-            imul ax
-            add ax, dx
-            mov bl, al
-            and bl, 0x3E
-            mov es:[di], bl
-            inc di
-            dec cx
-            jnz rndpat }
+    auto seed = static_cast<uint16_t>(nearstar_identity * 12345);
+    int16_t ax = seed;
+    for (int i = 0; i <= 64800; i++) {
+        ax += (64800 - i);
+        int32_t result = ax * ax;
+        auto resultHigh = static_cast<int16_t>(result >> 16);
+        auto resultLow = static_cast<int16_t>(result & 0xFFFF);
+        int16_t netResult = resultHigh = resultLow;
+        auto blarg = static_cast<uint8_t>(netResult & 0xFF);
+        blarg &= 0x3E;
+        s_background[i] = blarg;
+    }
+
     int16_t smoothcount;
-    fast_srand (seed);
+    fast_srand(seed);
     smoothcount = fast_random(3);
 
     if (nearstar_class == 11 || nearstar_class == 7 || nearstar_class == 2) {
@@ -6258,44 +6233,39 @@ void load_starface () {
     }
 
     while (smoothcount) {
-        ssmooth (s_background);
+        ssmooth(s_background);
         smoothcount--;
     }
-#endif
-    STUB
+    SKETCH
+
+    return;
 }
 
 void load_QVRmaps () {
-#if 0
-    int16_t fh;
-    fh = sa_open (offsets_map);
+    int32_t fh;
+    fh = sa_open(offsets_map);
 
     if (fh > -1) {
-        _rtl_read (fh, n_offsets_map, om_bytes);
-        _rtl_close (fh);
+        read(fh, n_offsets_map, om_bytes);
+        close(fh);
     }
 
-    fh = sa_open (globes_map);
+    fh = sa_open(globes_map);
 
     if (fh > -1) {
-        _rtl_read (fh, n_globes_map, gl_bytes);
-        _rtl_close (fh);
+        read(fh, n_globes_map, gl_bytes);
+        close(fh);
     }
-#endif
-    FIXME
 }
 
 void load_digimap2 () {
-#if 0
-    int16_t fh;
+    int32_t fh;
     fh = sa_open (off_digimap2);
 
     if (fh > -1) {
-        _rtl_read (fh, digimap2, dm2_bytes);
-        _rtl_close (fh);
+        read (fh, digimap2, dm2_bytes);
+        close (fh);
     }
-#endif
-    FIXME
 }
 
 int8_t    outhudbuffer[81];
@@ -6618,32 +6588,32 @@ void additional_consumes() {
 
     //
     if (ip_targetted > -1 && pwr > 15000) {
-        if (ip_reached && sync) {
-            if (sync == 1) // fixed-point chase
+        if (ip_reached && nsync) {
+            if (nsync == 1) // fixed-point chase
                 if (!(iqsecs % 29)) {
                     pwr--;
                     iqsecs++;
                 }
 
-            if (sync == 2) // far chase
+            if (nsync == 2) // far chase
                 if (!(iqsecs % 18)) {
                     pwr--;
                     iqsecs++;
                 }
 
-            if (sync == 3) // syncrone orbit
+            if (nsync == 3) // syncrone orbit
                 if (!(iqsecs % 58)) {
                     pwr--;
                     iqsecs++;
                 }
 
-            if (sync == 4) // vimana orbit
+            if (nsync == 4) // vimana orbit
                 if (!(iqsecs %  7)) {
                     pwr--;
                     iqsecs++;
                 }
 
-            if (sync == 5) // near chase
+            if (nsync == 5) // near chase
                 if (!(iqsecs % 33)) {
                     pwr--;
                     iqsecs++;

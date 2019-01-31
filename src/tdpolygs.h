@@ -115,21 +115,16 @@ int32_t    YSIZE         =   TEXTURE_YSIZE * V_MATRIXS; // Calibraz. dimensioni.
 float   XCOEFF        =                 EMU_K / dpp; // Coefficente di comodo.
 float   YCOEFF        =                 EMU_K / dpp; // Coefficente di comodo.
 
-// Inizializza indirizzi scanlines.
+// Initialize scanline addresses.
 
 uint16_t riga[200];
 
 void initscanlines () {
-#if 0
     uint16_t c;
 
     for (c = 0; c < 200; c++) {
-        riga[c] = 320 * c;
+        riga[c] = static_cast<uint16_t>(320 * c);
     }
-
-    _control87 (MCW_EM, MCW_EM); // disattiva i Floating Point Errors.
-#endif
-    FIXME
 }
 
 // Traccia un segmento senza effettuare controlli sui limiti. Pi� veloce.
