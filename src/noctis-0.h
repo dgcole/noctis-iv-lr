@@ -3,7 +3,7 @@
 extern int16_t QUADWORDS;
 extern uint8_t *adaptor;
 extern uint8_t *adapted;
-extern void reach_your_dir(void);
+extern void reach_your_dir(char** argv);
 extern void _320_200_256(void);
 extern void _80_25_C(void);
 extern int16_t attendi_pressione_tasto(void);

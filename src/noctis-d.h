@@ -2,6 +2,7 @@
 
 // C/C++ Standard Library Includes
 
+#include <vector>
 #include <cassert>
 #include <cmath>
 #include <cstdint>
@@ -13,6 +14,8 @@
 #include <memory>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#include <SDL2/SDL.h>
 
 /*
 

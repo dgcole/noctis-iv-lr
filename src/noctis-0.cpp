@@ -48,7 +48,7 @@ uint8_t tmppal[768];
 int8_t return_palette[768];
 int8_t surface_palette[768];
 
-int16_t lstri(int8_t *stri) {
+int16_t lstri(char* stri) {
     // Measure a string and copy it to tmppal.
     // This is a support function for reach_your_dir()
     int16_t c;
@@ -65,16 +65,42 @@ int16_t lstri(int8_t *stri) {
     return (0);
 }
 
-void reach_your_dir() STUB
+void reach_your_dir(char** argv) {
+    /*
+        NOTE: There was a comment here saying something about this being
+        used to reach beyond the current directory.
+    */
+    int16_t c;
+    int8_t d;
+    c = lstri(argv[0]) - 1;
 
-    // Initialize the 320x200x256 graphics mode.
-    void _320_200_256() STUB
+    while (c >= 0 && tmppal[c] != '\\') {
+        c--;
+    }
 
-    // Initialize the 80x25 text mode.
-    void _80_25_C() STUB
+    if (c >= 0) {
+        if (tmppal[c - 1] != ':') {
+            tmppal[c] = 0;
+        } else {
+            tmppal[c + 1] = 0;
+        }
+    }
 
-    // Wait for a key?
-    int16_t attendi_pressione_tasto() {
+    if (argv[0][0] >= 'a' && argv[0][0] <= 'z') {
+        d = argv[0][0] - 'a';
+    } else {
+        d = argv[0][0] - 'A';
+    }
+}
+
+// Initialize the 320x200x256 graphics mode.
+void _320_200_256() STUB
+
+// Initialize the 80x25 text mode.
+void _80_25_C() STUB
+
+// Wait for a key?
+int16_t attendi_pressione_tasto() {
     STUB return 0;
 }
 
@@ -2384,7 +2410,6 @@ void background(uint16_t start, uint8_t *target, uint8_t *background,
 */
 
 void sky(uint16_t limits) {
-#if 0
     uint16_t debug;
 
     int32_t min_xy = 1E9;
@@ -2458,24 +2483,16 @@ void sky(uint16_t limits) {
 
                 int32_t abc123 = (sect_x + sect_z);
                 int32_t accum = 0;
-                asm {
-                    pusha
 
-                    db 0x66
-                    mov dx, word ptr temp_x
-                    db 0x66
-                    mov ax, word ptr abc123
+                int32_t edx = temp_x;
+                int32_t eax = abc123;
 
-                    db 0x66
-                    imul dx
-                    db 0x66
-                    add dx, ax
-
-                    db 0x66
-                    mov word ptr accum, dx
-
-                    popa
-                }
+                // This replaced a very sketchy usage of imul.
+                int64_t result = (int64_t) edx * (int64_t) eax;
+                eax = result & 0xFFFFFFFF;
+                edx = result >> 32;
+                edx += eax;
+                accum = edx;
 
                 int32_t idkbro = (sect_x + sect_z) + accum;
 
@@ -2486,7 +2503,13 @@ void sky(uint16_t limits) {
                 }
                 temp_y -= cutoff;
 
-                accum = carryAddMultiply(temp_y, idkbro);
+                edx = temp_y;
+                eax = idkbro;
+                result = (int64_t) edx * (int64_t) eax;
+                eax = result & 0xFFFFFFFF;
+                edx = result >> 32;
+                edx += eax;
+                accum = edx;
 
                 temp_z = (accum & 0x0001FFFF) + sect_z;
                 // Exclude stars with z coordinate = 0
@@ -2570,8 +2593,6 @@ void sky(uint16_t limits) {
         sect_y -= k;
         sect_x += advance;
     }
-#endif
-    STUB
 }
 
 /*

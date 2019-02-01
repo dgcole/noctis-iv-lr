@@ -101,9 +101,9 @@ void alogena() {
     }
 }
 
-/* Quadranti di selezione del computer di bordo. */
+/* Selection panels for the on-board computer */
 
-void qsel(float *x, float *y, float *z, uint16_t n, uint8_t c) {
+void qsel(float *x, float *y, float *z, uint16_t n) {
     setfx(1);
     x[0] -= 10;
     y[0] -= 10;
@@ -113,7 +113,7 @@ void qsel(float *x, float *y, float *z, uint16_t n, uint8_t c) {
     y[2] += 10;
     x[3] -= 10;
     y[3] += 10;
-    poly3d(x, y, z, n, c);
+    poly3d(x, y, z, n, 1);
     chgfx(0);
     x[0] += 10;
     y[0] += 10;
@@ -127,7 +127,7 @@ void qsel(float *x, float *y, float *z, uint16_t n, uint8_t c) {
     resetfx();
 }
 
-/* Tutti i riflessi sulle superfici riflettenti. */
+// All reflections on reflective surfaces.
 
 void reflexes() {
     float x[4], y[4], z[4];
@@ -162,8 +162,6 @@ void reflexes() {
             x[1] = +1350; y[1] = +450; z[1] = -4000;
             poly3d (x, y, z, 3, 1);
         } */
-norefs:
-
     if (ap_targetting || ip_targetting) {
         goto noevid;
     }
@@ -188,7 +186,7 @@ norefs:
         y[2] = 50 * (s_control - 2) - 25;
         x[3] = -66 * 30 - 10;
         y[3] = 50 * (s_control - 2) - 25;
-        qsel(x, y, z, 4, 1);
+        qsel(x, y, z, 4);
     }
 
     if (sys != 4) {
@@ -220,7 +218,7 @@ norefs:
             y[2] = -75;
             x[3] = x[0];
             y[3] = -75;
-            qsel(x, y, z, 4, 1);
+            qsel(x, y, z, 4);
         }
     }
 
@@ -271,7 +269,6 @@ void frame(float x, float y, float l, float h, float borderwidth,
 
 // Draw star targeting cross.
 void pointer_cross_for(double xlight, double ylight, double zlight) {
-#if 0
     double xx, yy, zz, z2, rx, ry, rz;
     xx = xlight - dzat_x;
     yy = ylight - dzat_y;
@@ -288,7 +285,7 @@ void pointer_cross_for(double xlight, double ylight, double zlight) {
         ry += y_centro - 2;
 
         if (rx > 10 && ry > 10 && rx < 310 && ry < 190) {
-            uint16_t offsetmaybe = 320 * (int16_t) ry + rx;
+            uint16_t offsetmaybe = 320 * (int16_t) (ry + rx);
 
             for (int16_t i = 0; i < 4; i++) {
                 int16_t mod1 = (i == 1 || i == 3) ? 1 : -1;
@@ -300,8 +297,6 @@ void pointer_cross_for(double xlight, double ylight, double zlight) {
             }
         }
     }
-#endif
-    STUB
 }
 
 // Write a line on the onboard computer screen.
@@ -362,12 +357,12 @@ void mslocate(int16_t screen_id, int16_t cursor_x, int16_t cursor_y) {
     osscreen_cursor_y[screen_id] = cursor_y;
 }
 
-void mswrite(int16_t screen_id, char *text) {
+void mswrite(int16_t screen_id, const char *text) {
     // Scrittura caratteri (multischermo).
-    int16_t i, c = 0;
+    int16_t i, j = 0;
     int8_t symbol;
 
-    while ((symbol = text[c]) != 0) {
+    while ((symbol = text[j]) != 0) {
         if (symbol >= 32 && symbol <= 96) {
             i = 21 * osscreen_cursor_y[screen_id];
             i += osscreen_cursor_x[screen_id];
@@ -399,7 +394,7 @@ void mswrite(int16_t screen_id, char *text) {
             break;
         }
 
-        c++;
+        j++;
     }
 }
 
@@ -551,7 +546,7 @@ long pp[32] = {0x00000001, 0x00000002, 0x00000004, 0x00000008, 0x00000010,
 
 void digit_at(int8_t digit, float x, float y, float size, uint8_t color,
               int8_t shader) {
-    // questo � un carattere alfanumerico...
+    // This is an alphanumeric character.
     uint8_t *prev_txtr = txtr;
     float vx[4], vy[4], vz[4] = {0, 0, 0, 0};
     float size_x_left  = size * -1.5;
@@ -2450,7 +2445,13 @@ float starmass_correction[star_classes] = {
 
 extern uint16_t _stklen = 0x1800;
 
-int main() {
+int main(int argc, char** argv) {
+    // Initialize SDL.
+    SDL_Surface* surface = SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF000000, 0xFF0000, 0xFF00, 0xFF);
+    SDL_Window* window = SDL_CreateWindow("Noctis IV LR", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 400, 0);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE);
+
+    // Actual noctis stuff starts here.
     float satur, DfCoS;
     // float user_drawing_range;
     long ir, ig, ib, ire = 0, ige = 0, ibe = 0;
@@ -2481,19 +2482,19 @@ int main() {
         return 1;
     }
 
-    n_offsets_map = (uint8_t *)malloc(om_bytes);
-    n_globes_map  = (int8_t *)malloc((uint16_t)gl_bytes + (uint16_t)gl_brest);
-    s_background  = (uint8_t *)malloc(st_bytes);
-    p_background  = (uint8_t *)malloc(pl_bytes);
-    p_surfacemap  = (uint8_t *)malloc(ps_bytes);
-    objectschart  = (quadrant *)malloc(oc_bytes);
-    ruinschart    = (uint8_t *)objectschart; // oc alias
-    pvfile        = (uint8_t *)malloc(pv_bytes);
-    adaptor       = (uint8_t *)malloc(sc_bytes);
-    adapted       = (uint8_t *)malloc(sc_bytes);
-    txtr          = (uint8_t *)p_background;             // txtr alias
-    digimap2      = (uint32_t *)&n_globes_map[gl_bytes]; // font alias
-    reach_your_dir();
+    n_offsets_map = (uint8_t *)     malloc(om_bytes);
+    n_globes_map  = (int8_t *)      malloc((uint16_t)gl_bytes + (uint16_t)gl_brest);
+    s_background  = (uint8_t *)     malloc(st_bytes);
+    p_background  = (uint8_t *)     malloc(pl_bytes);
+    p_surfacemap  = (uint8_t *)     malloc(ps_bytes);
+    objectschart  = (quadrant *)    malloc(oc_bytes);
+    ruinschart    = (uint8_t *)     objectschart; // oc alias
+    pvfile        = (uint8_t *)     malloc(pv_bytes);
+    adaptor       = (uint8_t *)     malloc(sc_bytes);
+    adapted       = (uint8_t *)     malloc(sc_bytes);
+    txtr          = (uint8_t *)     p_background;             // txtr alias
+    digimap2      = (uint32_t *)    &n_globes_map[gl_bytes]; // font alias
+    reach_your_dir(argv);
 
     if (pvfile && adapted && n_offsets_map && n_globes_map && p_background &&
         s_background && p_surfacemap && objectschart && lens_flares_init()) {
@@ -2526,12 +2527,12 @@ int main() {
     clock_t right_dblclick_timing = 0;
     dpp                           = 210;
     change_camera_lens();
-    //   0..64  veicolo, selezioni computer, artefatti. BLU COBALTO, ma dipende
-    //   dalla luce delle stelle.
-    //  64..128 cosmo, sfondo galattico, cieli sereni e "suplucsi effect". dal
-    //  BLU ELETTRICO al BIANCO.
-    // 128..192 stelle (continue sfumature cicliche) o lune (non costanti)
-    // 192..256 pianeti (non costanti)
+    //   0..64  Vehicle, computer selections, artifacts. Cobalt Blue, depending
+    //   on the color from the star.
+    //  64..128 cosmos, galactic background, clear skies and "suplucsi effect".
+    //  from the white electric blue.
+    // 128..192 Stars (Continuous cyclic shaders) or moons (non-constant)
+    // 192..256 Planets (Non constant)
     tavola_colori(range8088, 0, 64, 16, 32, 63);
     tavola_colori(tmppal, 0, 256, 64, 64, 64);
     int16_t resolve = 64;
@@ -3476,7 +3477,7 @@ int main() {
         }
 
         //
-        // Tracciamento dello stato attuale dell'FCS.
+        // Tracing the current FCS status.
         //
     nohud_1:
         alfa = 0;
@@ -4451,6 +4452,22 @@ int main() {
 
         if (!_delay) {
             pcopy(adaptor, adapted);
+
+            SDL_RenderClear(renderer);
+            auto dest = static_cast<uint32_t*>(surface->pixels);
+            for (int i = 0; i < 64000; i++) {
+                uint8_t color_index = adaptor[i];
+                uint32_t color_r = tmppal[color_index * 3];
+                uint32_t color_g = tmppal[color_index * 3 + 1];
+                uint32_t color_b = tmppal[color_index * 3 + 2];
+
+                uint32_t color = (color_r << 24) + (color_g << 16) + (color_b << 8) + 255;
+                dest[i] = color;
+            }
+            SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+            SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+            SDL_RenderPresent(renderer);
+            SDL_DestroyTexture(texture);
         } else {
             pcopy(adapted, adapted);
 
