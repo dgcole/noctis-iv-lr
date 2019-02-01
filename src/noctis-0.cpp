@@ -40,9 +40,9 @@
 int16_t QUADWORDS = 16000;
 
 // Main video memory.
-uint8_t adaptor;
+uint8_t* adaptor;
 // Back buffer.
-uint8_t adapted;
+uint8_t* adapted;
 
 uint8_t     tmppal[768];
 int8_t      return_palette[768];
@@ -301,15 +301,10 @@ void pfade (uint8_t* target, uint16_t segshift, uint8_t speed) {
 
 // Color version: 4 shades of 64 intensity each.
 void psmooth_64(uint8_t* target, uint16_t segshift) {
-#if 0
     // Who knows why this is offset as it is... Definitely not me.
     uint16_t count = (QUADWORDS - 80) << 2;
-    uint32_t address = (uint32_t) target;
-    // Add segshift to the segment portion of the address by shifting up 16 bits.
-    address += ((uint32_t) segshift) << 16;
-    // Clear offset of address.
-    address &= 0xFFFF0000;
-    uint8_t far* shifted = (uint8_t far*) address;
+    // We might need to align the shifted pointer to a 16 byte interval to match the former offset clearing. Sketchy.
+    uint8_t* shifted = (target + (segshift * 16));
 
     for (uint16_t i = 0; i < count; i++) {
         uint8_t alow = shifted[i + 320];
@@ -334,8 +329,6 @@ void psmooth_64(uint8_t* target, uint16_t segshift) {
         alow |= clow;
         shifted[i] = alow;
     }
-#endif
-    STUB
 }
 
 
@@ -821,6 +814,7 @@ void fast_srand (int32_t seed) {
 }
 
 // Extraction of a number: "mask" activates the bits.
+// This is very sketchy!
 int32_t fast_random (int32_t mask) {
     auto eax = static_cast<uint32_t>(flat_rnd_seed);
     auto edx = static_cast<uint32_t>(flat_rnd_seed);
@@ -832,7 +826,6 @@ int32_t fast_random (int32_t mask) {
 
     flat_rnd_seed += eax;
 
-    SKETCH
     return eax & mask;
 }
 
@@ -5281,7 +5274,6 @@ void ring (int16_t planet_id, double ox, double oy, double oz, int16_t start,
     L'effetto falce viene realizzato da "glowinglobe". */
 
 void planets () {
-#if 0
     int8_t* atmosphere = (int8_t*) objectschart;
     uint8_t* surface_backup = (uint8_t*)p_background;
     int8_t is_moon;
@@ -5643,9 +5635,7 @@ void planets () {
                         test = poffs + ptr;
 
                         if (test > 0 && test < 64800) {
-                            _AL = p_background[test];
-                            asm xor al, 0x1E;
-                            p_background[test] = _AL;
+                            p_background[test] ^= 0x1E;
                         }
                     }
 
@@ -5654,9 +5644,7 @@ void planets () {
                             test = 360 * poffs + ptr;
 
                             if (test > 0 && test < 64800) {
-                                _AL = p_background[test];
-                                asm xor al, 0x1E;
-                                p_background[test] = _AL;
+                                p_background[test] ^= 0x1E;
                             }
                         }
                     }
@@ -5671,7 +5659,7 @@ void planets () {
                 }
 
                 globe (plwp + nearstar_p_rotation[n],
-                       adapted, p_background, n_globes_map, gl_bytes,
+                       adapted, p_background, (uint8_t*) n_globes_map, gl_bytes,
                        plx, ply, plz, nearstar_p_ray[n], colorbase, 0);
 
                 if (n == ip_targetted && landing_point) {
@@ -5679,9 +5667,7 @@ void planets () {
                         test = poffs + ptr;
 
                         if (test > 0 && test < 64800) {
-                            _AL = p_background[test];
-                            asm xor al, 0x1E;
-                            p_background[test] = _AL;
+                            p_background[test] ^= 0x1E;
                         }
                     }
 
@@ -5690,9 +5676,7 @@ void planets () {
                             test = 360 * poffs + ptr;
 
                             if (test > 0 && test < 64800) {
-                                _AL = p_background[test];
-                                asm xor al, 0x1E;
-                                p_background[test] = _AL;
+                                p_background[test] ^= 0x1E;
                             }
                         }
                     }
@@ -5708,7 +5692,7 @@ void planets () {
                     ts -= 360;
                 }
 
-                glowinglobe (plwp, adapted, n_globes_map, gl_bytes, plx,
+                glowinglobe (plwp, adapted, (uint8_t*) n_globes_map, gl_bytes, plx,
                              ply, plz, nearstar_p_ray[n], ts, 130, 127);
             }
         }
@@ -5724,11 +5708,10 @@ void planets () {
         }
 
 notaplanet:
+        int abc123;
     }
 
     p_background = surface_backup;
-#endif
-    STUB
 }
 
 /*
@@ -6210,6 +6193,7 @@ float  ppos_x, ppos_y, ppos_z;
 double dsd;         // To measure distances.
 
 // Load the bitmap for the star surface.
+// Implementation is sketchy at best.
 void load_starface () {
     auto seed = static_cast<uint16_t>(nearstar_identity * 12345);
     int16_t ax = seed;
@@ -6226,7 +6210,7 @@ void load_starface () {
 
     int16_t smoothcount;
     fast_srand(seed);
-    smoothcount = fast_random(3);
+    smoothcount = static_cast<int16_t>(fast_random(3));
 
     if (nearstar_class == 11 || nearstar_class == 7 || nearstar_class == 2) {
         smoothcount += fast_random(3) + 2;
@@ -6236,9 +6220,6 @@ void load_starface () {
         ssmooth(s_background);
         smoothcount--;
     }
-    SKETCH
-
-    return;
 }
 
 void load_QVRmaps () {

@@ -330,7 +330,7 @@ void control (int16_t line, char* text) {
 
 // Writes the title of a command on the main display.
 // These are split up into 4 blocks of 27 characters.
-void command (int16_t nr, char* text) {
+void command (int16_t nr, const char* text) {
     uint16_t length = strlen(text);
 
     if (length > 27) {
@@ -554,7 +554,6 @@ long pp[32] = { 0x00000001, 0x00000002, 0x00000004, 0x00000008,
 
 void digit_at (int8_t digit, float x, float y, float size, uint8_t color,
                int8_t shader) {
-#if 0
     // questo � un carattere alfanumerico...
     uint8_t* prev_txtr = txtr;
     float vx[4], vy[4], vz[4] = { 0, 0, 0, 0 };
@@ -617,8 +616,6 @@ void digit_at (int8_t digit, float x, float y, float size, uint8_t color,
         txtr = prev_txtr;
         resetfx ();
     }
-#endif
-    STUB
 }
 
 void screen() {
@@ -2320,39 +2317,38 @@ void commands () {
     }
 }
 
-/*  Scongela la situazione, riproducendola in tutto e per tutto,
-    e facendola evolvere al momento attuale. */
+/*  Undo the situation, reproducing it in all respects,
+     and making it evolve at the current time. */
 
 void unfreeze() {
-#if 0
     int16_t     fh;
     double  elapsed, dpwr;
     // Reading the consolidated starmap.
-    smh = _rtl_open (starmap_file, 4);
+    smh = open (starmap_file, 4);
 
     if (smh > -1) {
-        _rtl_read (smh, &sm_consolidated, 4);
+        read (smh, &sm_consolidated, 4);
 
         if (!sm_consolidated) {
-            lseek (smh, 0, SEEK_SET);
-            sm_consolidated = filelength(smh);
-            _rtl_write (smh, &sm_consolidated, 4);
+            sm_consolidated = lseek (smh, 0, SEEK_END);
+            lseek(smh, 0, SEEK_SET);
+            write (smh, &sm_consolidated, 4);
         }
 
-        _rtl_close (smh);
+        close (smh);
     } else {
         sm_consolidated = 0;
     }
 
     /* Lettura della situazione precedente. */
-    fh = _rtl_open (situation_file, 0);
+    fh = open (situation_file, 0);
 
     if (fh > -1) {
-        _rtl_read (fh, &nsync, 245);
-        _rtl_read (fh, &gnc_pos, 1);
-        _rtl_read (fh, &goesfile_pos, 4);
-        _rtl_read (fh, goesnet_command, 120);
-        _rtl_close (fh);
+        read (fh, &nsync, 245);
+        read (fh, &gnc_pos, 1);
+        read (fh, &goesfile_pos, 4);
+        read (fh, goesnet_command, 120);
+        close (fh);
     } else {
         return;
     }
@@ -2382,8 +2378,8 @@ void unfreeze() {
         if (charge == 120) {
             pwr = 20000;
         } else {
-            srand (secs);
-            pwr = random(5000) + 15000;
+            srand(static_cast<uint32_t>(secs));
+            pwr = static_cast<int16_t>((rand() % 5000) + 15000);
         }
     }
 
@@ -2434,8 +2430,6 @@ void unfreeze() {
     }
 
     pwr = dpwr;
-#endif
-    STUB
 }
 
 /* Programma principale. */
@@ -4195,10 +4189,9 @@ ip_drive_mode:
         }
 
         //
-        // Reazione alle eclissi (oscura le tinte della navicella).
-        // E abbassa la temperatura interna. Solo un po', perch� �
-        // contrastata dalla climatizzazione.
-        //
+        // Reactions to eclipses (obscure the color of the spacecraft).
+        // Also lower the internal temperature by a little, but not
+        // too much because it is contrasted by air conditioning.
         //
         fast_srand (secs / 2);
         pp_temp = 90 - dsd * 0.33;
