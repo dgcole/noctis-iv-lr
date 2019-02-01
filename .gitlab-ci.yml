@@ -8,8 +8,8 @@ stages:
 
 build:
   stage: build
-  script: "mkdir build && cd build && cmake .. && make"
+  script: "mkdir build && cd build && cmake .. && make && mv nivlr ../"
   artifacts:
     paths:
-      - build/nivlr
+      - nivlr
       - res/supports.nct
