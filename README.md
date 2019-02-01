@@ -1,7 +1,5 @@
 # Noctis IV LR
 
-[![pipeline status](https://gitlab.com/dgcole/noctis-iv-lr/badges/master/pipeline.svg)](https://gitlab.com/dgcole/noctis-iv-lr/commits/master)
-
 Noctis IV LR aims to eventually port Noctis IV to run on modern Windows and
 Linux. The starting point was the base Noctis IV source code. Neither NIV+ nor
 NICE were used, because the added layer of cruft on top of both would have
