@@ -1,7 +1,6 @@
 #include "noctis-d.h"
 
 extern int16_t QUADWORDS;
-extern uint8_t *adaptor;
 extern uint8_t *adapted;
 extern void reach_your_dir(char** argv);
 extern void _320_200_256(void);

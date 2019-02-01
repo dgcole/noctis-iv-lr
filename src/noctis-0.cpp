@@ -39,9 +39,8 @@
 
 int16_t QUADWORDS = 16000;
 
-// Main video memory.
-uint8_t *adaptor;
-// Back buffer.
+// Video memory. Because Noctis was originally written to use Mode 0x13, this
+// represents a sequence of 64,000 color indices.
 uint8_t *adapted;
 
 uint8_t tmppal[768];
@@ -170,17 +169,6 @@ void tavola_colori(uint8_t *new_palette, uint16_t starting_color,
         tmppal[c] = temp;
         c++;
     }
-
-#if 0
-    // Port 0x3c8 takes the index of the first color.
-    outp(0x3c8, 0);
-
-    for (int16_t i = 0; i < starting_color + num_colors; i++) {
-        // Port 0x3c9 takes up to 255 consecutive r, g, b, colors.
-        outp(0x3c9, tmppal[i]);
-    }
-#endif
-    STUB
 }
 
 // Variables to hold mouse readings.

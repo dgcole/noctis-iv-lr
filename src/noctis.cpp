@@ -2490,7 +2490,6 @@ int main(int argc, char** argv) {
     objectschart  = (quadrant *)    malloc(oc_bytes);
     ruinschart    = (uint8_t *)     objectschart; // oc alias
     pvfile        = (uint8_t *)     malloc(pv_bytes);
-    adaptor       = (uint8_t *)     malloc(sc_bytes);
     adapted       = (uint8_t *)     malloc(sc_bytes);
     txtr          = (uint8_t *)     p_background;             // txtr alias
     digimap2      = (uint32_t *)    &n_globes_map[gl_bytes]; // font alias
@@ -2576,7 +2575,6 @@ int main(int argc, char** argv) {
         pp_gravity   = 1;
         QUADWORDS    = 16000;
         pclear(adapted, 0);
-        pclear(adaptor, 0);
         QUADWORDS = pqw;
 
         if (exitflag) {
@@ -4451,29 +4449,23 @@ int main(int argc, char** argv) {
         }
 
         if (!_delay) {
-            pcopy(adaptor, adapted);
-
             SDL_RenderClear(renderer);
             auto dest = static_cast<uint32_t*>(surface->pixels);
             for (int i = 0; i < 64000; i++) {
-                uint8_t color_index = adaptor[i];
+                uint8_t color_index = adapted[i];
                 uint32_t color_r = tmppal[color_index * 3];
                 uint32_t color_g = tmppal[color_index * 3 + 1];
                 uint32_t color_b = tmppal[color_index * 3 + 2];
 
-                uint32_t color = (color_r << 24) + (color_g << 16) + (color_b << 8) + 255;
+                uint32_t color = (color_r << 24u) + (color_g << 16u) + (color_b << 8u) + 255;
                 dest[i] = color;
             }
             SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
             SDL_RenderCopy(renderer, texture, nullptr, nullptr);
             SDL_RenderPresent(renderer);
             SDL_DestroyTexture(texture);
-        } else {
-            pcopy(adapted, adapted);
-
-            if (_delay > 0 && _delay < 10) {
+        } else if (_delay > 0 && _delay < 10) {
                 _delay--;
-            }
         }
 
         QUADWORDS = pqw;
