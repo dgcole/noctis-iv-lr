@@ -1,11 +1,11 @@
-#include "noctis-d.h"
 #include "noctis-0.h"
+#include "noctis-d.h"
 
 const double deg = M_PI / 180;
 
 int16_t opencapcount;
-float   refx, refy, refz;
-float   sp_x, sp_y, sp_z;
+float refx, refy, refz;
+float sp_x, sp_y, sp_z;
 
 /*  Funzioni e variabili globali di tracciamento e gestione
     delle superfici planetarie, in poligonale (h! ce la far�?)
@@ -20,36 +20,36 @@ float   sp_x, sp_y, sp_z;
     comunque circa un decimo. E' importante ottimizzare quella,
     quando si vuole ottimizzare qualcosa... */
 
-int8_t    sctype; // tipo di scenario.
-#define OCEAN   1
-#define PLAINS  2
-#define DESERT  3
+int8_t sctype; // tipo di scenario.
+#define OCEAN 1
+#define PLAINS 2
+#define DESERT 3
 #define ICY 4
 
-float dsd1, dsd2;     // distanza dal sole (pri/sec)
-float nray1, nray2;   // raggio del sole (pri/sec)
-float latitude;       // latitudine (0..90, 90=poli)
-float exposure;       // longitudine relativa al centro dell'area diurna.
+float dsd1, dsd2;          // distanza dal sole (pri/sec)
+float nray1, nray2;        // raggio del sole (pri/sec)
+float latitude;            // latitudine (0..90, 90=poli)
+float exposure;            // longitudine relativa al centro dell'area diurna.
 float sun_x, sun_y, sun_z; // coordinate del "sole" locale.
-int16_t   sh_delta;     // shift del puntatore di confronto per lo shading.
+int16_t sh_delta;          // shift del puntatore di confronto per lo shading.
 
 // dati riguardanti il "sole" primario se ci si trova
 // attorno a un sole secondario (sistemi multipli di classe 8)
-int16_t   pri_crepzone;
-int16_t   pri_nightzone;
-int16_t   pri_sun_x_factor;
+int16_t pri_crepzone;
+int16_t pri_nightzone;
+int16_t pri_sun_x_factor;
 float pri_latitude, pri_exposure;
 float pri_x, pri_y, pri_z;
 
-int8_t  mirror = 0;     // effetto specchio d'acqua (agisce su "fragment").
-int8_t  waves_in = 0;   // flag di presenza delle onde sui mari.
-int8_t  waves_out = 0;  // flag di produzione di onde sui mari.
-int32_t  T_SCALE;        // scala della texture, passata in H/V_MATRIXS.
+int8_t mirror    = 0; // effetto specchio d'acqua (agisce su "fragment").
+int8_t waves_in  = 0; // flag di presenza delle onde sui mari.
+int8_t waves_out = 0; // flag di produzione di onde sui mari.
+int32_t T_SCALE;      // scala della texture, passata in H/V_MATRIXS.
 
 float base_pp_temp;
 float base_pp_pressure;
 
-float hpoint (int32_t px, int32_t pz) {
+float hpoint(int32_t px, int32_t pz) {
 #if 0
     // Trova l'altezza di un punto sulla superficie.
     // Per migliorare la risoluzione, usa un procedimento d'interpolazione
@@ -76,8 +76,7 @@ float hpoint (int32_t px, int32_t pz) {
 
     return (py);
 #endif
-    STUB
-    return 0;
+    STUB return 0;
 }
 
 /*
@@ -89,28 +88,27 @@ float hpoint (int32_t px, int32_t pz) {
 
 */
 
-int8_t  groundflares = 0;     // tipo di tracciamento del suolo.
-int32_t  mushscaling = 8191;   // range variabilit� (in bitmask) "greenmush"
-float treescaling = 4096;   // scalatura alberi, di solito mushscaling/2
-float treespreads = 0.75;   // scalatura rami ad ogni ricorsione
-float treepeaking = 1.25;   // passa come "distance_from_perfection"
-float branchwidth = 0.15;   // larghezza dei rami rispetto alla lunghezza
-float rootheight  = 0.50;   // altezza del tronco rispetto a "treescaling"
-int8_t  rootshade   = 0x00;   // colore di base del tronco
-int8_t  treeflares  = 0x00;   // tipo di tracciamento rami.
-int8_t  leafflares  = 0x00;       // tipo di tracciamento foglie.
+int8_t groundflares = 0;    // tipo di tracciamento del suolo.
+int32_t mushscaling = 8191; // range variabilit� (in bitmask) "greenmush"
+float treescaling   = 4096; // scalatura alberi, di solito mushscaling/2
+float treespreads   = 0.75; // scalatura rami ad ogni ricorsione
+float treepeaking   = 1.25; // passa come "distance_from_perfection"
+float branchwidth   = 0.15; // larghezza dei rami rispetto alla lunghezza
+float rootheight    = 0.50; // altezza del tronco rispetto a "treescaling"
+int8_t rootshade    = 0x00; // colore di base del tronco
+int8_t treeflares   = 0x00; // tipo di tracciamento rami.
+int8_t leafflares   = 0x00; // tipo di tracciamento foglie.
 
-float rockscaling = 500;    // dimensioni delle rocce.
-float rockpeaking = 250;    // altezza delle rocce.
-int16_t   rockdensity = 15;     // densit� gruppi di rocce (bitmask).
-int8_t  quartz      = 0;      // traccia quarzi trasparenti, se impostato.
+float rockscaling   = 500; // dimensioni delle rocce.
+float rockpeaking   = 250; // altezza delle rocce.
+int16_t rockdensity = 15;  // densit� gruppi di rocce (bitmask).
+int8_t quartz       = 0;   // traccia quarzi trasparenti, se impostato.
 
-int16_t   detail_seed = 12345;
+int16_t detail_seed = 12345;
 
-void greenmush (float x, float y, float z,
-                uint8_t mask_1, uint8_t mask_2,
-                int32_t scaling, uint8_t colorgrade,
-                uint8_t colormask, int8_t noseed) {
+void greenmush(float x, float y, float z, uint8_t mask_1, uint8_t mask_2,
+               int32_t scaling, uint8_t colorgrade, uint8_t colormask,
+               int8_t noseed) {
 #if 0
     // produce una serie di gruppi di minuscole sagome verdi, studiate per
     // fornire l'impressione delle fronde degli alberi pi� distanti.
@@ -149,11 +147,12 @@ void greenmush (float x, float y, float z,
     STUB
 }
 
-void build_fractal_tree (float x, float y, float z,
-                         float scaling, float reduction, float globalwidth,
-                         int32_t layers, int32_t divisions, float distance_from_perfection,
-                         uint8_t rootcolormask, uint8_t leafcolormask,
-                         float branchdetail, int8_t isrootnode, int8_t occurrence) {
+void build_fractal_tree(float x, float y, float z, float scaling,
+                        float reduction, float globalwidth, int32_t layers,
+                        int32_t divisions, float distance_from_perfection,
+                        uint8_t rootcolormask, uint8_t leafcolormask,
+                        float branchdetail, int8_t isrootnode,
+                        int8_t occurrence) {
 #if 0
     // funzione ricorsiva: eventualmente traccia l'intero albero pseudo-casuale,
     // con una struttura multilivello, ma va usata con parsimonia perch� �
@@ -340,104 +339,102 @@ void build_fractal_tree (float x, float y, float z,
     STUB
 }
 
-#define FORCE_LAT   11
-#define FORCE_CON   22
-#define GIANT_TREE  333
+#define FORCE_LAT 11
+#define FORCE_CON 22
+#define GIANT_TREE 333
 
-void albero (float x, float y, float z, int32_t depth) {
+void albero(float x, float y, float z, int32_t depth) {
     // disegna alberi ove richiesti.
-    fast_srand (x + y + z + 3);
+    fast_srand(x + y + z + 3);
     int16_t treetype = fast_random(511);
 
     if (treetype == GIANT_TREE) {
         if (depth > 11) {
-            greenmush (x, y - treescaling * 0.5, z, 07, 15, mushscaling, 223, 31, 0);
+            greenmush(x, y - treescaling * 0.5, z, 07, 15, mushscaling, 223, 31,
+                      0);
             return;
         }
 
         if (depth > 07) {
-            build_fractal_tree (x, y, z,
-                                2 * treescaling, treespreads, 1.5 * branchwidth,
-                                3, 2, 1.5 * treepeaking, rootshade, 0xC0, 120, 1, 0);
+            build_fractal_tree(x, y, z, 2 * treescaling, treespreads,
+                               1.5 * branchwidth, 3, 2, 1.5 * treepeaking,
+                               rootshade, 0xC0, 120, 1, 0);
             return;
         }
 
         if (depth > 04) {
-            build_fractal_tree (x, y, z,
-                                2 * treescaling, treespreads, 1.5 * branchwidth,
-                                4, 3, 1.5 * treepeaking, rootshade, 0xC0, 120, 1, 0);
+            build_fractal_tree(x, y, z, 2 * treescaling, treespreads,
+                               1.5 * branchwidth, 4, 3, 1.5 * treepeaking,
+                               rootshade, 0xC0, 120, 1, 0);
             return;
         }
 
-        build_fractal_tree (x, y, z,
-                            2 * treescaling, treespreads, 1.5 * branchwidth,
-                            4, 3, 1.5 * treepeaking, rootshade, 0xC0, 72, 1, 0);
+        build_fractal_tree(x, y, z, 2 * treescaling, treespreads,
+                           1.5 * branchwidth, 4, 3, 1.5 * treepeaking,
+                           rootshade, 0xC0, 72, 1, 0);
         return;
     }
 
     if (depth > 20) {
-        greenmush (x, y - treescaling * 0.5, z, 03, 07, mushscaling, 223, 31, 0);
+        greenmush(x, y - treescaling * 0.5, z, 03, 07, mushscaling, 223, 31, 0);
         return;
     }
 
     if (depth > 10) {
-        greenmush (x, y - treescaling * 0.7, z, 07, 15, mushscaling, 223, 31, 0);
+        greenmush(x, y - treescaling * 0.7, z, 07, 15, mushscaling, 223, 31, 0);
         return;
     }
 
     if (depth > 03) {
-        greenmush (x, y - treescaling * 0.9, z, 15, 31, mushscaling, 223, 31, 0);
+        greenmush(x, y - treescaling * 0.9, z, 15, 31, mushscaling, 223, 31, 0);
         return;
     }
 
     treetype >>= 3;
 
     if (treetype == FORCE_LAT) {
-        build_fractal_tree (x, y, z,
-                            treescaling, treespreads, branchwidth,
-                            2, 3, 2 * treepeaking, 0x80, 0xC0, 120, 1, 0);
+        build_fractal_tree(x, y, z, treescaling, treespreads, branchwidth, 2, 3,
+                           2 * treepeaking, 0x80, 0xC0, 120, 1, 0);
         return;
     }
 
     if (treetype == FORCE_CON) {
-        build_fractal_tree (x, y, z,
-                            treescaling, treespreads, branchwidth,
-                            2, 2, 0.5 * treepeaking, 0x80, 0x40, 120, 1, 0);
+        build_fractal_tree(x, y, z, treescaling, treespreads, branchwidth, 2, 2,
+                           0.5 * treepeaking, 0x80, 0x40, 120, 1, 0);
         return;
     }
 
-    build_fractal_tree (x, y, z,
-                        treescaling, treespreads, branchwidth,
-                        2, 2, treepeaking, rootshade, 0xC0, 120, 1, 0);
+    build_fractal_tree(x, y, z, treescaling, treespreads, branchwidth, 2, 2,
+                       treepeaking, rootshade, 0xC0, 120, 1, 0);
 }
 
-void cespuglio (float x, float y, float z, int32_t depth) {
+void cespuglio(float x, float y, float z, int32_t depth) {
     // disegna un cespuglio.
 
     // da 48 mt in poi: ammasso di foglie.
     if (depth >= 3) {
-        greenmush (x, y, z, 7, 7, mushscaling, 209, 31, 0);
+        greenmush(x, y, z, 7, 7, mushscaling, 209, 31, 0);
         return;
     }
 
     switch (depth) {
-        case 2: // 32 -- 48 mt: visibili i ramoscelli pi� grandi.
-            build_fractal_tree (x, y, z, 3000, 0.75, 0.15, 1, 1, 1.5, 0x00, 0xC0, 180, 0,
-                                0);
-            break;
+    case 2: // 32 -- 48 mt: visibili i ramoscelli pi� grandi.
+        build_fractal_tree(x, y, z, 3000, 0.75, 0.15, 1, 1, 1.5, 0x00, 0xC0,
+                           180, 0, 0);
+        break;
 
-        case 1: // 16 -- 32 mt: visibili il 50% delle ramificazioni.
-            build_fractal_tree (x, y, z, 3000, 0.75, 0.15, 1, 2, 1.5, 0x00, 0xC0, 120, 0,
-                                0);
-            break;
+    case 1: // 16 -- 32 mt: visibili il 50% delle ramificazioni.
+        build_fractal_tree(x, y, z, 3000, 0.75, 0.15, 1, 2, 1.5, 0x00, 0xC0,
+                           120, 0, 0);
+        break;
 
-        case 0: //  0 -- 16 mt: cespuglio completo.
-            build_fractal_tree (x, y, z, 3000, 0.75, 0.15, 1, 3, 1.5, 0x00, 0xC0, 120, 0,
-                                0);
+    case 0: //  0 -- 16 mt: cespuglio completo.
+        build_fractal_tree(x, y, z, 3000, 0.75, 0.15, 1, 3, 1.5, 0x00, 0xC0,
+                           120, 0, 0);
     }
 }
 
-void ciuffo (float x, float y, float z, int32_t depth) {
+void ciuffo(float x, float y, float z, int32_t depth) {
     // disegna un ciuffo d'erba.
 
     // da 64 mt in poi, non � visibile.
@@ -446,33 +443,33 @@ void ciuffo (float x, float y, float z, int32_t depth) {
     }
 
     switch (depth) {
-        case 3: // 48 -- 64 mt: qualche macchietta.
-            greenmush (x, y, z, 3, 7, 1023, 216, 31, 0);
-            break;
+    case 3: // 48 -- 64 mt: qualche macchietta.
+        greenmush(x, y, z, 3, 7, 1023, 216, 31, 0);
+        break;
 
-        case 2: // 32 -- 48 mt: visibile un filo d'erba.
-            build_fractal_tree (x, y, z, 1000, 1.00, 0.25, 0, 0, 1.0, 0x00, 0xC0, 120, 0,
-                                0);
-            break;
+    case 2: // 32 -- 48 mt: visibile un filo d'erba.
+        build_fractal_tree(x, y, z, 1000, 1.00, 0.25, 0, 0, 1.0, 0x00, 0xC0,
+                           120, 0, 0);
+        break;
 
-        case 1: // 16 -- 32 mt: visibili il 50% dei fili d'erba.
-            build_fractal_tree (x, y, z, 1000, 1.00, 0.25, 0, 7, 1.0, 0x00, 0xC0,  90, 0,
-                                0);
-            break;
+    case 1: // 16 -- 32 mt: visibili il 50% dei fili d'erba.
+        build_fractal_tree(x, y, z, 1000, 1.00, 0.25, 0, 7, 1.0, 0x00, 0xC0, 90,
+                           0, 0);
+        break;
 
-        case 0: //  0 -- 16 mt: un ciuffo completo.
-            build_fractal_tree (x, y, z, 1000, 1.00, 0.25, 0, 7, 1.0, 0x00, 0xC0,  60, 0,
-                                0);
+    case 0: //  0 -- 16 mt: un ciuffo completo.
+        build_fractal_tree(x, y, z, 1000, 1.00, 0.25, 0, 7, 1.0, 0x00, 0xC0, 60,
+                           0, 0);
     }
 }
 
-void roccia (float x, float y, float z, int32_t depth) {
+void roccia(float x, float y, float z, int32_t depth) {
     // disegna una pietra fatta sulla base di un tetraedo per risparmiare tempo.
     float tx[4], ty[4], tz[4];
     float px[3], pz[3];
     float rs = rockscaling;
-    int8_t  rc[3], rcolor;
-    int16_t   cdown;
+    int8_t rc[3], rcolor;
+    int16_t cdown;
 
     // da 160 mt in poi: nulla di visibile.
     if (depth >= 8) {
@@ -484,9 +481,9 @@ void roccia (float x, float y, float z, int32_t depth) {
         return;
     }
 
-    fast_srand (detail_seed);
+    fast_srand(detail_seed);
     // e questo che IN questo quadrante non ci sono rocce.
-    cdown = fast_random (rockdensity);
+    cdown = fast_random(rockdensity);
 
     if (!cdown) {
         return;
@@ -494,19 +491,19 @@ void roccia (float x, float y, float z, int32_t depth) {
 
     // da 32 a 160 mt: solo un triangolino.
     if (depth > 2) {
-        tx[0] = x;
-        tx[1] = x;
-        tx[2] = x + rockscaling - fast_flandom () * rockscaling;
-        tz[0] = z;
-        tz[1] = z;
-        tz[2] = z + rockscaling - fast_flandom () * rockscaling;
-        ty[0] = y - 100 - fast_flandom () * rockpeaking;
-        ty[1] = y - 100 - fast_flandom () * rockpeaking;
-        ty[2] = y - 100 - fast_flandom () * rockpeaking;
-        rcolor = fast_random (64 + 7);
+        tx[0]  = x;
+        tx[1]  = x;
+        tx[2]  = x + rockscaling - fast_flandom() * rockscaling;
+        tz[0]  = z;
+        tz[1]  = z;
+        tz[2]  = z + rockscaling - fast_flandom() * rockscaling;
+        ty[0]  = y - 100 - fast_flandom() * rockpeaking;
+        ty[1]  = y - 100 - fast_flandom() * rockpeaking;
+        ty[2]  = y - 100 - fast_flandom() * rockpeaking;
+        rcolor = fast_random(64 + 7);
 
-        if (facing (tx, ty, tz)) {
-            poly3d (tx, ty, tz, 3, rcolor);
+        if (facing(tx, ty, tz)) {
+            poly3d(tx, ty, tz, 3, rcolor);
         }
 
         return;
@@ -515,36 +512,36 @@ void roccia (float x, float y, float z, int32_t depth) {
     // da 16 a 32 mt: tre triagolini disposti a tetraedo, senza base.
     // da 0 a 16 mt: con texture, e sassolini multipli se necessari.
     rockscaling *= 5;
-    setfx (quartz);
-    rockrep:
-    px[0] = x - fast_flandom () * rockscaling;
-    pz[0] = z - fast_flandom () * rockscaling;
-    px[1] = x;
-    pz[1] = z + fast_flandom () * rockscaling;
-    px[2] = x + fast_flandom () * rockscaling;
-    pz[2] = z - fast_flandom () * rockscaling;
-    rcolor = fast_random (64);
-    rc[0] = rcolor + fast_random( 7);
-    rc[1] = rcolor + fast_random(15);
-    rc[2] = rcolor + fast_random(31);
-    tx[2] = x;
-    tz[2] = z;
-    ty[2] = hpoint (x, z) - 100 - fast_flandom () * rockpeaking;
-    tx[0] = px[0];
-    tx[1] = px[1];
-    tz[0] = pz[0];
-    tz[1] = pz[1];
-    ty[0] = hpoint (tx[0], tz[0]);
-    ty[1] = hpoint (tx[1], tz[1]);
+    setfx(quartz);
+rockrep:
+    px[0]  = x - fast_flandom() * rockscaling;
+    pz[0]  = z - fast_flandom() * rockscaling;
+    px[1]  = x;
+    pz[1]  = z + fast_flandom() * rockscaling;
+    px[2]  = x + fast_flandom() * rockscaling;
+    pz[2]  = z - fast_flandom() * rockscaling;
+    rcolor = fast_random(64);
+    rc[0]  = rcolor + fast_random(7);
+    rc[1]  = rcolor + fast_random(15);
+    rc[2]  = rcolor + fast_random(31);
+    tx[2]  = x;
+    tz[2]  = z;
+    ty[2]  = hpoint(x, z) - 100 - fast_flandom() * rockpeaking;
+    tx[0]  = px[0];
+    tx[1]  = px[1];
+    tz[0]  = pz[0];
+    tz[1]  = pz[1];
+    ty[0]  = hpoint(tx[0], tz[0]);
+    ty[1]  = hpoint(tx[1], tz[1]);
 
-    if (!facing (tx, ty, tz)) {
+    if (!facing(tx, ty, tz)) {
         if (depth < 2) {
             tx[3] = tx[2];
             ty[3] = ty[2];
             tz[3] = tz[2];
-            polymap (tx, ty, tz, 4, rc[0]);
+            polymap(tx, ty, tz, 4, rc[0]);
         } else {
-            poly3d (tx, ty, tz, 3, rc[0]);
+            poly3d(tx, ty, tz, 3, rc[0]);
         }
     }
 
@@ -552,17 +549,17 @@ void roccia (float x, float y, float z, int32_t depth) {
     tx[1] = px[2];
     tz[0] = pz[1];
     tz[1] = pz[2];
-    ty[0] = hpoint (tx[0], tz[0]);
-    ty[1] = hpoint (tx[1], tz[1]);
+    ty[0] = hpoint(tx[0], tz[0]);
+    ty[1] = hpoint(tx[1], tz[1]);
 
-    if (!facing (tx, ty, tz)) {
+    if (!facing(tx, ty, tz)) {
         if (depth < 2) {
             tx[3] = tx[2];
             ty[3] = ty[2];
             tz[3] = tz[2];
-            polymap (tx, ty, tz, 4, rc[1]);
+            polymap(tx, ty, tz, 4, rc[1]);
         } else {
-            poly3d (tx, ty, tz, 3, rc[1]);
+            poly3d(tx, ty, tz, 3, rc[1]);
         }
     }
 
@@ -570,23 +567,23 @@ void roccia (float x, float y, float z, int32_t depth) {
     tx[1] = px[0];
     tz[0] = pz[2];
     tz[1] = pz[0];
-    ty[0] = hpoint (tx[0], tz[0]);
-    ty[1] = hpoint (tx[1], tz[1]);
+    ty[0] = hpoint(tx[0], tz[0]);
+    ty[1] = hpoint(tx[1], tz[1]);
 
-    if (!facing (tx, ty, tz)) {
+    if (!facing(tx, ty, tz)) {
         if (depth < 2) {
             tx[3] = tx[2];
             ty[3] = ty[2];
             tz[3] = tz[2];
-            polymap (tx, ty, tz, 4, rc[2]);
+            polymap(tx, ty, tz, 4, rc[2]);
         } else {
-            poly3d (tx, ty, tz, 3, rc[2]);
+            poly3d(tx, ty, tz, 3, rc[2]);
         }
     }
 
-    x = x + fast_flandom() * 1000 * cdown - fast_flandom () * 1000 * cdown;
-    z = z + fast_flandom() * 1000 * cdown - fast_flandom () * 1000 * cdown;
-    y = hpoint (x, z);
+    x = x + fast_flandom() * 1000 * cdown - fast_flandom() * 1000 * cdown;
+    z = z + fast_flandom() * 1000 * cdown - fast_flandom() * 1000 * cdown;
+    y = hpoint(x, z);
     rockscaling *= 0.5;
     cdown--;
 
@@ -595,7 +592,7 @@ void roccia (float x, float y, float z, int32_t depth) {
     }
 
     rockscaling = rs;
-    resetfx ();
+    resetfx();
 }
 
 /*
@@ -607,142 +604,110 @@ void roccia (float x, float y, float z, int32_t depth) {
 
 */
 
-#define LFS     100     // massimo numero di animali.
-int16_t   animals  =   0;       // animali attualmente visibili.
-int8_t  ani_type [LFS];       // tipologia
-int32_t  ani_seed [LFS];       // seme pseudo per le modifiche alla forma.
-float ani_scale[LFS];       // scala.
-float ani_x    [LFS];       // posizione (X)
-float ani_quote[LFS];       // quota rispetto al suolo.
-float ani_z    [LFS];       // posizione (Z)
-float ani_pitch[LFS];       // direzione in cui si spostano.
-float ani_speed[LFS];       // velocit� attuale.
-float tgt_quote[LFS];       // quota che vogliono raggiungere.
-float tgt_speed[LFS];       // velocit� che vogliono raggiungere.
-float tgt_pitch[LFS];       // direzione che vogliono acquisire.
-int8_t  ani_lcount[LFS];      // contatempo di vicinanza.
-uint16_t ani_sqc[LFS];      // sub-quadrant coordinates (attuali).
-int8_t  ani_mtype[LFS];       // tipo di movimento.
+#define LFS 100         // massimo numero di animali.
+int16_t animals = 0;    // animali attualmente visibili.
+int8_t ani_type[LFS];   // tipologia
+int32_t ani_seed[LFS];  // seme pseudo per le modifiche alla forma.
+float ani_scale[LFS];   // scala.
+float ani_x[LFS];       // posizione (X)
+float ani_quote[LFS];   // quota rispetto al suolo.
+float ani_z[LFS];       // posizione (Z)
+float ani_pitch[LFS];   // direzione in cui si spostano.
+float ani_speed[LFS];   // velocit� attuale.
+float tgt_quote[LFS];   // quota che vogliono raggiungere.
+float tgt_speed[LFS];   // velocit� che vogliono raggiungere.
+float tgt_pitch[LFS];   // direzione che vogliono acquisire.
+int8_t ani_lcount[LFS]; // contatempo di vicinanza.
+uint16_t ani_sqc[LFS];  // sub-quadrant coordinates (attuali).
+int8_t ani_mtype[LFS];  // tipo di movimento.
 #define FELINE_LIKE 0
 #define RABBIT_LIKE 1
-#define KANGAROO_LIKE   2
+#define KANGAROO_LIKE 2
 
-#define BIRD    1               // definizione tipologia (per classi).
-#define REPTIL  4
-#define MAMMAL  5
+#define BIRD 1 // definizione tipologia (per classi).
+#define REPTIL 4
+#define MAMMAL 5
 
 // dati di definizione - classe uccelli - relativo PVfile: "birdy_ncc"
 
 const int16_t bird_wings_center_p = 1;
 const int16_t bird_wings_center_v = 0;
 
-pvlist bird_wing1[3] = { {  0, 1, 1, 1, 0 }, {  1, 1, 1, 1, 0 }, {0xFFF, 0, 0, 0, 0} };
-pvlist bird_wing2[3] = { {  2, 1, 1, 1, 0 }, {  3, 1, 1, 1, 0 }, {0xFFF, 0, 0, 0, 0} };
+pvlist bird_wing1[3] = {{0, 1, 1, 1, 0}, {1, 1, 1, 1, 0}, {0xFFF, 0, 0, 0, 0}};
+pvlist bird_wing2[3] = {{2, 1, 1, 1, 0}, {3, 1, 1, 1, 0}, {0xFFF, 0, 0, 0, 0}};
 
-const int16_t bird_legs_center_p  = 18;
-const int16_t bird_legs_center_v  = 1;
+const int16_t bird_legs_center_p = 18;
+const int16_t bird_legs_center_v = 1;
 
-pvlist bird_legs[3]  = { { 18, 0, 0, 1, 0 }, { 19, 0, 1, 0, 0 }, {0xFFF, 0, 0, 0, 0} };
+pvlist bird_legs[3] = {{18, 0, 0, 1, 0}, {19, 0, 1, 0, 0}, {0xFFF, 0, 0, 0, 0}};
 
 // dati di definizione - classe mammiferi - relativo PVfile: "mammal_ncc"
 
-pvlist mamm_ears[5] = {
-        { 42, 0, 1, 0, 0 },
-        { 45, 0, 0, 1, 0 },
-        { 43, 1, 0, 0, 0 },
-        { 44, 0, 0, 1, 0 },
-        {0xFFF, 0, 0, 0, 0}
-};
+pvlist mamm_ears[5] = {{42, 0, 1, 0, 0},
+                       {45, 0, 0, 1, 0},
+                       {43, 1, 0, 0, 0},
+                       {44, 0, 0, 1, 0},
+                       {0xFFF, 0, 0, 0, 0}};
 
-const int16_t mamm_wrap_center_p  = 16;
-const int16_t mamm_wrap_center_v  = 2;
+const int16_t mamm_wrap_center_p = 16;
+const int16_t mamm_wrap_center_v = 2;
 
 pvlist mamm_reartoto[19] = {
-        {  7, 0, 0, 1, 1 },
-        {  8, 1, 1, 1, 1 },
-        {  9, 1, 1, 1, 1 },
-        { 14, 1, 1, 1, 1 },
-        { 18, 0, 1, 1, 0 },
-        { 12, 1, 1, 1, 1 },
-        { 19, 1, 0, 0, 1 },
-        { 21, 0, 0, 1, 1 },
-        { 10, 1, 1, 1, 1 },
-        { 15, 1, 1, 1, 1 },
-        { 13, 1, 1, 1, 1 },
-        { 11, 1, 1, 1, 1 },
-        { 46, 1, 1, 1, 1 },
-        { 47, 1, 1, 1, 1 },
-        { 50, 1, 1, 1, 1 },
-        { 51, 1, 1, 1, 1 },
-        { 48, 1, 1, 1, 0 },
-        { 49, 1, 1, 1, 0 },
-        {0xFFF, 0, 0, 0, 0}
-};
+    {7, 0, 0, 1, 1},  {8, 1, 1, 1, 1},  {9, 1, 1, 1, 1},    {14, 1, 1, 1, 1},
+    {18, 0, 1, 1, 0}, {12, 1, 1, 1, 1}, {19, 1, 0, 0, 1},   {21, 0, 0, 1, 1},
+    {10, 1, 1, 1, 1}, {15, 1, 1, 1, 1}, {13, 1, 1, 1, 1},   {11, 1, 1, 1, 1},
+    {46, 1, 1, 1, 1}, {47, 1, 1, 1, 1}, {50, 1, 1, 1, 1},   {51, 1, 1, 1, 1},
+    {48, 1, 1, 1, 0}, {49, 1, 1, 1, 0}, {0xFFF, 0, 0, 0, 0}};
 
 pvlist mamm_legs[15] = {
-        {  0, 1, 1, 1, 1 }, // F-L
-        {  2, 1, 1, 0, 0 },
-        { 22, 1, 0, 0, 0 },
-        {  1, 1, 1, 1, 1 }, // F-R
-        {  3, 1, 1, 0, 0 },
-        { 23, 0, 1, 0, 0 },
-        {  8, 0, 0, 1, 1 }, // R-L
-        { 10, 1, 1, 1, 1 },
-        { 14, 0, 1, 1, 0 },
-        { 15, 1, 1, 1, 1 },
-        { 12, 0, 0, 1, 1 }, // R-R
-        { 13, 1, 1, 1, 1 },
-        {  9, 0, 0, 1, 1 },
-        { 11, 1, 1, 1, 1 },
-        {0xFFF, 0, 0, 0, 0}
-};
+    {0, 1, 1, 1, 1},                                       // F-L
+    {2, 1, 1, 0, 0},    {22, 1, 0, 0, 0}, {1, 1, 1, 1, 1}, // F-R
+    {3, 1, 1, 0, 0},    {23, 0, 1, 0, 0}, {8, 0, 0, 1, 1}, // R-L
+    {10, 1, 1, 1, 1},   {14, 0, 1, 1, 0}, {15, 1, 1, 1, 1},
+    {12, 0, 0, 1, 1}, // R-R
+    {13, 1, 1, 1, 1},   {9, 0, 0, 1, 1},  {11, 1, 1, 1, 1},
+    {0xFFF, 0, 0, 0, 0}};
 
-const int16_t mamm_tail_center_p  = 46;
-const int16_t mamm_tail_center_v  = 1;
+const int16_t mamm_tail_center_p = 46;
+const int16_t mamm_tail_center_v = 1;
 
-pvlist mamm_tail[7] = {
-        { 46, 1, 1, 1, 1 },
-        { 47, 1, 1, 1, 1 },
-        { 50, 1, 1, 1, 1 },
-        { 51, 1, 1, 1, 1 },
-        { 48, 1, 1, 1, 0 },
-        { 49, 1, 1, 1, 0 },
-        {0xFFF, 0, 0, 0, 0}
-};
+pvlist mamm_tail[7] = {{46, 1, 1, 1, 1},   {47, 1, 1, 1, 1}, {50, 1, 1, 1, 1},
+                       {51, 1, 1, 1, 1},   {48, 1, 1, 1, 0}, {49, 1, 1, 1, 0},
+                       {0xFFF, 0, 0, 0, 0}};
 
 /* Funzione di tracciamento ed animazione delle forme di vita animali. */
 
-void live_animal (int16_t n) {
+void live_animal(int16_t n) {
     const double an_incl_prec = 50;
-    double  incl;
-    float   period;
+    double incl;
+    float period;
     int16_t sqc_x, sqc_z;
-    int32_t    tick = 18 * secs;
-    float   dx, dy, dz, ax, ay, ay2, az;
-    float   update_ratio, tendence_to_stop; // mammals
-    int8_t    perform_depth_sort = 0;
-    int8_t    texture_skin_map   = 0;
-    float   animal_distance    = 0;
-    float   quote    = tgt_quote[n];
-    float   pitch    = tgt_pitch[n];
-    float   velocity = tgt_speed[n];
-    float   reaction = 0.5 / ani_scale[n];
-    ax = ani_x[n];
-    az = ani_z[n];
-    ay = hpoint (ani_x[n], ani_z[n]) - ani_quote[n];
+    int32_t tick = 18 * secs;
+    float dx, dy, dz, ax, ay, ay2, az;
+    float update_ratio, tendence_to_stop; // mammals
+    int8_t perform_depth_sort = 0;
+    int8_t texture_skin_map   = 0;
+    float animal_distance     = 0;
+    float quote               = tgt_quote[n];
+    float pitch               = tgt_pitch[n];
+    float velocity            = tgt_speed[n];
+    float reaction            = 0.5 / ani_scale[n];
+    ax                        = ani_x[n];
+    az                        = ani_z[n];
+    ay                        = hpoint(ani_x[n], ani_z[n]) - ani_quote[n];
 
     if (ani_lcount[n] < 0) {
-        dx        = 1 / (float)(-ani_lcount[n]);
-        ani_x[n]     += dx * (refx - ax);
-        ani_z[n]     += dx * (refz - az);
+        dx = 1 / (float)(-ani_lcount[n]);
+        ani_x[n] += dx * (refx - ax);
+        ani_z[n] += dx * (refz - az);
         ani_quote[n] -= dx * ani_quote[n];
 
         if (ani_lcount[n] > -10) {
-            stick3d (ax, ay, az, pos_x,      pos_y - 50, pos_z);
-            stick3d (ax, ay, az, pos_x - 50, pos_y - 50, pos_z);
-            stick3d (ax, ay, az, pos_x + 50, pos_y - 50, pos_z);
-            stick3d (ax, ay, az, pos_x,      pos_y - 50, pos_z + 50);
-            stick3d (ax, ay, az, pos_x,      pos_y - 50, pos_z - 50);
+            stick3d(ax, ay, az, pos_x, pos_y - 50, pos_z);
+            stick3d(ax, ay, az, pos_x - 50, pos_y - 50, pos_z);
+            stick3d(ax, ay, az, pos_x + 50, pos_y - 50, pos_z);
+            stick3d(ax, ay, az, pos_x, pos_y - 50, pos_z + 50);
+            stick3d(ax, ay, az, pos_x, pos_y - 50, pos_z - 50);
         }
 
         if (ani_lcount[n] < -1) {
@@ -758,17 +723,17 @@ void live_animal (int16_t n) {
     if (ani_type[n] == BIRD) {
         if (quote >= 1500) {
             velocity = 800;
-            fast_srand (n + (tick / 50));
-            pitch   += 5 * fast_flandom() - 2.5;
-            quote   += 1000 * fast_flandom() - 500;
+            fast_srand(n + (tick / 50));
+            pitch += 5 * fast_flandom() - 2.5;
+            quote += 1000 * fast_flandom() - 500;
             goto end_far;
         }
 
         if (quote > 750) {
             velocity = 400;
-            quote   *= 0.5;
-            fast_srand (n + (tick / 15));
-            pitch   += 10 * fast_flandom() - 5;
+            quote *= 0.5;
+            fast_srand(n + (tick / 15));
+            pitch += 10 * fast_flandom() - 5;
             goto end_far;
         }
 
@@ -778,7 +743,7 @@ void live_animal (int16_t n) {
             goto end_far;
         }
 
-        fast_srand (n + (tick / 10));
+        fast_srand(n + (tick / 10));
 
         if (quote < 50) {
             velocity = 0;
@@ -795,22 +760,22 @@ void live_animal (int16_t n) {
     }
 
     if (ani_type[n] == MAMMAL) {
-        //stick3d (ax, ay, az, ax, ay - 50000, az);
-        fast_srand (n);
-        update_ratio = fast_random (31) + 3;
-        tendence_to_stop = fast_flandom () * 0.8;
-        fast_srand (n + tick / update_ratio);
+        // stick3d (ax, ay, az, ax, ay - 50000, az);
+        fast_srand(n);
+        update_ratio     = fast_random(31) + 3;
+        tendence_to_stop = fast_flandom() * 0.8;
+        fast_srand(n + tick / update_ratio);
 
         if (fast_flandom() < tendence_to_stop) {
             velocity = 0;
-            fast_srand (n + tick);
+            fast_srand(n + tick);
 
             if (fast_flandom() < 0.1 * tendence_to_stop) {
                 pitch += 100 * fast_flandom();
                 pitch -= 100 * fast_flandom();
             }
         } else {
-            fast_srand (n + tick / 18);
+            fast_srand(n + tick / 18);
 
             if (ani_mtype[n] == FELINE_LIKE) {
                 velocity = 350 + fast_flandom() * 350;
@@ -824,7 +789,7 @@ void live_animal (int16_t n) {
                 velocity = 400 + fast_flandom() * 100;
             }
 
-            fast_srand (n + (tick / 5));
+            fast_srand(n + (tick / 5));
             dx = 300 * fast_flandom() - 5;
             pitch += dx / velocity;
         }
@@ -832,7 +797,7 @@ void live_animal (int16_t n) {
         quote = 0;
     }
 
-    end_far:
+end_far:
 
     if (quote < 0) {
         quote = 0;
@@ -841,26 +806,27 @@ void live_animal (int16_t n) {
     tgt_speed[n] = velocity;
     tgt_quote[n] = quote;
     tgt_pitch[n] = pitch;
-    dx = velocity - ani_speed[n];
-    dy = quote    - ani_quote[n];
-    dz = pitch    - ani_pitch[n];
+    dx           = velocity - ani_speed[n];
+    dy           = quote - ani_quote[n];
+    dz           = pitch - ani_pitch[n];
     ani_speed[n] += 3 * reaction * dx;
     ani_pitch[n] += 2 * reaction * dz;
     ani_quote[n] += 1 * reaction * dy;
-    ani_x[n] -= ani_speed[n] * sin (deg * ani_pitch[n]);
-    ani_z[n] -= ani_speed[n] * cos (deg * ani_pitch[n]);
+    ani_x[n] -= ani_speed[n] * sin(deg * ani_pitch[n]);
+    ani_z[n] -= ani_speed[n] * cos(deg * ani_pitch[n]);
 
-    if (ani_x[n] < 0 || ani_x[n] > 3276800 || ani_z[n] < 0 || ani_z[n] > 3276800) {
-        ani_x[n]     += ani_speed[n] * sin (deg * ani_pitch[n]);
-        ani_z[n]     += ani_speed[n] * sin (deg * ani_pitch[n]);
+    if (ani_x[n] < 0 || ani_x[n] > 3276800 || ani_z[n] < 0 ||
+        ani_z[n] > 3276800) {
+        ani_x[n] += ani_speed[n] * sin(deg * ani_pitch[n]);
+        ani_z[n] += ani_speed[n] * sin(deg * ani_pitch[n]);
         ani_pitch[n] += 180;
     }
 
-    inactive:
-    dx = ax - cam_x;
-    dy = ay - cam_y;
-    dz = az - cam_z;
-    animal_distance = sqrt (dx * dx + dy * dy + dz * dz);
+inactive:
+    dx              = ax - cam_x;
+    dy              = ay - cam_y;
+    dz              = az - cam_z;
+    animal_distance = sqrt(dx * dx + dy * dy + dz * dz);
 
     if (animal_distance > 250000) {
         ani_x[n] = pos_x + 100000 * fast_flandom() - 100000 * fast_flandom();
@@ -900,26 +866,26 @@ void live_animal (int16_t n) {
         return;
     }
 
-    if (animal_distance <  75000) {
+    if (animal_distance < 75000) {
         perform_depth_sort = 1;
     }
 
-    if (animal_distance <  12500) {
-        texture_skin_map   = 1 + (n % 2);
+    if (animal_distance < 12500) {
+        texture_skin_map = 1 + (n % 2);
     }
 
     /* Comportamento in vicinanza e tracciamento. */
     // impostazione texture per forme di vita.
     flares = 0;
-    txtr = p_background;
-    XSIZE = TEXTURE_XSIZE * 256;
-    YSIZE = TEXTURE_YSIZE * T_SCALE;
+    txtr   = p_background;
+    XSIZE  = TEXTURE_XSIZE * 256;
+    YSIZE  = TEXTURE_YSIZE * T_SCALE;
 
     if (ani_type[n] == BIRD) {
         // preparazione forma di base:
-        copypv (bird_result, bird_base);
-        modpv (bird_result, -1, -1, ani_scale[n], ani_scale[n], ani_scale[n], 0, 0, 0,
-               NULL);
+        copypv(bird_result, bird_base);
+        modpv(bird_result, -1, -1, ani_scale[n], ani_scale[n], ani_scale[n], 0,
+              0, 0, NULL);
 
         // modifiche alla forma di base:
         if (ani_lcount[n] < 0) {
@@ -934,7 +900,7 @@ void live_animal (int16_t n) {
         if (ani_quote[n] < 500) {
             // si inclina all'indietro, prima di
             // atterrare o decollare. � normale.
-            dz = -0.1 * fabs (250 - ani_quote[n]);
+            dz = -0.1 * fabs(250 - ani_quote[n]);
         } else {
             dz = 0;
         }
@@ -951,41 +917,41 @@ void live_animal (int16_t n) {
                     dy = 0;
                 }
 
-                modpv (bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1, 0,
-                       +45 * dy, +75 * dy, bird_wing1);
-                modpv (bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1, 0,
-                       -45 * dy, -75 * dy, bird_wing2);
+                modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1,
+                      1, 1, 0, +45 * dy, +75 * dy, bird_wing1);
+                modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1,
+                      1, 1, 0, -45 * dy, -75 * dy, bird_wing2);
                 goto bird_trace;
             }
         }
 
-        modpv (bird_result, bird_legs_center_p, bird_legs_center_v, 1, 1, 1, -75, 0, 0,
-               bird_legs);
+        modpv(bird_result, bird_legs_center_p, bird_legs_center_v, 1, 1, 1, -75,
+              0, 0, bird_legs);
 
         if (ani_scale[n] > 10) {
             // modello di comportamento:
             // in volo, grandi uccelli.
-            modpv (bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1,
-                   0, 0, fabs(10 - (tick % 20)) * -4.5, bird_wing1);
-            modpv (bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1,
-                   0, 0, fabs(10 - (tick % 20)) * +4.5, bird_wing2);
+            modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1,
+                  1, 0, 0, fabs(10 - (tick % 20)) * -4.5, bird_wing1);
+            modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1,
+                  1, 0, 0, fabs(10 - (tick % 20)) * +4.5, bird_wing2);
         } else {
             // modello di comportamento:
             // in volo, piccoli uccelli.
-            modpv (bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1,
-                   0, 0, fabs(3 - (tick % 6)) * -15, bird_wing1);
-            modpv (bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1,
-                   0, 0, fabs(3 - (tick % 6)) * +15, bird_wing2);
+            modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1,
+                  1, 0, 0, fabs(3 - (tick % 6)) * -15, bird_wing1);
+            modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1,
+                  1, 0, 0, fabs(3 - (tick % 6)) * +15, bird_wing2);
         }
 
-        // visualizzazione:
-        bird_trace:
-        modpv (bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1,
-               dz, 0, 0, 0);
-        modpv (bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1,
-               0, ani_pitch[n], 0, 0);
-        drawpv (bird_result, texture_skin_map, 3, ax, ay
-                                                      - 9 * ani_scale[n], az, perform_depth_sort);
+    // visualizzazione:
+    bird_trace:
+        modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1,
+              dz, 0, 0, 0);
+        modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1, 0,
+              ani_pitch[n], 0, 0);
+        drawpv(bird_result, texture_skin_map, 3, ax, ay - 9 * ani_scale[n], az,
+               perform_depth_sort);
 
         // reazioni alla vicinanza.
         // b�, gli uccelli tendono a scappare,
@@ -1017,34 +983,34 @@ void live_animal (int16_t n) {
 
     if (ani_type[n] == MAMMAL) {
         // preparazione forma di base:
-        copypv (mamm_result, mamm_base);
-        modpv (mamm_result, -1, -1, ani_scale[n], ani_scale[n], ani_scale[n], 0, 0, 0,
-               NULL);
+        copypv(mamm_result, mamm_base);
+        modpv(mamm_result, -1, -1, ani_scale[n], ani_scale[n], ani_scale[n], 0,
+              0, 0, NULL);
 
         if (ay > -10 && sctype == OCEAN) {
             // nell'acqua...
             // se alcuni ci si avventurano, b�,
             // possono sempre nuotare...
-            modpv (mamm_result, -1, -1, 1, 0.7, 1, 0, 0, 0, NULL);
-            modpv (mamm_result, -1, -1, 1, 0.0, 1, 0, 0, 0, mamm_legs);
-            period = fabs (fsecs - 0.5);
-            modpv (mamm_result, -1, -1, 1, 1, 1, 15, 0, 50 * period, NULL);
+            modpv(mamm_result, -1, -1, 1, 0.7, 1, 0, 0, 0, NULL);
+            modpv(mamm_result, -1, -1, 1, 0.0, 1, 0, 0, 0, mamm_legs);
+            period = fabs(fsecs - 0.5);
+            modpv(mamm_result, -1, -1, 1, 1, 1, 15, 0, 50 * period, NULL);
         } else {
             // Sulla terraferma...
             if (ani_mtype[n] != FELINE_LIKE) {
-                modpv (mamm_result, -1, -1, 2, 2, 0.75, 0, 0, 0, mamm_reartoto);
-                modpv (mamm_result, -1, -1, 1, 1, 1, 60, 0, 0, NULL);
-                modpv (mamm_result, mamm_tail_center_p, mamm_tail_center_v, 1, 1, 1, -100, 0, 0,
-                       mamm_tail);
+                modpv(mamm_result, -1, -1, 2, 2, 0.75, 0, 0, 0, mamm_reartoto);
+                modpv(mamm_result, -1, -1, 1, 1, 1, 60, 0, 0, NULL);
+                modpv(mamm_result, mamm_tail_center_p, mamm_tail_center_v, 1, 1,
+                      1, -100, 0, 0, mamm_tail);
 
                 if (ani_mtype[n] != KANGAROO_LIKE) {
-                    modpv (mamm_result, -1, -1, 0.33, 0.33, 0.33, 0, 0, 0, NULL);
+                    modpv(mamm_result, -1, -1, 0.33, 0.33, 0.33, 0, 0, 0, NULL);
                 }
             }
 
-            ay2 = hpoint (ax - an_incl_prec * sin (deg * ani_pitch[n]),
-                          az - an_incl_prec * cos (deg * ani_pitch[n]))
-                  - ani_quote[n];
+            ay2 = hpoint(ax - an_incl_prec * sin(deg * ani_pitch[n]),
+                         az - an_incl_prec * cos(deg * ani_pitch[n])) -
+                  ani_quote[n];
             incl = ay - ay2;
             incl /= an_incl_prec;
 
@@ -1057,8 +1023,8 @@ void live_animal (int16_t n) {
             }
 
             incl = ((double)180 * atan(incl)) / M_PI;
-            modpv (mamm_result, mamm_wrap_center_p,
-                   mamm_wrap_center_v, 1, 1, 1, incl, 0, 0, NULL);
+            modpv(mamm_result, mamm_wrap_center_p, mamm_wrap_center_v, 1, 1, 1,
+                  incl, 0, 0, NULL);
 
             if (ani_mtype[n] == FELINE_LIKE) {
                 ay -= ani_scale[n] * 16;
@@ -1076,12 +1042,12 @@ void live_animal (int16_t n) {
                 // se sono fermi possono comunque
                 // scondinzolare, mentre pensano
                 // a cosa fare...
-                fast_srand (4 * n);
+                fast_srand(4 * n);
 
                 if (fast_random(1)) {
-                    period = fabs (fsecs - 0.5);
-                    modpv (mamm_result, mamm_tail_center_p, mamm_tail_center_v,
-                           1, 1, 1, 0, 240 * period - 60, 0, mamm_tail);
+                    period = fabs(fsecs - 0.5);
+                    modpv(mamm_result, mamm_tail_center_p, mamm_tail_center_v,
+                          1, 1, 1, 0, 240 * period - 60, 0, mamm_tail);
                 }
             } else {
                 // se corrono, si fa semplicemente
@@ -1099,7 +1065,7 @@ void live_animal (int16_t n) {
                     period = 22;
                 }
 
-                period *= fabs (fsecs - 0.5);
+                period *= fabs(fsecs - 0.5);
                 period /= ani_scale[n];
 
                 if (ani_mtype[n] == FELINE_LIKE) {
@@ -1114,20 +1080,19 @@ void live_animal (int16_t n) {
                     ay -= 300 * ani_scale[n] * period;
                 }
 
-                modpv (mamm_result, mamm_wrap_center_p, mamm_wrap_center_v,
-                       1, 1, 1, - 50 * period, 0, 0, NULL);
-                modpv (mamm_result, mamm_wrap_center_p, mamm_wrap_center_v,
-                       1, 1, 1, 100 * period, 0, 0, mamm_reartoto);
+                modpv(mamm_result, mamm_wrap_center_p, mamm_wrap_center_v, 1, 1,
+                      1, -50 * period, 0, 0, NULL);
+                modpv(mamm_result, mamm_wrap_center_p, mamm_wrap_center_v, 1, 1,
+                      1, 100 * period, 0, 0, mamm_reartoto);
             }
         }
 
-        modpv (mamm_result, mamm_wrap_center_p, mamm_wrap_center_v,
-               1, 1, 1, 0, ani_pitch[n] + 180, 0, NULL);
-        // visualizzazione:
-        mamm_trace:
-        drawpv (mamm_result, 1, 0, ax, ay, az, perform_depth_sort);
+        modpv(mamm_result, mamm_wrap_center_p, mamm_wrap_center_v, 1, 1, 1, 0,
+              ani_pitch[n] + 180, 0, NULL);
+    // visualizzazione:
+    mamm_trace:
+        drawpv(mamm_result, 1, 0, ax, ay, az, perform_depth_sort);
     }
-
 }
 
 /*
@@ -1141,40 +1106,40 @@ void live_animal (int16_t n) {
 
 */
 
-#define  bk_lines_to_horizon    120
-#define  culling_limit      50
+#define bk_lines_to_horizon 120
+#define culling_limit 50
 
-void srf_detail (float x, float y, float z, int32_t depth, int8_t _class_) {
+void srf_detail(float x, float y, float z, int32_t depth, int8_t _class_) {
     // disegna un oggetto sulla superficie di un pianeta.
     switch (_class_) {
-        case ROCKS: // rocce, sassi, massi, pietre, pietruzze etc...
-            roccia (x, y, z, depth);
-            break;
+    case ROCKS: // rocce, sassi, massi, pietre, pietruzze etc...
+        roccia(x, y, z, depth);
+        break;
 
-        case VEGET: // vegetali che non rientrano nella classe alberi.
-            ciuffo (x, y + 150, z, depth);
-            break;
+    case VEGET: // vegetali che non rientrano nella classe alberi.
+        ciuffo(x, y + 150, z, depth);
+        break;
 
-        case TREES: // alberi, appunto. e cespugli quasi-alberi.
-            if (y > -15000) {
-                cespuglio (x, y, z, depth);
-            } else {
-                albero (x, y, z, depth);
-            }
+    case TREES: // alberi, appunto. e cespugli quasi-alberi.
+        if (y > -15000) {
+            cespuglio(x, y, z, depth);
+        } else {
+            albero(x, y, z, depth);
+        }
 
-            break;
+        break;
 
-        case NOTHING: // una parte non coperta dalla texture (rovine).
-            break;
+    case NOTHING: // una parte non coperta dalla texture (rovine).
+        break;
     }
 }
 
 int8_t gtx; // se attivo, traccia il livello del suolo con texture specifica
-int16_t  ipfx,
-        ipfz; // centro di tracciamento (coordinate SQC dell'osservatore).
+int16_t ipfx,
+    ipfz; // centro di tracciamento (coordinate SQC dell'osservatore).
 int8_t nearest_fragment_already_traced; // flag di lavoro.
 
-void fragment (int32_t x, int32_t z) {
+void fragment(int32_t x, int32_t z) {
 #if 0
     // traccia un quadrante della superficie.
     int8_t  poly1, poly2;
@@ -1627,12 +1592,12 @@ void fragment (int32_t x, int32_t z) {
     STUB
 }
 
-void iperficie (int16_t additional_quadrants) {
+void iperficie(int16_t additional_quadrants) {
     // Traccia i poligoni della superficie, dirigendo la funzione precedente.
     // questa funzione � centrata su ipfx;ipfz, e si prende cura di tracciare
     // i poligoni nell'ordine corretto rispetto alla distanza.
-    int16_t       b = beta;
-    int16_t   x, z;
+    int16_t b = beta;
+    int16_t x, z;
 
     if (b < 0) {
         b += 360;
@@ -1642,13 +1607,13 @@ void iperficie (int16_t additional_quadrants) {
 
     if (b < 45 || b >= 315) {
         for (z = 199; z >= ipfz - additional_quadrants;) { // -dlz
-            for (x = 0; x < ipfx;) { // +dlx
-                fragment (x, z);
+            for (x = 0; x < ipfx;) {                       // +dlx
+                fragment(x, z);
                 x++;
             }
 
             for (x = 199; x >= ipfx;) { // -dlx
-                fragment (x, z);
+                fragment(x, z);
                 x--;
             }
 
@@ -1660,13 +1625,13 @@ void iperficie (int16_t additional_quadrants) {
 
     if (b >= 135 && b < 225) {
         for (z = 0; z <= ipfz + additional_quadrants;) { // +dlz
-            for (x = 0; x < ipfx;) { // +dlx
-                fragment (x, z);
+            for (x = 0; x < ipfx;) {                     // +dlx
+                fragment(x, z);
                 x++;
             }
 
             for (x = 199; x >= ipfx;) { // -dlx
-                fragment (x, z);
+                fragment(x, z);
                 x--;
             }
 
@@ -1678,13 +1643,13 @@ void iperficie (int16_t additional_quadrants) {
 
     if (b >= 45 && b < 135) {
         for (x = 0; x <= ipfx + additional_quadrants;) { // +dlx
-            for (z = 199; z > ipfz;) { // -dlz
-                fragment (x, z);
+            for (z = 199; z > ipfz;) {                   // -dlz
+                fragment(x, z);
                 z--;
             }
 
             for (z = 0; z <= ipfz;) { // +dlz
-                fragment (x, z);
+                fragment(x, z);
                 z++;
             }
 
@@ -1696,13 +1661,13 @@ void iperficie (int16_t additional_quadrants) {
 
     if (b >= 225 && b < 315) {
         for (x = 199; x >= ipfx - additional_quadrants;) { // -dlx
-            for (z = 199; z > ipfz;) { // -dlz
-                fragment (x, z);
+            for (z = 199; z > ipfz;) {                     // -dlz
+                fragment(x, z);
                 z--;
             }
 
             for (z = 0; z <= ipfz;) { // +dlz
-                fragment (x, z);
+                fragment(x, z);
                 z++;
             }
 
@@ -1712,8 +1677,8 @@ void iperficie (int16_t additional_quadrants) {
         goto backoff;
     }
 
-    backoff:
-    flares = 0;
+backoff:
+    flares    = 0;
     H_MATRIXS = 16;
     V_MATRIXS = 16;
     change_txm_repeating_mode();
@@ -1740,8 +1705,8 @@ void iperficie (int16_t additional_quadrants) {
 
 */
 
-void round_hill (int16_t cx, int16_t cz, uint16_t r, float h, float hmax,
-                 int8_t allowcanyons) {
+void round_hill(int16_t cx, int16_t cz, uint16_t r, float h, float hmax,
+                int8_t allowcanyons) {
 #if 0
     // Una collina rotonda, o una montagna molto erosa (se la si fa grossa).
     // hmax entra in gioco se il flag "allowcanyons" � a zero:
@@ -1783,7 +1748,7 @@ void round_hill (int16_t cx, int16_t cz, uint16_t r, float h, float hmax,
     STUB
 }
 
-void smoothterrain (int16_t rounding) {
+void smoothterrain(int16_t rounding) {
 #if 0
     // Smussa il profilo del terreno.
     int16_t n;
@@ -1803,7 +1768,7 @@ void smoothterrain (int16_t rounding) {
     STUB
 }
 
-void rockyground (int16_t roughness, int16_t rounding, int8_t level) {
+void rockyground(int16_t roughness, int16_t rounding, int8_t level) {
 #if 0
     // Produce una superficie pi� o meno accidentata.
     for (ptr = 0; ptr < 40000; ptr++) {
@@ -1827,8 +1792,8 @@ void rockyground (int16_t roughness, int16_t rounding, int8_t level) {
     STUB
 }
 
-void std_crater (uint8_t* map, int16_t cx, int16_t cz, int16_t r,
-        int16_t lim_h, float h_factor, float h_raiser, int32_t align) {
+void std_crater(uint8_t *map, int16_t cx, int16_t cz, int16_t r, int16_t lim_h,
+                float h_factor, float h_raiser, int32_t align) {
 #if 0
 // Un cratere.
 int16_t x, z;
@@ -1862,11 +1827,11 @@ map[align * (int32_t)z + x] = y;
 }
 }
 #endif
-STUB
+    STUB
 }
 
-void srf_darkline (uint8_t* map, int16_t length,
-        int16_t x_trend, int16_t z_trend, int32_t align) {
+void srf_darkline(uint8_t *map, int16_t length, int16_t x_trend,
+                  int16_t z_trend, int32_t align) {
 #if 0
 // Una crepa scura (versione principalmente per textures).
 int16_t fx = random(align), fz = random(align);
@@ -1886,11 +1851,11 @@ map[location] >>= 1;
 length--;
 }
 #endif
-STUB
+    STUB
 }
 
-void felisian_srf_darkline (uint8_t* map, int16_t length,
-        int16_t x_trend, int16_t z_trend, int32_t align) {
+void felisian_srf_darkline(uint8_t *map, int16_t length, int16_t x_trend,
+                           int16_t z_trend, int32_t align) {
 #if 0
 // Un crepaccio (versione principalmente per superfici).
 int16_t fx = random(align), fz = random(align);
@@ -1929,12 +1894,11 @@ map[location - align] = peak;
 length--;
 }
 #endif
-STUB
+    STUB
 }
 
-void asterism (uint8_t* map, int16_t x, int16_t y,
-int16_t base, int16_t variation, int16_t density,
-        int16_t size, int32_t align) {
+void asterism(uint8_t *map, int16_t x, int16_t y, int16_t base,
+              int16_t variation, int16_t density, int16_t size, int32_t align) {
 #if 0
 // Simile a un asterisco variabile. Viene usata per i ceppi d'erba.
 if (density <= 0) {
@@ -1974,12 +1938,12 @@ shift_d--;
 ang += ad;
 }
 #endif
-STUB
+    STUB
 }
 
 /* Funzioni per la mappatura dei cieli planetari. */
 
-void nebular_sky () {
+void nebular_sky() {
 #if 0
     // Cielo nebuloso, piuttosto alieno, con piccoli ammassi sparsi o striati.
     uint16_t pqw = QUADWORDS;
@@ -2014,7 +1978,7 @@ void nebular_sky () {
     STUB
 }
 
-void cloudy_sky (int16_t density, int16_t smooths) {
+void cloudy_sky(int16_t density, int16_t smooths) {
 #if 0
     // Cielo con nuvole sparse, di tipo terrestre.
     int16_t      n = random (density + albedo);
@@ -2071,7 +2035,7 @@ void cloudy_sky (int16_t density, int16_t smooths) {
     4 - edifici coloniali a forma di X (stile Feniano)
     5 - edifici coloniali con tetto a cupola (stile Suricrasiano) */
 
-int16_t average_of_y (int16_t ic, int16_t jc, int16_t ra) {
+int16_t average_of_y(int16_t ic, int16_t jc, int16_t ra) {
 #if 0
     int16_t av = 0;
     int16_t ai = 1;
@@ -2087,12 +2051,11 @@ int16_t average_of_y (int16_t ic, int16_t jc, int16_t ra) {
     av /= ai;
     return (av);
 #endif
-    STUB
-    return 0;
+    STUB return 0;
 }
 
-void make_ruins (int8_t style1, int8_t style2, int8_t style3,
-                 int8_t style4, int8_t style5, int16_t density) {
+void make_ruins(int8_t style1, int8_t style2, int8_t style3, int8_t style4,
+                int8_t style5, int16_t density) {
 #if 0
     int16_t buildings = 0;
 
@@ -2353,7 +2316,7 @@ void make_ruins (int8_t style1, int8_t style2, int8_t style3,
 /*  Funzione che costruisce la superficie del pianeta.
     Regolata dal seme global_surface_seed, per ottenere risultati coerenti. */
 
-void build_surface () {
+void build_surface() {
 #if 0
     int16_t cx, cz, cr, n, incl;
     float hf, hr, ht;
@@ -3349,7 +3312,7 @@ void build_surface () {
 /*  Funzione che definisce il cielo visto da un pianeta.
     Oltretutto, definisce anche: tavola colori, temperatura e pressione. */
 
-void create_sky (int8_t atmosphere) {
+void create_sky(int8_t atmosphere) {
 #if 0
     // filtri colorati di base.
     float br = (float)sky_red_filter / 64,
@@ -3824,7 +3787,7 @@ void create_sky (int8_t atmosphere) {
 
 /* Funzione che definisce le forme di vita proprie ai pianeti abitabili. */
 
-void setup_animals () {
+void setup_animals() {
 #if 0
     int16_t n, p, x;
     int16_t bird_probability;
@@ -3971,7 +3934,7 @@ void setup_animals () {
     dalla superficie (il parametro height) e dell'orientamento della normale
     alla superficie in quel punto. sp_x;y;z stanno per "stepping pos x;y;z" */
 
-void add_height (int32_t px, int32_t pz, float height) {
+void add_height(int32_t px, int32_t pz, float height) {
 #if 0
     int32_t cpos;
     float x[3], y[3], z[3];
@@ -4020,11 +3983,11 @@ float tiredness = 0;
 
 int8_t exitflag = 0; // flag: se settato al ritorno di planetary_main,
 // significa che c'� stato un quit sulla superficie.
-int8_t entryflag = 0;// flag: se settato all'ingresso di planetary_main,
+int8_t entryflag = 0; // flag: se settato all'ingresso di planetary_main,
 // significa che si sta recuperando la situazione
 // di superficie.
 
-void planetary_main () {
+void planetary_main() {
 #if 0
     const int16_t widesnappingangle = 71;
     uint16_t pqw = QUADWORDS;

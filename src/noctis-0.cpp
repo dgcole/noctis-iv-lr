@@ -40,15 +40,15 @@
 int16_t QUADWORDS = 16000;
 
 // Main video memory.
-uint8_t* adaptor;
+uint8_t *adaptor;
 // Back buffer.
-uint8_t* adapted;
+uint8_t *adapted;
 
-uint8_t     tmppal[768];
-int8_t      return_palette[768];
-int8_t      surface_palette[768];
+uint8_t tmppal[768];
+int8_t return_palette[768];
+int8_t surface_palette[768];
 
-int16_t lstri(int8_t* stri) {
+int16_t lstri(int8_t *stri) {
     // Measure a string and copy it to tmppal.
     // This is a support function for reach_your_dir()
     int16_t c;
@@ -65,29 +65,25 @@ int16_t lstri(int8_t* stri) {
     return (0);
 }
 
-void reach_your_dir () STUB
+void reach_your_dir() STUB
 
-// Initialize the 320x200x256 graphics mode.
-void _320_200_256 () STUB
+    // Initialize the 320x200x256 graphics mode.
+    void _320_200_256() STUB
 
-// Initialize the 80x25 text mode.
-void _80_25_C () STUB
+    // Initialize the 80x25 text mode.
+    void _80_25_C() STUB
 
-// Wait for a key?
-int16_t attendi_pressione_tasto () {
-    STUB
-    return 0;
+    // Wait for a key?
+    int16_t attendi_pressione_tasto() {
+    STUB return 0;
 }
 
 // Return 1 if there is a key press to be processed.
-int16_t tasto_premuto () {
-    STUB
-    return 0;
-}
+int16_t tasto_premuto() { STUB return 0; }
 
 uint8_t range8088[64 * 3] = {
     0,  0,  0,  1,  1,  1,  2,  2,  2,  3,  3,  3,  4,  4,  4,  5,  5,  5,
-    6,  6,  6,  7,  7,  7,  8,  8,  8,  9,  9,  9, 10, 10, 10, 11, 11, 11,
+    6,  6,  6,  7,  7,  7,  8,  8,  8,  9,  9,  9,  10, 10, 10, 11, 11, 11,
     12, 12, 12, 13, 13, 13, 14, 14, 14, 15, 15, 15, 16, 16, 16, 17, 17, 17,
     18, 18, 18, 19, 19, 19, 20, 20, 20, 21, 21, 21, 22, 22, 22, 23, 23, 23,
     24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 29, 29,
@@ -96,13 +92,12 @@ uint8_t range8088[64 * 3] = {
     42, 42, 42, 43, 43, 43, 44, 44, 44, 45, 45, 45, 46, 46, 46, 47, 47, 47,
     48, 48, 48, 49, 49, 49, 50, 50, 50, 51, 51, 51, 52, 52, 52, 53, 53, 53,
     54, 54, 54, 55, 55, 55, 56, 56, 56, 57, 57, 57, 58, 58, 58, 59, 59, 59,
-    60, 60, 60, 61, 61, 61, 62, 62, 62, 63, 63, 63
-};
+    60, 60, 60, 61, 61, 61, 62, 62, 62, 63, 63, 63};
 
 // This sets up the vga color palette.
-void tavola_colori (uint8_t* new_palette,
-                    uint16_t starting_color, uint16_t num_colors,
-                    int8_t red_filter, int8_t green_filter, int8_t blue_filter) {
+void tavola_colori(uint8_t *new_palette, uint16_t starting_color,
+                   uint16_t num_colors, int8_t red_filter, int8_t green_filter,
+                   int8_t blue_filter) {
     int16_t c, cc = 0;
     uint16_t temp;
     num_colors *= 3;
@@ -166,31 +161,30 @@ void tavola_colori (uint8_t* new_palette,
 int16_t mdltx = 0, mdlty = 0, mx = 0, my = 0, mpul = 0;
 
 // Read mouse input.
-void mouse_input () STUB
+void mouse_input() STUB
 
-// Check the presence of the mouse (or the support for it).
-// And initialize the driver (empty the movement buffer).
+    // Check the presence of the mouse (or the support for it).
+    // And initialize the driver (empty the movement buffer).
 
-int8_t test_and_init_mouse () {
-    STUB
-    return 1;
+    int8_t test_and_init_mouse() {
+    STUB return 1;
 }
 
 // Copies QUADWORDS * 4 bytes from the source to the destination.
-void pcopy (uint8_t* dest, uint8_t* source) {
+void pcopy(uint8_t *dest, uint8_t *source) {
     memcpy(dest, source, QUADWORDS * 4);
 }
 
 // Clears QUADWORDS * 4 bytes starting at the target.
-void pclear (uint8_t* target, uint8_t pattern) {
+void pclear(uint8_t *target, uint8_t pattern) {
     memset(target, pattern, QUADWORDS * 4);
 }
 
 // Clears a rectangular region of the video memory.
 // Either x2 & y2 OR l and h must be specified.
 // This may or may not work.
-void areaclear (uint8_t* dest, int16_t x, int16_t y,
-                int16_t x2, int16_t y2, int16_t l, int16_t h, uint8_t pattern) {
+void areaclear(uint8_t *dest, int16_t x, int16_t y, int16_t x2, int16_t y2,
+               int16_t l, int16_t h, uint8_t pattern) {
     if (l == 0 || h == 0) {
         l = x2 - x;
         h = y2 - y;
@@ -199,7 +193,7 @@ void areaclear (uint8_t* dest, int16_t x, int16_t y,
     for (int16_t xPos = x; xPos < x + l; xPos++) {
         for (int16_t yPos = y; yPos < y + h; yPos++) {
             uint16_t netIndex = (yPos * 320) + xPos;
-            dest[netIndex] = pattern;
+            dest[netIndex]    = pattern;
         }
     }
 }
@@ -225,10 +219,10 @@ void areaclear (uint8_t* dest, int16_t x, int16_t y,
 
 */
 
-void psmooth_grays(uint8_t* target) {
+void psmooth_grays(uint8_t *target) {
     uint16_t count = (QUADWORDS << 2) - (320 << 2);
-    int index = 0;
-    for (uint16_t i = 0; i < count ; i++, index++) {
+    int index      = 0;
+    for (uint16_t i = 0; i < count; i++, index++) {
         uint8_t smoothed;
         uint16_t col1, col2, col3, col4;
         uint32_t temp;
@@ -273,7 +267,7 @@ void psmooth_grays(uint8_t* target) {
 }
 
 // Produces the fading effect seen during vimana flight.
-void pfade (uint8_t* target, uint16_t segshift, uint8_t speed) {
+void pfade(uint8_t *target, uint16_t segshift, uint8_t speed) {
 #if 0
     // Don't know why count is set as it is.
     uint16_t count = (QUADWORDS - 80) << 2;
@@ -300,18 +294,19 @@ void pfade (uint8_t* target, uint16_t segshift, uint8_t speed) {
 }
 
 // Color version: 4 shades of 64 intensity each.
-void psmooth_64(uint8_t* target, uint16_t segshift) {
+void psmooth_64(uint8_t *target, uint16_t segshift) {
     // Who knows why this is offset as it is... Definitely not me.
     uint16_t count = (QUADWORDS - 80) << 2;
-    // We might need to align the shifted pointer to a 16 byte interval to match the former offset clearing. Sketchy.
-    uint8_t* shifted = (target + (segshift * 16));
+    // We might need to align the shifted pointer to a 16 byte interval to match
+    // the former offset clearing. Sketchy.
+    uint8_t *shifted = (target + (segshift * 16));
 
     for (uint16_t i = 0; i < count; i++) {
-        uint8_t alow = shifted[i + 320];
+        uint8_t alow  = shifted[i + 320];
         uint8_t ahigh = shifted[i + 321];
         uint8_t bhigh = shifted[i + 640];
-        uint8_t blow = shifted[i + 641];
-        uint8_t clow = alow;
+        uint8_t blow  = shifted[i + 641];
+        uint8_t clow  = alow;
         // Bitwise AND with 63 for some reason...
         ahigh &= 0x3F;
         alow &= 0x3F;
@@ -331,10 +326,9 @@ void psmooth_64(uint8_t* target, uint16_t segshift) {
     }
 }
 
-
 // Circular version of the smoothing process.
 // Used on the white corners on the hud and on planets.
-void smootharound_64(uint8_t* target, int32_t cx, int32_t cy, int32_t r,
+void smootharound_64(uint8_t *target, int32_t cx, int32_t cy, int32_t r,
                      int8_t diffuse) {
     int32_t x1 = cx - r, y1 = cy - r;
     int32_t x2 = cx + r, y2 = cy + r;
@@ -399,12 +393,12 @@ void smootharound_64(uint8_t* target, int32_t cx, int32_t cy, int32_t r,
                     colors[2] = colors[0];
                     colors[3] = colors[1];
 
-                    for (uint16_t i = 0; i < 4; i ++) {
+                    for (uint16_t i = 0; i < 4; i++) {
                         colors[i] |= colormasks[i];
                     }
 
-                    target[cp] = colors[0];
-                    target[cp + 1] = colors[1];
+                    target[cp]       = colors[0];
+                    target[cp + 1]   = colors[1];
                     target[cp + 320] = colors[2];
                     target[cp + 321] = colors[3];
                 }
@@ -451,11 +445,11 @@ void smootharound_64(uint8_t* target, int32_t cx, int32_t cy, int32_t r,
 }
 
 // Using 64 levels in 4 shades, bring the screen to a single gradient.
-void mask_pixels(uint8_t* target, uint8_t mask) {
+void mask_pixels(uint8_t *target, uint8_t mask) {
     uint8_t cap = 0x3F;
 
     // If QUADWORDS is not cast to a long here it overflows and the loop hangs.
-    for (uint32_t i = 0; i < ((uint32_t) QUADWORDS) * 4; i++) {
+    for (uint32_t i = 0; i < ((uint32_t)QUADWORDS) * 4; i++) {
         uint8_t color = target[i];
         color &= cap;
         color += mask;
@@ -469,143 +463,144 @@ void mask_pixels(uint8_t* target, uint8_t mask) {
 
 // Support files
 
-const char*   situation_file  = "data\\Current.BIN";
-const char*   starmap_file    = "data\\StarMap.BIN";
-const char*   goesoutputfile  = "data\\GOESfile.TXT";
-const char*   surface_file    = "data\\Surface.BIN";
-int16_t     sfh; // Surface situation file handle.
+const char *situation_file = "data\\Current.BIN";
+const char *starmap_file   = "data\\StarMap.BIN";
+const char *goesoutputfile = "data\\GOESfile.TXT";
+const char *surface_file   = "data\\Surface.BIN";
+int16_t sfh; // Surface situation file handle.
 
 // Global variables that are saved.
 
-int8_t   nsync               = 1;      // 0
-int8_t   anti_rad           = 1;          // 1
-int8_t   pl_search          = 0;          // 2
-int8_t   field_amplificator = 0;          // 3
-int8_t   ilight             = 63;         // 4
-int8_t   ilightv            = 1;          // 5
-int8_t   charge             = 3;          // 6
-int8_t   revcontrols        = 0;          // 7
-int8_t   ap_targetting      = 0;          // 8
-int8_t   ap_targetted       = 0;          // 9
-int8_t   ip_targetting      = 0;          // 10
-int8_t   ip_targetted       = -1;     // 11
-int8_t   ip_reaching        = 0;          // 12
-int8_t   ip_reached         = 0;          // 13
-int8_t   ap_target_spin     = 0;          // 14
-int8_t   ap_target_r        = 0;          // 15
-int8_t   ap_target_g        = 0;          // 16
-int8_t   ap_target_b        = 0;          // 17
-int8_t   nearstar_spin      = 0;          // 18
-int8_t   nearstar_r         = 0;          // 19
-int8_t   nearstar_g         = 0;          // 20
-int8_t   nearstar_b         = 0;          // 21
-int8_t   gburst             = 0;          // 22
-int8_t   menusalwayson      = 1;      // 23
-int8_t   depolarize     = 0;          // 24
-int16_t    sys                = 4;      // 25
-int16_t    pwr                = 20000;  // 27
-int16_t    dev_page           = 0;      // 29
-int16_t    ap_target_class    = 0;      // 31
-int16_t    f_ray_elapsed      = 0;      // 33
-int16_t    nearstar_class     = 0;      // 35
-int16_t    nearstar_nop       = 0;      // 37
-float  pos_x              = 0;      // 39
-float  pos_y              = 0;      // 43
-float  pos_z              = -500;   // 47
-float  user_alfa          = 0;      // 51
-float  user_beta          = 0;      // 55
-float  navigation_beta    = 0;      // 59
-float  ap_target_ray      = 1000;   // 63
-float  nearstar_ray       = 1000;   // 67
-double dzat_x             = +3797120;   // 71
-double dzat_y             = -4352112;   // 79
-double dzat_z             = -925018;    // 87
-double ap_target_x        = 0;      // 95
-double ap_target_y        = 1E8;    // 103
-double ap_target_z        = 0;      // 111
-double nearstar_x         = 0;      // 119
-double nearstar_y         = 1E8;    // 127
-double nearstar_z         = 0;      // 135
-double helptime           = 0;      // 143
-double ip_target_initial_d = 1E8;   // 151
-double requested_approach_coefficient = 1; // 159
-double current_approach_coefficient = 1;// 167
-double reaction_time      = 0.01;   // 175
-int8_t   fcs_status[11]     = "STANDBY";  // 183
-int16_t    fcs_status_delay   = 0;      // 194
-int16_t    psys               = 4;      // 196
-double ap_target_initial_d = 1E8;   // 198
-double requested_vimana_coefficient = 1;// 206
-double current_vimana_coefficient = 1;  // 214
-double vimana_reaction_time = 0.01; // 222
-int8_t   lithium_collector  = 0;      // 230
-int8_t   autoscreenoff      = 0;      // 231
-int8_t   ap_reached         = 0;      // 232
-int16_t    lifter         = 0;      // 233
-double secs       = 0;      // 235
-int8_t   data       = 0;      // 243
-int8_t   surlight       = 16;     // 244
+int8_t nsync                          = 1;         // 0
+int8_t anti_rad                       = 1;         // 1
+int8_t pl_search                      = 0;         // 2
+int8_t field_amplificator             = 0;         // 3
+int8_t ilight                         = 63;        // 4
+int8_t ilightv                        = 1;         // 5
+int8_t charge                         = 3;         // 6
+int8_t revcontrols                    = 0;         // 7
+int8_t ap_targetting                  = 0;         // 8
+int8_t ap_targetted                   = 0;         // 9
+int8_t ip_targetting                  = 0;         // 10
+int8_t ip_targetted                   = -1;        // 11
+int8_t ip_reaching                    = 0;         // 12
+int8_t ip_reached                     = 0;         // 13
+int8_t ap_target_spin                 = 0;         // 14
+int8_t ap_target_r                    = 0;         // 15
+int8_t ap_target_g                    = 0;         // 16
+int8_t ap_target_b                    = 0;         // 17
+int8_t nearstar_spin                  = 0;         // 18
+int8_t nearstar_r                     = 0;         // 19
+int8_t nearstar_g                     = 0;         // 20
+int8_t nearstar_b                     = 0;         // 21
+int8_t gburst                         = 0;         // 22
+int8_t menusalwayson                  = 1;         // 23
+int8_t depolarize                     = 0;         // 24
+int16_t sys                           = 4;         // 25
+int16_t pwr                           = 20000;     // 27
+int16_t dev_page                      = 0;         // 29
+int16_t ap_target_class               = 0;         // 31
+int16_t f_ray_elapsed                 = 0;         // 33
+int16_t nearstar_class                = 0;         // 35
+int16_t nearstar_nop                  = 0;         // 37
+float pos_x                           = 0;         // 39
+float pos_y                           = 0;         // 43
+float pos_z                           = -500;      // 47
+float user_alfa                       = 0;         // 51
+float user_beta                       = 0;         // 55
+float navigation_beta                 = 0;         // 59
+float ap_target_ray                   = 1000;      // 63
+float nearstar_ray                    = 1000;      // 67
+double dzat_x                         = +3797120;  // 71
+double dzat_y                         = -4352112;  // 79
+double dzat_z                         = -925018;   // 87
+double ap_target_x                    = 0;         // 95
+double ap_target_y                    = 1E8;       // 103
+double ap_target_z                    = 0;         // 111
+double nearstar_x                     = 0;         // 119
+double nearstar_y                     = 1E8;       // 127
+double nearstar_z                     = 0;         // 135
+double helptime                       = 0;         // 143
+double ip_target_initial_d            = 1E8;       // 151
+double requested_approach_coefficient = 1;         // 159
+double current_approach_coefficient   = 1;         // 167
+double reaction_time                  = 0.01;      // 175
+int8_t fcs_status[11]                 = "STANDBY"; // 183
+int16_t fcs_status_delay              = 0;         // 194
+int16_t psys                          = 4;         // 196
+double ap_target_initial_d            = 1E8;       // 198
+double requested_vimana_coefficient   = 1;         // 206
+double current_vimana_coefficient     = 1;         // 214
+double vimana_reaction_time           = 0.01;      // 222
+int8_t lithium_collector              = 0;         // 230
+int8_t autoscreenoff                  = 0;         // 231
+int8_t ap_reached                     = 0;         // 232
+int16_t lifter                        = 0;         // 233
+double secs                           = 0;         // 235
+int8_t data                           = 0;         // 243
+int8_t surlight                       = 16;        // 244
 
 // Surface landing control data.
 
-int8_t   land_now       = 0;
-int8_t   landing_point      = 0;
-int16_t    landing_pt_lon     = 0;
-int16_t    landing_pt_lat     = 60;
+int8_t land_now        = 0;
+int8_t landing_point   = 0;
+int16_t landing_pt_lon = 0;
+int16_t landing_pt_lat = 60;
 
-int16_t     crepzone;
-int16_t     nightzone;
+int16_t crepzone;
+int16_t nightzone;
 int16_t sun_x_factor;
 
 // Global data that isn't saved.
-int16_t  epoc = 6011;
+int16_t epoc = 6011;
 
-int8_t        ctb[512];
-int8_t        dec[20];
+int8_t ctb[512];
+int8_t dec[20];
 
-int8_t        _delay          = 12;
-int8_t        stspeed         = 0;
-int8_t        bright;
-int8_t        elight          = 0;
-uint16_t    gl_start        = 0;
-uint16_t    point;
-uint16_t    vptr;
-int16_t         infoarea        = 0;
-int16_t         s_control       = 1;
-int16_t         s_command       = 0;
-int16_t         isecs, p_isecs;
-double      fsecs;
-int16_t         gl_fps          = 1;
-int16_t         fps             = 1;
-float       dlt_alfa        = 0;
-float       dlt_beta        = 0;
-float       dlt_nav_beta    = 0;
-float       step            = 0;
-float       shift           = 0;
-double      s_m             = 1000;
-double      plx, ply, plz;
-double      pxx, pyy;
-double      delta_x, delta_y;
-double      nearstar_identity;
-int16_t         nearstar_labeled;
-int16_t         nearstar_nob    = 0;
-int16_t         npcs, resident_map1, resident_map2;
-int8_t        ontheroof;
-int16_t         datasheetscroll = 0;
-int16_t         datasheetdelta  = 0;
+int8_t _delay  = 12;
+int8_t stspeed = 0;
+int8_t bright;
+int8_t elight     = 0;
+uint16_t gl_start = 0;
+uint16_t point;
+uint16_t vptr;
+int16_t infoarea  = 0;
+int16_t s_control = 1;
+int16_t s_command = 0;
+int16_t isecs, p_isecs;
+double fsecs;
+int16_t gl_fps     = 1;
+int16_t fps        = 1;
+float dlt_alfa     = 0;
+float dlt_beta     = 0;
+float dlt_nav_beta = 0;
+float step         = 0;
+float shift        = 0;
+double s_m         = 1000;
+double plx, ply, plz;
+double pxx, pyy;
+double delta_x, delta_y;
+double nearstar_identity;
+int16_t nearstar_labeled;
+int16_t nearstar_nob = 0;
+int16_t npcs, resident_map1, resident_map2;
+int8_t ontheroof;
+int16_t datasheetscroll = 0;
+int16_t datasheetdelta  = 0;
 
 // Constant data in the global segment.
 
 // Some ordinals (from 0 to 20) for certain representations.
-const char* ord[21] = { "zeroth", "first", "second", "third", "fourth", "fifth",
-                    "sixth", "seventh", "eight", "nineth", "tenth", "eleventh",
-                    "twelveth", "thiteenth", "fourteenth",
-                    "fifteenth", "sixteenth", "seventeenth",
-                    "eighteenth", "nineteenth", "twentyth"
-                  };
+const char *ord[21] = {"zeroth",    "first",       "second",     "third",
+                       "fourth",    "fifth",       "sixth",      "seventh",
+                       "eight",     "nineth",      "tenth",      "eleventh",
+                       "twelveth",  "thiteenth",   "fourteenth", "fifteenth",
+                       "sixteenth", "seventeenth", "eighteenth", "nineteenth",
+                       "twentyth"};
 
-const char* star_description[star_classes] = {
-    "medium size, yellow star, suitable for planets having indigenous lifeforms.",
+const char *star_description[star_classes] = {
+    "medium size, yellow star, suitable for planets having indigenous "
+    "lifeforms.",
     "very large, blue giant star, high energy radiations around.",
     "white dwarf star, possible harmful radiations.",
     "very large, ancient, red giant star.",
@@ -616,77 +611,43 @@ const char* star_description[star_classes] = {
     "possible MULTIPLE system - planets spread over wide ranges.",
     "medium size, surrounded by gas clouds, young star.",
     "very large and ancient runaway star, unsuitable for planets.",
-    "tiny pulsar object, unsafe, high radiation, strong gravity."
-};
+    "tiny pulsar object, unsafe, high radiation, strong gravity."};
 
 int8_t class_rgb[3 * star_classes] = {
-    63, 58, 40,
-    30, 50, 63,
-    63, 63, 63,
-    63, 30, 20,
-    63, 55, 32,
-    32, 16, 10,
-    32, 28, 24,
-    10, 20, 63,
-    63, 32, 16,
-    48, 32, 63,
-    40, 10, 10,
-    00, 63, 63
-};
+    63, 58, 40, 30, 50, 63, 63, 63, 63, 63, 30, 20, 63, 55, 32, 32, 16, 10,
+    32, 28, 24, 10, 20, 63, 63, 32, 16, 48, 32, 63, 40, 10, 10, 00, 63, 63};
 
-int16_t class_ray[star_classes] = {
-    5000, 15000,
-    300, 20000,
-    15000, 1000,
-    3000, 2000,
-    4000, 1500,
-    30000, 250
-};
+int16_t class_ray[star_classes] = {5000, 15000, 300,  20000, 15000, 1000,
+                                   3000, 2000,  4000, 1500,  30000, 250};
 
-int16_t class_rayvar[star_classes] = {
-    2000, 10000,
-    200, 15000,
-    5000, 1000,
-    3000, 500,
-    5000, 10000,
-    1000, 10
-};
+int16_t class_rayvar[star_classes] = {2000, 10000, 200,  15000, 5000, 1000,
+                                      3000, 500,   5000, 10000, 1000, 10};
 
-int16_t class_act[star_classes] = {
-    2, 4, 1,
-    6, 5, 10,
-    100, 1, 2,
-    1, 10, 1
-};
+int16_t class_act[star_classes] = {2, 4, 1, 6, 5, 10, 100, 1, 2, 1, 10, 1};
 
-int8_t class_planets[star_classes] = {
-    12, 18, 8,
-    15, 20, 3,
-    0, 1, 7,
-    20, 2, 5
-};
+int8_t class_planets[star_classes] = {12, 18, 8, 15, 20, 3, 0, 1, 7, 20, 2, 5};
 
-int8_t   nearstar_p_type       [maxbodies];
-int16_t    nearstar_p_owner      [maxbodies];
-int8_t   nearstar_p_moonid     [maxbodies];
-double nearstar_p_ring       [maxbodies];
-double nearstar_p_tilt       [maxbodies];
-double nearstar_p_ray        [maxbodies];
-double nearstar_p_orb_ray    [maxbodies];
-double nearstar_p_orb_seed   [maxbodies];
-double nearstar_p_orb_tilt   [maxbodies];
-double nearstar_p_orb_orient [maxbodies];
-double nearstar_p_orb_ecc    [maxbodies];
+int8_t nearstar_p_type[maxbodies];
+int16_t nearstar_p_owner[maxbodies];
+int8_t nearstar_p_moonid[maxbodies];
+double nearstar_p_ring[maxbodies];
+double nearstar_p_tilt[maxbodies];
+double nearstar_p_ray[maxbodies];
+double nearstar_p_orb_ray[maxbodies];
+double nearstar_p_orb_seed[maxbodies];
+double nearstar_p_orb_tilt[maxbodies];
+double nearstar_p_orb_orient[maxbodies];
+double nearstar_p_orb_ecc[maxbodies];
 
-int16_t    nearstar_p_rtperiod   [maxbodies];
-int16_t    nearstar_p_rotation   [maxbodies];
-int16_t    nearstar_p_term_start [maxbodies];
-int16_t    nearstar_p_term_end   [maxbodies];
+int16_t nearstar_p_rtperiod[maxbodies];
+int16_t nearstar_p_rotation[maxbodies];
+int16_t nearstar_p_term_start[maxbodies];
+int16_t nearstar_p_term_end[maxbodies];
 
-int16_t    nearstar_p_qsortindex [maxbodies];
-float  nearstar_p_qsortdist  [maxbodies];
+int16_t nearstar_p_qsortindex[maxbodies];
+float nearstar_p_qsortdist[maxbodies];
 
-const char* planet_description[] = {
+const char *planet_description[] = {
     "medium size, internally hot, unstable surface, no atmosphere.",
     "small, solid, dusty, craterized, no atmosphere.",
     "medium size, solid, thick atmosphere, fully covered by clouds.",
@@ -697,57 +658,35 @@ const char* planet_description[] = {
     "small, solid, icy surface, no atmosphere.",
     "medium size, surface is mainly native quartz, oxygen atmosphere.",
     "very large, substellar object, not consistent.",
-    "companion star - not a planet"
-};
+    "companion star - not a planet"};
 
-uint8_t planet_rgb_and_var[] = {
-    60, 30, 15, 20,
-    40, 50, 40, 25,
-    32, 32, 32, 32,
-    16, 32, 48, 40,
-    32, 40, 32, 20,
-    32, 32, 32, 32,
-    32, 32, 32, 32,
-    32, 40, 48, 24,
-    40, 40, 40, 30,
-    50, 25, 10, 20,
-    40, 40, 40, 40
-};
+uint8_t planet_rgb_and_var[] = {60, 30, 15, 20, 40, 50, 40, 25, 32, 32, 32,
+                                32, 16, 32, 48, 40, 32, 40, 32, 20, 32, 32,
+                                32, 32, 32, 32, 32, 32, 32, 40, 48, 24, 40,
+                                40, 40, 30, 50, 25, 10, 20, 40, 40, 40, 40};
 
-int16_t planet_possiblemoons[] = {
-    1, 1,
-    2, 3,
-    2, 2,
-    18, 2,
-    3, 20,
-    20
-};
+int16_t planet_possiblemoons[] = {1, 1, 2, 3, 2, 2, 18, 2, 3, 20, 20};
 
 const double planet_orb_scaling = 5.0;
 const double avg_planet_sizing  = 2.4;
 const double moon_orb_scaling   = 12.8;
 const double avg_moon_sizing    = 1.8;
 
-double avg_planet_ray[] = {
-    0.007, 0.003, 0.010,
-    0.011, 0.010, 0.008,
-    0.064, 0.009, 0.012,
-    0.125, 5.000
-};
+double avg_planet_ray[] = {0.007, 0.003, 0.010, 0.011, 0.010, 0.008,
+                           0.064, 0.009, 0.012, 0.125, 5.000};
 
 float mindiff = 0.01;
 
-
 // Physical and logical video matrices, cartography, and other memory blocks.
 
-uint8_t*    s_background;
-uint8_t*    p_background;
-uint8_t*    p_surfacemap;
-quadrant*   objectschart;
-uint8_t*    ruinschart; // As objectschart, but declared in bytes.
-uint8_t*    pvfile;
-uint8_t*    n_offsets_map;
-int8_t*     n_globes_map;
+uint8_t *s_background;
+uint8_t *p_background;
+uint8_t *p_surfacemap;
+quadrant *objectschart;
+uint8_t *ruinschart; // As objectschart, but declared in bytes.
+uint8_t *pvfile;
+uint8_t *n_offsets_map;
+int8_t *n_globes_map;
 
 // Planetary surface adjustment data.
 
@@ -758,26 +697,25 @@ int8_t gnd_red_filter = 63; // Filters for the ground.
 int8_t gnd_grn_filter = 63;
 int8_t gnd_blu_filter = 63;
 
-float planet_grav   = 150; // Corresponds to the planetary gravity.
-float rainy         = 0; // Raininess, based on cloud albedo. [0,5]
-int16_t   albedo        = 0; // Albedo average of the landing surface. [0,62]
+float planet_grav = 150; // Corresponds to the planetary gravity.
+float rainy       = 0;   // Raininess, based on cloud albedo. [0,5]
+int16_t albedo    = 0;   // Albedo average of the landing surface. [0,62]
 
 uint8_t sky_brightness = 32; // Sky luminosity. [0,48]
 uint8_t horiz_brt      = 20; // Brightness of the low horizon. [0,48]
 
 uint16_t m200[200]; // Numbers from 0 to 199, multipled by 200 (Lookup table)
 
-float   rwp        = 15; // Required wind power (in knots).
-float   iwp        = 0; // Ideal wind power (from 0 to 1).
-float   wp         = 0; // Current wind power.
-float   wdir       = 0; // Wind origin direction.
-float   wdirsin    = 0; // Optimization value.
-float   wdircos    = 1; // Optimization value.
+float rwp     = 15; // Required wind power (in knots).
+float iwp     = 0;  // Ideal wind power (from 0 to 1).
+float wp      = 0;  // Current wind power.
+float wdir    = 0;  // Wind origin direction.
+float wdirsin = 0;  // Optimization value.
+float wdircos = 1;  // Optimization value.
 
-int8_t    landed; // Flag set at the time of landing.
+int8_t landed; // Flag set at the time of landing.
 // Coded position quotiento of the lander (quotient:remainder).
-int32_t    atl_x, atl_z,
-           atl_x2, atl_z2;
+int32_t atl_x, atl_z, atl_x2, atl_z2;
 
 double qid = 1.0 / 16384; // Constant to find the x / z id of a quadrant.
 
@@ -788,20 +726,24 @@ double qid = 1.0 / 16384; // Constant to find the x / z id of a quadrant.
 uint32_t pvfile_datatop = 0; // Top of the data.
 
 // Note: dataptr is a relative pointer that can go from 0 to "pvbytes".
-uint16_t    pvfile_dataptr[handles] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-uint16_t    pvfile_datalen[handles] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-uint16_t    pvfile_npolygs[handles] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+uint16_t pvfile_dataptr[handles] = {0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0};
+uint16_t pvfile_datalen[handles] = {0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0};
+uint16_t pvfile_npolygs[handles] = {0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0};
 
-int8_t* pv_n_vtx[handles]; // Number of vertices for each polygon (3 or 4).
-float* pvfile_x[handles]; // X coordinate (four vertices) of each polygon.
-float* pvfile_y[handles]; // Y coordinate (four vertices) of each polygon.
-float* pvfile_z[handles]; // Z coordinate (four vertices) of each polygon.
-int8_t* pvfile_c[handles]; // Intensity of the color of each polygon (0 to 63).
-float* pv_mid_x[handles]; // X coordinate of the midpoint of each polygon.
-float* pv_mid_y[handles]; // Y coordinate of the midpoint of each polygon.
-float* pv_mid_z[handles]; // Z coordinate of the midpoint of each polygon.
-float* pv_mid_d[handles]; // Buffer distance of average points from the observer.
-int16_t* pv_dep_i[handles]; // Distance index (sorting of polygons).
+int8_t *pv_n_vtx[handles]; // Number of vertices for each polygon (3 or 4).
+float *pvfile_x[handles];  // X coordinate (four vertices) of each polygon.
+float *pvfile_y[handles];  // Y coordinate (four vertices) of each polygon.
+float *pvfile_z[handles];  // Z coordinate (four vertices) of each polygon.
+int8_t *pvfile_c[handles]; // Intensity of the color of each polygon (0 to 63).
+float *pv_mid_x[handles];  // X coordinate of the midpoint of each polygon.
+float *pv_mid_y[handles];  // Y coordinate of the midpoint of each polygon.
+float *pv_mid_z[handles];  // Z coordinate of the midpoint of each polygon.
+float
+    *pv_mid_d[handles]; // Buffer distance of average points from the observer.
+int16_t *pv_dep_i[handles]; // Distance index (sorting of polygons).
 
 // Pseudo-random number generation procedures.
 
@@ -809,19 +751,17 @@ int32_t flat_rnd_seed;
 
 // Pseudo table selection.
 // There are 4,294,967,295 possible tables, and about 20000 elements per table.
-void fast_srand (int32_t seed) {
-    flat_rnd_seed = seed | 3;
-}
+void fast_srand(int32_t seed) { flat_rnd_seed = seed | 3; }
 
 // Extraction of a number: "mask" activates the bits.
 // This is very sketchy!
-int32_t fast_random (int32_t mask) {
+int32_t fast_random(int32_t mask) {
     auto eax = static_cast<uint32_t>(flat_rnd_seed);
     auto edx = static_cast<uint32_t>(flat_rnd_seed);
 
     uint64_t result = eax * edx;
-    edx = static_cast<uint32_t>(result >> 32);
-    eax = static_cast<uint32_t>(result & 0xFFFFFFFF);
+    edx             = static_cast<uint32_t>(result >> 32);
+    eax             = static_cast<uint32_t>(result & 0xFFFFFFFF);
     eax += (edx >> 24);
 
     flat_rnd_seed += eax;
@@ -829,7 +769,7 @@ int32_t fast_random (int32_t mask) {
     return eax & mask;
 }
 
-int16_t ranged_fast_random (int16_t range) {
+int16_t ranged_fast_random(int16_t range) {
     if (range <= 0) {
         range = 1;
     }
@@ -837,42 +777,39 @@ int16_t ranged_fast_random (int16_t range) {
     return (fast_random(0x7FFF) % range);
 }
 
-float flandom () {
+float flandom() {
 #if 0
     return ((float) random(32767) * 0.000030518);
 #endif
     FIXME
 }
 
-float fast_flandom () {
-    return ((float) fast_random(32767) * 0.000030518);
-}
+float fast_flandom() { return ((float)fast_random(32767) * 0.000030518); }
 
 // Loads virtual file handles from supports.nct
 int32_t sa_open(int32_t offset_of_virtual_file) {
     int32_t fh;
-    fh = open ("res/supports.nct", 0);
+    fh = open("res/supports.nct", 0);
 
     if (fh == -1) {
         return (-1);
     }
 
-    if (lseek (fh, offset_of_virtual_file, SEEK_END) > -1) {
+    if (lseek(fh, offset_of_virtual_file, SEEK_END) > -1) {
         return (fh);
     } else {
-        close (fh);
+        close(fh);
         return (-1);
     }
 }
 
 // Defines a part of the color table so that a gradual gradient goes from one
 // color to another, within a certain number of intermediate colors.
-void shade (uint8_t* palette_buffer,
-            int16_t first_color, int16_t number_of_colors,
-            float start_r,  float start_g,  float start_b,
-            float finish_r, float finish_g, float finish_b) {
-    int16_t   count = number_of_colors;
-    float k = 1.00 / (float)number_of_colors;
+void shade(uint8_t *palette_buffer, int16_t first_color,
+           int16_t number_of_colors, float start_r, float start_g,
+           float start_b, float finish_r, float finish_g, float finish_b) {
+    int16_t count = number_of_colors;
+    float k       = 1.00 / (float)number_of_colors;
     float delta_r = (finish_r - start_r) * k;
     float delta_g = (finish_g - start_g) * k;
     float delta_b = (finish_b - start_b) * k;
@@ -921,46 +858,46 @@ void shade (uint8_t* palette_buffer,
 // Display control
 
 // Sets the 3d projection from a still viewpoint.
-void from_vehicle () {
+void from_vehicle() {
     cam_x = dzat_x;
     cam_y = dzat_y;
     cam_z = dzat_z;
-    alfa = user_alfa;
-    beta = user_beta + navigation_beta + 180;
+    alfa  = user_alfa;
+    beta  = user_beta + navigation_beta + 180;
 
     if (beta >= 360) {
         beta -= 360;
     }
 
-    change_angle_of_view ();
+    change_angle_of_view();
 }
 
 // Sets the 3d projection from the user's point of view.
-void from_user () {
+void from_user() {
     cam_x = pos_x;
     cam_y = pos_y;
     cam_z = pos_z;
-    alfa = user_alfa;
-    beta = user_beta;
-    change_angle_of_view ();
+    alfa  = user_alfa;
+    beta  = user_beta;
+    change_angle_of_view();
 }
 
 // Orients the virtual video camera to a certain point given by see_x;y;z,
 // fractalizing the lap corner to do it more quickly.
-void watch (double cam_x, double cam_y, double cam_z,
-            double see_x, double see_y, double see_z) {
+void watch(double cam_x, double cam_y, double cam_z, double see_x, double see_y,
+           double see_z) {
     double rx, ry, rz, w, ww, k, q, f1, f2, f3;
     double sinbeta, cosbeta, cosalfa;
-    rx     = cam_x - see_x;
-    ry     = cam_y - see_y;
-    rz     = cam_z - see_z;
-    w      = sqrt (rx * rx + ry * ry + rz * rz);
+    rx = cam_x - see_x;
+    ry = cam_y - see_y;
+    rz = cam_z - see_z;
+    w  = sqrt(rx * rx + ry * ry + rz * rz);
     see_x -= cam_x;
     see_y -= cam_y;
     see_z -= cam_z;
-    f1     = 0;
-    f2     = 0;
-    f3     = 2 * M_PI;
+    f1 = 0;
+    f2 = 0;
+    f3 = 2 * M_PI;
 
     while (f3 > 0.02) {
         q       = 1e+111;
@@ -969,31 +906,31 @@ void watch (double cam_x, double cam_y, double cam_z,
         cosbeta = cos(beta);
 
         for (alfa = f2 - f3; alfa < f2 + f3; alfa += ww) {
-            rx  = - w * sinbeta * cos(alfa) - see_x;
-            ry  = + w * sin(alfa)           - see_y;
-            rz  = + w * cosbeta * cos(alfa) - see_z;
-            k   = rx * rx + ry * ry + rz * rz;
+            rx = -w * sinbeta * cos(alfa) - see_x;
+            ry = +w * sin(alfa) - see_y;
+            rz = +w * cosbeta * cos(alfa) - see_z;
+            k  = rx * rx + ry * ry + rz * rz;
 
             if (k < q) {
-                q = k;
+                q  = k;
                 f2 = alfa;
             }
         }
 
-        alfa    = f2;
-        ry      = w * sin(alfa) - see_y;
-        ry     *= ry;
+        alfa = f2;
+        ry   = w * sin(alfa) - see_y;
+        ry *= ry;
         cosalfa = cos(alfa);
         q       = 1e+111;
         ww      = f3 / 10;
 
         for (beta = f1 - f3; beta < f1 + f3; beta += ww) {
-            rx  = - w * sin(beta) * cosalfa - see_x;
-            rz  = + w * cos(beta) * cosalfa - see_z;
-            k   = rx * rx + ry + rz * rz;
+            rx = -w * sin(beta) * cosalfa - see_x;
+            rz = +w * cos(beta) * cosalfa - see_z;
+            k  = rx * rx + ry + rz * rz;
 
             if (k < q) {
-                q = k;
+                q  = k;
                 f1 = beta;
             }
         }
@@ -1008,12 +945,12 @@ void watch (double cam_x, double cam_y, double cam_z,
 
 // Calculates the x-y offset from the center of the display by the point given
 // by point_x;y;z, returns the values in delta_x;y.
-int8_t xy (double cam_x, double cam_y, double cam_z,
-           double point_x, double point_y, double point_z) {
+int8_t xy(double cam_x, double cam_y, double cam_z, double point_x,
+          double point_y, double point_z) {
     double xx, yy, zz, z2, rz;
-    xx = point_x - cam_x;
-    yy = point_y - cam_y;
-    zz = point_z - cam_z;
+    xx      = point_x - cam_x;
+    yy      = point_y - cam_y;
+    zz      = point_z - cam_z;
     delta_x = xx * opt_pcosbeta + zz * opt_psinbeta;
     z2      = zz * opt_tcosbeta - xx * opt_tsinbeta;
     rz      = z2 * opt_tcosalfa + yy * opt_tsinalfa;
@@ -1029,7 +966,7 @@ int8_t xy (double cam_x, double cam_y, double cam_z,
 }
 
 // Move the user around inside the stardrifter.
-void p_Forward (float delta) {
+void p_Forward(float delta) {
     pos_x -= delta * opt_tsinbeta * opt_tcosalfa;
     pos_z += delta * opt_tcosbeta * opt_tcosalfa;
 }
@@ -1038,52 +975,52 @@ void p_Forward (float delta) {
 // neighbouring one) based on orbital parameters (inclination, eccentricity,
 // radius and orientation of major axis), and returns i values in plx, ply, plz.
 double mox, moy, moz;
-void   moonorigin (int16_t n) {
+void moonorigin(int16_t n) {
     double xx;
     double p_riv, ors;
     double alfa, beta;
-    ors = nearstar_p_orb_ray[n] * nearstar_p_orb_ray[n];
-    p_riv = sqrt (s_m / ors);
-    beta = (secs * p_riv * M_PI) / 180;
-    alfa = nearstar_p_orb_tilt[n] * deg;
-    xx  = -nearstar_p_orb_ray[n] * sin(beta) * cos(alfa);
-    moz =  nearstar_p_orb_ray[n] * cos(beta) * cos(alfa);
-    moy =  nearstar_p_orb_ray[n] * sin(alfa);
+    ors   = nearstar_p_orb_ray[n] * nearstar_p_orb_ray[n];
+    p_riv = sqrt(s_m / ors);
+    beta  = (secs * p_riv * M_PI) / 180;
+    alfa  = nearstar_p_orb_tilt[n] * deg;
+    xx    = -nearstar_p_orb_ray[n] * sin(beta) * cos(alfa);
+    moz   = nearstar_p_orb_ray[n] * cos(beta) * cos(alfa);
+    moy   = nearstar_p_orb_ray[n] * sin(alfa);
     moz *= nearstar_p_orb_ecc[n];
     beta = nearstar_p_orb_orient[n];
-    mox = xx * cos(beta) + moz * sin(beta);
-    moz = moz * cos(beta) - xx * sin(beta);
+    mox  = xx * cos(beta) + moz * sin(beta);
+    moz  = moz * cos(beta) - xx * sin(beta);
 }
 
-void planet_xyz (int16_t n) {
+void planet_xyz(int16_t n) {
     double xx;
     double alfa, beta;
     double p_m, p_riv, ors;
     ors = nearstar_p_orb_ray[n] * nearstar_p_orb_ray[n];
 
     if (nearstar_p_owner[n] > -1) {
-        xx = nearstar_p_ray[nearstar_p_owner[n]];
-        p_m = qt_M_PI * xx * xx * xx * 0.44e-4;
-        p_riv = sqrt (p_m / ors);
+        xx    = nearstar_p_ray[nearstar_p_owner[n]];
+        p_m   = qt_M_PI * xx * xx * xx * 0.44e-4;
+        p_riv = sqrt(p_m / ors);
     } else {
-        p_riv = sqrt (s_m / ors);
+        p_riv = sqrt(s_m / ors);
     }
 
     beta = (secs * p_riv * M_PI) / 180;
     alfa = nearstar_p_orb_tilt[n] * deg;
-    xx  = -nearstar_p_orb_ray[n] * sin(beta) * cos(alfa);
-    plz =  nearstar_p_orb_ray[n] * cos(beta) * cos(alfa);
-    ply =  nearstar_p_orb_ray[n] * sin(alfa);
+    xx   = -nearstar_p_orb_ray[n] * sin(beta) * cos(alfa);
+    plz  = nearstar_p_orb_ray[n] * cos(beta) * cos(alfa);
+    ply  = nearstar_p_orb_ray[n] * sin(alfa);
     plz *= nearstar_p_orb_ecc[n];
     beta = nearstar_p_orb_orient[n];
-    plx = xx * cos(beta) + plz * sin(beta);
-    plz = plz * cos(beta) - xx * sin(beta);
+    plx  = xx * cos(beta) + plz * sin(beta);
+    plz  = plz * cos(beta) - xx * sin(beta);
     plx += nearstar_x;
     ply += nearstar_y;
     plz += nearstar_z;
 
     if (nearstar_p_owner[n] > -1) {
-        moonorigin (nearstar_p_owner[n]);
+        moonorigin(nearstar_p_owner[n]);
         plx += mox;
         ply += moy;
         plz += moz;
@@ -1094,16 +1031,16 @@ void planet_xyz (int16_t n) {
 // For planets: Around the star.
 // For moons: Around the planet.
 // .01e-7 is the equivalent, in the virtual cosmos of Noctis.
-float rtp (int16_t n) {
+float rtp(int16_t n) {
     double p_m, p_riv, ors, xx;
     ors = nearstar_p_orb_ray[n] * nearstar_p_orb_ray[n];
 
     if (nearstar_p_owner[n] > -1) {
-        xx = nearstar_p_ray[nearstar_p_owner[n]];
-        p_m = qt_M_PI * xx * xx * xx * 0.44e-4;
-        p_riv = sqrt (p_m / ors);
+        xx    = nearstar_p_ray[nearstar_p_owner[n]];
+        p_m   = qt_M_PI * xx * xx * xx * 0.44e-4;
+        p_riv = sqrt(p_m / ors);
     } else {
-        p_riv = sqrt (s_m / ors);
+        p_riv = sqrt(s_m / ors);
     }
 
     return (360 / p_riv);
@@ -1112,7 +1049,7 @@ float rtp (int16_t n) {
 // Calculates the longitude of the point on a planet that the user is looking
 // at, given by (plx, ply, plz). The observed is placed at (obs_x, obs_z),
 // its y is irrelevant.
-int16_t planet_viewpoint (double obs_x, double obs_z) {
+int16_t planet_viewpoint(double obs_x, double obs_z) {
     uint16_t a;
     int16_t plwp = 0;
     double xx;
@@ -1126,53 +1063,49 @@ int16_t planet_viewpoint (double obs_x, double obs_z) {
 
         if (xx < min) {
             plwp = a;
-            min = xx;
+            min  = xx;
         }
     }
 
     return (plwp);
 }
 
-int16_t cplx_planet_viewpoint (int16_t logical_id) {
+int16_t cplx_planet_viewpoint(int16_t logical_id) {
     int16_t owner;
     double ownerplx;
     double ownerplz;
 
     if (nearstar_p_owner[logical_id] == -1) {
-        return (planet_viewpoint (nearstar_x, nearstar_z));
+        return (planet_viewpoint(nearstar_x, nearstar_z));
     }
 
     owner = nearstar_p_owner[logical_id];
 
     if (nearstar_p_type[owner] == 10) {
-        planet_xyz (owner);
+        planet_xyz(owner);
         ownerplx = plx;
         ownerplz = plz;
-        planet_xyz (logical_id);
-        return (planet_viewpoint (ownerplx, ownerplz));
+        planet_xyz(logical_id);
+        return (planet_viewpoint(ownerplx, ownerplz));
     } else {
-        return (planet_viewpoint (nearstar_x, nearstar_z));
+        return (planet_viewpoint(nearstar_x, nearstar_z));
     }
 }
 
 // Effect selection via "flares" control variable.
 
 int8_t previous_flares_value = 0;
-void setfx (int8_t fx) {
+void setfx(int8_t fx) {
     previous_flares_value = flares;
-    flares = fx;
+    flares                = fx;
 }
 
-void chgfx (int8_t fx) {
-    flares = fx;
-}
+void chgfx(int8_t fx) { flares = fx; }
 
-void resetfx ()  {
-    flares = previous_flares_value;
-}
+void resetfx() { flares = previous_flares_value; }
 
 // Tracing sticks (2D).
-void stick (uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
+void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
     int32_t a, b, L;
     uint16_t pi, pf;
 
@@ -1391,9 +1324,8 @@ int32_t fpy;      // First-point-y
 float p_rx, p_ry, p_rz;
 float stick_uneg = 200;
 
-void stick3d (float p_x, float p_y, float p_z,
-              float x, float y, float z) {
-    int32_t  lx, ly;
+void stick3d(float p_x, float p_y, float p_z, float x, float y, float z) {
+    int32_t lx, ly;
     float p_z2, diff;
     float rx, ry, rz, z2, kk;
     fpx = -1;
@@ -1420,7 +1352,8 @@ void stick3d (float p_x, float p_y, float p_z,
     rx = (x * opt_pcosbeta) + (z * opt_psinbeta);
     ry = (y * opt_pcosalfa) - (z2 * opt_psinalfa);
 
-    // Conversion of points behind the observer with respect to the screen plane.
+    // Conversion of points behind the observer with respect to the screen
+    // plane.
 
     if (rz < stick_uneg) {
         diff = rz - p_rz;
@@ -1437,7 +1370,7 @@ void stick3d (float p_x, float p_y, float p_z,
             diff = p_rz - rz;
 
             if (diff < -mindiff || diff > mindiff) {
-                kk = (stick_uneg - rz) / diff;
+                kk   = (stick_uneg - rz) / diff;
                 p_rx = kk * (p_rx - rx) + rx;
                 p_ry = kk * (p_ry - ry) + ry;
             }
@@ -1454,7 +1387,7 @@ void stick3d (float p_x, float p_y, float p_z,
     fpy = p_ry / p_rz;
 
     if (fpy < stk_lby && ly < stk_lby) {
-        return;    // Out-of-range lines.
+        return; // Out-of-range lines.
     }
 
     if (fpy > stk_uby && ly > stk_uby) {
@@ -1480,7 +1413,7 @@ void stick3d (float p_x, float p_y, float p_z,
         diff = fpx - lx;
 
         if (diff < -mindiff || diff > mindiff) {
-            kk = (stk_lbx - lx) / diff;
+            kk  = (stk_lbx - lx) / diff;
             fpy = kk * (fpy - ly) + ly;
             fpx = stk_lbx;
         }
@@ -1500,7 +1433,7 @@ void stick3d (float p_x, float p_y, float p_z,
         diff = fpy - ly;
 
         if (diff < -mindiff || diff > mindiff) {
-            kk = (stk_lby - ly) / diff;
+            kk  = (stk_lby - ly) / diff;
             fpx = kk * (fpx - lx) + lx;
             fpy = stk_lby;
         }
@@ -1520,7 +1453,7 @@ void stick3d (float p_x, float p_y, float p_z,
         diff = fpx - lx;
 
         if (diff < -mindiff || diff > mindiff) {
-            kk = (stk_ubx - lx) / diff;
+            kk  = (stk_ubx - lx) / diff;
             fpy = kk * (fpy - ly) + ly;
             fpx = stk_ubx;
         }
@@ -1540,7 +1473,7 @@ void stick3d (float p_x, float p_y, float p_z,
         diff = fpy - ly;
 
         if (diff < -mindiff || diff > mindiff) {
-            kk = (stk_uby - ly) / diff;
+            kk  = (stk_uby - ly) / diff;
             fpx = kk * (fpx - lx) + lx;
             fpy = stk_uby;
         }
@@ -1557,10 +1490,10 @@ void stick3d (float p_x, float p_y, float p_z,
     }
 
     if (fpx == lx && fpy == ly) {
-        return;    // Esclude le linee costituite da un punto solo.
+        return; // Esclude le linee costituite da un punto solo.
     }
 
-    stick (fpx + x_centro, fpy + y_centro, lx + x_centro, ly + y_centro);
+    stick(fpx + x_centro, fpy + y_centro, lx + x_centro, ly + y_centro);
 }
 
 /*
@@ -1574,7 +1507,7 @@ void stick3d (float p_x, float p_y, float p_z,
     habitable planets.
 */
 
-void link3d (float x, float y, float z) {
+void link3d(float x, float y, float z) {
     int32_t lx, ly;
     float rx, ry, rz, z2;
 
@@ -1621,13 +1554,13 @@ void link3d (float x, float y, float z) {
         return;
     }
 
-    stick (fpx + x_centro, fpy + y_centro, lx + x_centro, ly + y_centro);
+    stick(fpx + x_centro, fpy + y_centro, lx + x_centro, ly + y_centro);
 }
 
 // Tracing luminous sticks (in 2d, for the glows, generally used with the
 // flares flag = 1).
 
-void fline (int32_t fx, int32_t fy, int32_t lx, int32_t ly) {
+void fline(int32_t fx, int32_t fy, int32_t lx, int32_t ly) {
     float kk, diff;
 
     /*
@@ -1719,11 +1652,11 @@ void fline (int32_t fx, int32_t fy, int32_t lx, int32_t ly) {
     }
 
     if (fx == lx && fy == ly) {
-        return;    // Exclude lines consisting of a single point.
+        return; // Exclude lines consisting of a single point.
     }
 
     if (fy < stk_lby || ly < stk_lby) {
-        return;    // Exclude lines that have been seen before.
+        return; // Exclude lines that have been seen before.
     }
 
     if (fy > stk_uby || ly > stk_uby) {
@@ -1738,7 +1671,7 @@ void fline (int32_t fx, int32_t fy, int32_t lx, int32_t ly) {
         return;
     }
 
-    stick (fx + x_centro, fy + y_centro, lx + x_centro, ly + y_centro);
+    stick(fx + x_centro, fy + y_centro, lx + x_centro, ly + y_centro);
 }
 
 /*
@@ -1751,8 +1684,8 @@ uint8_t map_color_b = 31;
 uint8_t map_color_c = 32;
 uint8_t map_color_d = 33;
 
-void randomic_mapper (float x0, float y0, float z0, float x1, float y1,
-                      float z1, float x2, float y2, float z2, int8_t divisions) {
+void randomic_mapper(float x0, float y0, float z0, float x1, float y1, float z1,
+                     float x2, float y2, float z2, int8_t divisions) {
     float vx[3], vy[3], vz[3];
     float e0, f0, g0;
     float e1, f1, g1;
@@ -1780,31 +1713,31 @@ void randomic_mapper (float x0, float y0, float z0, float x1, float y1,
             vx[2] = e2;
             vy[2] = f2;
             vz[2] = g2;
-            poly3d (vx, vy, vz, 3, map_color_a);
-            randomic_mapper (x0, y0, z0, e0, f0, g0, e2, f2, g2, divisions);
+            poly3d(vx, vy, vz, 3, map_color_a);
+            randomic_mapper(x0, y0, z0, e0, f0, g0, e2, f2, g2, divisions);
             vx[0] = e1;
             vy[0] = f1;
             vz[0] = g1;
-            poly3d (vx, vy, vz, 3, map_color_b);
-            randomic_mapper (e1, f1, g1, e0, f0, g0, e2, f2, g2, divisions);
+            poly3d(vx, vy, vz, 3, map_color_b);
+            randomic_mapper(e1, f1, g1, e0, f0, g0, e2, f2, g2, divisions);
             vx[1] = x2;
             vy[1] = y2;
             vz[1] = z2;
-            poly3d (vx, vy, vz, 3, map_color_c);
-            randomic_mapper (e1, f1, g1, x2, y2, z2, e2, f2, g2, divisions);
+            poly3d(vx, vy, vz, 3, map_color_c);
+            randomic_mapper(e1, f1, g1, x2, y2, z2, e2, f2, g2, divisions);
             vx[2] = x1;
             vy[2] = y1;
             vz[2] = z1;
             vx[1] = e0;
             vy[1] = f0;
             vz[1] = g0;
-            poly3d (vx, vy, vz, 3, map_color_d);
-            randomic_mapper (e1, f1, g1, e0, f0, g0, x1, y1, z1, divisions);
+            poly3d(vx, vy, vz, 3, map_color_d);
+            randomic_mapper(e1, f1, g1, e0, f0, g0, x1, y1, z1, divisions);
         } else {
-            randomic_mapper (x0, y0, z0, e0, f0, g0, e2, f2, g2, divisions);
-            randomic_mapper (e1, f1, g1, e0, f0, g0, e2, f2, g2, divisions);
-            randomic_mapper (e1, f1, g1, x2, y2, z2, e2, f2, g2, divisions);
-            randomic_mapper (e1, f1, g1, e0, f0, g0, x1, y1, z1, divisions);
+            randomic_mapper(x0, y0, z0, e0, f0, g0, e2, f2, g2, divisions);
+            randomic_mapper(e1, f1, g1, e0, f0, g0, e2, f2, g2, divisions);
+            randomic_mapper(e1, f1, g1, x2, y2, z2, e2, f2, g2, divisions);
+            randomic_mapper(e1, f1, g1, e0, f0, g0, x1, y1, z1, divisions);
         }
     }
 }
@@ -1814,7 +1747,7 @@ void randomic_mapper (float x0, float y0, float z0, float x1, float y1,
     is already free nothing happens.
 */
 
-void unloadpv (int16_t handle) {
+void unloadpv(int16_t handle) {
 #if 0
     int16_t      h;
     uint16_t eod;
@@ -1868,9 +1801,8 @@ void unloadpv (int16_t handle) {
     FIXME;
 }
 
-
 // Free all the handles.
-void unloadallpv () {
+void unloadallpv() {
     int16_t h;
     pvfile_datatop = 0;
 
@@ -1880,17 +1812,14 @@ void unloadallpv () {
 }
 
 /*
-    Load a polygonal model file. If the specified handle is busy, it will be freed
-    and reassigned.
-    Parameters:
-        Handle: Number of the database in which to host the file, from 0 to 15.
-        virtual_file_position: Negative offset from the end of SUPPORTS.NCT.
-        x/y/z_scale: Scale correction of the polygons on all the axes.
-        x/y/z_move: Translation of the polygons on all the axes.
-        base_color: Basic color of the polygons.
-        depth_sort: Flag that specifies whether to allocate space for the
-            calculation of the midpoints of the vertices of each polygon and
-            carry out the depth-sorting when the object is to be traced.
+    Load a polygonal model file. If the specified handle is busy, it will be
+   freed and reassigned. Parameters: Handle: Number of the database in which to
+   host the file, from 0 to 15. virtual_file_position: Negative offset from the
+   end of SUPPORTS.NCT. x/y/z_scale: Scale correction of the polygons on all the
+   axes. x/y/z_move: Translation of the polygons on all the axes. base_color:
+   Basic color of the polygons. depth_sort: Flag that specifies whether to
+   allocate space for the calculation of the midpoints of the vertices of each
+   polygon and carry out the depth-sorting when the object is to be traced.
     Return:
         -1: The file cannot be accessed.
         0: The hndle is unassignable (does not exist), or there is not enough
@@ -1898,10 +1827,9 @@ void unloadallpv () {
         +1: Everything went well.
 */
 
-int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
-               float xscale, float yscale, float zscale,
-               float xmove,  float ymove,  float zmove,
-               uint8_t base_color,   int8_t depth_sort) {
+int8_t loadpv(int16_t handle, int32_t virtual_file_position, float xscale,
+              float yscale, float zscale, float xmove, float ymove, float zmove,
+              uint8_t base_color, int8_t depth_sort) {
     int16_t fh, c, p;
 
     // Check availability of the file and the handle.
@@ -1909,7 +1837,7 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
         return (0);
     }
 
-    fh = sa_open (virtual_file_position);
+    fh = sa_open(virtual_file_position);
 
     if (fh == -1) {
         return (-1);
@@ -1917,43 +1845,44 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
 
     // Free the handle if it is currently occupied.
     if (pvfile_datalen[handle]) {
-        unloadpv (handle);
+        unloadpv(handle);
     }
 
     // Internal handle update.
     pvfile_datalen[handle] = 0;
     pvfile_dataptr[handle] = pvfile_datatop;
     // Reading polygon numbers.
-    read (fh, &pvfile_npolygs[handle],  2);
+    read(fh, &pvfile_npolygs[handle], 2);
     // Pointer preparation.
-    pv_n_vtx[handle] = (int8_t*)  (pvfile + pvfile_datatop);
-    pvfile_datatop  +=  1 * pvfile_npolygs[handle];
-    pvfile_x[handle] = (float*) (pvfile + pvfile_datatop);
-    pvfile_datatop  += 16 * pvfile_npolygs[handle];
-    pvfile_y[handle] = (float*) (pvfile + pvfile_datatop);
-    pvfile_datatop  += 16 * pvfile_npolygs[handle];
-    pvfile_z[handle] = (float*) (pvfile + pvfile_datatop);
-    pvfile_datatop  += 16 * pvfile_npolygs[handle];
-    pvfile_c[handle] = (int8_t*)  (pvfile + pvfile_datatop);
-    pvfile_datatop  +=  1 * pvfile_npolygs[handle];
+    pv_n_vtx[handle] = (int8_t *)(pvfile + pvfile_datatop);
+    pvfile_datatop += 1 * pvfile_npolygs[handle];
+    pvfile_x[handle] = (float *)(pvfile + pvfile_datatop);
+    pvfile_datatop += 16 * pvfile_npolygs[handle];
+    pvfile_y[handle] = (float *)(pvfile + pvfile_datatop);
+    pvfile_datatop += 16 * pvfile_npolygs[handle];
+    pvfile_z[handle] = (float *)(pvfile + pvfile_datatop);
+    pvfile_datatop += 16 * pvfile_npolygs[handle];
+    pvfile_c[handle] = (int8_t *)(pvfile + pvfile_datatop);
+    pvfile_datatop += 1 * pvfile_npolygs[handle];
     /*
-        Clear the first data pointer for the depth sort. If it is no subsequently
-        modified, then depth sorting is not required for the object in question.
+        Clear the first data pointer for the depth sort. If it is no
+       subsequently modified, then depth sorting is not required for the object
+       in question.
     */
     pv_mid_x[handle] = 0;
 
     // Check availabity before reading the data.
     if (pvfile_datatop > pv_bytes) {
         pvfile_datatop = pvfile_dataptr[handle];
-        close (fh);
+        close(fh);
         return (0);
     }
 
     // Reading all the data on the polygons, in a single block.
-    read (fh, pvfile + pvfile_dataptr[handle],
-               pvfile_datatop - pvfile_dataptr[handle]);
+    read(fh, pvfile + pvfile_dataptr[handle],
+         pvfile_datatop - pvfile_dataptr[handle]);
     // dopodich� si pu� anche richiudere il file...
-    close (fh);
+    close(fh);
 
     // Resetting unused vertex data (for triangles).
     for (p = 0; p < pvfile_npolygs[handle]; p++)
@@ -1965,16 +1894,16 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
 
     // Prepare pointers for depth sorting management.
     if (depth_sort) {
-        pv_mid_x[handle] = (float*) (pvfile + pvfile_datatop);
-        pvfile_datatop  += 4 * pvfile_npolygs[handle];
-        pv_mid_y[handle] = (float*) (pvfile + pvfile_datatop);
-        pvfile_datatop  += 4 * pvfile_npolygs[handle];
-        pv_mid_z[handle] = (float*) (pvfile + pvfile_datatop);
-        pvfile_datatop  += 4 * pvfile_npolygs[handle];
-        pv_mid_d[handle] = (float*) (pvfile + pvfile_datatop);
-        pvfile_datatop  += 4 * pvfile_npolygs[handle];
-        pv_dep_i[handle] = (int16_t*)   (pvfile + pvfile_datatop);
-        pvfile_datatop  += 2 * pvfile_npolygs[handle];
+        pv_mid_x[handle] = (float *)(pvfile + pvfile_datatop);
+        pvfile_datatop += 4 * pvfile_npolygs[handle];
+        pv_mid_y[handle] = (float *)(pvfile + pvfile_datatop);
+        pvfile_datatop += 4 * pvfile_npolygs[handle];
+        pv_mid_z[handle] = (float *)(pvfile + pvfile_datatop);
+        pvfile_datatop += 4 * pvfile_npolygs[handle];
+        pv_mid_d[handle] = (float *)(pvfile + pvfile_datatop);
+        pvfile_datatop += 4 * pvfile_npolygs[handle];
+        pv_dep_i[handle] = (int16_t *)(pvfile + pvfile_datatop);
+        pvfile_datatop += 2 * pvfile_npolygs[handle];
 
         // Check available memory for newly added data.
         if (pvfile_datatop > pv_bytes) {
@@ -2027,12 +1956,11 @@ int8_t loadpv (int16_t   handle, int32_t virtual_file_position,
     other sorts by distance, the planets and moons for example.
 */
 
-void QuickSort (int16_t* index, float* mdist, int16_t start,
-                int16_t end) {
-    int16_t   tq;
-    int16_t   jq = end;
-    int16_t   iq = start;
-    float xq = mdist[index[(start + end) / 2]];
+void QuickSort(int16_t *index, float *mdist, int16_t start, int16_t end) {
+    int16_t tq;
+    int16_t jq = end;
+    int16_t iq = start;
+    float xq   = mdist[index[(start + end) / 2]];
 
     while (iq <= jq) {
         while (mdist[index[iq]] > xq) {
@@ -2044,7 +1972,7 @@ void QuickSort (int16_t* index, float* mdist, int16_t start,
         }
 
         if (iq <= jq) {
-            tq = index[iq];
+            tq        = index[iq];
             index[iq] = index[jq];
             index[jq] = tq;
             iq++;
@@ -2053,11 +1981,11 @@ void QuickSort (int16_t* index, float* mdist, int16_t start,
     }
 
     if (start < jq) {
-        QuickSort (index, mdist, start, jq);
+        QuickSort(index, mdist, start, jq);
     }
 
     if (iq < end) {
-        QuickSort (index, mdist, iq, end);
+        QuickSort(index, mdist, iq, end);
     }
 }
 
@@ -2075,9 +2003,8 @@ void QuickSort (int16_t* index, float* mdist, int16_t start,
             opzione nella chiamata a "loadpv" per quell'handle.
 */
 
-void drawpv (int16_t handle, int16_t mode, int16_t rm_iterations,
-             float center_x, float center_y, float center_z,
-             int8_t use_depth_sort) {
+void drawpv(int16_t handle, int16_t mode, int16_t rm_iterations, float center_x,
+            float center_y, float center_z, int8_t use_depth_sort) {
 #if 0
     float dx, dy, dz;
     uint16_t p, c, i, k;
@@ -2217,7 +2144,7 @@ void drawpv (int16_t handle, int16_t mode, int16_t rm_iterations,
 /*  Replica una forma poligonale, copiandola da un'handle gi� definito
     a uno di uguali dimensioni. In caso d'errore, non succede nulla. */
 
-void copypv (int16_t dest_handle, int16_t src_handle) {
+void copypv(int16_t dest_handle, int16_t src_handle) {
 #if 0
     if (src_handle >= handles) {
         return;
@@ -2251,10 +2178,9 @@ void copypv (int16_t dest_handle, int16_t src_handle) {
     se il puntatore "vertexs_to_affect" � nullo, tutti i vertici lo sono.
     Gli angoli sono espressi in gradi. */
 
-void modpv (int16_t handle, int16_t polygon_id, int16_t vertex_id,
-            float x_scale, float y_scale, float z_scale,
-            float x_angle, float y_angle, float z_angle,
-            pvlist* vertexs_to_affect) {
+void modpv(int16_t handle, int16_t polygon_id, int16_t vertex_id, float x_scale,
+           float y_scale, float z_scale, float x_angle, float y_angle,
+           float z_angle, pvlist *vertexs_to_affect) {
     if (handle >= handles) {
         return;
     }
@@ -2263,18 +2189,18 @@ void modpv (int16_t handle, int16_t polygon_id, int16_t vertex_id,
         return;
     }
 
-    float sin_x = sin (deg * x_angle);
-    float cos_x = cos (deg * x_angle);
-    float sin_y = sin (deg * y_angle);
-    float cos_y = cos (deg * y_angle);
-    float sin_z = sin (deg * z_angle);
-    float cos_z = cos (deg * z_angle);
-    int16_t   c, p, v, i, j;
+    float sin_x = sin(deg * x_angle);
+    float cos_x = cos(deg * x_angle);
+    float sin_y = sin(deg * y_angle);
+    float cos_y = cos(deg * y_angle);
+    float sin_z = sin(deg * z_angle);
+    float cos_z = cos(deg * z_angle);
+    int16_t c, p, v, i, j;
     float x1, y1, z1;
     float cx, cy, cz;
 
     if (polygon_id > -1 && vertex_id > -1) {
-        i = 4 * polygon_id + vertex_id;
+        i  = 4 * polygon_id + vertex_id;
         cx = pvfile_x[handle][i];
         cy = pvfile_y[handle][i];
         cz = pvfile_z[handle][i];
@@ -2289,10 +2215,14 @@ void modpv (int16_t handle, int16_t polygon_id, int16_t vertex_id,
             i = 4 * p;
 
             for (v = 0; v < pv_n_vtx[handle][p]; v++) {
-                x1 = (pvfile_x[handle][i] - cx) * cos_y + (pvfile_z[handle][i] - cz) * sin_y;
-                z1 = (pvfile_z[handle][i] - cz) * cos_y - (pvfile_x[handle][i] - cx) * sin_y;
-                pvfile_z[handle][i] = z_scale * (z1 * cos_x + (pvfile_y[handle][i] - cy) *
-                                                 sin_x) + cz;
+                x1 = (pvfile_x[handle][i] - cx) * cos_y +
+                     (pvfile_z[handle][i] - cz) * sin_y;
+                z1 = (pvfile_z[handle][i] - cz) * cos_y -
+                     (pvfile_x[handle][i] - cx) * sin_y;
+                pvfile_z[handle][i] =
+                    z_scale *
+                        (z1 * cos_x + (pvfile_y[handle][i] - cy) * sin_x) +
+                    cz;
                 y1 = (pvfile_y[handle][i] - cy) * cos_x - z1 * sin_x;
                 pvfile_x[handle][i] = x_scale * (x1 * cos_z + y1 * sin_z) + cx;
                 pvfile_y[handle][i] = y_scale * (y1 * cos_z - x1 * sin_z) + cy;
@@ -2329,25 +2259,29 @@ void modpv (int16_t handle, int16_t polygon_id, int16_t vertex_id,
                 }
 
                 goto next;
-perform:
-                x1 = (pvfile_x[handle][j] - cx) * cos_y + (pvfile_z[handle][j] - cz) * sin_y;
-                z1 = (pvfile_z[handle][j] - cz) * cos_y - (pvfile_x[handle][j] - cx) * sin_y;
-                pvfile_z[handle][j] = z_scale * (z1 * cos_x + (pvfile_y[handle][j] - cy) *
-                                                 sin_x) + cz;
+            perform:
+                x1 = (pvfile_x[handle][j] - cx) * cos_y +
+                     (pvfile_z[handle][j] - cz) * sin_y;
+                z1 = (pvfile_z[handle][j] - cz) * cos_y -
+                     (pvfile_x[handle][j] - cx) * sin_y;
+                pvfile_z[handle][j] =
+                    z_scale *
+                        (z1 * cos_x + (pvfile_y[handle][j] - cy) * sin_x) +
+                    cz;
                 y1 = (pvfile_y[handle][j] - cy) * cos_x - z1 * sin_x;
                 pvfile_x[handle][j] = x_scale * (x1 * cos_z + y1 * sin_z) + cx;
                 pvfile_y[handle][j] = y_scale * (y1 * cos_z - x1 * sin_z) + cy;
-next:
-                v ++;
+            next:
+                v++;
             } while (v < pv_n_vtx[handle][c]);
 
-            p ++;
+            p++;
         }
     }
 
     if (pv_mid_x[handle]) {
         for (p = 0; p < pvfile_npolygs[handle]; p++) {
-            i = 4 * p;
+            i  = 4 * p;
             cx = 0;
             cy = 0;
             cz = 0;
@@ -2368,7 +2302,7 @@ next:
 
 // Returns the alphabetic correspondent of integers and / or real numbers.
 
-char* alphavalue (double value) {
+char *alphavalue(double value) {
 #if 0
     gcvt (value, 15, dec);
     return (dec);
@@ -2377,12 +2311,9 @@ char* alphavalue (double value) {
 }
 
 // Draws the background, with the map offsets.map.
-void background (uint16_t start,
-                 uint8_t* target,
-                 uint8_t* background,
-                 uint8_t* offsetsmap,
-                 uint16_t total_map_bytes,
-                 uint16_t screenshift) {
+void background(uint16_t start, uint8_t *target, uint8_t *background,
+                uint8_t *offsetsmap, uint16_t total_map_bytes,
+                uint16_t screenshift) {
 #if 0
     asm {   pusha
             push ds
@@ -2452,7 +2383,7 @@ void background (uint16_t start,
     vision, they can probably see more than normal.
 */
 
-void sky (uint16_t limits) {
+void sky(uint16_t limits) {
 #if 0
     uint16_t debug;
 
@@ -2651,16 +2582,16 @@ void sky (uint16_t limits) {
     in target, FS hosts the tapestry wallpaper to map the globe, and the old DS
     points to the area of the map of the offsets, compressed with MAPS.EXE along
     the x-y plane. In fact, they are not video offset ready, because they must
-    becalculated (first byte = Y, second byte = X). When the Y is 100, that means
-    the original offset was 64000, and that is not a question of a point, but of
-    a series of advances along the segment, indicated for accuracy by byte X.
+    becalculated (first byte = Y, second byte = X). When the Y is 100, that
+   means the original offset was 64000, and that is not a question of a point,
+   but of a series of advances along the segment, indicated for accuracy by byte
+   X.
 */
 
 uint8_t glass_bubble = 1;
 // If set, draw a kind of bubble transparent around the globes drawn with the
 // "globe" function. It is used to simulate the presence of the atmosphere, but
 // only for planets with considerable quantities of gas.
-
 
 /*
     Heck, real fill managers, and they work!
@@ -2707,13 +2638,10 @@ void gman4x4 () {
 }
 #endif
 
-void globe (uint16_t start,
-            uint8_t* target,
-            uint8_t* tapestry,
-            uint8_t* offsetsmap,
-            uint16_t total_map_bytes,
-            double x, double y, double z,
-            float mag_factor, int8_t colormask, int8_t globe_saturation) {
+void globe(uint16_t start, uint8_t *target, uint8_t *tapestry,
+           uint8_t *offsetsmap, uint16_t total_map_bytes, double x, double y,
+           double z, float mag_factor, int8_t colormask,
+           int8_t globe_saturation) {
 #if 0
     void*    gman;
     int16_t center_x, center_y, temp;
@@ -2880,13 +2808,10 @@ void globe (uint16_t start,
     ma con un evidente demarcazione fra emisfero illuminato e buio.
     Viene usata per i pianeti in media distanza. */
 
-void glowinglobe (int16_t start,
-                  uint8_t* target,
-                  uint8_t* offsetsmap,
-                  uint16_t total_map_bytes,
-                  double x, double y, double z, float mag_factor,
-                  int16_t terminator_start, int16_t terminator_arc,
-                  uint8_t color) {
+void glowinglobe(int16_t start, uint8_t *target, uint8_t *offsetsmap,
+                 uint16_t total_map_bytes, double x, double y, double z,
+                 float mag_factor, int16_t terminator_start,
+                 int16_t terminator_arc, uint8_t color) {
 #if 0
     uint16_t center_x, center_y, temp;
     double xx, yy, zz, z2, rx, ry, rz;
@@ -3025,15 +2950,13 @@ clipout:asm {   add dx, 1
     STUB
 }
 
-
 /*
     Modified to make white globes. It is used for stars seen from afar, and for
     the corona. It does not need a globe map. Takes a color from between 0 and
     0x3F, b/c it should only work on the first shade for speed.
 */
-void whiteglobe (uint8_t* target,
-                 double x, double y, double z,
-                 float mag_factor, float fgm_factor) {
+void whiteglobe(uint8_t *target, double x, double y, double z, float mag_factor,
+                float fgm_factor) {
 #if 0
     double center_x, center_y, mag, fgm, shade_ext, ise;
     double xx, yy, zz, z2, rx, ry, rz, xa, ya, xb, yb;
@@ -3160,9 +3083,8 @@ void whiteglobe (uint8_t* target,
 
 double xsun_onscreen;
 
-void whitesun (uint8_t* target,
-               double x, double y, double z,
-               float mag_factor, float fgm_factor) {
+void whitesun(uint8_t *target, double x, double y, double z, float mag_factor,
+              float fgm_factor) {
 #if 0
     double center_x, center_y, mag, fgm, shade_ext, ise;
     double xx, yy, zz, z2, rx, ry, rz, xa, ya, xb, yb;
@@ -3269,7 +3191,7 @@ void whitesun (uint8_t* target,
 float lft_sin[361];
 float lft_cos[361];
 
-int8_t lens_flares_init () {
+int8_t lens_flares_init() {
     int16_t c;
     double a = 0, step = M_PI / 180;
 
@@ -3286,10 +3208,10 @@ int8_t lens_flares_init () {
     return (1);
 }
 
-void lens_flares_for (double cam_x, double cam_y, double cam_z,
-                      double xlight, double ylight, double zlight,
-                      double step, int16_t added, int8_t on_hud, int8_t condition,
-                      int16_t xshift, int16_t yshift) {
+void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight,
+                     double ylight, double zlight, double step, int16_t added,
+                     int8_t on_hud, int8_t condition, int16_t xshift,
+                     int16_t yshift) {
 #if 0
     double k = 10 / step, l = 1, u = 1.5;
     double xx, yy, zz, z2, rx, ry, rz;
@@ -3379,19 +3301,19 @@ exit_local:
     function to draw the planet properly.
 */
 
-const double    pix_dst_scale =     0.384;
-const double    pix_rad_scale =     1228.8;
+const double pix_dst_scale = 0.384;
+const double pix_rad_scale = 1228.8;
 
-#define         LIGHT_EMITTING      0
-#define         LIGHT_ABSORBING     1
-#define         MULTICOLOUR         2
+#define LIGHT_EMITTING 0
+#define LIGHT_ABSORBING 1
+#define MULTICOLOUR 2
 
-int8_t          pixilating_effect = LIGHT_EMITTING;
-int8_t          pixel_spreads     = 1;
-uint8_t         multicolourmask   = 0xC0;
+int8_t pixilating_effect = LIGHT_EMITTING;
+int8_t pixel_spreads     = 1;
+uint8_t multicolourmask  = 0xC0;
 
-void single_pixel_at_ptr (uint16_t ptr, uint8_t pixel_color) {
-# if 0
+void single_pixel_at_ptr(uint16_t ptr, uint8_t pixel_color) {
+#if 0
     // Add ptr shift to the offset.
     uint8_t far* shifted = adapted + ptr;
     uint8_t alow = shifted[0];
@@ -3434,17 +3356,17 @@ void single_pixel_at_ptr (uint16_t ptr, uint8_t pixel_color) {
     STUB
 }
 
-int8_t far_pixel_at (double xlight, double ylight, double zlight,
-                     double radii, uint8_t unconditioned_color) {
-    double  xx, yy, zz, z2, rz;
-    int32_t    pixel_color;
+int8_t far_pixel_at(double xlight, double ylight, double zlight, double radii,
+                    uint8_t unconditioned_color) {
+    double xx, yy, zz, z2, rz;
+    int32_t pixel_color;
     uint8_t edge_color_1;
     uint8_t edge_color_2;
     uint8_t edge_color_3;
     uint8_t edge_color_4;
-    xx = xlight - dzat_x;
-    yy = ylight - dzat_y;
-    zz = zlight - dzat_z;
+    xx  = xlight - dzat_x;
+    yy  = ylight - dzat_y;
+    zz  = zlight - dzat_z;
     pxx = xx * opt_pcosbeta + zz * opt_psinbeta;
     z2  = zz * opt_tcosbeta - xx * opt_tsinbeta;
     rz  = z2 * opt_tcosalfa + yy * opt_tsinalfa;
@@ -3480,43 +3402,43 @@ int8_t far_pixel_at (double xlight, double ylight, double zlight,
                 edge_color_4 = pixel_color >> 4;
 
                 if (edge_color_1 > 7) {
-                    single_pixel_at_ptr (vptr - 320, edge_color_1);
-                    single_pixel_at_ptr (vptr + 320, edge_color_1);
-                    single_pixel_at_ptr (vptr -   1, edge_color_1);
-                    single_pixel_at_ptr (vptr +   1, edge_color_1);
+                    single_pixel_at_ptr(vptr - 320, edge_color_1);
+                    single_pixel_at_ptr(vptr + 320, edge_color_1);
+                    single_pixel_at_ptr(vptr - 1, edge_color_1);
+                    single_pixel_at_ptr(vptr + 1, edge_color_1);
                 }
 
                 if (edge_color_2 > 7) {
-                    single_pixel_at_ptr (vptr - 321, edge_color_2);
-                    single_pixel_at_ptr (vptr - 319, edge_color_2);
-                    single_pixel_at_ptr (vptr + 321, edge_color_2);
-                    single_pixel_at_ptr (vptr + 319, edge_color_2);
+                    single_pixel_at_ptr(vptr - 321, edge_color_2);
+                    single_pixel_at_ptr(vptr - 319, edge_color_2);
+                    single_pixel_at_ptr(vptr + 321, edge_color_2);
+                    single_pixel_at_ptr(vptr + 319, edge_color_2);
                 }
 
                 if (edge_color_3 > 7) {
-                    single_pixel_at_ptr (vptr - 640, edge_color_3);
-                    single_pixel_at_ptr (vptr + 640, edge_color_3);
-                    single_pixel_at_ptr (vptr -   2, edge_color_3);
-                    single_pixel_at_ptr (vptr +   2, edge_color_3);
+                    single_pixel_at_ptr(vptr - 640, edge_color_3);
+                    single_pixel_at_ptr(vptr + 640, edge_color_3);
+                    single_pixel_at_ptr(vptr - 2, edge_color_3);
+                    single_pixel_at_ptr(vptr + 2, edge_color_3);
                 }
 
                 if (edge_color_4 > 7) {
-                    single_pixel_at_ptr (vptr - 641, edge_color_4);
-                    single_pixel_at_ptr (vptr - 639, edge_color_4);
-                    single_pixel_at_ptr (vptr + 641, edge_color_4);
-                    single_pixel_at_ptr (vptr + 639, edge_color_4);
-                    single_pixel_at_ptr (vptr - 322, edge_color_4);
-                    single_pixel_at_ptr (vptr - 318, edge_color_4);
-                    single_pixel_at_ptr (vptr + 322, edge_color_4);
-                    single_pixel_at_ptr (vptr + 318, edge_color_4);
+                    single_pixel_at_ptr(vptr - 641, edge_color_4);
+                    single_pixel_at_ptr(vptr - 639, edge_color_4);
+                    single_pixel_at_ptr(vptr + 641, edge_color_4);
+                    single_pixel_at_ptr(vptr + 639, edge_color_4);
+                    single_pixel_at_ptr(vptr - 322, edge_color_4);
+                    single_pixel_at_ptr(vptr - 318, edge_color_4);
+                    single_pixel_at_ptr(vptr + 322, edge_color_4);
+                    single_pixel_at_ptr(vptr + 318, edge_color_4);
                 }
 
                 if (pixel_color > 7) {
-                    single_pixel_at_ptr (vptr, pixel_color);
+                    single_pixel_at_ptr(vptr, pixel_color);
                 }
             } else {
                 if (pixel_color) {
-                    single_pixel_at_ptr (vptr, pixel_color);
+                    single_pixel_at_ptr(vptr, pixel_color);
                 }
             }
 
@@ -3535,22 +3457,21 @@ int8_t far_pixel_at (double xlight, double ylight, double zlight,
 
 */
 
-
 // Measure the time elapsed from 1-1-1984 to today, accurate to one frame,
 // which is 1/25 of a second on average.
-void getsecs () {
+void getsecs() {
     // January 1, 1984
     struct tm nepoch = {0};
-    nepoch.tm_sec = 0;
-    nepoch.tm_min = 0;
-    nepoch.tm_hour = 0;
-    nepoch.tm_mday = 1;
-    nepoch.tm_mon = 0;
-    nepoch.tm_year = 84;
+    nepoch.tm_sec    = 0;
+    nepoch.tm_min    = 0;
+    nepoch.tm_hour   = 0;
+    nepoch.tm_mday   = 1;
+    nepoch.tm_mon    = 0;
+    nepoch.tm_year   = 84;
 
     time_t rawtime;
     time(&rawtime);
-    struct tm * timeinfo;
+    struct tm *timeinfo;
     timeinfo = localtime(&rawtime);
     // Have to extract info from timeinfo before doing difftime, or else
     // timeinfo will point to nepoch, for some reason...
@@ -3569,14 +3490,14 @@ void getsecs () {
         }
 
         p_isecs = isecs;
-        gl_fps = fps;
-        fps = 1;
+        gl_fps  = fps;
+        fps     = 1;
     } else { // Fractions of a second
         if (gl_fps) {
-            secs += (double) fps / (double) gl_fps;
+            secs += (double)fps / (double)gl_fps;
         }
 
-        fsecs = (double) fps / (double) gl_fps;
+        fsecs = (double)fps / (double)gl_fps;
         fps++;
     }
 
@@ -3586,7 +3507,7 @@ void getsecs () {
 // Extracts from the pseudo table, from 74 trillion different elements,
 // information about the chosen star.
 
-void extract_ap_target_infos () {
+void extract_ap_target_infos() {
 #if 0
     srand (ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z / 100000);
     ap_target_class = random (star_classes);
@@ -3614,7 +3535,7 @@ void extract_ap_target_infos () {
 
 // Extracts a whole-type pseudo-random number by converting it to f-p.
 
-float zrandom (int16_t range) {
+float zrandom(int16_t range) {
 #if 0
     return (random(range) - random(range));
 #endif
@@ -3633,9 +3554,9 @@ float zrandom (int16_t range) {
      usa come buffer di lettura "p_surfacemap". */
 
 int16_t smh;
-double  idscale = 0.00001;
+double idscale = 0.00001;
 
-int32_t search_id_code (double id_code, int8_t type) {
+int32_t search_id_code(double id_code, int8_t type) {
 #if 0
     int32_t        pos = 4;
     int8_t        found = 0;
@@ -3685,7 +3606,7 @@ int32_t search_id_code (double id_code, int8_t type) {
     ci si trover�: tra l'altro, prepara i pianeti estraendoli dalla
     tabella pseudo. */
 
-int16_t starnop (double star_x, double star_y, double star_z)
+int16_t starnop(double star_x, double star_y, double star_z)
 // stima il numero di pianeti maggiori associato alle coord. di una stella
 {
 #if 0
@@ -3706,7 +3627,7 @@ int16_t starnop (double star_x, double star_y, double star_z)
     return 0;
 }
 
-void prepare_nearstar () {
+void prepare_nearstar() {
 #if 0
     int16_t    n, c, q, r, s, t;
     double key_radius;
@@ -4133,24 +4054,23 @@ no_moons:
 
 // Smooth the surface of a planet: fast 4x4 average.
 
-void ssmooth (uint8_t* target) {
-	uint32_t limit = ((uint32_t) QUADWORDS << 2) - (360 << 2);
+void ssmooth(uint8_t *target) {
+    uint32_t limit = ((uint32_t)QUADWORDS << 2) - (360 << 2);
 
-	for (uint32_t i = 0; i < limit; i++) {
+    for (uint32_t i = 0; i < limit; i++) {
         // 4 columns of 4 pixels each.
         uint8_t col1, col2, col3, col4, average;
 
-        col1 = target[i] + target[i + 360]
-        + target[i + 720] + target[i + 1080];
+        col1 = target[i] + target[i + 360] + target[i + 720] + target[i + 1080];
 
-        col2 = target[i + 1] + target[i + 361]
-        + target[i + 721] + target[i + 1081];
+        col2 = target[i + 1] + target[i + 361] + target[i + 721] +
+               target[i + 1081];
 
-        col3 = target[i + 2] + target[i + 362]
-        + target[i + 722] + target[i + 1082];
+        col3 = target[i + 2] + target[i + 362] + target[i + 722] +
+               target[i + 1082];
 
-        col4 = target[i + 3] + target[i + 363]
-        + target[i + 723] + target[i + 1083];
+        col4 = target[i + 3] + target[i + 363] + target[i + 723] +
+               target[i + 1083];
 
         col1 = (col1 & 0xFC) / 4;
         col2 = (col2 & 0xFC) / 4;
@@ -4160,12 +4080,12 @@ void ssmooth (uint8_t* target) {
         average = col1 + col2 + col3 + col4;
         average /= 4;
         target[i + 360] = average;
-	}
+    }
 }
 
 /* Smussa leggermente la superficie di un pianeta: media 2x2. */
 
-void lssmooth (uint8_t* target) {
+void lssmooth(uint8_t *target) {
 #if 0
     asm {   pusha
             push es
@@ -4195,9 +4115,9 @@ void lssmooth (uint8_t* target) {
     STUB
 }
 
-int16_t      c, gr, r, g, b, cr, cx, cy;
-float    a, kfract = 2;
-int8_t     lave, crays;
+int16_t c, gr, r, g, b, cr, cx, cy;
+float a, kfract = 2;
+int8_t lave, crays;
 uint16_t px, py;
 
 /*
@@ -4237,7 +4157,7 @@ uint16_t px, py;
 
 */
 
-void spot () { // una piccola macchia chiara sulla superficie.
+void spot() { // una piccola macchia chiara sulla superficie.
 #if 0
     asm {   les di, dword ptr p_background
             add di, py
@@ -4253,18 +4173,18 @@ void spot () { // una piccola macchia chiara sulla superficie.
     STUB
 }
 
-void permanent_storm () { // tempesta permanente (una macchia colossale).
+void permanent_storm() { // tempesta permanente (una macchia colossale).
     for (g = 1; g < cr; g++) {
         for (a = 0; a < 2 * M_PI; a += 4 * deg) {
-            px = cx + g * cos (a);
-            py = cy + g * sin (a);
+            px = cx + g * cos(a);
+            py = cy + g * sin(a);
             py *= 360;
-            spot ();
+            spot();
         }
     }
 }
 
-void crater () { // un cratere.
+void crater() { // un cratere.
 #if 0
     for (a = 0; a < 2 * M_PI; a += 4 * deg) {
         for (gr = 0; gr < cr; gr++) {
@@ -4315,8 +4235,8 @@ void crater () { // un cratere.
     STUB
 }
 
-void band () /* banda scura orizzontale: pu� essere portata al chiaro
-        negando la superficie sulla base del fondo scala 0x3E */
+void band() /* banda scura orizzontale: pu� essere portata al chiaro
+       negando la superficie sulla base del fondo scala 0x3E */
 {
 #if 0
     asm {   les di, dword ptr p_background
@@ -4337,7 +4257,7 @@ void band () /* banda scura orizzontale: pu� essere portata al chiaro
     STUB
 }
 
-void wave () { // Una banda come sopra, per� ondulata.
+void wave() { // Una banda come sopra, per� ondulata.
 #if 0
     asm {   les di, dword ptr p_background
             mov px, 360
@@ -4363,7 +4283,7 @@ void wave () { // Una banda come sopra, per� ondulata.
     STUB
 }
 
-void fracture (uint8_t* target, float max_latitude) {
+void fracture(uint8_t *target, float max_latitude) {
 #if 0
     // solco scuro: tipo le linee su Europa.
     // ha dei parametri perch� viene usata anche per simulare i fulmini
@@ -4403,15 +4323,15 @@ void fracture (uint8_t* target, float max_latitude) {
     STUB
 }
 
-void volcano () { // un krakatoa volcano con Gedeone il gigante coglione.
+void volcano() { // un krakatoa volcano con Gedeone il gigante coglione.
     for (a = 0; a < 2 * M_PI; a += 4 * deg) {
         b = gr;
 
         for (g = cr / 2; g < cr; g++) {
-            px = cx + cos (a) * g;
-            py = cy + sin (a) * g;
+            px = cx + cos(a) * g;
+            py = cy + sin(a) * g;
             py *= 360;
-            spot ();
+            spot();
             gr--;
 
             if (gr < 0) {
@@ -4423,7 +4343,7 @@ void volcano () { // un krakatoa volcano con Gedeone il gigante coglione.
     }
 }
 
-void contrast (float kt, float kq, float thrshld) {
+void contrast(float kt, float kq, float thrshld) {
     uint16_t c;
 
     for (c = 0; c < 64800; c++) {
@@ -4450,7 +4370,7 @@ void contrast (float kt, float kq, float thrshld) {
     }
 }
 
-void randoface (int16_t range, int16_t upon) {
+void randoface(int16_t range, int16_t upon) {
 #if 0
     uint16_t c;
 
@@ -4476,7 +4396,7 @@ void randoface (int16_t range, int16_t upon) {
     STUB
 }
 
-void negate () {
+void negate() {
 #if 0
     asm {   les di, p_background
             mov cx, 64800 }
@@ -4491,7 +4411,7 @@ void negate () {
     STUB
 }
 
-void crater_juice () {
+void crater_juice() {
 #if 0
     lave = random (3);
     crays = random (3) * 2;
@@ -4537,7 +4457,7 @@ void crater_juice () {
     bassa in assoluto). Il risultato sarebbe che una zona normalmente
     coperta di terra, al passaggio di una grossa nube diventerebbe mare. */
 
-void cirrus () { // una piccola macchia chiara (nube brillante).
+void cirrus() { // una piccola macchia chiara (nube brillante).
 #if 0
     asm {   les di, dword ptr objectschart
             mov bx, py
@@ -4554,7 +4474,7 @@ void cirrus () { // una piccola macchia chiara (nube brillante).
     STUB
 }
 
-void atm_cyclon () { // ciclone atmosferico: un'ammasso di nubi a spirale.
+void atm_cyclon() { // ciclone atmosferico: un'ammasso di nubi a spirale.
 #if 0
     b = 0;
 
@@ -4586,13 +4506,13 @@ void atm_cyclon () { // ciclone atmosferico: un'ammasso di nubi a spirale.
     STUB
 }
 
-void storm () { // tempesta (una grande macchia chiara sull'atmosfera).
+void storm() { // tempesta (una grande macchia chiara sull'atmosfera).
     for (g = 1; g < cr; g++) {
         for (a = 0; a < 2 * M_PI; a += 4 * deg) {
-            px = cx + g * cos (a);
-            py = cy + g * sin (a);
+            px = cx + g * cos(a);
+            py = cy + g * sin(a);
             py *= 360;
-            cirrus ();
+            cirrus();
         }
     }
 }
@@ -4604,8 +4524,8 @@ void storm () { // tempesta (una grande macchia chiara sull'atmosfera).
     campo ridotto ai bordi dei globi.
     "colorbase" viene assegnato a 192 per i pianeti, a 128 per le lune. */
 
-void surface (int16_t logical_id, int16_t type,
-              double seedval, uint8_t colorbase) {
+void surface(int16_t logical_id, int16_t type, double seedval,
+             uint8_t colorbase) {
 #if 0
     int16_t         plwp;
     uint16_t        seed;
@@ -5203,27 +5123,27 @@ void surface (int16_t logical_id, int16_t type,
 
 /* Tracciamento degli anelli (eventuali). */
 
-void ring (int16_t planet_id, double ox, double oy, double oz, int16_t start,
-           int16_t layers) {
-    int16_t     a, b, c, n, m, partn, partcls;
-    double  sx, sy, sz;
-    double  ringray = nearstar_p_ring[planet_id];
-    double  ringtilt = 0.1 * ringray * nearstar_p_tilt[planet_id];
-    double  step = 0.0075 * ringray;
-    fast_srand (10000 * ringray + planet_id);
-    b = 1 + fast_random (0x1F) - layers;
-    partcls = 1 + fast_random (3);
+void ring(int16_t planet_id, double ox, double oy, double oz, int16_t start,
+          int16_t layers) {
+    int16_t a, b, c, n, m, partn, partcls;
+    double sx, sy, sz;
+    double ringray  = nearstar_p_ring[planet_id];
+    double ringtilt = 0.1 * ringray * nearstar_p_tilt[planet_id];
+    double step     = 0.0075 * ringray;
+    fast_srand(10000 * ringray + planet_id);
+    b       = 1 + fast_random(0x1F) - layers;
+    partcls = 1 + fast_random(3);
 
     while (b > 0) {
         if (!fast_random(7)) {
-            c = 1 + fast_random (3);
+            c             = 1 + fast_random(3);
             pixel_spreads = 0;
         } else {
-            c = 1 + fast_random (7);
+            c             = 1 + fast_random(7);
             pixel_spreads = 1;
         }
 
-        a = start - (start % c);
+        a                 = start - (start % c);
         pixilating_effect = fast_random(1) + fast_random(1);
 
         if (a < 0) {
@@ -5233,7 +5153,7 @@ void ring (int16_t planet_id, double ox, double oy, double oz, int16_t start,
         n = c;
 
         while (n + c < 180) {
-            m = c + fast_random (1);
+            m = c + fast_random(1);
             n += m;
             a += m;
 
@@ -5241,15 +5161,15 @@ void ring (int16_t planet_id, double ox, double oy, double oz, int16_t start,
                 a -= 360;
             }
 
-            sy = oy - ringtilt * lft_sin[a];
-            sx = ox + ringray  * lft_sin[a];
-            sz = oz + ringray  * lft_cos[a];
+            sy    = oy - ringtilt * lft_sin[a];
+            sx    = ox + ringray * lft_sin[a];
+            sz    = oz + ringray * lft_cos[a];
             partn = partcls;
 
             while (partn) {
                 sz += step - (fast_flandom() * step);
                 sx += step - (fast_flandom() * step);
-                far_pixel_at (sx, sy, sz, -0.042, 0);
+                far_pixel_at(sx, sy, sz, -0.042, 0);
                 partn--;
             }
         }
@@ -5265,7 +5185,7 @@ void ring (int16_t planet_id, double ox, double oy, double oz, int16_t start,
     }
 
     pixilating_effect = LIGHT_EMITTING;
-    pixel_spreads = 1;
+    pixel_spreads     = 1;
 }
 
 /*  Visualizza appopriatamente i pianeti, come punti, barlumi di luce
@@ -5273,16 +5193,16 @@ void ring (int16_t planet_id, double ox, double oy, double oz, int16_t start,
     modo in cui un corpo planetario pu� rendersi visibile: con una falce.
     L'effetto falce viene realizzato da "glowinglobe". */
 
-void planets () {
-    int8_t* atmosphere = (int8_t*) objectschart;
-    uint8_t* surface_backup = (uint8_t*)p_background;
+void planets() {
+    int8_t *atmosphere      = (int8_t *)objectschart;
+    uint8_t *surface_backup = (uint8_t *)p_background;
     int8_t is_moon;
     int32_t poffs;
     int32_t test;
-    int16_t  i1, i2, n1, n2, c1, c2, pnpcs;
-    int16_t  c, n, t, ts, te, ll, plwp, riwp;
-    int16_t  te_ll_distance, te_ll_distance_1, te_ll_distance_2;
-    int16_t  ts_ll_distance, ts_ll_distance_1, ts_ll_distance_2;
+    int16_t i1, i2, n1, n2, c1, c2, pnpcs;
+    int16_t c, n, t, ts, te, ll, plwp, riwp;
+    int16_t te_ll_distance, te_ll_distance_1, te_ll_distance_2;
+    int16_t ts_ll_distance, ts_ll_distance_1, ts_ll_distance_2;
     double xx, yy, zz;
     double d3, d2, md2 = 1E9;
     uint8_t colorbase, showdisc, showrings, surfacemap;
@@ -5297,17 +5217,15 @@ void planets () {
     }
 
     for (n = 0; n < nearstar_nob; n++) {
-        planet_xyz (n);
-        xx = plx - dzat_x;
-        yy = ply - dzat_y;
-        zz = plz - dzat_z;
+        planet_xyz(n);
+        xx                       = plx - dzat_x;
+        yy                       = ply - dzat_y;
+        zz                       = plz - dzat_z;
         nearstar_p_qsortindex[n] = n;
-        nearstar_p_qsortdist[n]  = sqrt (xx * xx + yy * yy + zz * zz);
+        nearstar_p_qsortdist[n]  = sqrt(xx * xx + yy * yy + zz * zz);
     }
 
-    QuickSort (nearstar_p_qsortindex,
-               nearstar_p_qsortdist,
-               0, nearstar_nob - 1);
+    QuickSort(nearstar_p_qsortindex, nearstar_p_qsortdist, 0, nearstar_nob - 1);
 
     if (nearstar_nob == 1) {
         pnpcs = npcs;
@@ -5319,16 +5237,16 @@ void planets () {
         }
     } else {
         pnpcs = npcs;
-        n1 = nearstar_nob - 1;
-        i1 = nearstar_p_qsortindex[n1];
-        c1 = nearstar_p_owner[i1];
-        n2 = nearstar_nob - 2;
-        i2 = nearstar_p_qsortindex[n2];
-        c2 = nearstar_p_owner[i2];
+        n1    = nearstar_nob - 1;
+        i1    = nearstar_p_qsortindex[n1];
+        c1    = nearstar_p_owner[i1];
+        n2    = nearstar_nob - 2;
+        i2    = nearstar_p_qsortindex[n2];
+        c2    = nearstar_p_owner[i2];
 
         if (c1 > -1) {
             while (c2 > -1) {
-                n2 --;
+                n2--;
                 i2 = nearstar_p_qsortindex[n2];
                 c2 = nearstar_p_owner[i2];
             }
@@ -5343,27 +5261,27 @@ void planets () {
     }
 
     for (c = 0; c < nearstar_nob; c++) {
-        n  = nearstar_p_qsortindex[c];
+        n = nearstar_p_qsortindex[c];
         //
         d3 = nearstar_p_qsortdist[n];
-        planet_xyz (n);
+        planet_xyz(n);
 
         if (nearstar_p_owner[n] > -1) {
             p_background = s_background;
-            colorbase = 128;
-            is_moon = 1;
+            colorbase    = 128;
+            is_moon      = 1;
         } else {
             p_background = surface_backup;
-            colorbase = 192;
-            is_moon = 0;
+            colorbase    = 192;
+            is_moon      = 0;
         }
 
-        showdisc = 0;
-        showrings = 0;
+        showdisc   = 0;
+        showrings  = 0;
         surfacemap = 0;
 
         if (d3 < 250 * nearstar_p_ray[n]) {
-            showrings = 1;
+            showrings  = 1;
             ringlayers = 0.05 * (d3 / nearstar_p_ray[n]);
 
             if (d3 < 100 * nearstar_p_ray[n]) {
@@ -5377,7 +5295,7 @@ void planets () {
 
         //
         if (ip_targetting || !showdisc) {
-            far_pixel_at (plx, ply, plz, nearstar_p_ray[n], 0);
+            far_pixel_at(plx, ply, plz, nearstar_p_ray[n], 0);
 
             if (ip_targetting) {
                 pxx -= x_centro;
@@ -5385,7 +5303,7 @@ void planets () {
                 d2 = pxx * pxx + pyy * pyy;
 
                 if (d2 < md2) {
-                    md2 = d2;
+                    md2          = d2;
                     ip_targetted = n;
                 }
             }
@@ -5404,7 +5322,7 @@ void planets () {
                 multicolourmask = 0x40;
             }
 
-            plwp = 359 - planet_viewpoint (dzat_x, dzat_z);
+            plwp = 359 - planet_viewpoint(dzat_x, dzat_z);
 
             if (nearstar_p_ring[n]) {
                 riwp = plwp + 180;
@@ -5413,7 +5331,7 @@ void planets () {
                     riwp -= 360;
                 }
 
-                ring (n, plx, ply, plz, riwp, ringlayers);
+                ring(n, plx, ply, plz, riwp, ringlayers);
             }
         }
 
@@ -5422,37 +5340,33 @@ void planets () {
                 if (n == resident_map1 || n == resident_map2) {
                     if (is_moon) {
                         if (nearstar_p_type[n]) {
-                            surface (n, nearstar_p_type[n],
-                                     1000000        *
-                                     nearstar_ray*
-                                     nearstar_p_type[n]     *
-                                     nearstar_p_orb_orient[n],
-                                     128);
+                            surface(n, nearstar_p_type[n],
+                                    1000000 * nearstar_ray *
+                                        nearstar_p_type[n] *
+                                        nearstar_p_orb_orient[n],
+                                    128);
                         } else {
-                            surface (n, nearstar_p_type[n],
-                                     2000000 * n*
-                                     nearstar_ray*
-                                     nearstar_p_orb_orient[n],
-                                     128);
+                            surface(n, nearstar_p_type[n],
+                                    2000000 * n * nearstar_ray *
+                                        nearstar_p_orb_orient[n],
+                                    128);
                         }
                     } else {
                         if (nearstar_p_type[n]) {
-                            surface (n, nearstar_p_type[n],
-                                     1000000        *
-                                     nearstar_p_type[n]     *
-                                     nearstar_p_orb_seed[n] *
-                                     nearstar_p_orb_tilt[n] *
-                                     nearstar_p_orb_ecc[n]  *
-                                     nearstar_p_orb_orient[n],
-                                     192);
+                            surface(n, nearstar_p_type[n],
+                                    1000000 * nearstar_p_type[n] *
+                                        nearstar_p_orb_seed[n] *
+                                        nearstar_p_orb_tilt[n] *
+                                        nearstar_p_orb_ecc[n] *
+                                        nearstar_p_orb_orient[n],
+                                    192);
                         } else {
-                            surface (n, nearstar_p_type[n],
-                                     2000000 * n*
-                                     nearstar_p_orb_seed[n] *
-                                     nearstar_p_orb_tilt[n] *
-                                     nearstar_p_orb_ecc[n]  *
-                                     nearstar_p_orb_orient[n],
-                                     192);
+                            surface(n, nearstar_p_type[n],
+                                    2000000 * n * nearstar_p_orb_seed[n] *
+                                        nearstar_p_orb_tilt[n] *
+                                        nearstar_p_orb_ecc[n] *
+                                        nearstar_p_orb_orient[n],
+                                    192);
                         }
                     }
 
@@ -5474,20 +5388,18 @@ void planets () {
 
                     //
                     if (ts > te) {
-                        if (ll >= ts
-                                || ll < te) {
+                        if (ll >= ts || ll < te) {
                             nightzone = 1;
                         }
                     } else {
-                        if (ll >= ts
-                                && ll < te) {
+                        if (ll >= ts && ll < te) {
                             nightzone = 1;
                         }
                     }
 
                     //
                     te_ll_distance_1 = 0;
-                    ll = landing_pt_lon;
+                    ll               = landing_pt_lon;
 
                     while (ll != te) {
                         te_ll_distance_1++;
@@ -5499,7 +5411,7 @@ void planets () {
                     }
 
                     te_ll_distance_2 = 0;
-                    ll = landing_pt_lon;
+                    ll               = landing_pt_lon;
 
                     while (ll != te) {
                         te_ll_distance_2++;
@@ -5517,7 +5429,7 @@ void planets () {
                     }
 
                     ts_ll_distance_1 = 0;
-                    ll = landing_pt_lon;
+                    ll               = landing_pt_lon;
 
                     while (ll != ts) {
                         ts_ll_distance_1++;
@@ -5529,7 +5441,7 @@ void planets () {
                     }
 
                     ts_ll_distance_2 = 0;
-                    ll = landing_pt_lon;
+                    ll               = landing_pt_lon;
 
                     while (ll != ts) {
                         ts_ll_distance_2++;
@@ -5548,32 +5460,39 @@ void planets () {
 
                     if (ts_ll_distance <= te_ll_distance) {
                         sun_x_factor = +1;
-                        crepzone = ts_ll_distance;
+                        crepzone     = ts_ll_distance;
                     } else {
                         sun_x_factor = -1;
-                        crepzone = te_ll_distance;
+                        crepzone     = te_ll_distance;
                     }
 
                     //
-                    fast_srand (nearstar_p_orb_seed[n] * nearstar_p_orb_ecc[n] * 12345);
-                    ptr = 360 * landing_pt_lat + landing_pt_lon;
-                    sky_red_filter = fast_random (31) + 32;
-                    sky_grn_filter = fast_random (15) + 48;
-                    sky_blu_filter = fast_random (15) + 48;
+                    fast_srand(nearstar_p_orb_seed[n] * nearstar_p_orb_ecc[n] *
+                               12345);
+                    ptr            = 360 * landing_pt_lat + landing_pt_lon;
+                    sky_red_filter = fast_random(31) + 32;
+                    sky_grn_filter = fast_random(15) + 48;
+                    sky_blu_filter = fast_random(15) + 48;
 
                     if (is_moon) {
-                        gnd_red_filter = tmppal[(3 * p_background[ptr]) + 128 * 3 + 0];
-                        gnd_grn_filter = tmppal[(3 * p_background[ptr]) + 128 * 3 + 1];
-                        gnd_blu_filter = tmppal[(3 * p_background[ptr]) + 128 * 3 + 2];
+                        gnd_red_filter =
+                            tmppal[(3 * p_background[ptr]) + 128 * 3 + 0];
+                        gnd_grn_filter =
+                            tmppal[(3 * p_background[ptr]) + 128 * 3 + 1];
+                        gnd_blu_filter =
+                            tmppal[(3 * p_background[ptr]) + 128 * 3 + 2];
                     } else {
-                        gnd_red_filter = tmppal[(3 * p_background[ptr]) + 192 * 3 + 0];
-                        gnd_grn_filter = tmppal[(3 * p_background[ptr]) + 192 * 3 + 1];
-                        gnd_blu_filter = tmppal[(3 * p_background[ptr]) + 192 * 3 + 2];
+                        gnd_red_filter =
+                            tmppal[(3 * p_background[ptr]) + 192 * 3 + 0];
+                        gnd_grn_filter =
+                            tmppal[(3 * p_background[ptr]) + 192 * 3 + 1];
+                        gnd_blu_filter =
+                            tmppal[(3 * p_background[ptr]) + 192 * 3 + 2];
                     }
 
-                    gnd_red_filter += fast_random (15);
-                    gnd_grn_filter += fast_random (15);
-                    gnd_blu_filter += fast_random (15);
+                    gnd_red_filter += fast_random(15);
+                    gnd_grn_filter += fast_random(15);
+                    gnd_blu_filter += fast_random(15);
                     test = nearstar_p_type[n];
 
                     if (nightzone) {
@@ -5598,7 +5517,7 @@ void planets () {
                     }
 
                     if (test == 3 || test == 5) {
-                        albedo *= 2;    // da 0 a 1F --> da 0 a 3F
+                        albedo *= 2; // da 0 a 1F --> da 0 a 3F
                     }
 
                     rainy = (float)atmosphere[ptr >> 1] * 0.25;
@@ -5614,20 +5533,20 @@ void planets () {
                         if (crepzone > 5) {
                             sky_red_filter /= 2;
                             sky_brightness = 8;
-                            horiz_brt = 10;
+                            horiz_brt      = 10;
                         } else {
                             sky_brightness = 32;
-                            horiz_brt = 16;
+                            horiz_brt      = 16;
                         }
                     } else {
                         if (crepzone > 5) {
                             sky_brightness = 48;
-                            horiz_brt = 20;
+                            horiz_brt      = 20;
                         } else {
                             sky_grn_filter /= 2;
                             sky_blu_filter /= 3;
                             sky_brightness = 40;
-                            horiz_brt = 13;
+                            horiz_brt      = 13;
                         }
                     }
 
@@ -5658,9 +5577,9 @@ void planets () {
                     glass_bubble = 0;
                 }
 
-                globe (plwp + nearstar_p_rotation[n],
-                       adapted, p_background, (uint8_t*) n_globes_map, gl_bytes,
-                       plx, ply, plz, nearstar_p_ray[n], colorbase, 0);
+                globe(plwp + nearstar_p_rotation[n], adapted, p_background,
+                      (uint8_t *)n_globes_map, gl_bytes, plx, ply, plz,
+                      nearstar_p_ray[n], colorbase, 0);
 
                 if (n == ip_targetted && landing_point) {
                     for (poffs = -180; poffs < 180; poffs++) {
@@ -5682,7 +5601,7 @@ void planets () {
                     }
                 }
             } else {
-                ts = (89 + 35) - cplx_planet_viewpoint (n);
+                ts = (89 + 35) - cplx_planet_viewpoint(n);
 
                 if (ts < 0) {
                     ts += 360;
@@ -5692,22 +5611,22 @@ void planets () {
                     ts -= 360;
                 }
 
-                glowinglobe (plwp, adapted, (uint8_t*) n_globes_map, gl_bytes, plx,
-                             ply, plz, nearstar_p_ray[n], ts, 130, 127);
+                glowinglobe(plwp, adapted, (uint8_t *)n_globes_map, gl_bytes,
+                            plx, ply, plz, nearstar_p_ray[n], ts, 130, 127);
             }
         }
 
         if (showrings) {
             if (nearstar_p_ring[n]) {
-                ring (n, plx, ply, plz, plwp, ringlayers);
+                ring(n, plx, ply, plz, plwp, ringlayers);
 
                 if (!showdisc) {
-                    far_pixel_at (plx, ply, plz, nearstar_p_ray[n], 0);
+                    far_pixel_at(plx, ply, plz, nearstar_p_ray[n], 0);
                 }
             }
         }
 
-notaplanet:
+    notaplanet:
         int abc123;
     }
 
@@ -5726,7 +5645,7 @@ notaplanet:
 
 */
 
-double  laststar_x, laststar_y, laststar_z;
+double laststar_x, laststar_y, laststar_z;
 
 /*  Determina se una certa stella, di cui si specifica il codice
     d'identificazione univoco, � attualmente nel range dei sensori.
@@ -5734,7 +5653,7 @@ double  laststar_x, laststar_y, laststar_z;
     Quando � visibile, le coordinate della stella sono riportate
     nelle variabili "laststar_x", "laststar_y" e "laststar_z". */
 
-int8_t isthere (double star_id) {
+int8_t isthere(double star_id) {
 #if 0
     int8_t        visible_sectors = 9;
     int32_t        sect_x, sect_y, sect_z;
@@ -5861,29 +5780,28 @@ int8_t isthere (double star_id) {
 y_end:
     return (1);
 #endif
-    STUB
-    return 0;
+    STUB return 0;
 }
 
 /*  Ricerca tutte le stelle note visibili, fino a 50 contemporaneamente.
     Compila una tabella contenente l'ID di ogni stella e la sua
     posizione in coordinate Parsis. */
 
-const int16_t   tgt_bytes_per_scan = 5 * 32;
-int32_t        tgt_collect_lastpos = 0;
+const int16_t tgt_bytes_per_scan = 5 * 32;
+int32_t tgt_collect_lastpos      = 0;
 
-int16_t         targets = 0;
-int16_t         topmost_target = 0;
-int16_t         target_line = 0;
-int8_t        update_targets = 0;
-int8_t        collecting_targets = 0;
+int16_t targets           = 0;
+int16_t topmost_target    = 0;
+int16_t target_line       = 0;
+int8_t update_targets     = 0;
+int8_t collecting_targets = 0;
 
-double      targets_table_id[50];
-double      targets_table_px[50];
-double      targets_table_py[50];
-double      targets_table_pz[50];
+double targets_table_id[50];
+double targets_table_px[50];
+double targets_table_py[50];
+double targets_table_pz[50];
 
-void collect_targets () {
+void collect_targets() {
 #if 0
     int16_t     local_smh;
     uint16_t    n, ptr, index, toread;
@@ -5952,9 +5870,9 @@ stop:
 
 /* Cambia lo stato visualizzato dall'FCS sull'Head-Up-Display. */
 
-void status (const char* status_description, int16_t message_delay) {
+void status(const char *status_description, int16_t message_delay) {
     if (message_delay >= fcs_status_delay) {
-        strcpy((char*) fcs_status, status_description);
+        strcpy((char *)fcs_status, status_description);
         fcs_status_delay = message_delay;
     }
 }
@@ -6036,74 +5954,71 @@ int8_t digimap[65 * 5] = {
     for the sea, has been extended from 22586 to 32768.
 */
 
-uint32_t* digimap2; // Will be assigned to n_globes_map + gl_bytes.
+uint32_t *digimap2; // Will be assigned to n_globes_map + gl_bytes.
 
 // Panoramic dome.
 
-const float cupsize = 1800;
+const float cupsize   = 1800;
 const float cupheight = 1667;
 
-void cupola (float y_or, float brk) {
+void cupola(float y_or, float brk) {
     float xx, yy, zz;
     float lat, lon, dlat, dlon, dlon_2, k, clon, slon, ck, sk;
-    dlat = M_PI / 20;
-    dlon = M_PI / 10;
+    dlat   = M_PI / 20;
+    dlon   = M_PI / 10;
     dlon_2 = dlon / 2;
 
     for (lon = 0; lon < 2 * M_PI - dlon_2; lon += dlon) {
-        k = lon + dlon;
-        ck = cos (k);
-        sk = sin (k);
-        clon = cos (lon);
-        slon = sin (lon);
+        k    = lon + dlon;
+        ck   = cos(k);
+        sk   = sin(k);
+        clon = cos(lon);
+        slon = sin(lon);
 
         for (lat = dlat; lat < brk * dlat; lat += dlat) {
             xx = cupsize * sin(lat + dlat);
-            yy = - cupheight * cos(lat) * y_or;
+            yy = -cupheight * cos(lat) * y_or;
             zz = cupsize * sin(lat);
-            stick3d (zz * clon, yy, zz * slon,
-                     xx * clon, -cupheight * cos(lat + dlat)*y_or, xx * slon);
-            stick3d (zz * clon, yy, zz * slon,
-                     zz * ck, yy, zz * sk);
+            stick3d(zz * clon, yy, zz * slon, xx * clon,
+                    -cupheight * cos(lat + dlat) * y_or, xx * slon);
+            stick3d(zz * clon, yy, zz * slon, zz * ck, yy, zz * sk);
         }
 
         if (gburst > 1) {
             lat = (M_PI / 20) * 8 * ((float)gburst / 63);
-            lens_flares_for (cam_x, cam_y, cam_z,
-                             +cupsize * clon * sin(lat),
-                             -cupheight *      cos(lat),
-                             +cupsize * slon * sin(lat),
-                             -50000, 10, 1, 0, 1, 1);
+            lens_flares_for(cam_x, cam_y, cam_z, +cupsize * clon * sin(lat),
+                            -cupheight * cos(lat), +cupsize * slon * sin(lat),
+                            -50000, 10, 1, 0, 1, 1);
             flares = 0;
         }
     }
 }
 
-void polycupola (float y_or, int8_t textured) {
+void polycupola(float y_or, int8_t textured) {
     float d1, d2, d3, dd;
     float x[4], y[4], z[4];
     float lat, lon, dlat, dlon, dlon_2, k, clon, slon, ck, sk;
-    dlat = M_PI / 20;
-    dlon = M_PI / 10;
+    dlat   = M_PI / 20;
+    dlon   = M_PI / 10;
     dlon_2 = dlon / 2;
 
     if (textured) {
-        setfx (4);
+        setfx(4);
     } else {
-        setfx (2);
+        setfx(2);
     }
 
     for (lon = 0; lon < 2 * M_PI - dlon_2; lon += dlon) {
-        k = lon + dlon;
-        ck = cos (k);
-        sk = sin (k);
-        clon = cos (lon);
-        slon = sin (lon);
+        k    = lon + dlon;
+        ck   = cos(k);
+        sk   = sin(k);
+        clon = cos(lon);
+        slon = sin(lon);
 
         for (lat = dlat; lat < 8 * dlat; lat += dlat) {
-            xx = cupsize * sin(lat + dlat);
-            yy = - cupheight * cos(lat) * y_or;
-            zz = cupsize * sin(lat);
+            xx   = cupsize * sin(lat + dlat);
+            yy   = -cupheight * cos(lat) * y_or;
+            zz   = cupsize * sin(lat);
             x[0] = zz * clon;
             y[0] = yy;
             z[0] = zz * slon;
@@ -6111,16 +6026,16 @@ void polycupola (float y_or, int8_t textured) {
             y[1] = yy;
             z[1] = zz * sk;
             x[2] = xx * ck;
-            y[2] = - cupheight * cos(lat + dlat) * y_or;
+            y[2] = -cupheight * cos(lat + dlat) * y_or;
             z[2] = xx * sk;
             x[3] = xx * clon;
-            y[3] = - cupheight * cos(lat + dlat) * y_or;
+            y[3] = -cupheight * cos(lat + dlat) * y_or;
             z[3] = xx * slon;
 
             if (ontheroof && y_or == 1) {
                 d1 = 0.5 * (x[0] + x[1]) - cam_x;
                 d2 = 0.5 * (z[0] + z[1]) - cam_z;
-                dd = 1000 - sqrt (d1 * d1 + d2 * d2);
+                dd = 1000 - sqrt(d1 * d1 + d2 * d2);
 
                 if (dd > 600) {
                     dd = 600;
@@ -6131,14 +6046,14 @@ void polycupola (float y_or, int8_t textured) {
                 }
 
                 cam_y += dd;
-                poly3d (x, y, z, 4, 64);
+                poly3d(x, y, z, 4, 64);
                 cam_y -= dd;
             } else {
                 if (textured) {
                     d1 = 0.5 * (x[0] + x[1]) - cam_x;
                     d2 = 0.5 * (y[0] + y[2]) - cam_y;
                     d3 = 0.5 * (z[0] + z[1]) - cam_z;
-                    dd = 500 - sqrt (d1 * d1 + d2 * d2 + d3 * d3);
+                    dd = 500 - sqrt(d1 * d1 + d2 * d2 + d3 * d3);
 
                     if (dd > 500) {
                         dd = 500;
@@ -6149,9 +6064,9 @@ void polycupola (float y_or, int8_t textured) {
                     }
 
                     cam_y += 4 * dd * y_or;
-                    xx = x[3];
-                    yy = y[3];
-                    zz = z[3];
+                    xx   = x[3];
+                    yy   = y[3];
+                    zz   = z[3];
                     x[3] = x[2];
                     y[3] = y[2];
                     z[3] = z[2];
@@ -6164,46 +6079,45 @@ void polycupola (float y_or, int8_t textured) {
                     x[0] = xx;
                     y[0] = yy;
                     z[0] = zz;
-                    polymap (x, y, z, 4, 0);
+                    polymap(x, y, z, 4, 0);
                     cam_y -= 4 * dd * y_or;
                 } else {
-                    poly3d (x, y, z, 4, 64);
+                    poly3d(x, y, z, 4, 64);
                 }
             }
         }
     }
 
-    resetfx ();
+    resetfx();
 }
 
 // Synchronizer: up to 18 frames per second on any PC.
 
 clock_t gtime;
 
-void sync_start () {
-    gtime = clock();
+void sync_start() { gtime = clock(); }
+
+void sync_stop() {
+    while (clock() == gtime)
+        ;
 }
 
-void sync_stop () {
-    while (clock() == gtime);
-}
-
-int32_t   global_surface_seed;
-float  ppos_x, ppos_y, ppos_z;
-double dsd;         // To measure distances.
+int32_t global_surface_seed;
+float ppos_x, ppos_y, ppos_z;
+double dsd; // To measure distances.
 
 // Load the bitmap for the star surface.
 // Implementation is sketchy at best.
-void load_starface () {
-    auto seed = static_cast<uint16_t>(nearstar_identity * 12345);
+void load_starface() {
+    auto seed  = static_cast<uint16_t>(nearstar_identity * 12345);
     int16_t ax = seed;
     for (int i = 0; i <= 64800; i++) {
         ax += (64800 - i);
-        int32_t result = ax * ax;
-        auto resultHigh = static_cast<int16_t>(result >> 16);
-        auto resultLow = static_cast<int16_t>(result & 0xFFFF);
+        int32_t result    = ax * ax;
+        auto resultHigh   = static_cast<int16_t>(result >> 16);
+        auto resultLow    = static_cast<int16_t>(result & 0xFFFF);
         int16_t netResult = resultHigh = resultLow;
-        auto blarg = static_cast<uint8_t>(netResult & 0xFF);
+        auto blarg                     = static_cast<uint8_t>(netResult & 0xFF);
         blarg &= 0x3E;
         s_background[i] = blarg;
     }
@@ -6222,7 +6136,7 @@ void load_starface () {
     }
 }
 
-void load_QVRmaps () {
+void load_QVRmaps() {
     int32_t fh;
     fh = sa_open(offsets_map);
 
@@ -6239,26 +6153,26 @@ void load_QVRmaps () {
     }
 }
 
-void load_digimap2 () {
+void load_digimap2() {
     int32_t fh;
-    fh = sa_open (off_digimap2);
+    fh = sa_open(off_digimap2);
 
     if (fh > -1) {
-        read (fh, digimap2, dm2_bytes);
-        close (fh);
+        read(fh, digimap2, dm2_bytes);
+        close(fh);
     }
 }
 
-int8_t    outhudbuffer[81];
-const char *    compass =
+int8_t outhudbuffer[81];
+const char *compass =
     "N.........E.........S.........W.........N.........E.........S.......";
 
-float   tp_gravity = 1, pp_gravity = 1;
-float   tp_temp = 22, pp_temp = 22;
-float   tp_pressure = 1, pp_pressure = 1;
-float   tp_pulse = 118, pp_pulse = 118;
+float tp_gravity = 1, pp_gravity = 1;
+float tp_temp = 22, pp_temp = 22;
+float tp_pressure = 1, pp_pressure = 1;
+float tp_pulse = 118, pp_pulse = 118;
 
-void wrouthud (uint16_t x, uint16_t y, uint16_t l, char* text) {
+void wrouthud(uint16_t x, uint16_t y, uint16_t l, char *text) {
 #if 0
     int16_t j, i, n;
     uint16_t spot;
@@ -6297,7 +6211,7 @@ void wrouthud (uint16_t x, uint16_t y, uint16_t l, char* text) {
     STUB
 }
 
-void surrounding (int8_t compass_on, int16_t openhudcount) {
+void surrounding(int8_t compass_on, int16_t openhudcount) {
 #if 0
     int16_t cpos, crem;
     int32_t    lsecs, lptr;
@@ -6439,7 +6353,7 @@ extern int32_t planet_label_pos;
 extern int8_t planet_label[25];
 
 int8_t snapfilename[24];
-void snapshot (int16_t forcenumber, int8_t showdata) {
+void snapshot(int16_t forcenumber, int8_t showdata) {
 #if 0
     int16_t prog;
     uint16_t pqw;
@@ -6589,7 +6503,7 @@ void additional_consumes() {
                 }
 
             if (nsync == 4) // vimana orbit
-                if (!(iqsecs %  7)) {
+                if (!(iqsecs % 7)) {
                     pwr--;
                     iqsecs++;
                 }
@@ -6603,17 +6517,17 @@ void additional_consumes() {
     }
 
     //
-    if (pl_search       && !(iqsecs % 155)) {
+    if (pl_search && !(iqsecs % 155)) {
         pwr--;
         iqsecs++;
     }
 
-    if (ilightv == 1    && !(iqsecs %  84)) {
+    if (ilightv == 1 && !(iqsecs % 84)) {
         pwr--;
         iqsecs++;
     }
 
-    if (field_amplificator  && !(iqsecs %  41)) {
+    if (field_amplificator && !(iqsecs % 41)) {
         pwr--;
         iqsecs++;
     }
@@ -6623,15 +6537,15 @@ void additional_consumes() {
         if (charge) {
             charge--;
             pwr = 20000;
-            status ("FCS: READY", 100);
+            status("FCS: READY", 100);
         } else {
-            stspeed     = 0;
-            ip_reaching     = 0;
-            ip_reached  = 1;
-            ip_targetted    = -1;
+            stspeed      = 0;
+            ip_reaching  = 0;
+            ip_reached   = 1;
+            ip_targetted = -1;
 
             if (pwr != 15000) {
-                status ("POWER LOSS", 100);
+                status("POWER LOSS", 100);
                 pwr = 15000;
             }
         }
