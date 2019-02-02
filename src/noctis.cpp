@@ -1387,7 +1387,7 @@ void update_star_label() {
             }
 
             srand (ap_target_id);
-            sprintf ((char*) (star_label + 21), "S%02d", rand() % (star_classes + 1));
+            sprintf ((char*) (star_label + 21), "S%02d", rand() % star_classes);
         }
     }
 }
@@ -4458,7 +4458,7 @@ int main(int argc, char **argv) {
             if (c == 8) {
                 fast_srand(nearstar_identity);
                 srand(fast_random(0x7FFF));
-                c = rand() % (star_classes + 1);
+                c = rand() % star_classes;
                 ir = class_rgb[c * 3 + 0];
                 ig      = class_rgb[c * 3 + 1];
                 ib      = class_rgb[c * 3 + 2];

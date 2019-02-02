@@ -34,6 +34,7 @@
 */
 
 #include "noctis-d.h"
+#include "brtl.h"
 
 // Date and specific functions imported from ASSEMBLY.H
 
@@ -174,13 +175,16 @@ void tavola_colori(uint8_t *new_palette, uint16_t starting_color,
 int16_t mdltx = 0, mdlty = 0, mx = 0, my = 0, mpul = 0;
 
 // Read mouse input.
-void mouse_input() STUB
+void mouse_input() {
+    STUB
+}
 
     // Check the presence of the mouse (or the support for it).
     // And initialize the driver (empty the movement buffer).
 
-    int8_t test_and_init_mouse() {
-    STUB return 1;
+int8_t test_and_init_mouse() {
+    STUB
+    return 1;
 }
 
 // Copies QUADWORDS * 4 bytes from the source to the destination.
@@ -566,7 +570,7 @@ int16_t sun_x_factor;
 int16_t epoc = 6011;
 
 int8_t ctb[512];
-int8_t dec[20];
+char dec[20];
 
 int8_t _delay  = 12;
 int8_t stspeed = 0;
@@ -2305,11 +2309,8 @@ void modpv(int16_t handle, int16_t polygon_id, int16_t vertex_id, float x_scale,
 // Returns the alphabetic correspondent of integers and / or real numbers.
 
 char *alphavalue(double value) {
-#if 0
     gcvt (value, 15, dec);
     return (dec);
-#endif
-    FIXME
 }
 
 // Draws the background, with the map offsets.map.
@@ -6315,7 +6316,7 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
         }
     }
 
-    wrouthud (2, 2, NULL, outhudbuffer);
+    wrouthud (2, 2, NULL, (char*) outhudbuffer);
     pp_delta = (pp_gravity - tp_gravity) * 0.25;
     tp_gravity += pp_delta;
     pp_delta = (pp_temp - tp_temp) * 0.05;
@@ -6326,10 +6327,10 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
     tp_pulse += pp_delta;
     //unit� di debugging dell'albedo:
     //sprintf (outhudbuffer, "GRAVITY %2.3f FG & TEMPERATURE %+3.1f@C & PRESSURE %2.3f ATM & PULSE %3.0f PPS", tp_gravity, tp_temp, tp_pressure, (float)albedo);
-    sprintf (outhudbuffer,
+    sprintf ((char*) outhudbuffer,
              "GRAVITY %2.3f FG & TEMPERATURE %+3.1f@C & PRESSURE %2.3f ATM & PULSE %3.0f PPS",
              tp_gravity, tp_temp, tp_pressure, tp_pulse);
-    wrouthud (2, 192, NULL, outhudbuffer);
+    wrouthud (2, 192, NULL, (char*) outhudbuffer);
 }
 
 /*  Salva una fotografia dello schermo sul file "SNAPXXXX.BMP":
