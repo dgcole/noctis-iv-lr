@@ -765,19 +765,18 @@ int32_t flat_rnd_seed;
 
 // Pseudo table selection.
 // There are 4,294,967,295 possible tables, and about 20000 elements per table.
-void fast_srand(int32_t seed) { flat_rnd_seed = seed | 3; }
+void fast_srand(int32_t seed) {
+    flat_rnd_seed = seed | 3;
+}
 
 // Extraction of a number: "mask" activates the bits.
 // This is very sketchy!
 int32_t fast_random(int32_t mask) {
-    auto eax = static_cast<uint32_t>(flat_rnd_seed);
-    auto edx = static_cast<uint32_t>(flat_rnd_seed);
+    int32_t eax = flat_rnd_seed;
+    int32_t edx = flat_rnd_seed;
 
-    uint64_t result = eax * edx;
-    edx             = static_cast<uint32_t>(result >> 32);
-    eax             = static_cast<uint32_t>(result & 0xFFFFFFFF);
-    eax += (edx >> 24);
-
+    uint64_t res = (uint64_t) eax * (uint64_t) edx;
+    eax = (res & 0xFFFFFFFF) + ((res >> 32) & 0x0000FFFF);
     flat_rnd_seed += eax;
 
     return eax & mask;
@@ -798,7 +797,9 @@ float flandom() {
     FIXME
 }
 
-float fast_flandom() { return ((float)fast_random(32767) * 0.000030518); }
+float fast_flandom() {
+    return ((float)fast_random(32767) * 0.000030518);
+}
 
 // Loads virtual file handles from supports.nct
 int32_t sa_open(int32_t offset_of_virtual_file) {
@@ -6120,7 +6121,7 @@ double dsd; // To measure distances.
 void load_starface() {
     auto seed  = static_cast<uint16_t>(nearstar_identity * 12345);
     int16_t ax = seed;
-    for (int i = 0; i <= 64800; i++) {
+    for (int i = 0; i < 64800; i++) {
         ax += (64800 - i);
         int32_t result    = ax * ax;
         auto resultHigh   = static_cast<int16_t>(result >> 16);

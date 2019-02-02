@@ -406,31 +406,26 @@ const char *comm = "DATA\\COMM.BIN"; // File di comunicazione dei moduli.
 /* Congela la situazione (all'uscita dal programma o al run di un modulo). */
 
 void freeze() {
-#if 0
-    int16_t fh = _rtl_creat(situation_file, 0);
+    int16_t fh = creat(situation_file, 0);
 
     if (fh == -1) {
         return;
     }
 
-    _rtl_write (fh, &nsync, 245);
-    _rtl_write (fh, &gnc_pos, 1);
-    _rtl_write (fh, &goesfile_pos, 4);
-    _rtl_write (fh, goesnet_command, 120);
-    _rtl_close (fh);
-#endif
-    STUB
+    write (fh, &nsync, 245);
+    write (fh, &gnc_pos, 1);
+    write (fh, &goesfile_pos, 4);
+    write (fh, goesnet_command, 120);
+    close (fh);
 }
 
 void run_goesnet_module() {
-#if 0
     // Esecuzione di un modulo eseguibile della GOES Net.
     int16_t ch;
-    uint16_t bqw = QUADWORDS;
     // Salva la situazione perch� alcuni moduli ne hanno bisogno.
     freeze ();
     // Libera circa 60 kilobytes per il lancio del modulo eseguibile.
-    farfree (adapted);
+    free(adapted);
 
     // Verifica comandi residenti.
     if (!memcmp (goesnet_command, "CLR", 3)) {
@@ -438,22 +433,22 @@ void run_goesnet_module() {
         goto solong;
     }
 
-    ch = _rtl_creat (goesoutputfile, 0);
+    ch = creat (goesoutputfile, 0);
 
     if (ch > -1) {
-        _rtl_write (ch, "(UNKNOWN MODULE)", 16);
-        _rtl_close (ch);
+        write (ch, "(UNKNOWN MODULE)", 16);
+        close (ch);
     }
 
     // Cancella l'ultimo carattere (che � il _ cursore) dalla command
     // line, poi aggiunge la redirezione sul file "goesfile.txt"
     goesnet_command[gnc_pos] = 0;
-    strcat (goesnet_command, " >");
-    strcat (goesnet_command, goesoutputfile);
-    system (goesnet_command);
+    strcat ((char*) goesnet_command, " >");
+    strcat ((char*) goesnet_command, goesoutputfile);
+    system ((char*) goesnet_command);
     // Ri-alloca l'area temporaneamente liberata.
 solong:
-    adapted = (uint8_t far*) farmalloc (sc_bytes);
+    adapted = (uint8_t*) malloc (sc_bytes);
 
     if (!adapted) {
         _80_25_C ();
@@ -462,19 +457,15 @@ solong:
         attendi_pressione_tasto();
         exit (0xFF);
     } else {
-        QUADWORDS = 80 * 10;
-        pclear (adaptor, 0);
-        QUADWORDS = 16000 - 80 * 12;
-        pcopy (adapted + 2 * 320, adaptor);
-        QUADWORDS = bqw;
         // Reagisce alla presenza di dati nel file di comunicazione.
-        ch = _rtl_open (comm, 0);
+        ch = open (comm, 0);
 
         if (ch > -1) {
-            if (filelength(ch) == 2) {
+            uint32_t len = lseek(ch, 0, SEEK_END);
+            if (len == 2) {
                 if (ap_reached) {
                     if (pwr > 15000) {
-                        if (_rtl_read (ch, &ip_targetted, 2) == 2) {
+                        if (read (ch, &ip_targetted, 2) == 2) {
                             ip_targetted--;
                             fix_local_target ();
                             ip_targetting = 0;
@@ -487,11 +478,11 @@ solong:
                 }
             }
 
-            if (filelength(ch) == 24) {
-                _rtl_read (ch, &ap_target_x, 8);
-                _rtl_read (ch, &ap_target_y, 8);
+            if (len == 24) {
+                read (ch, &ap_target_x, 8);
+                read (ch, &ap_target_y, 8);
 
-                if (_rtl_read (ch, &ap_target_z, 8) == 8) {
+                if (read (ch, &ap_target_z, 8) == 8) {
                     ap_targetting = 0;
                     extract_ap_target_infos ();
                     fix_remote_target ();
@@ -508,16 +499,13 @@ solong:
                     }
                 }
             }
-
-            _rtl_close (ch);
+            close (ch);
             remove (comm);
         }
     }
 
     force_update = 1;
     goesfile_pos = 0;
-#endif
-    STUB
 }
 
 /* Gruppo di tracciamento dello schermo del computer di bordo. */
@@ -3509,7 +3497,7 @@ int main(int argc, char** argv) {
         }
 
         //
-        // Visualizzazione/aggiornamento tabella "targets in range".
+        // Display / update table "targets in range".
         //
         if (targets_in_range) {
             if (update_targets) {
@@ -3520,17 +3508,14 @@ int main(int argc, char** argv) {
                     tgt_label_pos = search_id_code(targets_table_id[c], 'S');
 
                     if (tgt_label_pos > -1) {
-#if 0
-                        smh = _rtl_open (starmap_file, 0);
+                        smh = open (starmap_file, 0);
 
                         if (smh > -1) {
                             lseek (smh, tgt_label_pos + 8, SEEK_SET);
-                            _rtl_read (smh, &target_name[tgts_in_show], 24);
-                            _rtl_close (smh);
+                            read (smh, &target_name[tgts_in_show], 24);
+                            close (smh);
                             tgts_in_show++;
                         }
-#endif
-                        STUB
                     }
 
                     c++;
