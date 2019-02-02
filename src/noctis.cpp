@@ -783,7 +783,7 @@ void vehicle(float opencapcount) {
         return;
     }
 
-    // Intercettazione tasti (prioritaria) per GOESNet.
+    // Key interception (priority) for GOESnet.
 
     if (force_update || (active_screen == 0 && tasto_premuto())) {
         if (!force_update) {
@@ -2420,7 +2420,8 @@ int main(int argc, char **argv) {
     SDL_Surface *surface =
         SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF000000, 0xFF0000, 0xFF00, 0xFF);
     SDL_Window *window = SDL_CreateWindow("Noctis IV LR", SDL_WINDOWPOS_CENTERED,
-                                          SDL_WINDOWPOS_CENTERED, 640, 400, 0);
+                                          SDL_WINDOWPOS_CENTERED, 640, 400, SDL_WINDOW_RESIZABLE | SDL_WINDOW_INPUT_GRABBED);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_Renderer *renderer =
         SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE);
 
@@ -2450,21 +2451,16 @@ int main(int argc, char **argv) {
         m200[ir] = ir * 200;
     }
 
-    if (!test_and_init_mouse()) {
-        printf("\nMouse not present or mouse driver not installed.\n");
-        return 1;
-    }
-
-    n_offsets_map = (uint8_t *)malloc(om_bytes);
-    n_globes_map  = (int8_t *)malloc((uint16_t)gl_bytes + (uint16_t)gl_brest);
-    s_background  = (uint8_t *)malloc(st_bytes);
-    p_background  = (uint8_t *)malloc(pl_bytes);
-    p_surfacemap  = (uint8_t *)malloc(ps_bytes);
+    n_offsets_map = (uint8_t *) malloc(om_bytes);
+    n_globes_map  = (int8_t *)  malloc((uint16_t)gl_bytes + (uint16_t)gl_brest);
+    s_background  = (uint8_t *) malloc(st_bytes);
+    p_background  = (uint8_t *) malloc(pl_bytes);
+    p_surfacemap  = (uint8_t *) malloc(ps_bytes);
     objectschart  = (quadrant *)malloc(oc_bytes);
-    ruinschart    = (uint8_t *)objectschart; // oc alias
-    pvfile        = (uint8_t *)malloc(pv_bytes);
-    adapted       = (uint8_t *)malloc(sc_bytes);
-    txtr          = (uint8_t *)p_background;             // txtr alias
+    ruinschart    = (uint8_t *) objectschart; // oc alias
+    pvfile        = (uint8_t *) malloc(pv_bytes);
+    adapted       = (uint8_t *) malloc(sc_bytes);
+    txtr          = (uint8_t *) p_background;             // txtr alias
     digimap2      = (uint32_t *)&n_globes_map[gl_bytes]; // font alias
     reach_your_dir(argv);
 
@@ -2494,7 +2490,7 @@ int main(int argc, char **argv) {
     pclear(adapted, 0);
     QUADWORDS -= 1440;
     pqw = QUADWORDS;
-    mouse_input();
+    handle_input(window);
     mpul                          = 0;
     clock_t right_dblclick_timing = 0;
     dpp                           = 210;
@@ -2726,8 +2722,7 @@ int main(int argc, char **argv) {
 
         // Mouse input for user movements.
         p_mpul = mpul;
-        mpul   = 0;
-        mouse_input();
+        handle_input(window);
 
         if (mpul & 2) {
             shift += 3 * mdltx;
@@ -4664,8 +4659,8 @@ int main(int argc, char **argv) {
         }
 
         //
-        // Input da tastiera: snapshot, fine sessione,
-        // selezione bersagli, attribuzione labels etc...
+        // Keyboard input: snapshot, end of session
+        // selection of targets, attribution of labels, etc...
         //
         if (ontheroof) {
             if (tasto_premuto()) {

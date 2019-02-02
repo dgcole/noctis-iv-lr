@@ -14,8 +14,9 @@ extern int8_t surface_palette[768];
 extern void tavola_colori(uint8_t *nuova_tavolozza, uint16_t colore_di_partenza,
                           uint16_t nr_colori, int8_t filtro_rosso,
                           int8_t filtro_verde, int8_t filtro_blu);
-extern int16_t mdltx, mdlty, mx, my, mpul;
-extern void mouse_input(void);
+extern int16_t mdltx, mdlty, mx, my;
+extern uint16_t mpul;
+extern void handle_input(SDL_Window *window);
 extern int8_t test_and_init_mouse(void);
 extern void pcopy(uint8_t *dest, uint8_t *sorg);
 extern void pclear(uint8_t *target, uint8_t pattern);

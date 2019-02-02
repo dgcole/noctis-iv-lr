@@ -96,11 +96,11 @@ void reach_your_dir(char **argv) {
 // Initialize the 320x200x256 graphics mode.
 void _320_200_256() STUB
 
-    // Initialize the 80x25 text mode.
-    void _80_25_C() STUB
+// Initialize the 80x25 text mode.
+void _80_25_C() STUB
 
-    // Wait for a key?
-    int16_t attendi_pressione_tasto() {
+// Wait for a key?
+int16_t attendi_pressione_tasto() {
     STUB return 0;
 }
 
@@ -172,19 +172,43 @@ void tavola_colori(uint8_t *new_palette, uint16_t starting_color,
 }
 
 // Variables to hold mouse readings.
-int16_t mdltx = 0, mdlty = 0, mx = 0, my = 0, mpul = 0;
+int16_t mdltx = 0, mdlty = 0, mx = 0, my = 0;
+uint16_t mpul = 0;
 
-// Read mouse input.
-void mouse_input() {
-    STUB
-}
+// Handle SDL events..
+void handle_input(SDL_Window *window) {
+    static bool ldown = false;
+    static bool rdown = false;
 
-    // Check the presence of the mouse (or the support for it).
-    // And initialize the driver (empty the movement buffer).
+    mdltx = 0;
+    mdlty = 0;
+    mpul = 0;
 
-int8_t test_and_init_mouse() {
-    STUB
-    return 1;
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        if (event.type == SDL_QUIT) {
+            exit(0);
+        } else if (event.type == SDL_MOUSEMOTION) {
+            mdltx = event.motion.xrel;
+            mdlty = event.motion.yrel;
+
+            mx += mdltx;
+            my += mdlty;
+        } else if (event.type == SDL_MOUSEBUTTONDOWN) {
+            if (event.button.button == SDL_BUTTON_LEFT) ldown = true;
+            if (event.button.button == SDL_BUTTON_RIGHT) rdown = true;
+        } else if (event.type == SDL_MOUSEBUTTONUP) {
+            if (event.button.button == SDL_BUTTON_LEFT) ldown = false;
+            if (event.button.button == SDL_BUTTON_RIGHT) rdown = false;
+        } else if (event.type == SDL_KEYUP) {
+            if (event.key.keysym.sym == SDLK_ESCAPE) {
+                exit(0);
+            }
+        }
+    }
+
+    if (ldown) mpul |= 1u;
+    if (rdown) mpul |= 2u;
 }
 
 // Copies QUADWORDS * 4 bytes from the source to the destination.
