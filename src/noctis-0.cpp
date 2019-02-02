@@ -283,18 +283,15 @@ void psmooth_grays(uint8_t *target) {
 
 // Produces the fading effect seen during vimana flight.
 void pfade(uint8_t *target, uint16_t segshift, uint8_t speed) {
-#if 0
     // Don't know why count is set as it is.
     uint16_t count = (QUADWORDS - 80) << 2;
-    uint32_t address = (uint32_t) target;
-    address += ((uint32_t) segshift) << 16;
-    // Clear offset of address.
-    address &= 0xFFFF0000;
-    uint8_t far* shifted = (uint8_t far*) address;
+    uint8_t *shifted = (target + segshift * 16);
+    // Quasi-offset might need to be cleared.
+
 
     for (int16_t i = 0; i < count; i++) {
         uint8_t color = shifted[i];
-        color &= 0x3F;
+        color &= 0x3Fu;
 
         if (speed < color) {
             color -= speed;
@@ -304,8 +301,6 @@ void pfade(uint8_t *target, uint16_t segshift, uint8_t speed) {
 
         shifted[i] = color;
     }
-#endif
-    STUB
 }
 
 // Color version: 4 shades of 64 intensity each.
@@ -1116,12 +1111,12 @@ void resetfx() { flares = previous_flares_value; }
 void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
     int32_t a, b, L;
     uint16_t pi, pf;
-
-#if 0
-
-    uint32_t address = (uint32_t) adapted;
+    /*uint32_t address = (uint32_t) adapted;
     uint16_t offset = address & 0xFFFF;
-    unsigned char* truncated = (unsigned char far *) (address & 0xFFFF0000);
+    unsigned char* truncated = (unsigned char far *) (address & 0xFFFF0000);*/
+    // This probably will not work the same as the original.
+    uint16_t offset = 0;
+    uint8_t *truncated = adapted;
 
     if (xp == xa) {
         if (ya >= yp) {
@@ -1320,8 +1315,6 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
             truncated[index + 7] = 0xEE;
         }
     }
-#endif
-    STUB
 }
 
 /* Tracing sticks (3D Part). */
@@ -1498,7 +1491,7 @@ void stick3d(float p_x, float p_y, float p_z, float x, float y, float z) {
     }
 
     if (fpx == lx && fpy == ly) {
-        return; // Esclude le linee costituite da un punto solo.
+        return; // Excludes lines consisting of a single point.
     }
 
     stick(fpx + x_centro, fpy + y_centro, lx + x_centro, ly + y_centro);
@@ -3209,7 +3202,6 @@ void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight,
                      double ylight, double zlight, double step, int16_t added,
                      int8_t on_hud, int8_t condition, int16_t xshift,
                      int16_t yshift) {
-#if 0
     double k = 10 / step, l = 1, u = 1.5;
     double xx, yy, zz, z2, rx, ry, rz;
     int32_t xs, ys, dx, dy;
@@ -3287,8 +3279,6 @@ void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight,
 
 exit_local:
     resetfx ();
-#endif
-    STUB
 }
 
 /*
@@ -3309,10 +3299,9 @@ int8_t pixilating_effect = LIGHT_EMITTING;
 int8_t pixel_spreads     = 1;
 uint8_t multicolourmask  = 0xC0;
 
-void single_pixel_at_ptr(uint16_t ptr, uint8_t pixel_color) {
-#if 0
+void single_pixel_at_ptr(uint16_t offset, uint8_t pixel_color) {
     // Add ptr shift to the offset.
-    uint8_t far* shifted = adapted + ptr;
+    uint8_t *shifted = adapted + offset;
     uint8_t alow = shifted[0];
     alow &= 0x3F;
     alow += pixel_color;
@@ -3349,8 +3338,6 @@ void single_pixel_at_ptr(uint16_t ptr, uint8_t pixel_color) {
         }
         break;
     }
-#endif
-    STUB
 }
 
 int8_t far_pixel_at(double xlight, double ylight, double zlight, double radii,
@@ -3475,10 +3462,9 @@ void getsecs() {
     uint8_t currSecond = timeinfo->tm_sec;
 
     secs = difftime(rawtime, mktime(&nepoch));
-    // This offset should make it match up with GOESXNET and vanilla Noctis IV.
-    // I don't know why it's needed. A day is 86,400 seconds so this offset
-    // doesn't line up nicely with anything.
-    secs -= 82801;
+    // This offsets the time by a day. I don't know why it's needed, but it makes
+    // this version match up with the clock in vanilla Noctis IV.
+    secs -= 86400;
     isecs = currSecond;
 
     if (p_isecs != isecs) { // Frame timing.
@@ -3505,29 +3491,25 @@ void getsecs() {
 // information about the chosen star.
 
 void extract_ap_target_infos() {
-#if 0
     srand (ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z / 100000);
-    ap_target_class = random (star_classes);
-    ap_target_ray = ((float)class_ray[ap_target_class] + (float)random(
-                         class_rayvar[ap_target_class])) * 0.001;
+    ap_target_class = rand() % star_classes;
+    ap_target_ray = ((float)class_ray[ap_target_class] + (float)(rand() % class_rayvar[ap_target_class])) * 0.001;
     ap_target_r = class_rgb[3 * ap_target_class + 0];
     ap_target_g = class_rgb[3 * ap_target_class + 1];
     ap_target_b = class_rgb[3 * ap_target_class + 2];
     ap_target_spin = 0;
 
     if (ap_target_class == 11) {
-        ap_target_spin = random (30) + 1;
+        ap_target_spin = (random() % 30)+ 1;
     }
 
     if (ap_target_class == 7) {
-        ap_target_spin = random (12) + 1;
+        ap_target_spin = (random() % 12)+ 1;
     }
 
     if (ap_target_class == 2) {
-        ap_target_spin = random (4) + 1;
+        ap_target_spin = (random() % 4)+ 1;
     }
-#endif
-    STUB
 }
 
 // Extracts a whole-type pseudo-random number by converting it to f-p.
@@ -6165,7 +6147,6 @@ float tp_pressure = 1, pp_pressure = 1;
 float tp_pulse = 118, pp_pulse = 118;
 
 void wrouthud(uint16_t x, uint16_t y, uint16_t l, char *text) {
-#if 0
     int16_t j, i, n;
     uint16_t spot;
     n = 0;
@@ -6199,8 +6180,6 @@ void wrouthud(uint16_t x, uint16_t y, uint16_t l, char *text) {
         spot += 4;
         n++;
     }
-#endif
-    STUB
 }
 
 void surrounding(int8_t compass_on, int16_t openhudcount) {

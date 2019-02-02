@@ -351,7 +351,7 @@ extern void lens_flares_for(double cam_x, double cam_y, double cam_z, double xli
                             double ylight, double zlight, double step,
                             int16_t added, int8_t on_hud, int8_t condition,
                             int16_t xshift, int16_t yshift);
-extern void single_pixel_at_ptr(uint16_t ptr, uint8_t pixel_color);
+extern void single_pixel_at_ptr(uint16_t offset, uint8_t pixel_color);
 extern int8_t far_pixel_at(double xlight, double ylight, double zlight,
                            double radii, uint8_t unconditioned_color);
 extern uint32_t *digimap2;

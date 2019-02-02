@@ -4403,9 +4403,9 @@ int main(int argc, char **argv) {
             auto dest = static_cast<uint32_t *>(surface->pixels);
             for (int i = 0; i < 64000; i++) {
                 uint8_t color_index = adapted[i];
-                uint32_t color_r    = tmppal[color_index * 3];
-                uint32_t color_g    = tmppal[color_index * 3 + 1];
-                uint32_t color_b    = tmppal[color_index * 3 + 2];
+                uint32_t color_r    = tmppal[color_index * 3] * 4;
+                uint32_t color_g    = tmppal[color_index * 3 + 1] * 4;
+                uint32_t color_b    = tmppal[color_index * 3 + 2] * 4;
 
                 uint32_t color =
                     (color_r << 24u) + (color_g << 16u) + (color_b << 8u) + 255;
