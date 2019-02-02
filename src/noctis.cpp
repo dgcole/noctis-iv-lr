@@ -96,8 +96,7 @@ void alogena() {
     }
 
     if (ilightv == 1 && !elight) {
-        lens_flares_for(cam_x, cam_y, cam_z, -10, 10, -10, -50000, 2, 1, 0, 1,
-                        1);
+        lens_flares_for(cam_x, cam_y, cam_z, -10, 10, -10, -50000, 2, 1, 0, 1, 1);
     }
 }
 
@@ -229,8 +228,7 @@ noevid:
 
 /* Schemi aggiuntivi per lo schermo del computer. */
 
-void frame(float x, float y, float l, float h, float borderwidth,
-           uint8_t color) {
+void frame(float x, float y, float l, float h, float borderwidth, uint8_t color) {
     // disegna una cornice rettangolare.
     float vx[4], vy[4], vz[4] = {0, 0, 0, 0};
     float x0 = cam_x;
@@ -285,7 +283,7 @@ void pointer_cross_for(double xlight, double ylight, double zlight) {
         ry += y_centro - 2;
 
         if (rx > 10 && ry > 10 && rx < 310 && ry < 190) {
-            uint16_t offsetmaybe = 320 * (int16_t) (ry + rx);
+            uint16_t offsetmaybe = 320 * (int16_t)(ry + rx);
 
             for (int16_t i = 0; i < 4; i++) {
                 int16_t mod1 = (i == 1 || i == 3) ? 1 : -1;
@@ -398,10 +396,10 @@ void mswrite(int16_t screen_id, const char *text) {
     }
 }
 
-int8_t gnc_pos              = 0;     // Numero carattere in command line.
-long goesfile_pos           = 0;     // Posizione sul file output di GOES.
-int8_t goesnet_command[120] = "_";   // Command line di GOES Net.
-const char *comm = "DATA\\COMM.BIN"; // File di comunicazione dei moduli.
+int8_t gnc_pos              = 0;   // Numero carattere in command line.
+long goesfile_pos           = 0;   // Posizione sul file output di GOES.
+int8_t goesnet_command[120] = "_"; // Command line di GOES Net.
+const char *comm            = "DATA\\COMM.BIN"; // File di comunicazione dei moduli.
 
 /* Congela la situazione (all'uscita dal programma o al run di un modulo). */
 
@@ -412,95 +410,96 @@ void freeze() {
         return;
     }
 
-    write (fh, &nsync, 245);
-    write (fh, &gnc_pos, 1);
-    write (fh, &goesfile_pos, 4);
-    write (fh, goesnet_command, 120);
-    close (fh);
+    write(fh, &nsync, 245);
+    write(fh, &gnc_pos, 1);
+    write(fh, &goesfile_pos, 4);
+    write(fh, goesnet_command, 120);
+    close(fh);
 }
 
 void run_goesnet_module() {
     // Esecuzione di un modulo eseguibile della GOES Net.
     int16_t ch;
     // Salva la situazione perch� alcuni moduli ne hanno bisogno.
-    freeze ();
+    freeze();
     // Libera circa 60 kilobytes per il lancio del modulo eseguibile.
     free(adapted);
 
     // Verifica comandi residenti.
-    if (!memcmp (goesnet_command, "CLR", 3)) {
-        remove (goesoutputfile);
+    if (!memcmp(goesnet_command, "CLR", 3)) {
+        remove(goesoutputfile);
         goto solong;
     }
 
-    ch = creat (goesoutputfile, 0);
+    ch = creat(goesoutputfile, 0);
 
     if (ch > -1) {
-        write (ch, "(UNKNOWN MODULE)", 16);
-        close (ch);
+        write(ch, "(UNKNOWN MODULE)", 16);
+        close(ch);
     }
 
     // Cancella l'ultimo carattere (che � il _ cursore) dalla command
     // line, poi aggiunge la redirezione sul file "goesfile.txt"
     goesnet_command[gnc_pos] = 0;
-    strcat ((char*) goesnet_command, " >");
-    strcat ((char*) goesnet_command, goesoutputfile);
-    system ((char*) goesnet_command);
+    strcat((char *)goesnet_command, " >");
+    strcat((char *)goesnet_command, goesoutputfile);
+    system((char *)goesnet_command);
     // Ri-alloca l'area temporaneamente liberata.
 solong:
-    adapted = (uint8_t*) malloc (sc_bytes);
+    adapted = (uint8_t *)malloc(sc_bytes);
 
     if (!adapted) {
-        _80_25_C ();
-        printf ("Sorry, GOES Net crashed.\n");
-        printf ("System integrity compromised: any key to quit.\n\n");
+        _80_25_C();
+        printf("Sorry, GOES Net crashed.\n");
+        printf("System integrity compromised: any key to quit.\n\n");
         attendi_pressione_tasto();
-        exit (0xFF);
+        exit(0xFF);
     } else {
         // Reagisce alla presenza di dati nel file di comunicazione.
-        ch = open (comm, 0);
+        ch = open(comm, 0);
 
         if (ch > -1) {
             uint32_t len = lseek(ch, 0, SEEK_END);
+            lseek(ch, 0, SEEK_SET);
             if (len == 2) {
                 if (ap_reached) {
                     if (pwr > 15000) {
-                        if (read (ch, &ip_targetted, 2) == 2) {
+                        if (read(ch, &ip_targetted, 2) == 2) {
                             ip_targetted--;
-                            fix_local_target ();
+                            fix_local_target();
                             ip_targetting = 0;
-                            ip_reached = 0;
-                            ip_reaching = 1; // partenza automatica
+                            ip_reached    = 0;
+                            ip_reaching   = 1; // partenza automatica
                         }
                     }
                 } else {
-                    status ("NEED RECAL", 75);
+                    status("NEED RECAL", 75);
                 }
             }
 
             if (len == 24) {
-                read (ch, &ap_target_x, 8);
-                read (ch, &ap_target_y, 8);
+                read(ch, &ap_target_x, 8);
+                read(ch, &ap_target_y, 8);
 
-                if (read (ch, &ap_target_z, 8) == 8) {
+                if (read(ch, &ap_target_z, 8) == 8) {
                     ap_targetting = 0;
-                    extract_ap_target_infos ();
-                    fix_remote_target ();
+                    extract_ap_target_infos();
+                    fix_remote_target();
 
                     if (lithium_collector || manual_target) {
-                        status ("CONFLICT", 50);
+                        status("CONFLICT", 50);
                     } else {
                         if (pwr > 15000) {
-                            stspeed = 1; // partenza automatica
-                            nsnp = 1;
-                            ip_reached = 0;
+                            stspeed      = 1; // partenza automatica
+                            nsnp         = 1;
+                            ip_reached   = 0;
                             ip_targetted = -1;
                         }
                     }
                 }
             }
-            close (ch);
-            remove (comm);
+            close(ch);
+            remove(comm);
         }
     }
 
@@ -654,8 +653,7 @@ void screen() {
             }
 
             if (ctb[t] >= 'A' && ctb[t] <= 'Z') {
-                digit_at(ctb[t], -6, -16, 4, blinkscolor - 12 * (clock() % 6),
-                         1);
+                digit_at(ctb[t], -6, -16, 4, blinkscolor - 12 * (clock() % 6), 1);
             } else {
                 if (ctb[t] >= 'a' && ctb[t] <= 'z') {
                     digit_at(ctb[t] - 32, -6, -16, 4, screencolor, 1);
@@ -672,10 +670,9 @@ void screen() {
     cam_y = y;
 }
 
-/* Disegna la mappa di superficie al momento in cui si vuole sbarcare. */
+// Draw the surface map at the time you want to land.
 
 void show_planetary_map() {
-#if 0
     int8_t    is_moon;
     int16_t     lat, lon, i, j, p;
 
@@ -718,18 +715,15 @@ void show_planetary_map() {
 
         lon++;
     }
-#endif
-    STUB
 }
 
-/*  Disegna l'astrozattera. (Quella che si sta usando, vista dall'interno.)
-    Assume anche il compito di decifrare i comandi da tastiera per GOESNet. */
+/*  Draw the stardrifter. (The one you are using, seen from the inside.)
+    It also assumes the task of deciphering keyboard commands for GOESnet. */
 
 int16_t goesk_a = -1;
 int16_t goesk_e = -1;
 
 void vehicle(float opencapcount) {
-#if 0
     int16_t   n, c, i, j, k, screenfile;
     int8_t  short_text[11];
     uint8_t chcol;
@@ -891,7 +885,7 @@ non_valido:
 
         memset (osscreen[0] + 3 * 21, 0, 4 * 21);
         mslocate (0, 0, 3);
-        mswrite (0, goesnet_command);
+        mswrite (0, (char*) goesnet_command);
     }
 
     // Intercettazione tasti (prioritaria) per lo schermo "STARMAP TREE".
@@ -911,16 +905,18 @@ krep1:
                 case 0x4F:
                 case 0x76:
                 case 0x91:
-                    screenfile = _rtl_open (goesoutputfile, 0);
+                    screenfile = open (goesoutputfile, 0);
 
                     if (screenfile > -1) {
-                        goesfile_pos = filelength(screenfile) - 7 * 21;
+                        uint32_t len = lseek(screenfile, 0, SEEK_END);
+                        lseek(screenfile, 0, SEEK_SET);
+                        goesfile_pos = len - 7 * 21;
 
                         if (goesfile_pos < 0) {
                             goesfile_pos = 0;
                         }
 
-                        _rtl_close (screenfile);
+                        close (screenfile);
                     }
 
                     goesk_e = -1;
@@ -971,13 +967,13 @@ krep1:
         }
 
         memset (osscreen[1], 0, 21 * 7);
-        screenfile = _rtl_open (goesoutputfile, 0);
+        screenfile = open (goesoutputfile, 0);
 
         if (screenfile > -1) {
             lseek (screenfile, goesfile_pos, SEEK_SET);
-            n = _rtl_read (screenfile, osscreen[1], 7 * 21);
+            n = read (screenfile, osscreen[1], 7 * 21);
             osscreen[1][n] = 0;
-            _rtl_close (screenfile);
+            close (screenfile);
         }
     }
 
@@ -1206,8 +1202,8 @@ krep2:
     if (landing_point) {
         show_planetary_map ();
         polymap (osscreen_x, osscreen_y, osscreen_z, 4, 0);
-        sprintf (short_text, "LQ %03d:%03d", landing_pt_lon, landing_pt_lat);
-        status (short_text, 10);
+        sprintf ((char*) short_text, "LQ %03d:%03d", landing_pt_lon, landing_pt_lat);
+        status ((char*) short_text, 10);
     } else {
         poly3d (osscreen_x, osscreen_y, osscreen_z, 4, 4);
     }
@@ -1285,8 +1281,6 @@ krep2:
         cam_z -= 3100;
         cam_y = chry;
     }
-#endif
-    STUB
 }
 
 /* Disegna un'astrozattera, vista dall'esterno. */
@@ -1373,9 +1367,8 @@ int8_t moon_no_label[25]   = "NAMELESS MOON #../../...";
 const char *sr_message = "SYSTEM RESET";
 
 void update_star_label() {
-#if 0
     if (ap_targetted == -1) {
-        strcpy (star_label, "- DIRECT PARSIS TARGET -");
+        strcpy ((char*) star_label, "- DIRECT PARSIS TARGET -");
     } else {
         ap_target_id = ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z /
                        100000;
@@ -1385,24 +1378,21 @@ void update_star_label() {
             star_label_pos = search_id_code (ap_target_id, 'S');
 
             if (star_label_pos != -1) {
-                smh = _rtl_open (starmap_file, 0);
+                smh = open (starmap_file, 0);
                 lseek (smh, star_label_pos, SEEK_SET);
-                _rtl_read (smh, &star_id, 32);
-                _rtl_close (smh);
+                read (smh, &star_id, 32);
+                close (smh);
             } else {
                 memcpy (star_label, star_no_label, 24);
             }
 
             srand (ap_target_id);
-            sprintf (star_label + 21, "S%02d", random (star_classes));
+            sprintf ((char*) (star_label + 21), "S%02d", rand() % (star_classes + 1));
         }
     }
-#endif
-    STUB
 }
 
 void update_planet_label() {
-#if 0
     current_planet_id = nearstar_identity + ip_targetted + 1;
 
     if (current_planet_id != prev_planet_id) {
@@ -1410,31 +1400,28 @@ void update_planet_label() {
         planet_label_pos = search_id_code (current_planet_id, 'P');
 
         if (planet_label_pos != -1) {
-            smh = _rtl_open (starmap_file, 0);
+            smh = open (starmap_file, 0);
             lseek (smh, planet_label_pos, SEEK_SET);
-            _rtl_read (smh, &planet_id, 32);
-            _rtl_close (smh);
+            read (smh, &planet_id, 32);
+            close (smh);
         } else {
             if (nearstar_p_owner[ip_targetted] == -1) {
                 memcpy (planet_label, planet_no_label, 24);
             } else {
                 memcpy (planet_label, moon_no_label, 24);
-                sprintf (planet_label + 15, "%02d", nearstar_p_moonid[ip_targetted] + 1);
-                sprintf (planet_label + 18, "%02d", nearstar_p_owner[ip_targetted] + 1);
+                sprintf ((char*) (planet_label + 15), "%02d", nearstar_p_moonid[ip_targetted] + 1);
+                sprintf ((char*) (planet_label + 18), "%02d", nearstar_p_owner[ip_targetted] + 1);
                 planet_label[17] = '/';
                 planet_label[20] = '&';
             }
         }
 
-        sprintf (planet_label + 21, "P%02d", ip_targetted + 1);
+        sprintf ((char*) (planet_label + 21), "P%02d", ip_targetted + 1);
     }
-#endif
-    STUB
 }
 
 // Control the flight (Flight Control System).
 void fcs() {
-#if 0
     int16_t n;
 
     if (ip_targetted != -1) {
@@ -1449,9 +1436,9 @@ void fcs() {
             n = ip_targetted;
         }
 
-        other (ord[n + 1]);
+        other ((char*) ord[n + 1]);
         other (" planet. ");
-        other (planet_description[nearstar_p_type[ip_targetted]]);
+        other ((char*) planet_description[nearstar_p_type[ip_targetted]]);
     }
 
     if (ap_targetted) {
@@ -1459,7 +1446,7 @@ void fcs() {
             cline (2, "remote target: class ");
             other (alphavalue(ap_target_class));
             other (" star; ");
-            other (star_description[ap_target_class]);
+            other ((char*) star_description[ap_target_class]);
         } else {
             cline (2, "direct parsis target: non-star type.");
         }
@@ -1502,8 +1489,6 @@ void fcs() {
             command (3, "clear local target");
         }
     }
-#endif
-    STUB
 }
 
 /* Comandi dell'FCS. */
@@ -1858,7 +1843,6 @@ int8_t dummy_identity[9] = "Removed:";
 int8_t comp_data[32];
 
 void dev_commands() {
-#if 0
     int16_t n;
     float dist;
 
@@ -1997,12 +1981,12 @@ void dev_commands() {
                         labstar = 0;
 
                         if (star_label_pos >= sm_consolidated) {
-                            smh = _rtl_open (starmap_file, 4);
+                            smh = open (starmap_file, 4);
 
                             if (smh > -1) {
                                 lseek (smh, star_label_pos, SEEK_SET);
-                                _rtl_write (smh, &dummy_identity[0], 8);
-                                _rtl_close (smh);
+                                write (smh, &dummy_identity[0], 8);
+                                close (smh);
                                 ap_target_previd = 12345;
                                 status ("REMOVED", 50);
                                 star_label_pos = -1;
@@ -2023,32 +2007,32 @@ void dev_commands() {
                         }
                     }
                 } else {
-                    smh = _rtl_open (starmap_file, 4);
+                    smh = open (starmap_file, 4);
 
                     if (smh == -1) {
-                        smh = _rtl_creat (starmap_file, 0);
+                        smh = creat (starmap_file, 0);
                         sm_consolidated = 4;
-                        _rtl_write (smh, &sm_consolidated, 4);
+                        write (smh, &sm_consolidated, 4);
                     }
 
                     if (smh > -1) {
                         lseek (smh, 4, SEEK_SET);
 
-                        while (_rtl_read (smh, comp_data, 32) == 32)
+                        while (read (smh, comp_data, 32) == 32)
                             if (memcmp (comp_data, dummy_identity, 8)) {
-                                if (!memicmp (comp_data + 8, star_label, 20)) {
+                                if (!strcasecmp((char*) (comp_data + 8), (char*) star_label)) {
                                     status ("EXTANT", 50);
                                     ap_target_previd = 12345;
                                     star_label_pos = -1;
-                                    _rtl_close (smh);
+                                    close (smh);
                                     return;
                                 }
                             }
 
                         lseek (smh, 0, SEEK_END);
-                        star_label_pos = tell(smh);
-                        _rtl_write (smh, &star_id, 32);
-                        _rtl_close (smh);
+                        star_label_pos = lseek(smh, 0, SEEK_CUR);
+                        write (smh, &star_id, 32);
+                        close (smh);
                         status ("ASSIGNED", 50);
                         nearstar_labeled++;
                     } else {
@@ -2070,12 +2054,12 @@ void dev_commands() {
                         labplanet = 0;
 
                         if (planet_label_pos >= sm_consolidated) {
-                            smh = _rtl_open (starmap_file, 4);
+                            smh = open (starmap_file, 4);
 
                             if (smh > -1) {
                                 lseek (smh, planet_label_pos, SEEK_SET);
-                                _rtl_write (smh, &dummy_identity[0], 8);
-                                _rtl_close (smh);
+                                write (smh, &dummy_identity[0], 8);
+                                close (smh);
                                 prev_planet_id = 12345;
                                 status ("REMOVED", 50);
                                 planet_label_pos = -1;
@@ -2096,32 +2080,32 @@ void dev_commands() {
                         }
                     }
                 } else {
-                    smh = _rtl_open (starmap_file, 4);
+                    smh = open (starmap_file, 4);
 
                     if (smh == -1) {
-                        smh = _rtl_creat (starmap_file, 0);
+                        smh = creat (starmap_file, 0);
                         sm_consolidated = 4;
-                        _rtl_write (smh, &sm_consolidated, 4);
+                        write (smh, &sm_consolidated, 4);
                     }
 
                     if (smh > -1) {
                         lseek (smh, 4, SEEK_SET);
 
-                        while (_rtl_read (smh, comp_data, 32) == 32)
+                        while (read (smh, comp_data, 32) == 32)
                             if (memcmp (comp_data, dummy_identity, 8)) {
-                                if (!memicmp (comp_data + 8, planet_label, 20)) {
+                                if (!strcasecmp((char*) (comp_data + 8), (char*) planet_label)) {
                                     status ("EXTANT", 50);
                                     prev_planet_id = 12345;
                                     planet_label_pos = -1;
-                                    _rtl_close (smh);
+                                    close (smh);
                                     return;
                                 }
                             }
 
                         lseek (smh, 0, SEEK_END);
-                        planet_label_pos = tell(smh);
-                        _rtl_write (smh, &planet_id, 32);
-                        _rtl_close (smh);
+                        planet_label_pos = lseek(smh, 0, SEEK_CUR);
+                        write (smh, &planet_id, 32);
+                        close (smh);
                         status ("ASSIGNED", 50);
                         nearstar_labeled++;
                     } else {
@@ -2217,8 +2201,6 @@ void dev_commands() {
             gburst = 0;
         }
     }
-#endif
-    STUB
 }
 
 /* Preferenze. */
@@ -2360,8 +2342,8 @@ void unfreeze() {
         if (charge == 120) {
             pwr = 20000;
         } else {
-            srand(static_cast<uint32_t>(secs));
-            pwr = static_cast<int16_t>((rand() % 5000) + 15000);
+            srand((uint32_t) (secs));
+            pwr = (int16_t) ((rand() % 5000) + 15000);
         }
     }
 
@@ -2433,11 +2415,14 @@ float starmass_correction[star_classes] = {
 
 extern uint16_t _stklen = 0x1800;
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
     // Initialize SDL.
-    SDL_Surface* surface = SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF000000, 0xFF0000, 0xFF00, 0xFF);
-    SDL_Window* window = SDL_CreateWindow("Noctis IV LR", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 400, 0);
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE);
+    SDL_Surface *surface =
+        SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF000000, 0xFF0000, 0xFF00, 0xFF);
+    SDL_Window *window = SDL_CreateWindow("Noctis IV LR", SDL_WINDOWPOS_CENTERED,
+                                          SDL_WINDOWPOS_CENTERED, 640, 400, 0);
+    SDL_Renderer *renderer =
+        SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE);
 
     // Actual noctis stuff starts here.
     float satur, DfCoS;
@@ -2470,17 +2455,17 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    n_offsets_map = (uint8_t *)     malloc(om_bytes);
-    n_globes_map  = (int8_t *)      malloc((uint16_t)gl_bytes + (uint16_t)gl_brest);
-    s_background  = (uint8_t *)     malloc(st_bytes);
-    p_background  = (uint8_t *)     malloc(pl_bytes);
-    p_surfacemap  = (uint8_t *)     malloc(ps_bytes);
-    objectschart  = (quadrant *)    malloc(oc_bytes);
-    ruinschart    = (uint8_t *)     objectschart; // oc alias
-    pvfile        = (uint8_t *)     malloc(pv_bytes);
-    adapted       = (uint8_t *)     malloc(sc_bytes);
-    txtr          = (uint8_t *)     p_background;             // txtr alias
-    digimap2      = (uint32_t *)    &n_globes_map[gl_bytes]; // font alias
+    n_offsets_map = (uint8_t *)malloc(om_bytes);
+    n_globes_map  = (int8_t *)malloc((uint16_t)gl_bytes + (uint16_t)gl_brest);
+    s_background  = (uint8_t *)malloc(st_bytes);
+    p_background  = (uint8_t *)malloc(pl_bytes);
+    p_surfacemap  = (uint8_t *)malloc(ps_bytes);
+    objectschart  = (quadrant *)malloc(oc_bytes);
+    ruinschart    = (uint8_t *)objectschart; // oc alias
+    pvfile        = (uint8_t *)malloc(pv_bytes);
+    adapted       = (uint8_t *)malloc(sc_bytes);
+    txtr          = (uint8_t *)p_background;             // txtr alias
+    digimap2      = (uint32_t *)&n_globes_map[gl_bytes]; // font alias
     reach_your_dir(argv);
 
     if (pvfile && adapted && n_offsets_map && n_globes_map && p_background &&
@@ -2838,8 +2823,7 @@ int main(int argc, char** argv) {
                         xx = pos_x + 1700;
                         pos_x -= xx * 0.25;
 
-                        if (fabs(zz) < 25 && fabs(xx) < 25 &&
-                            fabs(user_beta) < 1) {
+                        if (fabs(zz) < 25 && fabs(xx) < 25 && fabs(user_beta) < 1) {
                             right_dblclick_timing = 0;
                             right_dblclick        = 0;
                         }
@@ -2970,8 +2954,7 @@ int main(int argc, char** argv) {
             if (nearstar_class != 5 && nearstar_class != 6 &&
                 nearstar_class != 10) {
                 if (nearstar_class != 11 || gl_start < 90) {
-                    if (l_dsd > 5 * nearstar_ray &&
-                        l_dsd < 1000 * nearstar_ray) {
+                    if (l_dsd > 5 * nearstar_ray && l_dsd < 1000 * nearstar_ray) {
                         lens_flares_for(dzat_x, dzat_y, dzat_z, nearstar_x,
                                         nearstar_y, nearstar_z,
                                         (10 * nearstar_ray) / l_dsd,
@@ -2997,8 +2980,8 @@ int main(int argc, char** argv) {
                 gl_start += nearstar_spin;
                 gl_start %= 360;
                 globe(gl_start, adapted, s_background, (uint8_t *)n_globes_map,
-                      gl_bytes, nearstar_x, nearstar_y, nearstar_z,
-                      nearstar_ray, 64, satur);
+                      gl_bytes, nearstar_x, nearstar_y, nearstar_z, nearstar_ray,
+                      64, satur);
             } else {
                 globe((clock() / 360) % 360, adapted, s_background,
                       (uint8_t *)n_globes_map, gl_bytes, nearstar_x, nearstar_y,
@@ -3508,12 +3491,12 @@ int main(int argc, char** argv) {
                     tgt_label_pos = search_id_code(targets_table_id[c], 'S');
 
                     if (tgt_label_pos > -1) {
-                        smh = open (starmap_file, 0);
+                        smh = open(starmap_file, 0);
 
                         if (smh > -1) {
-                            lseek (smh, tgt_label_pos + 8, SEEK_SET);
-                            read (smh, &target_name[tgts_in_show], 24);
-                            close (smh);
+                            lseek(smh, tgt_label_pos + 8, SEEK_SET);
+                            read(smh, &target_name[tgts_in_show], 24);
+                            close(smh);
                             tgts_in_show++;
                         }
                     }
@@ -3620,14 +3603,12 @@ int main(int argc, char** argv) {
                             }
 
                             wrouthud(14, 113, c, "SURFACE TEMPERATURE:");
-                            sprintf((char *)outhudbuffer,
-                                    "%1.0f@K&%1.0f@C&%1.0f@F",
+                            sprintf((char *)outhudbuffer, "%1.0f@K&%1.0f@C&%1.0f@F",
                                     tmp_float + 273.15, tmp_float,
                                     tmp_float * 1.8 + 32);
                             wrouthud(14, 119, c, (char *)outhudbuffer);
-                            sprintf(
-                                (char *)outhudbuffer, "MAJOR BODIES: %d EST.",
-                                starnop(ap_target_x, ap_target_y, ap_target_z));
+                            sprintf((char *)outhudbuffer, "MAJOR BODIES: %d EST.",
+                                    starnop(ap_target_x, ap_target_y, ap_target_z));
                             wrouthud(14, 129, c, (char *)outhudbuffer);
                         } else {
                             wrouthud(14, 87, c, "DIRECT PARSIS TARGET");
@@ -3682,13 +3663,11 @@ int main(int argc, char** argv) {
 
                         if (p1 < 2) {
                             sprintf((char *)outhudbuffer,
-                                    "%ld EPOCS, %03ld:%03ld:%03ld", p1, p2, p3,
-                                    p4);
+                                    "%ld EPOCS, %03ld:%03ld:%03ld", p1, p2, p3, p4);
                         } else {
                             if (p1 < 2047) {
                                 sprintf((char *)outhudbuffer,
-                                        "%ld EPOCS, %03ld:%03ld:???", p1, p2,
-                                        p3);
+                                        "%ld EPOCS, %03ld:%03ld:???", p1, p2, p3);
                             } else {
                                 sprintf((char *)outhudbuffer,
                                         "%ld EPOCS, %03ld:???:???", p1, p2);
@@ -3724,10 +3703,8 @@ int main(int argc, char** argv) {
                     srand(nearstar_identity);
 
                     if (nearstar_class == 6 || nearstar_class == 5) {
-#if 0
-                        ir = random (50);
-#endif
-                        STUB if (nearstar_class == 5) {
+                        ir = rand() % 50;
+                        if (nearstar_class == 5) {
                             ir -= 125 / dsd;
 
                             if (ir <= 0) {
@@ -3741,21 +3718,17 @@ int main(int argc, char** argv) {
                         ir = 0;
                     }
 
-                    sprintf((char *)outhudbuffer, "LI+ IONS: %ld MTPD EST.",
-                            ir);
+                    sprintf((char *)outhudbuffer, "LI+ IONS: %ld MTPD EST.", ir);
                     wrouthud(14, 119, c, (char *)outhudbuffer);
-#if 0
-                    tmp_float = 50 + random (10) - random (10);
-#endif
-                    STUB tmp_float *= (1 - eclipse);
+
+                    tmp_float = 50 + (rand() % 10) - (rand() % 10);
+
+                    tmp_float *= (1 - eclipse);
                     tmp_float *= 100 / dsd;
 
                     if (nearstar_class == 11) {
                         if (gl_start < 90) {
-#if 0
-                            tmp_float *= 75 + random (50);
-#endif
-                            STUB
+                            tmp_float *= 75 + rand() % 50;
                         } else {
                             tmp_float *= 50;
                         }
@@ -3802,12 +3775,10 @@ int main(int argc, char** argv) {
                     }
 
                     srand(secs);
-#if 0
                     tmp_float *= 1
-                                 + (float)(random(100)) * 0.001
-                                 - (float)(random(100)) * 0.001;
-#endif
-                    STUB sprintf((char *)outhudbuffer, "RADIATION: %1.1f KR",
+                                 + (float)(rand() % 100) * 0.001
+                                 - (float)(rand() % 100) * 0.001;
+                    sprintf((char *)outhudbuffer, "RADIATION: %1.1f KR",
                                  tmp_float);
                     wrouthud(14, 126, c, (char *)outhudbuffer);
                     break;
@@ -3918,10 +3889,9 @@ int main(int argc, char** argv) {
                     }
 
                 ap_drive_mode:
-                    current_vimana_coefficient +=
-                        (requested_vimana_coefficient -
-                         current_vimana_coefficient) *
-                        vimana_reaction_time;
+                    current_vimana_coefficient += (requested_vimana_coefficient -
+                                                   current_vimana_coefficient) *
+                                                  vimana_reaction_time;
 
                     if (current_vimana_coefficient < 10) {
                         current_vimana_coefficient = 10;
@@ -3961,8 +3931,7 @@ int main(int argc, char** argv) {
                 }
 
                 if (nsync == 3) { // syncrone orbit
-                    ang =
-                        (double)nearstar_p_rotation[ip_targetted] * (double)deg;
+                    ang = (double)nearstar_p_rotation[ip_targetted] * (double)deg;
                     hold_z = 1.8 + 0.1 * nearstar_p_ray[ip_targetted];
                 }
 
@@ -4025,10 +3994,9 @@ int main(int argc, char** argv) {
                 status("IGNITION", 0);
                 reaction_time = 0.05;
             ip_drive_mode:
-                current_approach_coefficient +=
-                    (requested_approach_coefficient -
-                     current_approach_coefficient) *
-                    reaction_time;
+                current_approach_coefficient += (requested_approach_coefficient -
+                                                 current_approach_coefficient) *
+                                                reaction_time;
 
                 if (current_approach_coefficient < 10) {
                     current_approach_coefficient = 10;
@@ -4080,10 +4048,7 @@ int main(int argc, char** argv) {
         //
         if (lithium_collector) {
             srand(nearstar_identity);
-#if 0
-            ir = random (50);
-#endif
-            STUB
+            ir = rand() % 50;
 
                 if (nearstar_class == 5) {
                 ir -= 125 / dsd;
@@ -4126,8 +4091,8 @@ int main(int argc, char** argv) {
         //
         // Controllo eclissi.
         //
-        stz = dzz * cos(deg * navigation_beta) -
-              dxx * sin(deg * navigation_beta) - fabs(dyy) / 2;
+        stz = dzz * cos(deg * navigation_beta) - dxx * sin(deg * navigation_beta) -
+              fabs(dyy) / 2;
 
         if (stz > dsd) {
             stz = dsd;
@@ -4435,30 +4400,31 @@ int main(int argc, char** argv) {
 
         if (!_delay) {
             SDL_RenderClear(renderer);
-            auto dest = static_cast<uint32_t*>(surface->pixels);
+            auto dest = static_cast<uint32_t *>(surface->pixels);
             for (int i = 0; i < 64000; i++) {
                 uint8_t color_index = adapted[i];
-                uint32_t color_r = tmppal[color_index * 3];
-                uint32_t color_g = tmppal[color_index * 3 + 1];
-                uint32_t color_b = tmppal[color_index * 3 + 2];
+                uint32_t color_r    = tmppal[color_index * 3];
+                uint32_t color_g    = tmppal[color_index * 3 + 1];
+                uint32_t color_b    = tmppal[color_index * 3 + 2];
 
-                uint32_t color = (color_r << 24u) + (color_g << 16u) + (color_b << 8u) + 255;
+                uint32_t color =
+                    (color_r << 24u) + (color_g << 16u) + (color_b << 8u) + 255;
                 dest[i] = color;
             }
-            SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+            SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
             SDL_RenderCopy(renderer, texture, nullptr, nullptr);
             SDL_RenderPresent(renderer);
             SDL_DestroyTexture(texture);
         } else if (_delay > 0 && _delay < 10) {
-                _delay--;
+            _delay--;
         }
 
         QUADWORDS = pqw;
 
         if (resolve == 1) {
             while (resolve <= 63) {
-                tavola_colori((uint8_t *)return_palette, 0, 256, resolve,
-                              resolve, resolve);
+                tavola_colori((uint8_t *)return_palette, 0, 256, resolve, resolve,
+                              resolve);
                 ir = clock();
 
                 while (ir == clock())
@@ -4473,16 +4439,16 @@ int main(int argc, char** argv) {
         }
 
         //
-        // Questa sezione controlla i pixels a ciclo continuo
-        // che raffigurano le correnti convettive interne alle stelle,
-        // ma entra in azione solo se la stella � abbastanza vicina,
-        // altrimenti non si vede che un globo bianco: i colori
-        // delle stelle non sono propriamente colori, ma solo tenui
-        // sfumature; in pratica, essendo quasi tutte ben oltre il
-        // livello di saturazione dell'occhio, le stelle appaiono
-        // in genere tutte bianche, a meno che non le si avvicini
-        // davvero moltissimo.
+        // This section controls the pixels in a continuous loop
+        // depicting the convective currents inside the stars,
+        // but goes into action only if the star is close enough,
+        // otherwise you can not see a white globe: The colors
+        // of the stars are not really colors, but only soft
+        // nuances; in practice, being almost all well beyond the
+        // saturation level of the eye, the stars appear generally
+        // all white, unless you approach them really very much.
         //
+
         if (dsd < 1000 * nearstar_ray) {
             ir = nearstar_r;
             ig = nearstar_g;
@@ -4492,10 +4458,8 @@ int main(int argc, char** argv) {
             if (c == 8) {
                 fast_srand(nearstar_identity);
                 srand(fast_random(0x7FFF));
-#if 0
-                c = random (star_classes);
-#endif
-                STUB ir = class_rgb[c * 3 + 0];
+                c = rand() % (star_classes + 1);
+                ir = class_rgb[c * 3 + 0];
                 ig      = class_rgb[c * 3 + 1];
                 ib      = class_rgb[c * 3 + 2];
             }
@@ -4740,8 +4704,7 @@ int main(int argc, char** argv) {
                     if (targets_in_range) {
                         if (c == 80) {
                             if (target_line < 2) {
-                                if (topmost_target + target_line <
-                                    targets - 1) {
+                                if (topmost_target + target_line < targets - 1) {
                                     target_line++;
                                 }
                             } else {
@@ -4877,12 +4840,12 @@ int main(int argc, char** argv) {
                         if (c == 13) {
                             if (!collecting_targets &&
                                 topmost_target + target_line < targets) {
-                                ap_target_x = targets_table_px[topmost_target +
-                                                               target_line];
-                                ap_target_y = targets_table_py[topmost_target +
-                                                               target_line];
-                                ap_target_z = targets_table_pz[topmost_target +
-                                                               target_line];
+                                ap_target_x =
+                                    targets_table_px[topmost_target + target_line];
+                                ap_target_y =
+                                    targets_table_py[topmost_target + target_line];
+                                ap_target_z =
+                                    targets_table_pz[topmost_target + target_line];
                                 extract_ap_target_infos();
                                 fix_remote_target();
                             }
@@ -4944,8 +4907,8 @@ int main(int argc, char** argv) {
                                     iptargetstring[ir] = '/';
 
                                     if (iptargetstring[ir + 1] != 0) {
-                                        iptargetplanet = atoi(
-                                            (char *)iptargetstring + ir + 1);
+                                        iptargetplanet =
+                                            atoi((char *)iptargetstring + ir + 1);
                                         goto searchmoon;
                                     }
 
@@ -4971,8 +4934,7 @@ int main(int argc, char** argv) {
                             ir = 0;
 
                             while (ir < nearstar_nob) {
-                                if (nearstar_p_owner[ir] ==
-                                        iptargetplanet - 1 &&
+                                if (nearstar_p_owner[ir] == iptargetplanet - 1 &&
                                     nearstar_p_moonid[ir] == iptargetmoon - 1) {
                                     ip_targetted = ir;
                                     fix_local_target();
@@ -5039,12 +5001,12 @@ int main(int argc, char** argv) {
                         if (c == 13) {
                             switch (mt_coord) {
                             case 0:
-                                ap_target_x = atol((char *)manual_x_string);
+                                ap_target_x        = atol((char *)manual_x_string);
                                 manual_y_string[0] = 0;
                                 break;
 
                             case 1:
-                                ap_target_y = -atol((char *)manual_y_string);
+                                ap_target_y        = -atol((char *)manual_y_string);
                                 manual_z_string[0] = 0;
                                 break;
 
@@ -5064,18 +5026,15 @@ int main(int argc, char** argv) {
 
                         switch (mt_coord) {
                         case 0:
-                            sprintf(temp_distance_buffer, "%s",
-                                    manual_x_string);
+                            sprintf(temp_distance_buffer, "%s", manual_x_string);
                             break;
 
                         case 1:
-                            sprintf(temp_distance_buffer, "%s",
-                                    manual_y_string);
+                            sprintf(temp_distance_buffer, "%s", manual_y_string);
                             break;
 
                         case 2:
-                            sprintf(temp_distance_buffer, "%s",
-                                    manual_z_string);
+                            sprintf(temp_distance_buffer, "%s", manual_z_string);
                         }
 
                         if (mt_coord <= 2) {
@@ -5147,10 +5106,7 @@ int main(int argc, char** argv) {
             c = 0;
         }
     } while ((c != 27) || stspeed || ip_reaching || lifter);
-
-#if 0
     remove (surface_file);
-#endif
-    STUB allstop : _80_25_C();
+    allstop : _80_25_C();
     freeze();
 }

@@ -1,19 +1,19 @@
 #pragma once
 
-// C/C++ Standard Library Includes
+// C Standard Library Includes
 
-#include <vector>
-#include <cassert>
-#include <cmath>
-#include <cstdint>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <ctime>
-#include <fcntl.h>
-#include <memory>
-#include <sys/stat.h>
+#include <memory.h>
+#include <assert.h>
+#include <math.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+
 
 #include <SDL2/SDL.h>
 
@@ -159,10 +159,10 @@ struct quadrant {
 
 struct pvlist {
     uint16_t polygon_id : 12;
-    uint16_t vtxflag_0 : 1;
-    uint16_t vtxflag_1 : 1;
-    uint16_t vtxflag_2 : 1;
-    uint16_t vtxflag_3 : 1;
+    uint8_t vtxflag_0 : 1;
+    uint8_t vtxflag_1 : 1;
+    uint8_t vtxflag_2 : 1;
+    uint8_t vtxflag_3 : 1;
 };
 
 // Processor time cutoff for double left and right clicks.
@@ -170,10 +170,10 @@ struct pvlist {
 
 // Defines to help with porting.
 
-#define FIXME                                                                  \
-    {                                                                          \
-        printf("FIXME: %s\n", __FUNCTION__);                                   \
-        assert(false);                                                         \
+#define FIXME                                                                      \
+    {                                                                              \
+        printf("FIXME: %s\n", __FUNCTION__);                                       \
+        assert(false);                                                             \
     }
-#define STUB                                                                   \
+#define STUB                                                                       \
     { printf("STUB: %s\n", __FUNCTION__); }

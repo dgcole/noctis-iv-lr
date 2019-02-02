@@ -2,7 +2,7 @@
 
 extern int16_t QUADWORDS;
 extern uint8_t *adapted;
-extern void reach_your_dir(char** argv);
+extern void reach_your_dir(char **argv);
 extern void _320_200_256(void);
 extern void _80_25_C(void);
 extern int16_t attendi_pressione_tasto(void);
@@ -19,10 +19,10 @@ extern void mouse_input(void);
 extern int8_t test_and_init_mouse(void);
 extern void pcopy(uint8_t *dest, uint8_t *sorg);
 extern void pclear(uint8_t *target, uint8_t pattern);
-extern void areacopy(uint8_t *dest, uint8_t sorg, int16_t x, int16_t y,
-                     int16_t l, int16_t h);
-extern void areaclear(uint8_t *dest, int16_t x, int16_t y, int16_t x2,
-                      int16_t y2, int16_t l, int16_t h, uint8_t pattern);
+extern void areacopy(uint8_t *dest, uint8_t sorg, int16_t x, int16_t y, int16_t l,
+                     int16_t h);
+extern void areaclear(uint8_t *dest, int16_t x, int16_t y, int16_t x2, int16_t y2,
+                      int16_t l, int16_t h, uint8_t pattern);
 extern void psmooth_grays(uint8_t *target);
 extern void pfade(uint8_t *target, uint16_t segshift, uint8_t speed);
 extern void psmooth_64(uint8_t *target, uint16_t segshift);
@@ -228,7 +228,7 @@ extern float mindiff;
 extern uint8_t *p_background;
 extern uint8_t *s_background;
 extern uint8_t *p_surfacemap;
-extern quadrant *objectschart;
+extern struct quadrant *objectschart;
 extern uint8_t *ruinschart; // come objectschart, ma dichiarato in bytes
 extern uint8_t *pvfile;
 extern uint8_t *n_offsets_map;
@@ -275,8 +275,7 @@ extern int16_t ranged_fast_random(int16_t range);
 extern int32_t sa_open(int32_t offset_of_virtual_file);
 extern void shade(uint8_t *palette_buffer, int16_t first_color,
                   int16_t number_of_colors, float start_r, float start_g,
-                  float start_b, float finish_r, float finish_g,
-                  float finish_b);
+                  float start_b, float finish_r, float finish_g, float finish_b);
 extern int8_t snapfilename[24];
 extern void snapshot(int16_t forcenumber, int8_t showdata);
 extern int8_t helpfile_hlp[13];
@@ -312,10 +311,9 @@ extern void randomic_mapper(float x0, float y0, float z0, float x1, float y1,
                             int8_t divisions);
 extern void unloadpv(int16_t handle);
 extern void unloadallpv(void);
-extern int8_t loadpv(int16_t handle, int32_t virtual_file_position,
-                     float xscale, float yscale, float zscale, float xmove,
-                     float ymove, float zmove, uint8_t base_color,
-                     int8_t depth_sort);
+extern int8_t loadpv(int16_t handle, int32_t virtual_file_position, float xscale,
+                     float yscale, float zscale, float xmove, float ymove,
+                     float zmove, uint8_t base_color, int8_t depth_sort);
 extern void QuickSort(int16_t index, float mdist, int16_t start, int16_t end);
 extern void drawpv(int16_t handle, int16_t mode, int16_t rm_iterations,
                    float center_x, float center_y, float center_z,
@@ -323,7 +321,7 @@ extern void drawpv(int16_t handle, int16_t mode, int16_t rm_iterations,
 extern void copypv(int16_t dest_handle, int16_t src_handle);
 extern void modpv(int16_t handle, int16_t polygon_id, int16_t vertex_id,
                   float x_scale, float y_scale, float z_scale, float x_angle,
-                  float y_angle, float z_angle, pvlist *vertexs_to_affect);
+                  float y_angle, float z_angle, struct pvlist *vertexs_to_affect);
 //--------------------------------------------------------------------------//
 extern char *alphavalue(double value);
 extern void background(uint16_t start, uint8_t target, uint8_t background,
@@ -334,8 +332,8 @@ extern double laststar_x, laststar_y, laststar_z;
 extern int8_t isthere(double star_id);
 extern int8_t glass_bubble;
 extern void globe(uint16_t start, uint8_t *target, uint8_t *tapestry,
-                  uint8_t *offsetsmap, uint16_t total_map_bytes, double x,
-                  double y, double z, float mag_factor, int8_t colormask,
+                  uint8_t *offsetsmap, uint16_t total_map_bytes, double x, double y,
+                  double z, float mag_factor, int8_t colormask,
                   int8_t globe_saturation);
 extern void glowinglobe(int16_t start, uint8_t *target, uint8_t *offsetsmap,
                         uint16_t total_map_bytes, double x, double y, double z,
@@ -349,10 +347,10 @@ extern void whitesun(uint8_t *target, double x, double y, double z,
 extern float lft_sin[361];
 extern float lft_cos[361];
 extern int8_t lens_flares_init(void);
-extern void lens_flares_for(double cam_x, double cam_y, double cam_z,
-                            double xlight, double ylight, double zlight,
-                            double step, int16_t added, int8_t on_hud,
-                            int8_t condition, int16_t xshift, int16_t yshift);
+extern void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight,
+                            double ylight, double zlight, double step,
+                            int16_t added, int8_t on_hud, int8_t condition,
+                            int16_t xshift, int16_t yshift);
 extern void single_pixel_at_ptr(uint16_t ptr, uint8_t pixel_color);
 extern int8_t far_pixel_at(double xlight, double ylight, double zlight,
                            double radii, uint8_t unconditioned_color);

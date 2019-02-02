@@ -147,12 +147,11 @@ void greenmush(float x, float y, float z, uint8_t mask_1, uint8_t mask_2,
     STUB
 }
 
-void build_fractal_tree(float x, float y, float z, float scaling,
-                        float reduction, float globalwidth, int32_t layers,
-                        int32_t divisions, float distance_from_perfection,
-                        uint8_t rootcolormask, uint8_t leafcolormask,
-                        float branchdetail, int8_t isrootnode,
-                        int8_t occurrence) {
+void build_fractal_tree(float x, float y, float z, float scaling, float reduction,
+                        float globalwidth, int32_t layers, int32_t divisions,
+                        float distance_from_perfection, uint8_t rootcolormask,
+                        uint8_t leafcolormask, float branchdetail,
+                        int8_t isrootnode, int8_t occurrence) {
 #if 0
     // funzione ricorsiva: eventualmente traccia l'intero albero pseudo-casuale,
     // con una struttura multilivello, ma va usata con parsimonia perch� �
@@ -350,8 +349,7 @@ void albero(float x, float y, float z, int32_t depth) {
 
     if (treetype == GIANT_TREE) {
         if (depth > 11) {
-            greenmush(x, y - treescaling * 0.5, z, 07, 15, mushscaling, 223, 31,
-                      0);
+            greenmush(x, y - treescaling * 0.5, z, 07, 15, mushscaling, 223, 31, 0);
             return;
         }
 
@@ -369,9 +367,8 @@ void albero(float x, float y, float z, int32_t depth) {
             return;
         }
 
-        build_fractal_tree(x, y, z, 2 * treescaling, treespreads,
-                           1.5 * branchwidth, 4, 3, 1.5 * treepeaking,
-                           rootshade, 0xC0, 72, 1, 0);
+        build_fractal_tree(x, y, z, 2 * treescaling, treespreads, 1.5 * branchwidth,
+                           4, 3, 1.5 * treepeaking, rootshade, 0xC0, 72, 1, 0);
         return;
     }
 
@@ -419,18 +416,18 @@ void cespuglio(float x, float y, float z, int32_t depth) {
 
     switch (depth) {
     case 2: // 32 -- 48 mt: visibili i ramoscelli pi� grandi.
-        build_fractal_tree(x, y, z, 3000, 0.75, 0.15, 1, 1, 1.5, 0x00, 0xC0,
-                           180, 0, 0);
+        build_fractal_tree(x, y, z, 3000, 0.75, 0.15, 1, 1, 1.5, 0x00, 0xC0, 180, 0,
+                           0);
         break;
 
     case 1: // 16 -- 32 mt: visibili il 50% delle ramificazioni.
-        build_fractal_tree(x, y, z, 3000, 0.75, 0.15, 1, 2, 1.5, 0x00, 0xC0,
-                           120, 0, 0);
+        build_fractal_tree(x, y, z, 3000, 0.75, 0.15, 1, 2, 1.5, 0x00, 0xC0, 120, 0,
+                           0);
         break;
 
     case 0: //  0 -- 16 mt: cespuglio completo.
-        build_fractal_tree(x, y, z, 3000, 0.75, 0.15, 1, 3, 1.5, 0x00, 0xC0,
-                           120, 0, 0);
+        build_fractal_tree(x, y, z, 3000, 0.75, 0.15, 1, 3, 1.5, 0x00, 0xC0, 120, 0,
+                           0);
     }
 }
 
@@ -448,18 +445,18 @@ void ciuffo(float x, float y, float z, int32_t depth) {
         break;
 
     case 2: // 32 -- 48 mt: visibile un filo d'erba.
-        build_fractal_tree(x, y, z, 1000, 1.00, 0.25, 0, 0, 1.0, 0x00, 0xC0,
-                           120, 0, 0);
+        build_fractal_tree(x, y, z, 1000, 1.00, 0.25, 0, 0, 1.0, 0x00, 0xC0, 120, 0,
+                           0);
         break;
 
     case 1: // 16 -- 32 mt: visibili il 50% dei fili d'erba.
-        build_fractal_tree(x, y, z, 1000, 1.00, 0.25, 0, 7, 1.0, 0x00, 0xC0, 90,
-                           0, 0);
+        build_fractal_tree(x, y, z, 1000, 1.00, 0.25, 0, 7, 1.0, 0x00, 0xC0, 90, 0,
+                           0);
         break;
 
     case 0: //  0 -- 16 mt: un ciuffo completo.
-        build_fractal_tree(x, y, z, 1000, 1.00, 0.25, 0, 7, 1.0, 0x00, 0xC0, 60,
-                           0, 0);
+        build_fractal_tree(x, y, z, 1000, 1.00, 0.25, 0, 7, 1.0, 0x00, 0xC0, 60, 0,
+                           0);
     }
 }
 
@@ -633,17 +630,17 @@ int8_t ani_mtype[LFS];  // tipo di movimento.
 const int16_t bird_wings_center_p = 1;
 const int16_t bird_wings_center_v = 0;
 
-pvlist bird_wing1[3] = {{0, 1, 1, 1, 0}, {1, 1, 1, 1, 0}, {0xFFF, 0, 0, 0, 0}};
-pvlist bird_wing2[3] = {{2, 1, 1, 1, 0}, {3, 1, 1, 1, 0}, {0xFFF, 0, 0, 0, 0}};
+struct pvlist bird_wing1[3] = {{0, 1, 1, 1, 0}, {1, 1, 1, 1, 0}, {0xFFF, 0, 0, 0, 0}};
+struct pvlist bird_wing2[3] = {{2, 1, 1, 1, 0}, {3, 1, 1, 1, 0}, {0xFFF, 0, 0, 0, 0}};
 
 const int16_t bird_legs_center_p = 18;
 const int16_t bird_legs_center_v = 1;
 
-pvlist bird_legs[3] = {{18, 0, 0, 1, 0}, {19, 0, 1, 0, 0}, {0xFFF, 0, 0, 0, 0}};
+struct pvlist bird_legs[3] = {{18, 0, 0, 1, 0}, {19, 0, 1, 0, 0}, {0xFFF, 0, 0, 0, 0}};
 
 // dati di definizione - classe mammiferi - relativo PVfile: "mammal_ncc"
 
-pvlist mamm_ears[5] = {{42, 0, 1, 0, 0},
+struct pvlist mamm_ears[5] = {{42, 0, 1, 0, 0},
                        {45, 0, 0, 1, 0},
                        {43, 1, 0, 0, 0},
                        {44, 0, 0, 1, 0},
@@ -652,26 +649,24 @@ pvlist mamm_ears[5] = {{42, 0, 1, 0, 0},
 const int16_t mamm_wrap_center_p = 16;
 const int16_t mamm_wrap_center_v = 2;
 
-pvlist mamm_reartoto[19] = {
+struct pvlist mamm_reartoto[19] = {
     {7, 0, 0, 1, 1},  {8, 1, 1, 1, 1},  {9, 1, 1, 1, 1},    {14, 1, 1, 1, 1},
     {18, 0, 1, 1, 0}, {12, 1, 1, 1, 1}, {19, 1, 0, 0, 1},   {21, 0, 0, 1, 1},
     {10, 1, 1, 1, 1}, {15, 1, 1, 1, 1}, {13, 1, 1, 1, 1},   {11, 1, 1, 1, 1},
     {46, 1, 1, 1, 1}, {47, 1, 1, 1, 1}, {50, 1, 1, 1, 1},   {51, 1, 1, 1, 1},
     {48, 1, 1, 1, 0}, {49, 1, 1, 1, 0}, {0xFFF, 0, 0, 0, 0}};
 
-pvlist mamm_legs[15] = {
-    {0, 1, 1, 1, 1},                                       // F-L
-    {2, 1, 1, 0, 0},    {22, 1, 0, 0, 0}, {1, 1, 1, 1, 1}, // F-R
-    {3, 1, 1, 0, 0},    {23, 0, 1, 0, 0}, {8, 0, 0, 1, 1}, // R-L
-    {10, 1, 1, 1, 1},   {14, 0, 1, 1, 0}, {15, 1, 1, 1, 1},
-    {12, 0, 0, 1, 1}, // R-R
-    {13, 1, 1, 1, 1},   {9, 0, 0, 1, 1},  {11, 1, 1, 1, 1},
-    {0xFFF, 0, 0, 0, 0}};
+struct pvlist mamm_legs[15] = {
+    {0, 1, 1, 1, 1},                                                        // F-L
+    {2, 1, 1, 0, 0},  {22, 1, 0, 0, 0}, {1, 1, 1, 1, 1},                    // F-R
+    {3, 1, 1, 0, 0},  {23, 0, 1, 0, 0}, {8, 0, 0, 1, 1},                    // R-L
+    {10, 1, 1, 1, 1}, {14, 0, 1, 1, 0}, {15, 1, 1, 1, 1}, {12, 0, 0, 1, 1}, // R-R
+    {13, 1, 1, 1, 1}, {9, 0, 0, 1, 1},  {11, 1, 1, 1, 1}, {0xFFF, 0, 0, 0, 0}};
 
 const int16_t mamm_tail_center_p = 46;
 const int16_t mamm_tail_center_v = 1;
 
-pvlist mamm_tail[7] = {{46, 1, 1, 1, 1},   {47, 1, 1, 1, 1}, {50, 1, 1, 1, 1},
+struct pvlist mamm_tail[7] = {{46, 1, 1, 1, 1},   {47, 1, 1, 1, 1}, {50, 1, 1, 1, 1},
                        {51, 1, 1, 1, 1},   {48, 1, 1, 1, 0}, {49, 1, 1, 1, 0},
                        {0xFFF, 0, 0, 0, 0}};
 
@@ -815,8 +810,7 @@ end_far:
     ani_x[n] -= ani_speed[n] * sin(deg * ani_pitch[n]);
     ani_z[n] -= ani_speed[n] * cos(deg * ani_pitch[n]);
 
-    if (ani_x[n] < 0 || ani_x[n] > 3276800 || ani_z[n] < 0 ||
-        ani_z[n] > 3276800) {
+    if (ani_x[n] < 0 || ani_x[n] > 3276800 || ani_z[n] < 0 || ani_z[n] > 3276800) {
         ani_x[n] += ani_speed[n] * sin(deg * ani_pitch[n]);
         ani_z[n] += ani_speed[n] * sin(deg * ani_pitch[n]);
         ani_pitch[n] += 180;
@@ -884,8 +878,8 @@ inactive:
     if (ani_type[n] == BIRD) {
         // preparazione forma di base:
         copypv(bird_result, bird_base);
-        modpv(bird_result, -1, -1, ani_scale[n], ani_scale[n], ani_scale[n], 0,
-              0, 0, NULL);
+        modpv(bird_result, -1, -1, ani_scale[n], ani_scale[n], ani_scale[n], 0, 0,
+              0, NULL);
 
         // modifiche alla forma di base:
         if (ani_lcount[n] < 0) {
@@ -917,37 +911,37 @@ inactive:
                     dy = 0;
                 }
 
-                modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1,
-                      1, 1, 0, +45 * dy, +75 * dy, bird_wing1);
-                modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1,
-                      1, 1, 0, -45 * dy, -75 * dy, bird_wing2);
+                modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1,
+                      1, 0, +45 * dy, +75 * dy, bird_wing1);
+                modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1,
+                      1, 0, -45 * dy, -75 * dy, bird_wing2);
                 goto bird_trace;
             }
         }
 
-        modpv(bird_result, bird_legs_center_p, bird_legs_center_v, 1, 1, 1, -75,
-              0, 0, bird_legs);
+        modpv(bird_result, bird_legs_center_p, bird_legs_center_v, 1, 1, 1, -75, 0,
+              0, bird_legs);
 
         if (ani_scale[n] > 10) {
             // modello di comportamento:
             // in volo, grandi uccelli.
-            modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1,
-                  1, 0, 0, fabs(10 - (tick % 20)) * -4.5, bird_wing1);
-            modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1,
-                  1, 0, 0, fabs(10 - (tick % 20)) * +4.5, bird_wing2);
+            modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1, 0,
+                  0, fabs(10 - (tick % 20)) * -4.5, bird_wing1);
+            modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1, 0,
+                  0, fabs(10 - (tick % 20)) * +4.5, bird_wing2);
         } else {
             // modello di comportamento:
             // in volo, piccoli uccelli.
-            modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1,
-                  1, 0, 0, fabs(3 - (tick % 6)) * -15, bird_wing1);
-            modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1,
-                  1, 0, 0, fabs(3 - (tick % 6)) * +15, bird_wing2);
+            modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1, 0,
+                  0, fabs(3 - (tick % 6)) * -15, bird_wing1);
+            modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1, 0,
+                  0, fabs(3 - (tick % 6)) * +15, bird_wing2);
         }
 
     // visualizzazione:
     bird_trace:
-        modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1,
-              dz, 0, 0, 0);
+        modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1, dz, 0,
+              0, 0);
         modpv(bird_result, bird_wings_center_p, bird_wings_center_v, 1, 1, 1, 0,
               ani_pitch[n], 0, 0);
         drawpv(bird_result, texture_skin_map, 3, ax, ay - 9 * ani_scale[n], az,
@@ -984,8 +978,8 @@ inactive:
     if (ani_type[n] == MAMMAL) {
         // preparazione forma di base:
         copypv(mamm_result, mamm_base);
-        modpv(mamm_result, -1, -1, ani_scale[n], ani_scale[n], ani_scale[n], 0,
-              0, 0, NULL);
+        modpv(mamm_result, -1, -1, ani_scale[n], ani_scale[n], ani_scale[n], 0, 0,
+              0, NULL);
 
         if (ay > -10 && sctype == OCEAN) {
             // nell'acqua...
@@ -1000,8 +994,8 @@ inactive:
             if (ani_mtype[n] != FELINE_LIKE) {
                 modpv(mamm_result, -1, -1, 2, 2, 0.75, 0, 0, 0, mamm_reartoto);
                 modpv(mamm_result, -1, -1, 1, 1, 1, 60, 0, 0, NULL);
-                modpv(mamm_result, mamm_tail_center_p, mamm_tail_center_v, 1, 1,
-                      1, -100, 0, 0, mamm_tail);
+                modpv(mamm_result, mamm_tail_center_p, mamm_tail_center_v, 1, 1, 1,
+                      -100, 0, 0, mamm_tail);
 
                 if (ani_mtype[n] != KANGAROO_LIKE) {
                     modpv(mamm_result, -1, -1, 0.33, 0.33, 0.33, 0, 0, 0, NULL);
@@ -1046,8 +1040,8 @@ inactive:
 
                 if (fast_random(1)) {
                     period = fabs(fsecs - 0.5);
-                    modpv(mamm_result, mamm_tail_center_p, mamm_tail_center_v,
-                          1, 1, 1, 0, 240 * period - 60, 0, mamm_tail);
+                    modpv(mamm_result, mamm_tail_center_p, mamm_tail_center_v, 1, 1,
+                          1, 0, 240 * period - 60, 0, mamm_tail);
                 }
             } else {
                 // se corrono, si fa semplicemente
@@ -1080,10 +1074,10 @@ inactive:
                     ay -= 300 * ani_scale[n] * period;
                 }
 
-                modpv(mamm_result, mamm_wrap_center_p, mamm_wrap_center_v, 1, 1,
-                      1, -50 * period, 0, 0, NULL);
-                modpv(mamm_result, mamm_wrap_center_p, mamm_wrap_center_v, 1, 1,
-                      1, 100 * period, 0, 0, mamm_reartoto);
+                modpv(mamm_result, mamm_wrap_center_p, mamm_wrap_center_v, 1, 1, 1,
+                      -50 * period, 0, 0, NULL);
+                modpv(mamm_result, mamm_wrap_center_p, mamm_wrap_center_v, 1, 1, 1,
+                      100 * period, 0, 0, mamm_reartoto);
             }
         }
 
@@ -1830,8 +1824,8 @@ map[align * (int32_t)z + x] = y;
     STUB
 }
 
-void srf_darkline(uint8_t *map, int16_t length, int16_t x_trend,
-                  int16_t z_trend, int32_t align) {
+void srf_darkline(uint8_t *map, int16_t length, int16_t x_trend, int16_t z_trend,
+                  int32_t align) {
 #if 0
 // Una crepa scura (versione principalmente per textures).
 int16_t fx = random(align), fz = random(align);
@@ -1897,8 +1891,8 @@ length--;
     STUB
 }
 
-void asterism(uint8_t *map, int16_t x, int16_t y, int16_t base,
-              int16_t variation, int16_t density, int16_t size, int32_t align) {
+void asterism(uint8_t *map, int16_t x, int16_t y, int16_t base, int16_t variation,
+              int16_t density, int16_t size, int32_t align) {
 #if 0
 // Simile a un asterisco variabile. Viene usata per i ceppi d'erba.
 if (density <= 0) {

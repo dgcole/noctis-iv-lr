@@ -28,9 +28,9 @@
 
 */
 
-#include <cmath>
-#include <cstdio>
-#include <memory>
+#include <math.h>
+#include <stdio.h>
+#include <memory.h>
 
 #include "noctis-d.h"
 
@@ -87,7 +87,7 @@ const double deg = M_PI / 180;
 // Distanza dal piano di proiezione.
 
 float dpp     = 200;
-float inv_dpp = 1 / dpp;
+float inv_dpp = 1 / 200;
 
 /*  Costanti e variabili di controllo del texture mapping.
     H_MATRIXS e V_MATRIXS specificano le ripetizioni della stessa
@@ -2132,13 +2132,13 @@ int8_t fast_load_texture(int8_t *fname) { /* Solo per bitmaps 256 x 256. */
     #define NORMAL       0x00 // luminosit� non curata
 
               /* sezione spotlight */
-#define SPOTLIGHT 0x10 // torcia elettrica o faro, con centro su <xl, yl>
+#define SPOTLIGHT 0x10         // torcia elettrica o faro, con centro su <xl, yl>
 int16_t xl         = x_centro; // coordinate video del centro di luce
 int16_t yl         = y_centro; // coordinata y
 int16_t aspect     = 8;        // aspetto d. proiezione: + alto = + schiacciato
-int16_t fallout    = 20; // evidenza della zona centrale: + alto = + diffuso
-int16_t lt_range   = 30; // ampiezza zona illumin.: 0 = infinita
-int16_t absorption = 45; // assorbimento della superficie, da 0 a 63
+int16_t fallout    = 20;       // evidenza della zona centrale: + alto = + diffuso
+int16_t lt_range   = 30;       // ampiezza zona illumin.: 0 = infinita
+int16_t absorption = 45;       // assorbimento della superficie, da 0 a 63
 
 /* sezione radiosity semplificata */
 #define RADIOSITY 0x20 // luminosit� regolabile orizzontalmente o vertic.

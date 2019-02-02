@@ -47,7 +47,7 @@ uint8_t tmppal[768];
 int8_t return_palette[768];
 int8_t surface_palette[768];
 
-int16_t lstri(char* stri) {
+int16_t lstri(char *stri) {
     // Measure a string and copy it to tmppal.
     // This is a support function for reach_your_dir()
     int16_t c;
@@ -64,7 +64,7 @@ int16_t lstri(char* stri) {
     return (0);
 }
 
-void reach_your_dir(char** argv) {
+void reach_your_dir(char **argv) {
     /*
         NOTE: There was a comment here saying something about this being
         used to reach beyond the current directory.
@@ -95,11 +95,11 @@ void reach_your_dir(char** argv) {
 // Initialize the 320x200x256 graphics mode.
 void _320_200_256() STUB
 
-// Initialize the 80x25 text mode.
-void _80_25_C() STUB
+    // Initialize the 80x25 text mode.
+    void _80_25_C() STUB
 
-// Wait for a key?
-int16_t attendi_pressione_tasto() {
+    // Wait for a key?
+    int16_t attendi_pressione_tasto() {
     STUB return 0;
 }
 
@@ -107,16 +107,15 @@ int16_t attendi_pressione_tasto() {
 int16_t tasto_premuto() { STUB return 0; }
 
 uint8_t range8088[64 * 3] = {
-    0,  0,  0,  1,  1,  1,  2,  2,  2,  3,  3,  3,  4,  4,  4,  5,  5,  5,
-    6,  6,  6,  7,  7,  7,  8,  8,  8,  9,  9,  9,  10, 10, 10, 11, 11, 11,
-    12, 12, 12, 13, 13, 13, 14, 14, 14, 15, 15, 15, 16, 16, 16, 17, 17, 17,
-    18, 18, 18, 19, 19, 19, 20, 20, 20, 21, 21, 21, 22, 22, 22, 23, 23, 23,
-    24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 29, 29,
-    30, 30, 30, 31, 31, 31, 32, 32, 32, 33, 33, 33, 34, 34, 34, 35, 35, 35,
-    36, 36, 36, 37, 37, 37, 38, 38, 38, 39, 39, 39, 40, 40, 40, 41, 41, 41,
-    42, 42, 42, 43, 43, 43, 44, 44, 44, 45, 45, 45, 46, 46, 46, 47, 47, 47,
-    48, 48, 48, 49, 49, 49, 50, 50, 50, 51, 51, 51, 52, 52, 52, 53, 53, 53,
-    54, 54, 54, 55, 55, 55, 56, 56, 56, 57, 57, 57, 58, 58, 58, 59, 59, 59,
+    0,  0,  0,  1,  1,  1,  2,  2,  2,  3,  3,  3,  4,  4,  4,  5,  5,  5,  6,  6,
+    6,  7,  7,  7,  8,  8,  8,  9,  9,  9,  10, 10, 10, 11, 11, 11, 12, 12, 12, 13,
+    13, 13, 14, 14, 14, 15, 15, 15, 16, 16, 16, 17, 17, 17, 18, 18, 18, 19, 19, 19,
+    20, 20, 20, 21, 21, 21, 22, 22, 22, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26,
+    26, 27, 27, 27, 28, 28, 28, 29, 29, 29, 30, 30, 30, 31, 31, 31, 32, 32, 32, 33,
+    33, 33, 34, 34, 34, 35, 35, 35, 36, 36, 36, 37, 37, 37, 38, 38, 38, 39, 39, 39,
+    40, 40, 40, 41, 41, 41, 42, 42, 42, 43, 43, 43, 44, 44, 44, 45, 45, 45, 46, 46,
+    46, 47, 47, 47, 48, 48, 48, 49, 49, 49, 50, 50, 50, 51, 51, 51, 52, 52, 52, 53,
+    53, 53, 54, 54, 54, 55, 55, 55, 56, 56, 56, 57, 57, 57, 58, 58, 58, 59, 59, 59,
     60, 60, 60, 61, 61, 61, 62, 62, 62, 63, 63, 63};
 
 // This sets up the vga color palette.
@@ -185,9 +184,7 @@ void mouse_input() STUB
 }
 
 // Copies QUADWORDS * 4 bytes from the source to the destination.
-void pcopy(uint8_t *dest, uint8_t *source) {
-    memcpy(dest, source, QUADWORDS * 4);
-}
+void pcopy(uint8_t *dest, uint8_t *source) { memcpy(dest, source, QUADWORDS * 4); }
 
 // Clears QUADWORDS * 4 bytes starting at the target.
 void pclear(uint8_t *target, uint8_t pattern) {
@@ -740,23 +737,19 @@ double qid = 1.0 / 16384; // Constant to find the x / z id of a quadrant.
 uint32_t pvfile_datatop = 0; // Top of the data.
 
 // Note: dataptr is a relative pointer that can go from 0 to "pvbytes".
-uint16_t pvfile_dataptr[handles] = {0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 0, 0};
-uint16_t pvfile_datalen[handles] = {0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 0, 0};
-uint16_t pvfile_npolygs[handles] = {0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 0, 0};
+uint16_t pvfile_dataptr[handles] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+uint16_t pvfile_datalen[handles] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+uint16_t pvfile_npolygs[handles] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-int8_t *pv_n_vtx[handles]; // Number of vertices for each polygon (3 or 4).
-float *pvfile_x[handles];  // X coordinate (four vertices) of each polygon.
-float *pvfile_y[handles];  // Y coordinate (four vertices) of each polygon.
-float *pvfile_z[handles];  // Z coordinate (four vertices) of each polygon.
-int8_t *pvfile_c[handles]; // Intensity of the color of each polygon (0 to 63).
-float *pv_mid_x[handles];  // X coordinate of the midpoint of each polygon.
-float *pv_mid_y[handles];  // Y coordinate of the midpoint of each polygon.
-float *pv_mid_z[handles];  // Z coordinate of the midpoint of each polygon.
-float
-    *pv_mid_d[handles]; // Buffer distance of average points from the observer.
+int8_t *pv_n_vtx[handles];  // Number of vertices for each polygon (3 or 4).
+float *pvfile_x[handles];   // X coordinate (four vertices) of each polygon.
+float *pvfile_y[handles];   // Y coordinate (four vertices) of each polygon.
+float *pvfile_z[handles];   // Z coordinate (four vertices) of each polygon.
+int8_t *pvfile_c[handles];  // Intensity of the color of each polygon (0 to 63).
+float *pv_mid_x[handles];   // X coordinate of the midpoint of each polygon.
+float *pv_mid_y[handles];   // Y coordinate of the midpoint of each polygon.
+float *pv_mid_z[handles];   // Z coordinate of the midpoint of each polygon.
+float *pv_mid_d[handles];   // Buffer distance of average points from the observer.
 int16_t *pv_dep_i[handles]; // Distance index (sorting of polygons).
 
 // Pseudo-random number generation procedures.
@@ -765,9 +758,7 @@ int32_t flat_rnd_seed;
 
 // Pseudo table selection.
 // There are 4,294,967,295 possible tables, and about 20000 elements per table.
-void fast_srand(int32_t seed) {
-    flat_rnd_seed = seed | 3;
-}
+void fast_srand(int32_t seed) { flat_rnd_seed = seed | 3; }
 
 // Extraction of a number: "mask" activates the bits.
 // This is very sketchy!
@@ -775,8 +766,8 @@ int32_t fast_random(int32_t mask) {
     int32_t eax = flat_rnd_seed;
     int32_t edx = flat_rnd_seed;
 
-    uint64_t res = (uint64_t) eax * (uint64_t) edx;
-    eax = (res & 0xFFFFFFFF) + ((res >> 32) & 0x0000FFFF);
+    uint64_t res = (uint64_t)eax * (uint64_t)edx;
+    eax          = (res & 0xFFFFFFFF) + ((res >> 32) & 0x0000FFFF);
     flat_rnd_seed += eax;
 
     return eax & mask;
@@ -797,9 +788,7 @@ float flandom() {
     FIXME
 }
 
-float fast_flandom() {
-    return ((float)fast_random(32767) * 0.000030518);
-}
+float fast_flandom() { return ((float)fast_random(32767) * 0.000030518); }
 
 // Loads virtual file handles from supports.nct
 int32_t sa_open(int32_t offset_of_virtual_file) {
@@ -820,9 +809,9 @@ int32_t sa_open(int32_t offset_of_virtual_file) {
 
 // Defines a part of the color table so that a gradual gradient goes from one
 // color to another, within a certain number of intermediate colors.
-void shade(uint8_t *palette_buffer, int16_t first_color,
-           int16_t number_of_colors, float start_r, float start_g,
-           float start_b, float finish_r, float finish_g, float finish_b) {
+void shade(uint8_t *palette_buffer, int16_t first_color, int16_t number_of_colors,
+           float start_r, float start_g, float start_b, float finish_r,
+           float finish_g, float finish_b) {
     int16_t count = number_of_colors;
     float k       = 1.00 / (float)number_of_colors;
     float delta_r = (finish_r - start_r) * k;
@@ -960,8 +949,8 @@ void watch(double cam_x, double cam_y, double cam_z, double see_x, double see_y,
 
 // Calculates the x-y offset from the center of the display by the point given
 // by point_x;y;z, returns the values in delta_x;y.
-int8_t xy(double cam_x, double cam_y, double cam_z, double point_x,
-          double point_y, double point_z) {
+int8_t xy(double cam_x, double cam_y, double cam_z, double point_x, double point_y,
+          double point_z) {
     double xx, yy, zz, z2, rz;
     xx      = point_x - cam_x;
     yy      = point_y - cam_y;
@@ -2153,7 +2142,7 @@ void drawpv(int16_t handle, int16_t mode, int16_t rm_iterations, float center_x,
     cam_y += center_y;
     cam_z += center_z;
 #endif
-    FIXME
+    STUB
 }
 
 /*  Replica una forma poligonale, copiandola da un'handle gi� definito
@@ -2235,8 +2224,7 @@ void modpv(int16_t handle, int16_t polygon_id, int16_t vertex_id, float x_scale,
                 z1 = (pvfile_z[handle][i] - cz) * cos_y -
                      (pvfile_x[handle][i] - cx) * sin_y;
                 pvfile_z[handle][i] =
-                    z_scale *
-                        (z1 * cos_x + (pvfile_y[handle][i] - cy) * sin_x) +
+                    z_scale * (z1 * cos_x + (pvfile_y[handle][i] - cy) * sin_x) +
                     cz;
                 y1 = (pvfile_y[handle][i] - cy) * cos_x - z1 * sin_x;
                 pvfile_x[handle][i] = x_scale * (x1 * cos_z + y1 * sin_z) + cx;
@@ -2280,8 +2268,7 @@ void modpv(int16_t handle, int16_t polygon_id, int16_t vertex_id, float x_scale,
                 z1 = (pvfile_z[handle][j] - cz) * cos_y -
                      (pvfile_x[handle][j] - cx) * sin_y;
                 pvfile_z[handle][j] =
-                    z_scale *
-                        (z1 * cos_x + (pvfile_y[handle][j] - cy) * sin_x) +
+                    z_scale * (z1 * cos_x + (pvfile_y[handle][j] - cy) * sin_x) +
                     cz;
                 y1 = (pvfile_y[handle][j] - cy) * cos_x - z1 * sin_x;
                 pvfile_x[handle][j] = x_scale * (x1 * cos_z + y1 * sin_z) + cx;
@@ -2401,7 +2388,7 @@ void background(uint16_t start, uint8_t *target, uint8_t *background,
 void sky(uint16_t limits) {
     uint16_t debug;
 
-    int32_t min_xy = 1E9;
+    int32_t min_xy         = 1E9;
     int8_t visible_sectors = 9;
 
     if (field_amplificator) {
@@ -2439,7 +2426,7 @@ void sky(uint16_t limits) {
     int16_t rarity_factor;
     double distance_from_home;
 
-    distance_from_home = sqrt (dzat_x * dzat_x + dzat_z * dzat_z);
+    distance_from_home = sqrt(dzat_x * dzat_x + dzat_z * dzat_z);
     distance_from_home += 30 * fabs(dzat_y);
 
     rarity_factor = distance_from_home * 0.25e-8;
@@ -2471,15 +2458,15 @@ void sky(uint16_t limits) {
                 temp_x -= cutoff;
 
                 int32_t abc123 = (sect_x + sect_z);
-                int32_t accum = 0;
+                int32_t accum  = 0;
 
                 int32_t edx = temp_x;
                 int32_t eax = abc123;
 
                 // This replaced a very sketchy usage of imul.
-                int64_t result = (int64_t) edx * (int64_t) eax;
-                eax = result & 0xFFFFFFFF;
-                edx = result >> 32;
+                int64_t result = (int64_t)edx * (int64_t)eax;
+                eax            = result & 0xFFFFFFFF;
+                edx            = result >> 32;
                 edx += eax;
                 accum = edx;
 
@@ -2492,11 +2479,11 @@ void sky(uint16_t limits) {
                 }
                 temp_y -= cutoff;
 
-                edx = temp_y;
-                eax = idkbro;
-                result = (int64_t) edx * (int64_t) eax;
-                eax = result & 0xFFFFFFFF;
-                edx = result >> 32;
+                edx    = temp_y;
+                eax    = idkbro;
+                result = (int64_t)edx * (int64_t)eax;
+                eax    = result & 0xFFFFFFFF;
+                edx    = result >> 32;
                 edx += eax;
                 accum = edx;
 
@@ -2523,7 +2510,7 @@ void sky(uint16_t limits) {
                 }
 
                 inv_rz = uno / rz;
-                rx = ((xx * opt_pcosbeta) + (zz * opt_psinbeta)) * inv_rz;
+                rx     = ((xx * opt_pcosbeta) + (zz * opt_psinbeta)) * inv_rz;
 
                 index = rx + x_centro;
                 if (index <= 10 || index >= 310) {
@@ -2538,22 +2525,22 @@ void sky(uint16_t limits) {
                 }
 
                 nety <<= 1;
-                uint16_t toAddLow = ((uint8_t*) riga)[nety];
-                uint16_t toAddHigh = ((uint8_t*) riga)[nety + 1];
-                uint16_t toAdd = (toAddHigh << 8) + toAddLow;
+                uint16_t toAddLow  = ((uint8_t *)riga)[nety];
+                uint16_t toAddHigh = ((uint8_t *)riga)[nety + 1];
+                uint16_t toAdd     = (toAddHigh << 8) + toAddLow;
                 index += toAdd;
 
                 if (ap_targetting != 1) {
                     uint8_t color = adapted[index];
-                    if (color == 68 || color < (limits >> 8)
-                        || color > (limits & 0xFF)) {
+                    if (color == 68 || color < (limits >> 8) ||
+                        color > (limits & 0xFF)) {
                         continue;
                     }
                 }
 
-                temp = (int32_t) rz;
+                temp              = (int32_t)rz;
                 int32_t tempshift = temp >> (13 + field_amplificator);
-                int8_t mask = 63 - tempshift;
+                int8_t mask       = 63 - tempshift;
                 if (mask >= 0) {
                     int8_t color = adapted[index];
                     adapted[index] &= 0xC0;
@@ -2569,7 +2556,7 @@ void sky(uint16_t limits) {
                     temp = (rx * rx) + (ry * ry);
 
                     if (temp < min_xy) {
-                        min_xy = temp;
+                        min_xy      = temp;
                         ap_target_x = temp_x;
                         ap_target_y = temp_y;
                         ap_target_z = temp_z;
@@ -2648,10 +2635,9 @@ void gman4x4 () {
 }
 #endif
 
-void globe(uint16_t start, uint8_t *target, uint8_t *tapestry,
-           uint8_t *offsetsmap, uint16_t total_map_bytes, double x, double y,
-           double z, float mag_factor, int8_t colormask,
-           int8_t globe_saturation) {
+void globe(uint16_t start, uint8_t *target, uint8_t *tapestry, uint8_t *offsetsmap,
+           uint16_t total_map_bytes, double x, double y, double z, float mag_factor,
+           int8_t colormask, int8_t globe_saturation) {
 #if 0
     void*    gman;
     int16_t center_x, center_y, temp;
@@ -2820,8 +2806,8 @@ void globe(uint16_t start, uint8_t *target, uint8_t *tapestry,
 
 void glowinglobe(int16_t start, uint8_t *target, uint8_t *offsetsmap,
                  uint16_t total_map_bytes, double x, double y, double z,
-                 float mag_factor, int16_t terminator_start,
-                 int16_t terminator_arc, uint8_t color) {
+                 float mag_factor, int16_t terminator_start, int16_t terminator_arc,
+                 uint8_t color) {
 #if 0
     uint16_t center_x, center_y, temp;
     double xx, yy, zz, z2, rx, ry, rz;
@@ -4073,14 +4059,11 @@ void ssmooth(uint8_t *target) {
 
         col1 = target[i] + target[i + 360] + target[i + 720] + target[i + 1080];
 
-        col2 = target[i + 1] + target[i + 361] + target[i + 721] +
-               target[i + 1081];
+        col2 = target[i + 1] + target[i + 361] + target[i + 721] + target[i + 1081];
 
-        col3 = target[i + 2] + target[i + 362] + target[i + 722] +
-               target[i + 1082];
+        col3 = target[i + 2] + target[i + 362] + target[i + 722] + target[i + 1082];
 
-        col4 = target[i + 3] + target[i + 363] + target[i + 723] +
-               target[i + 1083];
+        col4 = target[i + 3] + target[i + 363] + target[i + 723] + target[i + 1083];
 
         col1 = (col1 & 0xFC) / 4;
         col2 = (col2 & 0xFC) / 4;
@@ -4534,8 +4517,7 @@ void storm() { // tempesta (una grande macchia chiara sull'atmosfera).
     campo ridotto ai bordi dei globi.
     "colorbase" viene assegnato a 192 per i pianeti, a 128 per le lune. */
 
-void surface(int16_t logical_id, int16_t type, double seedval,
-             uint8_t colorbase) {
+void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase) {
 #if 0
     int16_t         plwp;
     uint16_t        seed;
@@ -5351,8 +5333,7 @@ void planets() {
                     if (is_moon) {
                         if (nearstar_p_type[n]) {
                             surface(n, nearstar_p_type[n],
-                                    1000000 * nearstar_ray *
-                                        nearstar_p_type[n] *
+                                    1000000 * nearstar_ray * nearstar_p_type[n] *
                                         nearstar_p_orb_orient[n],
                                     128);
                         } else {
@@ -5621,8 +5602,8 @@ void planets() {
                     ts -= 360;
                 }
 
-                glowinglobe(plwp, adapted, (uint8_t *)n_globes_map, gl_bytes,
-                            plx, ply, plz, nearstar_p_ray[n], ts, 130, 127);
+                glowinglobe(plwp, adapted, (uint8_t *)n_globes_map, gl_bytes, plx,
+                            ply, plz, nearstar_p_ray[n], ts, 130, 127);
             }
         }
 
