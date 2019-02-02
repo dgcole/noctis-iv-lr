@@ -6203,7 +6203,6 @@ void wrouthud(uint16_t x, uint16_t y, uint16_t l, char *text) {
 }
 
 void surrounding(int8_t compass_on, int16_t openhudcount) {
-#if 0
     int16_t cpos, crem;
     int32_t    lsecs, lptr;
     float   pp_delta, ccom;
@@ -6244,40 +6243,40 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
     areaclear (adapted, 308, 188, 0, 0, 4, 4, lptr);
     smootharound_64 (adapted, 308, 188, 5, 1);
     // Print time on outer HUD.
-    sprintf (outhudbuffer, "EPOC %d & ", epoc);
+    sprintf((char*) outhudbuffer, "EPOC %d & ", epoc);
 
     uint16_t sinisters = fmod(secs, 1e9) / 1e6;
     // Pad with a 0.
     if (sinisters < 100) {
-        strcat(outhudbuffer, "0");
+        strcat((char*) outhudbuffer, "0");
     }
-    strcat (outhudbuffer, alphavalue(sinisters));
-    strcat (outhudbuffer, ".");
+    strcat((char*) outhudbuffer, alphavalue(sinisters));
+    strcat((char*) outhudbuffer, ".");
 
     uint16_t medii = fmod(secs, 1e6) / 1e3;
     if (medii < 100) {
-        strcat(outhudbuffer, "0");
+        strcat((char*) outhudbuffer, "0");
     }
-    strcat (outhudbuffer, alphavalue(medii));
-    strcat (outhudbuffer, ".");
+    strcat((char*) outhudbuffer, alphavalue(medii));
+    strcat((char*) outhudbuffer, ".");
 
     uint16_t dexters = fmod(secs, 1e3);
     if (dexters < 100) {
-        strcat(outhudbuffer, "0");
+        strcat((char*) outhudbuffer, "0");
     }
-    strcat (outhudbuffer, alphavalue(dexters));
+    strcat((char*) outhudbuffer, alphavalue(dexters));
 
     if (compass_on) {
-        strcat (outhudbuffer, " & SQC ");
-        strcat (outhudbuffer, alphavalue(landing_pt_lon));
-        strcat (outhudbuffer, ".");
-        strcat (outhudbuffer, alphavalue(landing_pt_lat));
-        strcat (outhudbuffer, ":");
-        strcat (outhudbuffer, alphavalue((((int32_t)(pos_x)) >> 14) - 100));
-        strcat (outhudbuffer, ".");
-        strcat (outhudbuffer, alphavalue((((int32_t)(pos_z)) >> 14) - 100));
-        areaclear (adapted, 254, 1, 0, 0, 5, 7, 64 + 0);
-        areaclear (adapted, 256, 8, 0, 0, 1, 1, 64 + 63);
+        strcat((char*) outhudbuffer, " & SQC ");
+        strcat((char*) outhudbuffer, alphavalue(landing_pt_lon));
+        strcat((char*) outhudbuffer, ".");
+        strcat((char*) outhudbuffer, alphavalue(landing_pt_lat));
+        strcat((char*) outhudbuffer, ":");
+        strcat((char*) outhudbuffer, alphavalue((((int32_t)(pos_x)) >> 14) - 100));
+        strcat((char*) outhudbuffer, ".");
+        strcat((char*) outhudbuffer, alphavalue((((int32_t)(pos_z)) >> 14) - 100));
+        areaclear(adapted, 254, 1, 0, 0, 5, 7, 64 + 0);
+        areaclear(adapted, 256, 8, 0, 0, 1, 1, 64 + 63);
         ccom = 360 - user_beta;
 
         if (ccom > 359) {
@@ -6286,15 +6285,15 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
 
         cpos = ccom / 9;
         crem = ccom * 0.44444;
-        wrouthud (200 - (crem % 4), 2, 28, compass + cpos);
+        wrouthud(200 - (crem % 4), 2, 28, (char*) (compass + cpos));
     } else {
         if (!ontheroof) {
-            strcat (outhudbuffer, " & ");
+            strcat((char*) outhudbuffer, " & ");
 
             if (sys == 4) {
-                strcat (outhudbuffer, "5\\FLIGHTCTR R\\DEVICES    D\\PREFS      X\\SCREEN OFF");
+                strcat((char*) outhudbuffer, "5\\FLIGHTCTR R\\DEVICES    D\\PREFS      X\\SCREEN OFF");
             } else {
-                cpos = strlen (outhudbuffer);
+                cpos = strlen((char*) outhudbuffer);
                 outhudbuffer[cpos + 00] = '6';
                 outhudbuffer[cpos + 01] = '\\';
                 memcpy (outhudbuffer + cpos + 02, ctb + 20 + 27 * 0, 10);
@@ -6311,7 +6310,7 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
                 outhudbuffer[cpos + 40] = '\\';
                 memcpy (outhudbuffer + cpos + 41, ctb + 20 + 27 * 3, 10);
                 outhudbuffer[cpos + 51] = 0;
-                strupr (outhudbuffer);
+                strupr((char*) outhudbuffer);
             }
         }
     }
@@ -6331,8 +6330,6 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
              "GRAVITY %2.3f FG & TEMPERATURE %+3.1f@C & PRESSURE %2.3f ATM & PULSE %3.0f PPS",
              tp_gravity, tp_temp, tp_pressure, tp_pulse);
     wrouthud (2, 192, NULL, outhudbuffer);
-#endif
-    STUB
 }
 
 /*  Salva una fotografia dello schermo sul file "SNAPXXXX.BMP":
