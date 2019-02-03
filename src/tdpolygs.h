@@ -127,13 +127,13 @@ void initscanlines() {
     }
 }
 
-// Traccia un segmento senza effettuare controlli sui limiti. Pi� veloce.
-// Traccia con colore 255.
-// Non effettua controlli, e quindi non va utilizzata per altre cose,
-// o per lo meno bisogna stare attenti a far rientrare gli estremi del
-// segmento nell'area video utilizzabile.
-// Quella che effettua i controlli si trova nella funzione waveline di
-// Liquid Player, ed � sicura al 1000 per mille.
+// Draw a segment without checking limits. Faster.
+// Trace with color 255.
+// It does not carry out checks, so it should not be used for other things,
+// or at least you have to be careful to include the extremes of the
+// segment in the usable video area.
+// The one doing the checks is in the waveline function of
+// Liquid Player, and it is safe at 1000 per thousand.
 
 uint16_t ptr;
 
@@ -141,7 +141,6 @@ uint32_t xp, yp, xa, ya;
 uint32_t global_x, global_y;
 
 void Segmento() {
-#if 0
     int32_t a, b, L;
     uint16_t pi, pf;
 
@@ -154,41 +153,27 @@ void Segmento() {
             pf = riga[yp + 1];
         }
 
-        asm {   les si, dword ptr adapted
-                add pi, si
-                add pf, si
-                mov si, pi }
-        clu:
-        asm {   mov byte ptr es:[si], 255
-                add si, 320
-                cmp si, pf
-                jb clu }
+        while (pi < pf) {
+            adapted[pi] = 255;
+            pi += 320;
+        }
+
         return;
     }
-
-    asm {   db 0x66;
-            mov si, word ptr xa
-            db 0x66;
-            sub si, word ptr xp
-            jnc a_posit
-            db 0x66;
-            mov ax, word ptr xp
-            db 0x66;
-            mov bx, word ptr xa
-            db 0x66;
-            mov cx, word ptr yp
-            db 0x66;
-            mov dx, word ptr ya
-            db 0x66;
-            mov word ptr xa, ax
-            db 0x66;
-            mov word ptr xp, bx
-            db 0x66;
-            mov word ptr ya, cx
-            db 0x66;
-            mov word ptr yp, dx
-            db 0x66;
-            neg si }
+    // ES: Adapted.
+    if (xa < xp) {
+        asm {
+            mov eax, word ptr xp
+            mov ebx, word ptr xa
+            mov ecx, word ptr yp
+            mov edx, word ptr ya
+            mov word ptr xa, eax
+            mov word ptr xp, ebx
+            mov word ptr ya, ecx
+            mov word ptr yp, edx
+            neg esi
+        }
+    }
     a_posit:
     asm {   db 0x66;
             mov word ptr a, si
@@ -281,8 +266,6 @@ void Segmento() {
             db 0x66;
             cmp word ptr global_x, cx
             jb  _do }
-#endif
-    STUB
 }
 
 // La funzione di tracciamento viene principalmente usata da Noctis,

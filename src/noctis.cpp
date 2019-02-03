@@ -2487,7 +2487,7 @@ int main(int argc, char **argv) {
     _320_200_256(); // INIZIALIZZAZIONE GRAFICA.
     initscanlines();
     unfreeze();
-    pclear(adapted, 0);
+    memset(adapted, 0, QUADWORDS * 4);
     QUADWORDS -= 1440;
     pqw = QUADWORDS;
     handle_input(window);
@@ -2543,7 +2543,7 @@ int main(int argc, char **argv) {
         holdtomiddle = 1;
         pp_gravity   = 1;
         QUADWORDS    = 16000;
-        pclear(adapted, 0);
+        memset(adapted, 0, QUADWORDS * 4);
         QUADWORDS = pqw;
 
         if (exitflag) {
@@ -2901,7 +2901,7 @@ int main(int argc, char **argv) {
 
         // Black background, which will be made hazy.
         if (!stspeed) {
-            pclear(adapted + 2880, 0);
+            memset(adapted + 2880, 0, QUADWORDS * 4);
         } else {
             pfade(adapted, 180, 8);
         }
@@ -3587,7 +3587,7 @@ int main(int argc, char **argv) {
                                 }
                             }
 
-                            wrouthud(14, 97, c, "PRIMARY MASS:");
+                            wrouthud(14, 97, c, (char*) "PRIMARY MASS:");
                             sprintf((char *)outhudbuffer, "%1.8f BAL. M.",
                                     tmp_float);
                             wrouthud(14, 103, c, (char *)outhudbuffer);
@@ -3597,7 +3597,7 @@ int main(int argc, char **argv) {
                                 tmp_float *= 0.0022;
                             }
 
-                            wrouthud(14, 113, c, "SURFACE TEMPERATURE:");
+                            wrouthud(14, 113, c, (char*) "SURFACE TEMPERATURE:");
                             sprintf((char *)outhudbuffer, "%1.0f@K&%1.0f@C&%1.0f@F",
                                     tmp_float + 273.15, tmp_float,
                                     tmp_float * 1.8 + 32);
@@ -3606,10 +3606,10 @@ int main(int argc, char **argv) {
                                     starnop(ap_target_x, ap_target_y, ap_target_z));
                             wrouthud(14, 129, c, (char *)outhudbuffer);
                         } else {
-                            wrouthud(14, 87, c, "DIRECT PARSIS TARGET");
+                            wrouthud(14, 87, c, (char*) "DIRECT PARSIS TARGET");
                         }
                     } else {
-                        wrouthud(14, 87, c, "REMOTE TARGET NOT SET");
+                        wrouthud(14, 87, c, (char*) "REMOTE TARGET NOT SET");
                     }
 
                     break;
@@ -3617,7 +3617,7 @@ int main(int argc, char **argv) {
                 case 2: // local target data
                     if (ip_targetted != -1) {
                         wrouthud(14, 87, c, (char *)planet_label);
-                        wrouthud(14, 97, c, "PERIOD OF ROTATION:");
+                        wrouthud(14, 97, c, (char*) "PERIOD OF ROTATION:");
 
                         if (nearstar_p_qsortindex[nearstar_nob - 1] ==
                             ip_targetted) {
@@ -3635,19 +3635,19 @@ int main(int argc, char **argv) {
                             } else {
                                 if (ip_reaching || ip_reached) {
                                     if (nearstar_p_type[ip_targetted] != 10) {
-                                        wrouthud(14, 103, c, "COMPUTING...");
+                                        wrouthud(14, 103, c, (char*) "COMPUTING...");
                                     } else {
-                                        wrouthud(14, 103, c, "NOT RESOLVABLE");
+                                        wrouthud(14, 103, c, (char*) "NOT RESOLVABLE");
                                     }
                                 } else {
-                                    wrouthud(14, 103, c, "TOO FAR TO ESTIMATE");
+                                    wrouthud(14, 103, c, (char*) "TOO FAR TO ESTIMATE");
                                 }
                             }
                         } else {
-                            wrouthud(14, 103, c, "TOO FAR TO ESTIMATE");
+                            wrouthud(14, 103, c, (char*) "TOO FAR TO ESTIMATE");
                         }
 
-                        wrouthud(14, 113, c, "PERIOD OF REVOLUTION:");
+                        wrouthud(14, 113, c, (char*) "PERIOD OF REVOLUTION:");
                         tmp_float = rtp(ip_targetted);
                         p1        = tmp_float * 1e-9;
                         p2        = tmp_float * 1e-6;

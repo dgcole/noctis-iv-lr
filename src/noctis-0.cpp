@@ -211,14 +211,6 @@ void handle_input(SDL_Window *window) {
     if (rdown) mpul |= 2u;
 }
 
-// Copies QUADWORDS * 4 bytes from the source to the destination.
-void pcopy(uint8_t *dest, uint8_t *source) { memcpy(dest, source, QUADWORDS * 4); }
-
-// Clears QUADWORDS * 4 bytes starting at the target.
-void pclear(uint8_t *target, uint8_t pattern) {
-    memset(target, pattern, QUADWORDS * 4);
-}
-
 // Clears a rectangular region of the video memory.
 // Either x2 & y2 OR l and h must be specified.
 // This may or may not work.
@@ -2030,7 +2022,6 @@ void QuickSort(int16_t *index, float *mdist, int16_t start, int16_t end) {
 
 void drawpv(int16_t handle, int16_t mode, int16_t rm_iterations, float center_x,
             float center_y, float center_z, int8_t use_depth_sort) {
-#if 0
     float dx, dy, dz;
     uint16_t p, c, i, k;
 
@@ -2047,6 +2038,7 @@ void drawpv(int16_t handle, int16_t mode, int16_t rm_iterations, float center_x,
     cam_y -= center_y;
     cam_z -= center_z;
 
+    uint16_t mask;
     if (use_depth_sort && pv_mid_x[handle]) {
         // tracciamento con depth sorting.
         // fase 1: calcolo distanza punti medi.
@@ -2077,13 +2069,13 @@ void drawpv(int16_t handle, int16_t mode, int16_t rm_iterations, float center_x,
 
             case 1:
                 k = pvfile_c[handle][c];
-                asm {   push    ax
-                        mov     ax, k
-                        and     ax, 0x3F
-                        and     k,  0xC0
-                        shr     ax, 1
-                        or  k,  ax
-                        pop ax }
+
+                mask = k;
+                mask &= 0x3Fu;
+                k &= 0xC0u;
+                mask >>= 1u;
+                k |= mask;
+
                 polymap (pvfile_x[handle] + i,
                          pvfile_y[handle] + i,
                          pvfile_z[handle] + i,
@@ -2125,19 +2117,18 @@ void drawpv(int16_t handle, int16_t mode, int16_t rm_iterations, float center_x,
 
             case 1:
                 k = pvfile_c[handle][p];
-                asm {   push    ax
-                        mov     ax, k
-                        and     ax, 0x3F
-                        and     k,  0xC0
-                        shr     ax, 1
-                        or  k,  ax
-                        pop ax }
+
+                mask = k;
+                mask &= 0x3Fu;
+                k &= 0xC0u;
+                mask >>= 1u;
+                k |= mask;
+
                 polymap (pvfile_x[handle] + i,
                          pvfile_y[handle] + i,
                          pvfile_z[handle] + i,
                          pv_n_vtx[handle][p], k);
                 break;
-
             case 2:
                 map_color_a = pvfile_c[handle][p];
                 map_color_b = map_color_a - 2;
@@ -2162,15 +2153,12 @@ void drawpv(int16_t handle, int16_t mode, int16_t rm_iterations, float center_x,
     cam_x += center_x;
     cam_y += center_y;
     cam_z += center_z;
-#endif
-    STUB
 }
 
 /*  Replica una forma poligonale, copiandola da un'handle gi� definito
     a uno di uguali dimensioni. In caso d'errore, non succede nulla. */
 
 void copypv(int16_t dest_handle, int16_t src_handle) {
-#if 0
     if (src_handle >= handles) {
         return;
     }
@@ -2187,10 +2175,7 @@ void copypv(int16_t dest_handle, int16_t src_handle) {
         return;
     }
 
-    _fmemmove (pv_n_vtx[dest_handle], pv_n_vtx[src_handle],
-               pvfile_datalen[src_handle]);
-#endif
-    FIXME
+    memcpy(pv_n_vtx[dest_handle], pv_n_vtx[src_handle], pvfile_datalen[src_handle]);
 }
 
 /*  Ruota una forma poligonale rispetto a uno dei suoi vertici,
