@@ -142,7 +142,8 @@ uint32_t global_x, global_y;
 
 void Segmento() {
     int32_t a, b, L;
-    uint16_t pi, pf;
+    uint32_t pi, pf;
+    bool flip = false;
 
     if (xp == xa) {
         if (ya >= yp) {
@@ -160,112 +161,59 @@ void Segmento() {
 
         return;
     }
-    // ES: Adapted.
+
+    pi = abs((int32_t) xa - (int32_t) xp);
     if (xa < xp) {
-        asm {
-            mov eax, word ptr xp
-            mov ebx, word ptr xa
-            mov ecx, word ptr yp
-            mov edx, word ptr ya
-            mov word ptr xa, eax
-            mov word ptr xp, ebx
-            mov word ptr ya, ecx
-            mov word ptr yp, edx
-            neg esi
-        }
+        uint32_t temp;
+
+        temp = xp;
+        xp = xa;
+        xa = temp;
+
+        temp = yp;
+        yp = ya;
+        ya = temp;
     }
-    a_posit:
-    asm {   db 0x66;
-            mov word ptr a, si
-            db 0x66;
-            mov word ptr L, si
-            xor ch, ch
-            db 0x66;
-            mov ax, word ptr ya
-            db 0x66;
-            sub ax, word ptr yp
-            jnc b_posit
-            not ch
-            db 0x66;
-            neg ax }
-    b_posit:
-    asm {   db 0x66;
-            mov word ptr b, ax
-            db 0x66;
-            cmp ax, word ptr L
-            jb b_lower
-            db 0x66;
-            mov word ptr L, ax }
-    b_lower:
-    asm {   db 0x66;
-            inc word ptr L
-            db 0x66;
-            shl word ptr xa, 16
-            db 0x66;
-            mov ax, word ptr xp
-            db 0x66;
-            mov bx, word ptr yp
-            db 0x66;
-            shl ax, 16
-            db 0x66;
-            shl bx, 16
-            db 0x66;
-            mov word ptr global_x, ax
-            db 0x66;
-            mov word ptr global_y, bx
-            db 0x66;
-            shl word ptr a, 16 // a *= 65536, unsigned
-            db 0x66;
-            sal word ptr b, 16 // b *= 65536, signed
-            mov dx, word ptr a[2]
-            mov ax, word ptr a
-            div word ptr L     // a /= L, 16bit - unsigned
-            mov word ptr a, ax
-            mov word ptr a[2], 0
-            mov dx, word ptr b[2]
-            mov ax, word ptr b
-            div word ptr L     // b /= L, 16bit - false unsigned
-            mov word ptr b, ax
-            mov word ptr b[2], 0
-            test ch, ch
-            jz trace
-            db 0x66;
-            neg word ptr b }
-    trace:
-    asm les ax, dword ptr adapted;
-    /*
 
-        Nota importante:
+    a = pi;
+    L = pi;
 
-            Tutte le operazioni precedute dal prefisso 0x66
-            vanno considerate con operandi di dimensioni doppie.
-            Difatti, poich� l'assemblatore in-line non supporta
-            i registri a 32 bit, � necessario aggiungere i
-            prefissi d'estensione manualmente.
-            Cos� facendo, i puntatori di tipo word (word ptr)
-            vanno considerati come dword ptr, mentre i registri
-            sono tutti estesi (per esempio, ax diventa eax).
+    b = abs((int32_t) ya - (int32_t) yp);
+    if (ya < yp) {
+        flip = true;
+    }
 
-    */
-    asm {   db 0x66;
-            mov ax, word ptr a    // passa in eax il delta_x (ovvero a).
-            db 0x66;
-            mov dx, word ptr b    // passa in edx il delta_y (ovvero b).
-            db 0x66;
-            mov cx, word ptr xa } // passa in ecx il limite superiore del ciclo (come coordinata x d'arrivo).
-    _do:
-    asm {   mov bx, word ptr global_y[2]
-            mov di, word ptr global_x[2]
-            add bx, bx
-            db 0x66;
-            add word ptr global_x, ax
-            add di, word ptr riga[bx]
-            db 0x66;
-            add word ptr global_y, dx
-            mov byte ptr es:[di+4], 255
-            db 0x66;
-            cmp word ptr global_x, cx
-            jb  _do }
+    if (b >= L) {
+        L = b;
+    }
+
+    L++;
+    xa <<= 16u;
+
+    global_x = xp << 16u;
+    global_y = yp << 16u;
+
+    a *= 65536;
+    b *= 65536;
+
+    a /= L;
+    b /= L;
+
+    if (flip) b = -b;
+
+    while (global_x < xa) {
+        uint16_t argblarg = 2 * (global_y >> 16u);
+        uint16_t index = (global_x >> 16u);
+
+        global_x += a;
+        global_y += b;
+
+        auto *charRiga = (uint8_t *)riga;
+        uint16_t shift = (charRiga[argblarg + 1] << 8u) + charRiga[argblarg];
+        index += shift;
+
+        adapted[index + 4] = 255;
+    }
 }
 
 // La funzione di tracciamento viene principalmente usata da Noctis,
