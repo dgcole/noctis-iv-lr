@@ -1,5 +1,7 @@
 # Noctis IV LR
 
+**PLEASE NOTE: This project is a heavy WIP. It is not playable.**
+
 Noctis IV LR aims to eventually port Noctis IV to run on Linux and Modern Windows.
 The starting point was the base Noctis IV source code. Neither NIV+ nor
 NICE were used, because the added layer of cruft on top of both would have
@@ -32,3 +34,6 @@ porting the rendering code, but it's entirely achievable given enough time.
 ## Differences from Vanilla
 * SUPPORTS.NCT is loaded from the res/ folder instead of being appended to the binary.
 * Fixed a bug with triads dexter above 1000. 
+
+## License
+Released under the terms of the [WTOF Public License](LICENSE.md) under Alex's conditions that the original gameplay be preserved.
