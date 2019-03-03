@@ -28,9 +28,9 @@
 
 */
 
-#include <memory>
-#include <cmath>
-#include <cstdio>
+#include <math.h>
+#include <stdio.h>
+#include <memory.h>
 
 #include "noctis-d.h"
 
@@ -47,15 +47,15 @@
 #endif
 
 #ifndef altezza
-#define altezza   180
+#define altezza 180
 #endif
 
 #ifndef x_centro
-#define x_centro  160
+#define x_centro 160
 #endif
 
 #ifndef y_centro
-#define y_centro  100
+#define y_centro 100
 #endif
 
 /*
@@ -86,8 +86,8 @@ const double deg = M_PI / 180;
 
 // Distanza dal piano di proiezione.
 
-float dpp = 200;
-float inv_dpp = 1 / dpp;
+float dpp     = 200;
+float inv_dpp = 1 / 200;
 
 /*  Costanti e variabili di controllo del texture mapping.
     H_MATRIXS e V_MATRIXS specificano le ripetizioni della stessa
@@ -102,24 +102,24 @@ float inv_dpp = 1 / dpp;
     se si mette a 12 si ottengono tre ripetizioni, eccetera...
     (ps ho cambiato la base a 16, sedicesimi di texture). */
 
-const uint16_t  MPIX          =                 319; // Massimo PIXEL su X.
-const uint16_t  MPIY          =                         199; // Massimo PIXEL su Y.
-const uint16_t  TEXTURE_XSIZE =                 256; // Larghezza delle BMP.
-const uint16_t  TEXTURE_YSIZE =                 256; // Altezza delle BMP.
+const uint16_t MPIX          = 319; // Massimo PIXEL su X.
+const uint16_t MPIY          = 199; // Massimo PIXEL su Y.
+const uint16_t TEXTURE_XSIZE = 256; // Larghezza delle BMP.
+const uint16_t TEXTURE_YSIZE = 256; // Altezza delle BMP.
 
-float   EMU_K         =                      16; // Cost. di emulaz. FPU
-int32_t    H_MATRIXS     =                  16; // Nr. ripetizioni. 16-128
-int32_t    V_MATRIXS     =                  16; // Nr. ripetizioni. 16-128
-int32_t    XSIZE         =   TEXTURE_XSIZE * H_MATRIXS; // Calibraz. dimensioni.
-int32_t    YSIZE         =   TEXTURE_YSIZE * V_MATRIXS; // Calibraz. dimensioni.
-float   XCOEFF        =                 EMU_K / dpp; // Coefficente di comodo.
-float   YCOEFF        =                 EMU_K / dpp; // Coefficente di comodo.
+float EMU_K       = 16;                        // Cost. di emulaz. FPU
+int32_t H_MATRIXS = 16;                        // Nr. ripetizioni. 16-128
+int32_t V_MATRIXS = 16;                        // Nr. ripetizioni. 16-128
+int32_t XSIZE     = TEXTURE_XSIZE * H_MATRIXS; // Calibraz. dimensioni.
+int32_t YSIZE     = TEXTURE_YSIZE * V_MATRIXS; // Calibraz. dimensioni.
+float XCOEFF      = EMU_K / dpp;               // Coefficente di comodo.
+float YCOEFF      = EMU_K / dpp;               // Coefficente di comodo.
 
 // Initialize scanline addresses.
 
 uint16_t riga[200];
 
-void initscanlines () {
+void initscanlines() {
     uint16_t c;
 
     for (c = 0; c < 200; c++) {
@@ -127,23 +127,23 @@ void initscanlines () {
     }
 }
 
-// Traccia un segmento senza effettuare controlli sui limiti. Pi� veloce.
-// Traccia con colore 255.
-// Non effettua controlli, e quindi non va utilizzata per altre cose,
-// o per lo meno bisogna stare attenti a far rientrare gli estremi del
-// segmento nell'area video utilizzabile.
-// Quella che effettua i controlli si trova nella funzione waveline di
-// Liquid Player, ed � sicura al 1000 per mille.
+// Draw a segment without checking limits. Faster.
+// Trace with color 255.
+// It does not carry out checks, so it should not be used for other things,
+// or at least you have to be careful to include the extremes of the
+// segment in the usable video area.
+// The one doing the checks is in the waveline function of
+// Liquid Player, and it is safe at 1000 per thousand.
 
 uint16_t ptr;
 
 uint32_t xp, yp, xa, ya;
 uint32_t global_x, global_y;
 
-void Segmento () {
-#if 0
+void Segmento() {
     int32_t a, b, L;
-    uint16_t pi, pf;
+    uint32_t pi, pf;
+    bool flip = false;
 
     if (xp == xa) {
         if (ya >= yp) {
@@ -154,135 +154,66 @@ void Segmento () {
             pf = riga[yp + 1];
         }
 
-        asm {   les si, dword ptr adapted
-                add pi, si
-                add pf, si
-                mov si, pi }
-        clu:
-        asm {   mov byte ptr es:[si], 255
-                add si, 320
-                cmp si, pf
-                jb clu }
+        while (pi < pf) {
+            adapted[pi] = 255;
+            pi += 320;
+        }
+
         return;
     }
 
-    asm {   db 0x66;
-            mov si, word ptr xa
-            db 0x66;
-            sub si, word ptr xp
-            jnc a_posit
-            db 0x66;
-            mov ax, word ptr xp
-            db 0x66;
-            mov bx, word ptr xa
-            db 0x66;
-            mov cx, word ptr yp
-            db 0x66;
-            mov dx, word ptr ya
-            db 0x66;
-            mov word ptr xa, ax
-            db 0x66;
-            mov word ptr xp, bx
-            db 0x66;
-            mov word ptr ya, cx
-            db 0x66;
-            mov word ptr yp, dx
-            db 0x66;
-            neg si }
-    a_posit:
-    asm {   db 0x66;
-            mov word ptr a, si
-            db 0x66;
-            mov word ptr L, si
-            xor ch, ch
-            db 0x66;
-            mov ax, word ptr ya
-            db 0x66;
-            sub ax, word ptr yp
-            jnc b_posit
-            not ch
-            db 0x66;
-            neg ax }
-    b_posit:
-    asm {   db 0x66;
-            mov word ptr b, ax
-            db 0x66;
-            cmp ax, word ptr L
-            jb b_lower
-            db 0x66;
-            mov word ptr L, ax }
-    b_lower:
-    asm {   db 0x66;
-            inc word ptr L
-            db 0x66;
-            shl word ptr xa, 16
-            db 0x66;
-            mov ax, word ptr xp
-            db 0x66;
-            mov bx, word ptr yp
-            db 0x66;
-            shl ax, 16
-            db 0x66;
-            shl bx, 16
-            db 0x66;
-            mov word ptr global_x, ax
-            db 0x66;
-            mov word ptr global_y, bx
-            db 0x66;
-            shl word ptr a, 16 // a *= 65536, unsigned
-            db 0x66;
-            sal word ptr b, 16 // b *= 65536, signed
-            mov dx, word ptr a[2]
-            mov ax, word ptr a
-            div word ptr L     // a /= L, 16bit - unsigned
-            mov word ptr a, ax
-            mov word ptr a[2], 0
-            mov dx, word ptr b[2]
-            mov ax, word ptr b
-            div word ptr L     // b /= L, 16bit - false unsigned
-            mov word ptr b, ax
-            mov word ptr b[2], 0
-            test ch, ch
-            jz trace
-            db 0x66;
-            neg word ptr b }
-    trace:
-    asm les ax, dword ptr adapted;
-    /*
+    pi = abs((int32_t) xa - (int32_t) xp);
+    if (xa < xp) {
+        uint32_t temp;
 
-        Nota importante:
+        temp = xp;
+        xp = xa;
+        xa = temp;
 
-            Tutte le operazioni precedute dal prefisso 0x66
-            vanno considerate con operandi di dimensioni doppie.
-            Difatti, poich� l'assemblatore in-line non supporta
-            i registri a 32 bit, � necessario aggiungere i
-            prefissi d'estensione manualmente.
-            Cos� facendo, i puntatori di tipo word (word ptr)
-            vanno considerati come dword ptr, mentre i registri
-            sono tutti estesi (per esempio, ax diventa eax).
+        temp = yp;
+        yp = ya;
+        ya = temp;
+    }
 
-    */
-    asm {   db 0x66;
-            mov ax, word ptr a    // passa in eax il delta_x (ovvero a).
-            db 0x66;
-            mov dx, word ptr b    // passa in edx il delta_y (ovvero b).
-            db 0x66;
-            mov cx, word ptr xa } // passa in ecx il limite superiore del ciclo (come coordinata x d'arrivo).
-    _do:
-    asm {   mov bx, word ptr global_y[2]
-            mov di, word ptr global_x[2]
-            add bx, bx
-            db 0x66;
-            add word ptr global_x, ax
-            add di, word ptr riga[bx]
-            db 0x66;
-            add word ptr global_y, dx
-            mov byte ptr es:[di+4], 255
-            db 0x66;
-            cmp word ptr global_x, cx
-            jb  _do }
-#endif
-    STUB
+    a = pi;
+    L = pi;
+
+    b = abs((int32_t) ya - (int32_t) yp);
+    if (ya < yp) {
+        flip = true;
+    }
+
+    if (b >= L) {
+        L = b;
+    }
+
+    L++;
+    xa <<= 16u;
+
+    global_x = xp << 16u;
+    global_y = yp << 16u;
+
+    a *= 65536;
+    b *= 65536;
+
+    a /= L;
+    b /= L;
+
+    if (flip) b = -b;
+
+    while (global_x < xa) {
+        uint16_t argblarg = 2 * (global_y >> 16u);
+        uint16_t index = (global_x >> 16u);
+
+        global_x += a;
+        global_y += b;
+
+        auto *charRiga = (uint8_t *)riga;
+        uint16_t shift = (charRiga[argblarg + 1] << 8u) + charRiga[argblarg];
+        index += shift;
+
+        adapted[index + 4] = 255;
+    }
 }
 
 // La funzione di tracciamento viene principalmente usata da Noctis,
@@ -356,10 +287,10 @@ float rzf[VERTICI_PER_POLIGONO];
 
 // Limiti dell'area video rielaborati.
 
-#define lbx -larghezza/2 + x_centro
-#define ubx larghezza/2 + x_centro
-#define lby -altezza/2 + y_centro
-#define uby altezza/2 + y_centro
+#define lbx -larghezza / 2 + x_centro
+#define ubx larghezza / 2 + x_centro
+#define lby -altezza / 2 + y_centro
+#define uby altezza / 2 + y_centro
 
 int32_t lbxl = lbx;
 int32_t ubxl = ubx;
@@ -389,33 +320,33 @@ float opt_tsinalfa = 0;
 float opt_tcosngamma = 1;
 float opt_tsinngamma = 0;
 
-void change_angle_of_view () {
-    opt_pcosbeta = cos (beta * deg) * dpp;
-    opt_psinbeta = sin (beta * deg) * dpp;
-    opt_tcosbeta = cos (beta * deg);
-    opt_tsinbeta = sin (beta * deg);
-    opt_pcosalfa = cos (alfa * deg) * dpp; // 0.833
-    opt_psinalfa = sin (alfa * deg) * dpp; // 0.833
-    opt_tcosalfa = cos (alfa * deg);
-    opt_tsinalfa = sin (alfa * deg);
-    opt_tcosngamma = cos (ngamma * deg);
-    opt_tsinngamma = sin (ngamma * deg);
+void change_angle_of_view() {
+    opt_pcosbeta   = cos(beta * deg) * dpp;
+    opt_psinbeta   = sin(beta * deg) * dpp;
+    opt_tcosbeta   = cos(beta * deg);
+    opt_tsinbeta   = sin(beta * deg);
+    opt_pcosalfa   = cos(alfa * deg) * dpp; // 0.833
+    opt_psinalfa   = sin(alfa * deg) * dpp; // 0.833
+    opt_tcosalfa   = cos(alfa * deg);
+    opt_tsinalfa   = sin(alfa * deg);
+    opt_tcosngamma = cos(ngamma * deg);
+    opt_tsinngamma = sin(ngamma * deg);
 }
 
 // Chiamare dopo aver cambiato dpp.
 // Cambia l'obiettivo della videocamera.
 
-void change_camera_lens () {
+void change_camera_lens() {
     inv_dpp = 1 / dpp;
-    XCOEFF = EMU_K / dpp;
-    YCOEFF = EMU_K / dpp;
-    change_angle_of_view ();
+    XCOEFF  = EMU_K / dpp;
+    YCOEFF  = EMU_K / dpp;
+    change_angle_of_view();
 }
 
 // Chiamare dopo aver cambiato V_MATRIXS o H_MATRIXS.
 // Aggiorna le variabili di lavoro per il texture mapping.
 
-void change_txm_repeating_mode () {
+void change_txm_repeating_mode() {
     XSIZE = TEXTURE_XSIZE * H_MATRIXS;
     YSIZE = TEXTURE_YSIZE * V_MATRIXS;
 }
@@ -436,8 +367,7 @@ float uno = 1; // sempre uno: � una costante di comodo.
 uint8_t entity = 1; /* controlla quantit� generiche nel riempimento
                  dei poligoni con alcuni effetti speciali. */
 
-void poly3d (float* x, float* y, float* z,
-             uint16_t nrv, uint8_t colore) {
+void poly3d(float *x, float *y, float *z, uint16_t nrv, uint8_t colore) {
 #if 0
     uint16_t _8n;
     uint8_t ent = entity;
@@ -2043,13 +1973,13 @@ drawb:
 
 */
 
-#define OK                     1 // Ritorno positivo.
-#define NOT_OK                     0 // Ritorno negativo.
+#define OK 1     // Ritorno positivo.
+#define NOT_OK 0 // Ritorno negativo.
 
-uint8_t* txtr; /* Area della texture (FLS a livelli di intensit�,
+uint8_t *txtr; /* Area della texture (FLS a livelli di intensit�,
                  64 livelli per pixel, senza header).*/
 
-int8_t init_texture_mapping () {
+int8_t init_texture_mapping() {
 #if 0
     _control87 (MCW_EM, MCW_EM); // disattiva i Floating Point Errors.
     txtr = (uint8_t huge*)
@@ -2064,7 +1994,7 @@ int8_t init_texture_mapping () {
     STUB
 }
 
-int8_t load_texture (int8_t* fname, int32_t offset)
+int8_t load_texture(int8_t *fname, int32_t offset)
 /*  Carica una bitmap:
     formato FLS a livelli di luminanza,
     64 livelli per pixel, senza header. */
@@ -2104,7 +2034,7 @@ int8_t load_texture (int8_t* fname, int32_t offset)
     STUB
 }
 
-int8_t fast_load_texture (int8_t* fname) { /* Solo per bitmaps 256 x 256. */
+int8_t fast_load_texture(int8_t *fname) { /* Solo per bitmaps 256 x 256. */
 #if 0
     int16_t fh;
     uint32_t p;
@@ -2133,25 +2063,24 @@ int8_t fast_load_texture (int8_t* fname) { /* Solo per bitmaps 256 x 256. */
     #define NORMAL       0x00 // luminosit� non curata
 
               /* sezione spotlight */
-#define SPOTLIGHT    0x10 // torcia elettrica o faro, con centro su <xl, yl>
-int16_t     xl = x_centro;    // coordinate video del centro di luce
-int16_t yl = y_centro;    // coordinata y
-int16_t     aspect = 8;       // aspetto d. proiezione: + alto = + schiacciato
-int16_t     fallout =
-    20;     // evidenza della zona centrale: + alto = + diffuso
-int16_t     lt_range = 30;    // ampiezza zona illumin.: 0 = infinita
-int16_t     absorption = 45;  // assorbimento della superficie, da 0 a 63
+#define SPOTLIGHT 0x10         // torcia elettrica o faro, con centro su <xl, yl>
+int16_t xl         = x_centro; // coordinate video del centro di luce
+int16_t yl         = y_centro; // coordinata y
+int16_t aspect     = 8;        // aspetto d. proiezione: + alto = + schiacciato
+int16_t fallout    = 20;       // evidenza della zona centrale: + alto = + diffuso
+int16_t lt_range   = 30;       // ampiezza zona illumin.: 0 = infinita
+int16_t absorption = 45;       // assorbimento della superficie, da 0 a 63
 
 /* sezione radiosity semplificata */
-#define RADIOSITY    0x20 // luminosit� regolabile orizzontalmente o vertic.
-int8_t    shadymask = 1;
+#define RADIOSITY 0x20 // luminosit� regolabile orizzontalmente o vertic.
+int8_t shadymask  = 1;
 int16_t shady_aux = 0;
 
-int16_t     xsh, ysh, ksh; // variabili di lavoro che devono rientrare in DS.
+int16_t xsh, ysh, ksh; // variabili di lavoro che devono rientrare in DS.
 
-float   pnx, pny, pnz; // valori di ritorno della funzione successiva. */
+float pnx, pny, pnz; // valori di ritorno della funzione successiva. */
 
-void pnorm (float* x, float* y, float* z)
+void pnorm(float *x, float *y, float *z)
 // Calcola i coefficenti x/y/z della normale ad un poligono.
 // Valori calcolati in pnx, pny, pnz.
 // Richiesti almeno tre vertici.
@@ -2171,10 +2100,10 @@ void pnorm (float* x, float* y, float* z)
     xr = y1 * z2 - y2 * z1;
     yr = z1 * x2 - z2 * x1;
     zr = x1 * y2 - x2 * y1;
-    ln = sqrt (xr * xr + yr * yr + zr * zr);
+    ln = sqrt(xr * xr + yr * yr + zr * zr);
 
     if (ln > 0) {
-        ln  =  1 / ln;
+        ln  = 1 / ln;
         pnx = xr * ln;
         pny = yr * ln;
         pnz = zr * ln;
@@ -2200,19 +2129,19 @@ void pnorm (float* x, float* y, float* z)
     dato che i parametri sullo stack non sono raggiungibili nel ciclo
     di tracciamento principale, per ragioni di ottimizzazione. */
 
-float   _0 = 0.0;
-float   _16 = 16.0;
+float _0  = 0.0;
+float _16 = 16.0;
 
-float   x_antialias = 1.125;
-float   y_antialias = 1.125;
-float   z_antialias = 1.125;
+float x_antialias = 1.125;
+float y_antialias = 1.125;
+float z_antialias = 1.125;
 
-int8_t    culling_needed = 0;  // flag: traccia due punti per volta.
-int8_t    halfscan_needed = 0; // flag: traccia due linee per volta.
+int8_t culling_needed  = 0; // flag: traccia due punti per volta.
+int8_t halfscan_needed = 0; // flag: traccia due linee per volta.
 
 uint8_t escrescenze = 0xE0; // primo colore dei bumps (escrescenze)
 
-void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
+void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
 #if 0
     float ultima_x[2 * VERTICI_PER_POLIGONO];
     float ultima_y[2 * VERTICI_PER_POLIGONO];
@@ -3514,9 +3443,9 @@ row:
     STUB
 }
 
-void Forward (float delta) /* Provoca l'avanzamento dell'osservatore
-                  nella direzione di volo di <delta>
-                  unit� virtuali. */
+void Forward(float delta) /* Provoca l'avanzamento dell'osservatore
+                 nella direzione di volo di <delta>
+                 unit� virtuali. */
 {
     cam_x -= delta * opt_tsinbeta * opt_tcosalfa;
     cam_z += delta * opt_tcosbeta * opt_tcosalfa;
@@ -3525,7 +3454,7 @@ void Forward (float delta) /* Provoca l'avanzamento dell'osservatore
 
 int32_t _x_, _y_;
 
-int8_t getcoords (float x, float y, float z) {
+int8_t getcoords(float x, float y, float z) {
 #if 0
     // calcola le coordinate sullo schermo di un punto nello spazio,
     // usando lo stesso nucleo di calcolo di poly3d e di polymap,
@@ -3650,7 +3579,7 @@ convert: //my  = dpp / rz;
     STUB
 }
 
-int8_t facing (float* x, float* y, float* z) {
+int8_t facing(float *x, float *y, float *z) {
 #if 0
     /*  Controlla se un poligono a una sola faccia � visibile o meno.
         Certo che come procedimento non � poi tanto semplice: va calcolata,

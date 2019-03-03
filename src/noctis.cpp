@@ -3,8 +3,8 @@
     Supervision functions for the base module.
 */
 
-#include "noctis-d.h"
 #include "noctis-0.h"
+#include "noctis-d.h"
 
 const double deg = M_PI / 180;
 
@@ -15,54 +15,54 @@ extern float tiredness;
 
 // Stuff imported from noctis-0.cpp to lighten it.
 
-int8_t   nsnp         = 1; // Nearstar-Not-Prepared
-int8_t   manual_target    = 0;
-int8_t   mt_string_char   = 0;
-int8_t   mt_coord     = 0;
-int8_t   manual_x_string [11];
-int8_t   manual_y_string [11];
-int8_t   manual_z_string [11];
+int8_t nsnp           = 1; // Nearstar-Not-Prepared
+int8_t manual_target  = 0;
+int8_t mt_string_char = 0;
+int8_t mt_coord       = 0;
+int8_t manual_x_string[11];
+int8_t manual_y_string[11];
+int8_t manual_z_string[11];
 
 // Set the autopilot travel parameters.
 // TODO; This isn't getting called on a double right-click like it should be.
-void fix_remote_target () {
+void fix_remote_target() {
     double dxx, dyy, dzz;
-    status ("TGT FIXED", 105);
-    dxx = dzat_x - ap_target_x;
-    dyy = dzat_y - ap_target_y;
-    dzz = dzat_z - ap_target_z;
-    ap_target_initial_d = sqrt (dxx * dxx + dyy * dyy + dzz * dzz);
+    status("TGT FIXED", 105);
+    dxx                          = dzat_x - ap_target_x;
+    dyy                          = dzat_y - ap_target_y;
+    dzz                          = dzat_z - ap_target_z;
+    ap_target_initial_d          = sqrt(dxx * dxx + dyy * dyy + dzz * dzz);
     requested_vimana_coefficient = 1000 * ap_target_initial_d;
-    current_vimana_coefficient = 1000 * ap_target_initial_d;
-    vimana_reaction_time = 0.01;
-    ap_reached = 0;
-    dxx = sqrt (ap_target_x * ap_target_x + ap_target_z * ap_target_z);
+    current_vimana_coefficient   = 1000 * ap_target_initial_d;
+    vimana_reaction_time         = 0.01;
+    ap_reached                   = 0;
+    dxx = sqrt(ap_target_x * ap_target_x + ap_target_z * ap_target_z);
     dxx += fabs(ap_target_y * 30);
 
     if (dxx > 2E9) {
-        status ("OUTOFRANGE", 105);
+        status("OUTOFRANGE", 105);
         ap_targetted = 0;
     } else {
         ap_targetted = 1;
     }
 }
 
-void fix_local_target () {
+void fix_local_target() {
     double dxx, dyy, dzz;
-    status ("TGT FIXED", 105);
-    planet_xyz (ip_targetted);
-    dxx = dzat_x - plx;
-    dyy = dzat_y - ply;
-    dzz = dzat_z - plz;
-    ip_target_initial_d = sqrt (dxx * dxx + dyy * dyy + dzz * dzz);
+    status("TGT FIXED", 105);
+    planet_xyz(ip_targetted);
+    dxx                            = dzat_x - plx;
+    dyy                            = dzat_y - ply;
+    dzz                            = dzat_z - plz;
+    ip_target_initial_d            = sqrt(dxx * dxx + dyy * dyy + dzz * dzz);
     requested_approach_coefficient = 1000 * ip_target_initial_d;
-    current_approach_coefficient = 1000 * ip_target_initial_d;
-    reaction_time = 0.01;
+    current_approach_coefficient   = 1000 * ip_target_initial_d;
+    reaction_time                  = 0.01;
 }
 
 /* Lampada alogena (ovvero il laser a diffusione interno alle zattere). */
 
-void alogena () {
+void alogena() {
     float x[3], y[3], z[3];
     float lon, dlon, dlon_2;
     int16_t pcol;
@@ -73,7 +73,7 @@ void alogena () {
     }
 
     dlon_2 = dlon / 2;
-    pcol = 72 + ilightv;
+    pcol   = 72 + ilightv;
 
     if (pcol > 100) {
         pcol = 100;
@@ -91,19 +91,19 @@ void alogena () {
         x[1] = 15 * sin(lon);
         y[1] = 15 * cos(lon);
         z[1] = (y[1] - x[1]) / 2;
-        poly3d (x, y, z, 3, pcol);
+        poly3d(x, y, z, 3, pcol);
         pcol += 2;
     }
 
     if (ilightv == 1 && !elight) {
-        lens_flares_for (cam_x, cam_y, cam_z, -10, 10, -10, -50000, 2, 1, 0, 1, 1);
+        lens_flares_for(cam_x, cam_y, cam_z, -10, 10, -10, -50000, 2, 1, 0, 1, 1);
     }
 }
 
-/* Quadranti di selezione del computer di bordo. */
+/* Selection panels for the on-board computer */
 
-void qsel (float* x, float* y, float* z, uint16_t n, uint8_t c) {
-    setfx (1);
+void qsel(float *x, float *y, float *z, uint16_t n) {
+    setfx(1);
     x[0] -= 10;
     y[0] -= 10;
     x[1] += 10;
@@ -112,8 +112,8 @@ void qsel (float* x, float* y, float* z, uint16_t n, uint8_t c) {
     y[2] += 10;
     x[3] -= 10;
     y[3] += 10;
-    poly3d (x, y, z, n, c);
-    chgfx (0);
+    poly3d(x, y, z, n, 1);
+    chgfx(0);
     x[0] += 10;
     y[0] += 10;
     x[1] -= 10;
@@ -122,15 +122,15 @@ void qsel (float* x, float* y, float* z, uint16_t n, uint8_t c) {
     y[2] -= 10;
     x[3] += 10;
     y[3] -= 10;
-    poly3d (x, y, z, n, 68);
-    resetfx ();
+    poly3d(x, y, z, n, 68);
+    resetfx();
 }
 
-/* Tutti i riflessi sulle superfici riflettenti. */
+// All reflections on reflective surfaces.
 
-void reflexes () {
+void reflexes() {
     float x[4], y[4], z[4];
-    setfx (1);
+    setfx(1);
     lbxf++;
     /*  if (depolarize) goto norefs;
 
@@ -161,16 +161,14 @@ void reflexes () {
             x[1] = +1350; y[1] = +450; z[1] = -4000;
             poly3d (x, y, z, 3, 1);
         } */
-norefs:
-
     if (ap_targetting || ip_targetting) {
         goto noevid;
     }
 
     if (ilight) {
-        setfx (1);
+        setfx(1);
     } else {
-        setfx (0);
+        setfx(0);
     }
 
     z[0] = 0;
@@ -187,26 +185,26 @@ norefs:
         y[2] = 50 * (s_control - 2) - 25;
         x[3] = -66 * 30 - 10;
         y[3] = 50 * (s_control - 2) - 25;
-        qsel (x, y, z, 4, 1);
+        qsel(x, y, z, 4);
     }
 
     if (sys != 4) {
         x[0] = -45.65 * 30;
-        y[0] = - 125;
+        y[0] = -125;
         x[1] = -45.45 * 30;
-        y[1] = - 125;
+        y[1] = -125;
         x[2] = -45.45 * 30;
-        y[2] =    75;
+        y[2] = 75;
         x[3] = -45.65 * 30;
-        y[3] =    75;
+        y[3] = 75;
 
         if (stspeed) {
-            poly3d (x, y, z, 4, 32);
+            poly3d(x, y, z, 4, 32);
         } else {
             if (ilight) {
-                poly3d (x, y, z, 4, 8);
+                poly3d(x, y, z, 4, 8);
             } else {
-                poly3d (x, y, z, 4, 80);
+                poly3d(x, y, z, 4, 80);
             }
         }
 
@@ -216,27 +214,26 @@ norefs:
             x[1] = x[0] + 26 * 30 + 10;
             y[1] = -130;
             x[2] = x[1];
-            y[2] =  -75;
+            y[2] = -75;
             x[3] = x[0];
-            y[3] =  -75;
-            qsel (x, y, z, 4, 1);
+            y[3] = -75;
+            qsel(x, y, z, 4);
         }
     }
 
 noevid:
     lbxf--;
-    setfx (0);
+    setfx(0);
 }
 
 /* Schemi aggiuntivi per lo schermo del computer. */
 
-void frame (float x, float y, float l, float h,
-            float borderwidth, uint8_t color) {
+void frame(float x, float y, float l, float h, float borderwidth, uint8_t color) {
     // disegna una cornice rettangolare.
-    float vx[4], vy[4], vz[4] = { 0, 0, 0, 0 };
+    float vx[4], vy[4], vz[4] = {0, 0, 0, 0};
     float x0 = cam_x;
     float y0 = cam_y;
-    setfx (4);
+    setfx(4);
     vx[0] = -l - borderwidth;
     vy[0] = -borderwidth;
     vx[1] = +l + borderwidth;
@@ -247,9 +244,9 @@ void frame (float x, float y, float l, float h,
     vy[3] = vy[2];
     cam_x = x0 - x;
     cam_y = y0 - y - h;
-    poly3d (vx, vy, vz, 4, color);
+    poly3d(vx, vy, vz, 4, color);
     cam_y = y0 - y + h;
-    poly3d (vx, vy, vz, 4, color);
+    poly3d(vx, vy, vz, 4, color);
     vx[0] = -borderwidth;
     vy[0] = -h - borderwidth;
     vx[1] = +borderwidth;
@@ -260,17 +257,16 @@ void frame (float x, float y, float l, float h,
     vy[3] = vy[2];
     cam_y = y0 - y;
     cam_x = x0 - x - l;
-    poly3d (vx, vy, vz, 4, color);
+    poly3d(vx, vy, vz, 4, color);
     cam_x = x0 - x + l;
-    poly3d (vx, vy, vz, 4, color);
+    poly3d(vx, vy, vz, 4, color);
     cam_x = x0;
     cam_y = y0;
-    resetfx ();
+    resetfx();
 }
 
 // Draw star targeting cross.
-void pointer_cross_for (double xlight, double ylight, double zlight) {
-#if 0
+void pointer_cross_for(double xlight, double ylight, double zlight) {
     double xx, yy, zz, z2, rx, ry, rz;
     xx = xlight - dzat_x;
     yy = ylight - dzat_y;
@@ -287,7 +283,7 @@ void pointer_cross_for (double xlight, double ylight, double zlight) {
         ry += y_centro - 2;
 
         if (rx > 10 && ry > 10 && rx < 310 && ry < 190) {
-            uint16_t offsetmaybe = 320 * (int16_t) ry + rx;
+            uint16_t offsetmaybe = 320 * (int16_t)(ry + rx);
 
             for (int16_t i = 0; i < 4; i++) {
                 int16_t mod1 = (i == 1 || i == 3) ? 1 : -1;
@@ -299,12 +295,10 @@ void pointer_cross_for (double xlight, double ylight, double zlight) {
             }
         }
     }
-#endif
-    STUB
 }
 
 // Write a line on the onboard computer screen.
-void cline(int16_t line, char* text) {
+void cline(int16_t line, char *text) {
     // Multiply the line index by 128 b/c there are 128 characters per line.
     line *= 128;
     // The non-control section starts 20 characters into the line.
@@ -315,14 +309,15 @@ void cline(int16_t line, char* text) {
 }
 
 // Write text following what was just written with cline().
-void other(char* text) {
+void other(char *text) {
     strcpy(&ctb[point], text);
-    // Increment the current character index by the length of what was just added.
+    // Increment the current character index by the length of what was just
+    // added.
     point += strlen(text);
 }
 
 // Write the title of a system check (there are 4 in all).
-void control (int16_t line, char* text) {
+void control(int16_t line, char *text) {
     // Multiply the line index by 128 b/c there are 128 characters per line.
     uint16_t start = line * 128;
     strcpy(&ctb[start], text);
@@ -330,7 +325,7 @@ void control (int16_t line, char* text) {
 
 // Writes the title of a command on the main display.
 // These are split up into 4 blocks of 27 characters.
-void command (int16_t nr, const char* text) {
+void command(int16_t nr, const char *text) {
     uint16_t length = strlen(text);
 
     if (length > 27) {
@@ -341,34 +336,31 @@ void command (int16_t nr, const char* text) {
     strcpy(&ctb[index], text);
 }
 
-
 // Clear the whole on-board computer screen.
-void clear_onboard_screen () {
-    memset(ctb, 0, 512);
-}
+void clear_onboard_screen() { memset(ctb, 0, 512); }
 
 /* Gruppo di gestione del sistema operativo di bordo. */
 
-uint8_t reset_signal = 55;        // Segnale di reset (=55).
-int8_t force_update = 0;              // Forza il refresh schermi.
-int8_t active_screen = 0;             // Schermo attualmente attivo.
-uint8_t osscreen[2][7 * 21 + 1];  // Matrici degli schermi GOES.
-int16_t osscreen_cursor_x[2] = { 0, 0 };        // Posizione cursori (x).
-int16_t osscreen_cursor_y[2] = { 0, 0 };        // Posizione cursori (y).
-int8_t osscreen_textbuffer[7 * 21 + 1] = "";  // Buffer degli schermi.
+uint8_t reset_signal = 55;                       // Segnale di reset (=55).
+int8_t force_update  = 0;                        // Forza il refresh schermi.
+int8_t active_screen = 0;                        // Schermo attualmente attivo.
+uint8_t osscreen[2][7 * 21 + 1];                 // Matrici degli schermi GOES.
+int16_t osscreen_cursor_x[2]           = {0, 0}; // Posizione cursori (x).
+int16_t osscreen_cursor_y[2]           = {0, 0}; // Posizione cursori (y).
+int8_t osscreen_textbuffer[7 * 21 + 1] = "";     // Buffer degli schermi.
 
-void mslocate (int16_t screen_id, int16_t cursor_x, int16_t cursor_y) {
+void mslocate(int16_t screen_id, int16_t cursor_x, int16_t cursor_y) {
     // Rilocazione cursore (multischermo).
     osscreen_cursor_x[screen_id] = cursor_x;
     osscreen_cursor_y[screen_id] = cursor_y;
 }
 
-void mswrite (int16_t screen_id, char* text) {
+void mswrite(int16_t screen_id, const char *text) {
     // Scrittura caratteri (multischermo).
-    int16_t  i, c = 0;
+    int16_t i, j = 0;
     int8_t symbol;
 
-    while ((symbol = text[c]) != 0) {
+    while ((symbol = text[j]) != 0) {
         if (symbol >= 32 && symbol <= 96) {
             i = 21 * osscreen_cursor_y[screen_id];
             i += osscreen_cursor_x[screen_id];
@@ -400,137 +392,126 @@ void mswrite (int16_t screen_id, char* text) {
             break;
         }
 
-        c++;
+        j++;
     }
 }
 
-int8_t gnc_pos = 0;           // Numero carattere in command line.
-long goesfile_pos = 0;          // Posizione sul file output di GOES.
-int8_t goesnet_command[120] = "_";    // Command line di GOES Net.
-const char* comm = "DATA\\COMM.BIN";  // File di comunicazione dei moduli.
+int8_t gnc_pos              = 0;   // Numero carattere in command line.
+long goesfile_pos           = 0;   // Posizione sul file output di GOES.
+int8_t goesnet_command[120] = "_"; // Command line di GOES Net.
+const char *comm            = "DATA\\COMM.BIN"; // File di comunicazione dei moduli.
 
 /* Congela la situazione (all'uscita dal programma o al run di un modulo). */
 
-void freeze () {
-#if 0
-    int16_t fh = _rtl_creat(situation_file, 0);
+void freeze() {
+    int16_t fh = creat(situation_file, 0);
 
     if (fh == -1) {
         return;
     }
 
-    _rtl_write (fh, &nsync, 245);
-    _rtl_write (fh, &gnc_pos, 1);
-    _rtl_write (fh, &goesfile_pos, 4);
-    _rtl_write (fh, goesnet_command, 120);
-    _rtl_close (fh);
-#endif
-    STUB
+    write(fh, &nsync, 245);
+    write(fh, &gnc_pos, 1);
+    write(fh, &goesfile_pos, 4);
+    write(fh, goesnet_command, 120);
+    close(fh);
 }
 
-void run_goesnet_module () {
-#if 0
+void run_goesnet_module() {
     // Esecuzione di un modulo eseguibile della GOES Net.
     int16_t ch;
-    uint16_t bqw = QUADWORDS;
     // Salva la situazione perch� alcuni moduli ne hanno bisogno.
-    freeze ();
+    freeze();
     // Libera circa 60 kilobytes per il lancio del modulo eseguibile.
-    farfree (adapted);
+    free(adapted);
 
     // Verifica comandi residenti.
-    if (!memcmp (goesnet_command, "CLR", 3)) {
-        remove (goesoutputfile);
+    if (!memcmp(goesnet_command, "CLR", 3)) {
+        remove(goesoutputfile);
         goto solong;
     }
 
-    ch = _rtl_creat (goesoutputfile, 0);
+    ch = creat(goesoutputfile, 0);
 
     if (ch > -1) {
-        _rtl_write (ch, "(UNKNOWN MODULE)", 16);
-        _rtl_close (ch);
+        write(ch, "(UNKNOWN MODULE)", 16);
+        close(ch);
     }
 
     // Cancella l'ultimo carattere (che � il _ cursore) dalla command
     // line, poi aggiunge la redirezione sul file "goesfile.txt"
     goesnet_command[gnc_pos] = 0;
-    strcat (goesnet_command, " >");
-    strcat (goesnet_command, goesoutputfile);
-    system (goesnet_command);
+    strcat((char *)goesnet_command, " >");
+    strcat((char *)goesnet_command, goesoutputfile);
+    system((char *)goesnet_command);
     // Ri-alloca l'area temporaneamente liberata.
 solong:
-    adapted = (uint8_t far*) farmalloc (sc_bytes);
+    adapted = (uint8_t *)malloc(sc_bytes);
 
     if (!adapted) {
-        _80_25_C ();
-        printf ("Sorry, GOES Net crashed.\n");
-        printf ("System integrity compromised: any key to quit.\n\n");
+        _80_25_C();
+        printf("Sorry, GOES Net crashed.\n");
+        printf("System integrity compromised: any key to quit.\n\n");
         attendi_pressione_tasto();
-        exit (0xFF);
+        exit(0xFF);
     } else {
-        QUADWORDS = 80 * 10;
-        pclear (adaptor, 0);
-        QUADWORDS = 16000 - 80 * 12;
-        pcopy (adapted + 2 * 320, adaptor);
-        QUADWORDS = bqw;
         // Reagisce alla presenza di dati nel file di comunicazione.
-        ch = _rtl_open (comm, 0);
+        ch = open(comm, 0);
 
         if (ch > -1) {
-            if (filelength(ch) == 2) {
+            uint32_t len = lseek(ch, 0, SEEK_END);
+            lseek(ch, 0, SEEK_SET);
+            if (len == 2) {
                 if (ap_reached) {
                     if (pwr > 15000) {
-                        if (_rtl_read (ch, &ip_targetted, 2) == 2) {
+                        if (read(ch, &ip_targetted, 2) == 2) {
                             ip_targetted--;
-                            fix_local_target ();
+                            fix_local_target();
                             ip_targetting = 0;
-                            ip_reached = 0;
-                            ip_reaching = 1; // partenza automatica
+                            ip_reached    = 0;
+                            ip_reaching   = 1; // partenza automatica
                         }
                     }
                 } else {
-                    status ("NEED RECAL", 75);
+                    status("NEED RECAL", 75);
                 }
             }
 
-            if (filelength(ch) == 24) {
-                _rtl_read (ch, &ap_target_x, 8);
-                _rtl_read (ch, &ap_target_y, 8);
+            if (len == 24) {
+                read(ch, &ap_target_x, 8);
+                read(ch, &ap_target_y, 8);
 
-                if (_rtl_read (ch, &ap_target_z, 8) == 8) {
+                if (read(ch, &ap_target_z, 8) == 8) {
                     ap_targetting = 0;
-                    extract_ap_target_infos ();
-                    fix_remote_target ();
+                    extract_ap_target_infos();
+                    fix_remote_target();
 
                     if (lithium_collector || manual_target) {
-                        status ("CONFLICT", 50);
+                        status("CONFLICT", 50);
                     } else {
                         if (pwr > 15000) {
-                            stspeed = 1; // partenza automatica
-                            nsnp = 1;
-                            ip_reached = 0;
+                            stspeed      = 1; // partenza automatica
+                            nsnp         = 1;
+                            ip_reached   = 0;
                             ip_targetted = -1;
                         }
                     }
                 }
             }
-
-            _rtl_close (ch);
-            remove (comm);
+            close(ch);
+            remove(comm);
         }
     }
 
     force_update = 1;
     goesfile_pos = 0;
-#endif
-    STUB
 }
 
 /* Gruppo di tracciamento dello schermo del computer di bordo. */
 
-void squaredot (float x, float y, float size, uint8_t color) {
+void squaredot(float x, float y, float size, uint8_t color) {
     // questo � un quadratino, un "pixel" del computer di bordo.
-    float vx[4], vy[4], vz[4] = { 0, 0, 0, 0 };
+    float vx[4], vy[4], vz[4] = {0, 0, 0, 0};
     vx[0] = x - size;
     vx[1] = x + size;
     vx[2] = x + size;
@@ -539,33 +520,31 @@ void squaredot (float x, float y, float size, uint8_t color) {
     vy[1] = y - size;
     vy[2] = y + size;
     vy[3] = y + size;
-    poly3d (vx, vy, vz, 4, color);
+    poly3d(vx, vy, vz, 4, color);
 }
 
-long pp[32] = { 0x00000001, 0x00000002, 0x00000004, 0x00000008,
-                0x00000010, 0x00000020, 0x00000040, 0x00000080,
-                0x00000100, 0x00000200, 0x00000400, 0x00000800,
-                0x00001000, 0x00002000, 0x00004000, 0x00008000,
-                0x00010000, 0x00020000, 0x00040000, 0x00080000,
-                0x00100000, 0x00200000, 0x00400000, 0x00800000,
-                0x01000000, 0x02000000, 0x04000000, 0x08000000,
-                0x10000000, 0x20000000, 0x40000000, 0x80000000
-              };
+long pp[32] = {0x00000001, 0x00000002, 0x00000004, 0x00000008, 0x00000010,
+               0x00000020, 0x00000040, 0x00000080, 0x00000100, 0x00000200,
+               0x00000400, 0x00000800, 0x00001000, 0x00002000, 0x00004000,
+               0x00008000, 0x00010000, 0x00020000, 0x00040000, 0x00080000,
+               0x00100000, 0x00200000, 0x00400000, 0x00800000, 0x01000000,
+               0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000,
+               0x40000000, 0x80000000};
 
-void digit_at (int8_t digit, float x, float y, float size, uint8_t color,
-               int8_t shader) {
-    // questo � un carattere alfanumerico...
-    uint8_t* prev_txtr = txtr;
-    float vx[4], vy[4], vz[4] = { 0, 0, 0, 0 };
-    float size_x_left = size * -1.5;
-    float size_y_left = size * -2.0;
+void digit_at(int8_t digit, float x, float y, float size, uint8_t color,
+              int8_t shader) {
+    // This is an alphanumeric character.
+    uint8_t *prev_txtr = txtr;
+    float vx[4], vy[4], vz[4] = {0, 0, 0, 0};
+    float size_x_left  = size * -1.5;
+    float size_y_left  = size * -2.0;
     float size_x_right = size * +4.0;
     float size_y_right = size * +8.0;
-    long prev_xs = XSIZE;
-    long prev_ys = YSIZE;
-    int16_t  n, m, d, i;
+    long prev_xs       = XSIZE;
+    long prev_ys       = YSIZE;
+    int16_t n, m, d, i;
     int8_t pixel_color = color % 64;
-    int8_t map_base = (color >> 6) << 6;
+    int8_t map_base    = (color >> 6) << 6;
 
     if (reset_signal > 100) {
         pixel_color -= (reset_signal - 100);
@@ -577,10 +556,10 @@ void digit_at (int8_t digit, float x, float y, float size, uint8_t color,
 
     if (digit > 32 && digit <= 96) {
         txtr = p_surfacemap;
-        d = (digit - 32) * 36;
+        d    = (digit - 32) * 36;
 
         for (n = 0; n < 36; n++) {
-            i = 256 * n - 5;
+            i           = 256 * n - 5;
             txtr[i - 1] = 0; // evita aliasing a fine scanline.
 
             for (m = 0; m < 32; m++) {
@@ -599,28 +578,28 @@ void digit_at (int8_t digit, float x, float y, float size, uint8_t color,
         }
 
         txtr[256 * 36 - 6] = 0; // evita aliasing a fine matrice.
-        vx[3] = x + size_x_left;
-        vx[0] = x + size_x_right;
-        vx[1] = x + size_x_right;
-        vx[2] = x + size_x_left;
-        vy[3] = y + size_y_left;
-        vy[0] = y + size_y_left;
-        vy[1] = y + size_y_right;
-        vy[2] = y + size_y_right;
-        setfx (2);
+        vx[3]              = x + size_x_left;
+        vx[0]              = x + size_x_right;
+        vx[1]              = x + size_x_right;
+        vx[2]              = x + size_x_left;
+        vy[3]              = y + size_y_left;
+        vy[0]              = y + size_y_left;
+        vy[1]              = y + size_y_right;
+        vy[2]              = y + size_y_right;
+        setfx(2);
         XSIZE = 512;
         YSIZE = 576;
-        polymap (vx, vy, vz, 4, map_base);
+        polymap(vx, vy, vz, 4, map_base);
         XSIZE = prev_xs;
         YSIZE = prev_ys;
-        txtr = prev_txtr;
-        resetfx ();
+        txtr  = prev_txtr;
+        resetfx();
     }
 }
 
 void screen() {
     float x, y;
-    int16_t   c, p, t = 0;
+    int16_t c, p, t = 0;
 #define blinkscolor 127
 #define screencolor 127
 
@@ -629,7 +608,7 @@ void screen() {
     }
 
     if (pwr <= 15000 && !charge) {
-        fast_srand (secs);
+        fast_srand(secs);
         c = fast_random(3) + 2;
 
         if (clock() % c) {
@@ -674,16 +653,16 @@ void screen() {
             }
 
             if (ctb[t] >= 'A' && ctb[t] <= 'Z') {
-                digit_at (ctb[t], -6, -16, 4, blinkscolor - 12 * (clock() % 6), 1);
+                digit_at(ctb[t], -6, -16, 4, blinkscolor - 12 * (clock() % 6), 1);
             } else {
                 if (ctb[t] >= 'a' && ctb[t] <= 'z') {
-                    digit_at (ctb[t] - 32, -6, -16, 4, screencolor, 1);
+                    digit_at(ctb[t] - 32, -6, -16, 4, screencolor, 1);
                 } else {
-                    digit_at (ctb[t], -6, -16, 4, screencolor, 1);
+                    digit_at(ctb[t], -6, -16, 4, screencolor, 1);
                 }
             }
 
-passby:
+        passby:
             t++;
         }
 
@@ -691,10 +670,9 @@ passby:
     cam_y = y;
 }
 
-/* Disegna la mappa di superficie al momento in cui si vuole sbarcare. */
+// Draw the surface map at the time you want to land.
 
-void show_planetary_map () {
-#if 0
+void show_planetary_map() {
     int8_t    is_moon;
     int16_t     lat, lon, i, j, p;
 
@@ -737,18 +715,15 @@ void show_planetary_map () {
 
         lon++;
     }
-#endif
-    STUB
 }
 
-/*  Disegna l'astrozattera. (Quella che si sta usando, vista dall'interno.)
-    Assume anche il compito di decifrare i comandi da tastiera per GOESNet. */
+/*  Draw the stardrifter. (The one you are using, seen from the inside.)
+    It also assumes the task of deciphering keyboard commands for GOESnet. */
 
 int16_t goesk_a = -1;
 int16_t goesk_e = -1;
 
-void vehicle (float opencapcount) {
-#if 0
+void vehicle(float opencapcount) {
     int16_t   n, c, i, j, k, screenfile;
     int8_t  short_text[11];
     uint8_t chcol;
@@ -808,7 +783,7 @@ void vehicle (float opencapcount) {
         return;
     }
 
-    // Intercettazione tasti (prioritaria) per GOESNet.
+    // Key interception (priority) for GOESnet.
 
     if (force_update || (active_screen == 0 && tasto_premuto())) {
         if (!force_update) {
@@ -910,7 +885,7 @@ non_valido:
 
         memset (osscreen[0] + 3 * 21, 0, 4 * 21);
         mslocate (0, 0, 3);
-        mswrite (0, goesnet_command);
+        mswrite (0, (char*) goesnet_command);
     }
 
     // Intercettazione tasti (prioritaria) per lo schermo "STARMAP TREE".
@@ -930,16 +905,18 @@ krep1:
                 case 0x4F:
                 case 0x76:
                 case 0x91:
-                    screenfile = _rtl_open (goesoutputfile, 0);
+                    screenfile = open (goesoutputfile, 0);
 
                     if (screenfile > -1) {
-                        goesfile_pos = filelength(screenfile) - 7 * 21;
+                        uint32_t len = lseek(screenfile, 0, SEEK_END);
+                        lseek(screenfile, 0, SEEK_SET);
+                        goesfile_pos = len - 7 * 21;
 
                         if (goesfile_pos < 0) {
                             goesfile_pos = 0;
                         }
 
-                        _rtl_close (screenfile);
+                        close (screenfile);
                     }
 
                     goesk_e = -1;
@@ -990,13 +967,13 @@ krep1:
         }
 
         memset (osscreen[1], 0, 21 * 7);
-        screenfile = _rtl_open (goesoutputfile, 0);
+        screenfile = open (goesoutputfile, 0);
 
         if (screenfile > -1) {
             lseek (screenfile, goesfile_pos, SEEK_SET);
-            n = _rtl_read (screenfile, osscreen[1], 7 * 21);
+            n = read (screenfile, osscreen[1], 7 * 21);
             osscreen[1][n] = 0;
-            _rtl_close (screenfile);
+            close (screenfile);
         }
     }
 
@@ -1225,14 +1202,14 @@ krep2:
     if (landing_point) {
         show_planetary_map ();
         polymap (osscreen_x, osscreen_y, osscreen_z, 4, 0);
-        sprintf (short_text, "LQ %03d:%03d", landing_pt_lon, landing_pt_lat);
-        status (short_text, 10);
+        sprintf ((char*) short_text, "LQ %03d:%03d", landing_pt_lon, landing_pt_lat);
+        status ((char*) short_text, 10);
     } else {
         poly3d (osscreen_x, osscreen_y, osscreen_z, 4, 4);
     }
 
-#define surface_crosshair_x_shift   +25
-#define surface_crosshair_y_shift   -10
+#define surface_crosshair_x_shift +25
+#define surface_crosshair_y_shift -10
 #define surface_crosshair_x_spacing +11
 #define surface_crosshair_y_spacing +10
     setfx (2);
@@ -1304,98 +1281,94 @@ krep2:
         cam_z -= 3100;
         cam_y = chry;
     }
-#endif
-    STUB
 }
 
 /* Disegna un'astrozattera, vista dall'esterno. */
 
-void other_vehicle_at (double ovhx, double ovhy, double ovhz) {
-    cam_x = - ovhx;
-    cam_y = - ovhy;
-    cam_z = - ovhz;
+void other_vehicle_at(double ovhx, double ovhy, double ovhz) {
+    cam_x = -ovhx;
+    cam_y = -ovhy;
+    cam_z = -ovhz;
     cam_z += 3100;
-    setfx (2);
+    setfx(2);
 
     if (ovhy > -375) {
-        cupola (+1, 8);
+        cupola(+1, 8);
     }
 
     if (ovhy < +375) {
-        cupola (-1, 8);
+        cupola(-1, 8);
     }
 
-    resetfx ();
+    resetfx();
     cam_z -= 3100;
     cam_x = 0;
     cam_y = 0;
     cam_z = 0;
-    drawpv (vehicle_handle, 0, 0, ovhx, ovhy, ovhz, 1);
-    cam_x = - ovhx;
-    cam_y = - ovhy;
-    cam_z = - ovhz;
+    drawpv(vehicle_handle, 0, 0, ovhx, ovhy, ovhz, 1);
+    cam_x = -ovhx;
+    cam_y = -ovhy;
+    cam_z = -ovhz;
     cam_z += 3100;
-    setfx (2);
+    setfx(2);
 
     if (ovhy > +375) {
-        cupola (+1, 8);
+        cupola(+1, 8);
     }
 
     if (ovhy < -375) {
-        cupola (-1, 8);
+        cupola(-1, 8);
     }
 
-    resetfx ();
+    resetfx();
     cam_z -= 3100;
-    lens_flares_for (cam_x, cam_y, cam_z, 3225, 0, 0, -5e5, 3, 1, 1, 1, 1);
-    lens_flares_for (cam_x, cam_y, cam_z, -3225, 0, 0, -5e5, 3, 1, 1, 1, 1);
-    lens_flares_for (cam_x, cam_y, cam_z, 3225, 0, -6150, -5e5, 3, 1, 1, 1, 1);
-    lens_flares_for (cam_x, cam_y, cam_z, -3225, 0, -6150, -5e5, 3, 1, 1, 1, 1);
+    lens_flares_for(cam_x, cam_y, cam_z, 3225, 0, 0, -5e5, 3, 1, 1, 1, 1);
+    lens_flares_for(cam_x, cam_y, cam_z, -3225, 0, 0, -5e5, 3, 1, 1, 1, 1);
+    lens_flares_for(cam_x, cam_y, cam_z, 3225, 0, -6150, -5e5, 3, 1, 1, 1, 1);
+    lens_flares_for(cam_x, cam_y, cam_z, -3225, 0, -6150, -5e5, 3, 1, 1, 1, 1);
 }
-
 
 /* Fine roba importata da noctis-0.cpp */
 
 /* Variabili globali di uso generico. */
 
-uint8_t* ctrlkeys     = (uint8_t*) 0x00000417;
+uint8_t *ctrlkeys = (uint8_t *)0x00000417;
 
-int8_t   aso_countdown = 100; // contatore per la funzione "autoscreenoff"
-long   tgt_label_pos = -1;  // posizione etichetta target selezionato
-int16_t    tgts_in_show = 0;    // targets correntemente visualizzati
+int8_t aso_countdown = 100; // contatore per la funzione "autoscreenoff"
+long tgt_label_pos   = -1;  // posizione etichetta target selezionato
+int16_t tgts_in_show = 0;   // targets correntemente visualizzati
 
 /* Dati gestione cartografia. */
 
-int8_t   targets_in_range = 0;
-long   sm_consolidated  = 0;
+int8_t targets_in_range = 0;
+long sm_consolidated    = 0;
 
-int8_t   target_name[4][24];
+int8_t target_name[4][24];
 
-int8_t   iptargetstring[11];
-int8_t   iptargetchar = 0;
-int8_t   iptargetplanet;
-int8_t   iptargetmoon;
+int8_t iptargetstring[11];
+int8_t iptargetchar = 0;
+int8_t iptargetplanet;
+int8_t iptargetmoon;
 
 double ap_target_id = 12345, ap_target_previd = 54321;
 double current_planet_id = 12345, prev_planet_id = 54321;
-int8_t   labstar = 0, labplanet = 0, labstar_char = 0, labplanet_char = 0;
-long   star_label_pos = -1, planet_label_pos = -1;
+int8_t labstar = 0, labplanet = 0, labstar_char = 0, labplanet_char = 0;
+long star_label_pos = -1, planet_label_pos = -1;
 
-double star_id = 12345;
-int8_t   star_label[25] = "UNKNOWN STAR / CLASS ...";
-int8_t   star_no_label[25] = "UNKNOWN STAR / CLASS ...";
+double star_id           = 12345;
+int8_t star_label[25]    = "UNKNOWN STAR / CLASS ...";
+int8_t star_no_label[25] = "UNKNOWN STAR / CLASS ...";
 
-double planet_id = 12345;
-int8_t   planet_label[25] = "NAMELESS PLANET / N. ...";
-int8_t   planet_no_label[25] = "NAMELESS PLANET / N. ...";
-int8_t   moon_no_label[25] =   "NAMELESS MOON #../../...";
+double planet_id           = 12345;
+int8_t planet_label[25]    = "NAMELESS PLANET / N. ...";
+int8_t planet_no_label[25] = "NAMELESS PLANET / N. ...";
+int8_t moon_no_label[25]   = "NAMELESS MOON #../../...";
 
-const char*   sr_message = "SYSTEM RESET";
+const char *sr_message = "SYSTEM RESET";
 
-void update_star_label () {
-#if 0
+void update_star_label() {
     if (ap_targetted == -1) {
-        strcpy (star_label, "- DIRECT PARSIS TARGET -");
+        strcpy ((char*) star_label, "- DIRECT PARSIS TARGET -");
     } else {
         ap_target_id = ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z /
                        100000;
@@ -1405,24 +1378,21 @@ void update_star_label () {
             star_label_pos = search_id_code (ap_target_id, 'S');
 
             if (star_label_pos != -1) {
-                smh = _rtl_open (starmap_file, 0);
+                smh = open (starmap_file, 0);
                 lseek (smh, star_label_pos, SEEK_SET);
-                _rtl_read (smh, &star_id, 32);
-                _rtl_close (smh);
+                read (smh, &star_id, 32);
+                close (smh);
             } else {
                 memcpy (star_label, star_no_label, 24);
             }
 
             srand (ap_target_id);
-            sprintf (star_label + 21, "S%02d", random (star_classes));
+            sprintf ((char*) (star_label + 21), "S%02d", rand() % star_classes);
         }
     }
-#endif
-    STUB
 }
 
-void update_planet_label () {
-#if 0
+void update_planet_label() {
     current_planet_id = nearstar_identity + ip_targetted + 1;
 
     if (current_planet_id != prev_planet_id) {
@@ -1430,31 +1400,28 @@ void update_planet_label () {
         planet_label_pos = search_id_code (current_planet_id, 'P');
 
         if (planet_label_pos != -1) {
-            smh = _rtl_open (starmap_file, 0);
+            smh = open (starmap_file, 0);
             lseek (smh, planet_label_pos, SEEK_SET);
-            _rtl_read (smh, &planet_id, 32);
-            _rtl_close (smh);
+            read (smh, &planet_id, 32);
+            close (smh);
         } else {
             if (nearstar_p_owner[ip_targetted] == -1) {
                 memcpy (planet_label, planet_no_label, 24);
             } else {
                 memcpy (planet_label, moon_no_label, 24);
-                sprintf (planet_label + 15, "%02d", nearstar_p_moonid[ip_targetted] + 1);
-                sprintf (planet_label + 18, "%02d", nearstar_p_owner[ip_targetted] + 1);
+                sprintf ((char*) (planet_label + 15), "%02d", nearstar_p_moonid[ip_targetted] + 1);
+                sprintf ((char*) (planet_label + 18), "%02d", nearstar_p_owner[ip_targetted] + 1);
                 planet_label[17] = '/';
                 planet_label[20] = '&';
             }
         }
 
-        sprintf (planet_label + 21, "P%02d", ip_targetted + 1);
+        sprintf ((char*) (planet_label + 21), "P%02d", ip_targetted + 1);
     }
-#endif
-    STUB
 }
 
 // Control the flight (Flight Control System).
 void fcs() {
-#if 0
     int16_t n;
 
     if (ip_targetted != -1) {
@@ -1469,9 +1436,9 @@ void fcs() {
             n = ip_targetted;
         }
 
-        other (ord[n + 1]);
+        other ((char*) ord[n + 1]);
         other (" planet. ");
-        other (planet_description[nearstar_p_type[ip_targetted]]);
+        other ((char*) planet_description[nearstar_p_type[ip_targetted]]);
     }
 
     if (ap_targetted) {
@@ -1479,7 +1446,7 @@ void fcs() {
             cline (2, "remote target: class ");
             other (alphavalue(ap_target_class));
             other (" star; ");
-            other (star_description[ap_target_class]);
+            other ((char*) star_description[ap_target_class]);
         } else {
             cline (2, "direct parsis target: non-star type.");
         }
@@ -1522,32 +1489,30 @@ void fcs() {
             command (3, "clear local target");
         }
     }
-#endif
-    STUB
 }
 
 /* Comandi dell'FCS. */
 
-void fcs_commands () {
+void fcs_commands() {
     switch (s_command) {
     case 1:
         if (stspeed || manual_target) {
-            status ("CONFLICT", 50);
+            status("CONFLICT", 50);
             break;
         }
 
-        status ("TGT-REMOTE", 50);
+        status("TGT-REMOTE", 50);
         ap_targetting = 1;
-        ap_targetted = 0;
+        ap_targetted  = 0;
         break;
 
     case 2:
         if (stspeed) {
             stspeed = 0;
-            status ("IDLE", 50);
+            status("IDLE", 50);
         } else {
             if (lithium_collector || manual_target) {
-                status ("CONFLICT", 50);
+                status("CONFLICT", 50);
                 break;
             }
 
@@ -1555,9 +1520,9 @@ void fcs_commands () {
                 stspeed = 1;
 
                 if (ap_targetted) {
-                    nsnp = 1;
-                    ap_reached = 0;
-                    ip_reached = 0;
+                    nsnp         = 1;
+                    ap_reached   = 0;
+                    ip_reached   = 0;
                     ip_targetted = -1;
                 }
             }
@@ -1568,25 +1533,25 @@ void fcs_commands () {
     case 3:
         if (ip_reached || ip_targetted == -1) {
             if (ap_reached) {
-                status ("TGT-LOCAL", 50);
-                ip_targetted = -1;
+                status("TGT-LOCAL", 50);
+                ip_targetted  = -1;
                 ip_targetting = 1;
-                ip_reaching = 0;
-                ip_reached = 0;
-                iptargetchar = 0;
+                ip_reaching   = 0;
+                ip_reached    = 0;
+                iptargetchar  = 0;
             } else {
-                status ("NEED RECAL", 75);
+                status("NEED RECAL", 75);
             }
         } else {
             if (ip_reaching) {
-                status ("IDLE", 50);
+                status("IDLE", 50);
                 ip_targetted = -1;
-                ip_reaching = 0;
-                ip_reached = 1;
+                ip_reaching  = 0;
+                ip_reached   = 1;
             } else {
                 if (pwr > 15000) {
                     ip_reaching = 1;
-                    status ("CONFIRM", 50);
+                    status("CONFIRM", 50);
                 }
             }
         }
@@ -1597,62 +1562,62 @@ void fcs_commands () {
         if (!ip_reaching && ip_targetted != -1) {
             if (!ip_reached) {
                 ip_targetted = -1;
-                status ("TGT REJECT", 50);
+                status("TGT REJECT", 50);
             } else {
                 landing_point = 1 - landing_point;
 
                 if (landing_point) {
-                    if (nearstar_p_type[ip_targetted] == 0
-                            || nearstar_p_type[ip_targetted] == 6
-                            || nearstar_p_type[ip_targetted] >= 9) {
-                        status ("IMPOSSIBLE", 50);
+                    if (nearstar_p_type[ip_targetted] == 0 ||
+                        nearstar_p_type[ip_targetted] == 6 ||
+                        nearstar_p_type[ip_targetted] >= 9) {
+                        status("IMPOSSIBLE", 50);
                         landing_point = 0;
                     } else {
-                        status ("SURFACE", 50);
+                        status("SURFACE", 50);
                         landing_pt_lon = 0;
                         landing_pt_lat = 60;
                     }
                 } else {
-                    status ("IDLE", 50);
+                    status("IDLE", 50);
                 }
             }
         } else {
-            status ("ERROR", 50);
+            status("ERROR", 50);
         }
     }
 }
 
 /* Dispositivi di bordo: men� principale e quattro sottomen�. */
 
-void devices () {
-    double  parsis_x, parsis_y, parsis_z;
-    int16_t     n, sp;
-    long    lsecs;
+void devices() {
+    double parsis_x, parsis_y, parsis_z;
+    int16_t n, sp;
+    long lsecs;
 
     switch (dev_page) {
     case 0: // sub menu
-        command (0, "navigation instruments");
-        command (1, "miscellaneous");
-        command (2, "galactic cartography");
-        command (3, "emergency functions");
-        cline (3, "SELECT ARGUMENT");
+        command(0, "navigation instruments");
+        command(1, "miscellaneous");
+        command(2, "galactic cartography");
+        command(3, "emergency functions");
+        cline(3, "SELECT ARGUMENT");
         break;
 
     case 1: // navigation status
         if (field_amplificator) {
-            command (0, "STARFIELD AMPLIFICATOR");
-            cline (1, "starfield amplification active, ");
+            command(0, "STARFIELD AMPLIFICATOR");
+            cline(1, "starfield amplification active, ");
         } else {
-            command (0, "starfield amplificator");
-            cline (1, "starfield amplification disabled, ");
+            command(0, "starfield amplificator");
+            cline(1, "starfield amplification disabled, ");
         }
 
         if (anti_rad) {
-            command (3, "FORCE RADIATIONS LIMIT");
-            other ("high-radiation fields are avoided.");
+            command(3, "FORCE RADIATIONS LIMIT");
+            other("high-radiation fields are avoided.");
         } else {
-            command (3, "force radiations limit");
-            other ("high-radiation fields are ignored.");
+            command(3, "force radiations limit");
+            other("high-radiation fields are ignored.");
         }
 
         if (nsync) {
@@ -1665,206 +1630,208 @@ void devices () {
                     }
                 }
 
-                cline (1, "tracking status: performing ");
+                cline(1, "tracking status: performing ");
 
                 if (nsync == 1) {
-                    other ("fixed-point chase.");
-                    command (2, "fixed-point chase");
+                    other("fixed-point chase.");
+                    command(2, "fixed-point chase");
                 }
 
                 if (nsync == 2) {
-                    other ("far chase.");
-                    command (2, "far chase");
+                    other("far chase.");
+                    command(2, "far chase");
                 }
 
                 if (nsync == 3) {
-                    other ("syncrone orbit.");
-                    command (2, "syncrone orbit");
+                    other("syncrone orbit.");
+                    command(2, "syncrone orbit");
                 }
 
                 if (nsync == 4) {
-                    other ("high-speed orbit.");
-                    command (2, "high-speed orbit");
+                    other("high-speed orbit.");
+                    command(2, "high-speed orbit");
                 }
 
                 if (nsync == 5) {
-                    other ("near chase.");
-                    command (2, "near chase");
+                    other("near chase.");
+                    command(2, "near chase");
                 }
             } else {
-                cline (2, "tracking status: disconnected.");
+                cline(2, "tracking status: disconnected.");
 
                 if (nsync == 1) {
-                    command (2, "fixed-point chase");
+                    command(2, "fixed-point chase");
                 }
 
                 if (nsync == 2) {
-                    command (2, "far chase");
+                    command(2, "far chase");
                 }
 
                 if (nsync == 3) {
-                    command (2, "syncrone orbit");
+                    command(2, "syncrone orbit");
                 }
 
                 if (nsync == 4) {
-                    command (2, "high-speed orbit");
+                    command(2, "high-speed orbit");
                 }
 
                 if (nsync == 5) {
-                    command (2, "near chase");
+                    command(2, "near chase");
                 }
             }
         } else {
-            cline (2, "tracking status: inactive.");
-            command (2, "drive tracking mode");
+            cline(2, "tracking status: inactive.");
+            command(2, "drive tracking mode");
         }
 
         if (pl_search) {
-            command (1, "LOCAL PLANETS FINDER");
+            command(1, "LOCAL PLANETS FINDER");
             xx = nearstar_x - dzat_x;
             yy = nearstar_y - dzat_y;
             zz = nearstar_z - dzat_z;
-            xx = sqrt (xx * xx + yy * yy + zz * zz);
+            xx = sqrt(xx * xx + yy * yy + zz * zz);
 
             if (xx < 20000) {
                 if (nearstar_nop) {
-                    cline (3, "planet finder report: system has ");
-                    other (alphavalue(nearstar_nop));
-                    other (" ");
+                    cline(3, "planet finder report: system has ");
+                    other(alphavalue(nearstar_nop));
+                    other(" ");
 
                     if (nearstar_class == 9) {
-                        other ("proto");
+                        other("proto");
                     }
 
                     if (nearstar_nop == 1) {
-                        other ("planet, and ");
+                        other("planet, and ");
                     } else {
-                        other ("planets, and ");
+                        other("planets, and ");
                     }
 
-                    other (alphavalue(nearstar_nob - nearstar_nop));
-                    other (" minor bodies. ");
-                    other (alphavalue(nearstar_labeled));
-                    other (" labeled out of ");
-                    other (alphavalue(nearstar_nob));
-                    other (".");
+                    other(alphavalue(nearstar_nob - nearstar_nop));
+                    other(" minor bodies. ");
+                    other(alphavalue(nearstar_labeled));
+                    other(" labeled out of ");
+                    other(alphavalue(nearstar_nob));
+                    other(".");
                 } else {
-                    cline (3, "planet finder report: there are no major bodies in this system.");
+                    cline(3, "planet finder report: there are no major bodies "
+                             "in this system.");
                 }
             } else {
-                cline (3, "planet finder report: no stellar systems within remote sensors range.");
+                cline(3, "planet finder report: no stellar systems within "
+                         "remote sensors range.");
             }
         } else {
-            command (1, "local planets finder");
+            command(1, "local planets finder");
         }
 
         break;
 
     case 2: // miscellaneous devices status
         if (ilightv == 1) {
-            command (0, "internal light on");
+            command(0, "internal light on");
         } else {
-            command (0, "internal light off");
+            command(0, "internal light off");
         }
 
-        command (1, "remote target data");
-        command (2, "local target data");
-        command (3, "environment data");
+        command(1, "remote target data");
+        command(2, "local target data");
+        command(3, "environment data");
 
         if (data == 1) {
-            command (1, "REMOTE TARGET DATA");
+            command(1, "REMOTE TARGET DATA");
         }
 
         if (data == 2) {
-            command (2, "LOCAL TARGET DATA");
+            command(2, "LOCAL TARGET DATA");
         }
 
         if (data == 3) {
-            command (3, "ENVIRONMENT DATA");
+            command(3, "ENVIRONMENT DATA");
         }
 
         break;
 
     case 3: // galactic cartography status
         if (labstar) {
-            command (0, "assign star label");
+            command(0, "assign star label");
         } else {
             if (star_label_pos > -1) {
-                command (0, "remove star label");
+                command(0, "remove star label");
             } else {
-                command (0, "label star as...");
+                command(0, "label star as...");
             }
         }
 
         if (labplanet) {
-            command (1, "assign planet label");
+            command(1, "assign planet label");
         } else {
             if (planet_label_pos > -1) {
-                command (1, "remove planet label");
+                command(1, "remove planet label");
             } else {
-                command (1, "label planet as...");
+                command(1, "label planet as...");
             }
         }
 
         if (targets_in_range) {
-            command (2, "quit targets in range");
+            command(2, "quit targets in range");
         } else {
-            command (2, "show targets in range");
+            command(2, "show targets in range");
         }
 
         if (manual_target) {
-            command (3, "(enter coordinates)");
+            command(3, "(enter coordinates)");
         } else {
-            command (3, "set target to parsis");
+            command(3, "set target to parsis");
         }
 
-        cline (1, "epoc ");
-        other (alphavalue((long)epoc));
-        other (" triads ");
+        cline(1, "epoc ");
+        other(alphavalue((long)epoc));
+        other(" triads ");
         lsecs = secs;
         lsecs -= lsecs % 1000000L;
         lsecs /= 1000000L;
-        other (alphavalue(lsecs));
-        other (",");
+        other(alphavalue(lsecs));
+        other(",");
         lsecs = secs;
         lsecs %= 1000000L;
         lsecs -= lsecs % 1000;
         lsecs /= 1000;
-        other (alphavalue(lsecs));
-        other (",");
+        other(alphavalue(lsecs));
+        other(",");
         lsecs = secs;
         lsecs %= 1000;
-        other (alphavalue(lsecs));
-        cline (2, "parsis universal coordinates: ");
+        other(alphavalue(lsecs));
+        cline(2, "parsis universal coordinates: ");
         parsis_x = floor(dzat_x + 0.5);
         parsis_y = floor(dzat_y + 0.5);
         parsis_z = floor(dzat_z + 0.5);
-        other (alphavalue(parsis_x));
-        other (";");
-        other (alphavalue(-parsis_y));
-        other (";");
-        other (alphavalue(parsis_z));
-        cline (3, "heading pitch: ");
-        other (alphavalue((int16_t)(sin(deg * navigation_beta) * +100)));
-        other (";");
-        other (alphavalue((int16_t)(cos(deg * navigation_beta) * -100)));
+        other(alphavalue(parsis_x));
+        other(";");
+        other(alphavalue(-parsis_y));
+        other(";");
+        other(alphavalue(parsis_z));
+        cline(3, "heading pitch: ");
+        other(alphavalue((int16_t)(sin(deg * navigation_beta) * +100)));
+        other(";");
+        other(alphavalue((int16_t)(cos(deg * navigation_beta) * -100)));
         break;
 
     case 4: // emergency functions status
-        command (0, "reset onboard system");
-        command (1, "send help request");
+        command(0, "reset onboard system");
+        command(1, "send help request");
 
         if (lithium_collector) {
-            command (2, "stop scoping lithium");
+            command(2, "stop scoping lithium");
         } else {
-            command (2, "scope for lithium");
+            command(2, "scope for lithium");
         }
 
-        command (3, "clear status");
+        command(3, "clear status");
 
         if (gburst == -1) {
-            cline (1, "NOTE: there are no emergencies at the moment.");
-            cline (2, "help request not sent.");
+            cline(1, "NOTE: there are no emergencies at the moment.");
+            cline(2, "help request not sent.");
             break;
         }
     }
@@ -1875,8 +1842,7 @@ void devices () {
 int8_t dummy_identity[9] = "Removed:";
 int8_t comp_data[32];
 
-void dev_commands () {
-#if 0
+void dev_commands() {
     int16_t n;
     float dist;
 
@@ -2015,12 +1981,12 @@ void dev_commands () {
                         labstar = 0;
 
                         if (star_label_pos >= sm_consolidated) {
-                            smh = _rtl_open (starmap_file, 4);
+                            smh = open (starmap_file, 4);
 
                             if (smh > -1) {
                                 lseek (smh, star_label_pos, SEEK_SET);
-                                _rtl_write (smh, &dummy_identity[0], 8);
-                                _rtl_close (smh);
+                                write (smh, &dummy_identity[0], 8);
+                                close (smh);
                                 ap_target_previd = 12345;
                                 status ("REMOVED", 50);
                                 star_label_pos = -1;
@@ -2041,32 +2007,32 @@ void dev_commands () {
                         }
                     }
                 } else {
-                    smh = _rtl_open (starmap_file, 4);
+                    smh = open (starmap_file, 4);
 
                     if (smh == -1) {
-                        smh = _rtl_creat (starmap_file, 0);
+                        smh = creat (starmap_file, 0);
                         sm_consolidated = 4;
-                        _rtl_write (smh, &sm_consolidated, 4);
+                        write (smh, &sm_consolidated, 4);
                     }
 
                     if (smh > -1) {
                         lseek (smh, 4, SEEK_SET);
 
-                        while (_rtl_read (smh, comp_data, 32) == 32)
+                        while (read (smh, comp_data, 32) == 32)
                             if (memcmp (comp_data, dummy_identity, 8)) {
-                                if (!memicmp (comp_data + 8, star_label, 20)) {
+                                if (!strcasecmp((char*) (comp_data + 8), (char*) star_label)) {
                                     status ("EXTANT", 50);
                                     ap_target_previd = 12345;
                                     star_label_pos = -1;
-                                    _rtl_close (smh);
+                                    close (smh);
                                     return;
                                 }
                             }
 
                         lseek (smh, 0, SEEK_END);
-                        star_label_pos = tell(smh);
-                        _rtl_write (smh, &star_id, 32);
-                        _rtl_close (smh);
+                        star_label_pos = lseek(smh, 0, SEEK_CUR);
+                        write (smh, &star_id, 32);
+                        close (smh);
                         status ("ASSIGNED", 50);
                         nearstar_labeled++;
                     } else {
@@ -2088,12 +2054,12 @@ void dev_commands () {
                         labplanet = 0;
 
                         if (planet_label_pos >= sm_consolidated) {
-                            smh = _rtl_open (starmap_file, 4);
+                            smh = open (starmap_file, 4);
 
                             if (smh > -1) {
                                 lseek (smh, planet_label_pos, SEEK_SET);
-                                _rtl_write (smh, &dummy_identity[0], 8);
-                                _rtl_close (smh);
+                                write (smh, &dummy_identity[0], 8);
+                                close (smh);
                                 prev_planet_id = 12345;
                                 status ("REMOVED", 50);
                                 planet_label_pos = -1;
@@ -2114,32 +2080,32 @@ void dev_commands () {
                         }
                     }
                 } else {
-                    smh = _rtl_open (starmap_file, 4);
+                    smh = open (starmap_file, 4);
 
                     if (smh == -1) {
-                        smh = _rtl_creat (starmap_file, 0);
+                        smh = creat (starmap_file, 0);
                         sm_consolidated = 4;
-                        _rtl_write (smh, &sm_consolidated, 4);
+                        write (smh, &sm_consolidated, 4);
                     }
 
                     if (smh > -1) {
                         lseek (smh, 4, SEEK_SET);
 
-                        while (_rtl_read (smh, comp_data, 32) == 32)
+                        while (read (smh, comp_data, 32) == 32)
                             if (memcmp (comp_data, dummy_identity, 8)) {
-                                if (!memicmp (comp_data + 8, planet_label, 20)) {
+                                if (!strcasecmp((char*) (comp_data + 8), (char*) planet_label)) {
                                     status ("EXTANT", 50);
                                     prev_planet_id = 12345;
                                     planet_label_pos = -1;
-                                    _rtl_close (smh);
+                                    close (smh);
                                     return;
                                 }
                             }
 
                         lseek (smh, 0, SEEK_END);
-                        planet_label_pos = tell(smh);
-                        _rtl_write (smh, &planet_id, 32);
-                        _rtl_close (smh);
+                        planet_label_pos = lseek(smh, 0, SEEK_CUR);
+                        write (smh, &planet_id, 32);
+                        close (smh);
                         status ("ASSIGNED", 50);
                         nearstar_labeled++;
                     } else {
@@ -2235,84 +2201,82 @@ void dev_commands () {
             gburst = 0;
         }
     }
-#endif
-    STUB
 }
 
 /* Preferenze. */
 
-void prefs () {
+void prefs() {
     if (autoscreenoff) {
-        command (0, "auto screen sleep on");
+        command(0, "auto screen sleep on");
     } else {
-        command (0, "auto screen sleep off");
+        command(0, "auto screen sleep off");
     }
 
     if (revcontrols) {
-        command (1, "reverse pitch controls");
+        command(1, "reverse pitch controls");
     } else {
-        command (1, "normal pitch controls");
+        command(1, "normal pitch controls");
     }
 
     if (menusalwayson) {
-        command (2, "menus always onscreen");
+        command(2, "menus always onscreen");
     } else {
-        command (2, "auto-hidden menus");
+        command(2, "auto-hidden menus");
     }
 
     if (depolarize) {
-        command (3, "polarize");
+        command(3, "polarize");
     } else {
-        command (3, "depolarize");
+        command(3, "depolarize");
     }
 }
 
 /* Comandi di impostazione delle opzioni preferenziali. */
 
-void toggle_option (int8_t* option_flag) {
+void toggle_option(int8_t *option_flag) {
     *option_flag = 1 - *option_flag;
 
     if (*option_flag) {
-        status ("ACQUIRED", 50);
+        status("ACQUIRED", 50);
     } else {
-        status ("DISABLED", 50);
+        status("DISABLED", 50);
     }
 }
 
-void pfs_commands () {
+void pfs_commands() {
     switch (s_command) {
     case 1:
-        toggle_option (&autoscreenoff);
+        toggle_option(&autoscreenoff);
         break;
 
     case 2:
-        toggle_option (&revcontrols);
+        toggle_option(&revcontrols);
         break;
 
     case 3:
-        toggle_option (&menusalwayson);
+        toggle_option(&menusalwayson);
         break;
 
     case 4:
-        toggle_option (&depolarize);
+        toggle_option(&depolarize);
     }
 }
 
 /*  Comandi impartiti al computer di bordo.
     Tutti tranne "disattiva schermo". */
 
-void commands () {
+void commands() {
     switch (sys) {
     case 1:
-        fcs_commands ();
+        fcs_commands();
         break;
 
     case 2:
-        dev_commands ();
+        dev_commands();
         break;
 
     case 3:
-        pfs_commands ();
+        pfs_commands();
         break;
     }
 }
@@ -2321,34 +2285,34 @@ void commands () {
      and making it evolve at the current time. */
 
 void unfreeze() {
-    int16_t     fh;
-    double  elapsed, dpwr;
+    int16_t fh;
+    double elapsed, dpwr;
     // Reading the consolidated starmap.
-    smh = open (starmap_file, 4);
+    smh = open(starmap_file, 4);
 
     if (smh > -1) {
-        read (smh, &sm_consolidated, 4);
+        read(smh, &sm_consolidated, 4);
 
         if (!sm_consolidated) {
-            sm_consolidated = lseek (smh, 0, SEEK_END);
+            sm_consolidated = lseek(smh, 0, SEEK_END);
             lseek(smh, 0, SEEK_SET);
-            write (smh, &sm_consolidated, 4);
+            write(smh, &sm_consolidated, 4);
         }
 
-        close (smh);
+        close(smh);
     } else {
         sm_consolidated = 0;
     }
 
     /* Lettura della situazione precedente. */
-    fh = open (situation_file, 0);
+    fh = open(situation_file, 0);
 
     if (fh > -1) {
-        read (fh, &nsync, 245);
-        read (fh, &gnc_pos, 1);
-        read (fh, &goesfile_pos, 4);
-        read (fh, goesnet_command, 120);
-        close (fh);
+        read(fh, &nsync, 245);
+        read(fh, &gnc_pos, 1);
+        read(fh, &goesfile_pos, 4);
+        read(fh, goesnet_command, 120);
+        close(fh);
     } else {
         return;
     }
@@ -2356,18 +2320,18 @@ void unfreeze() {
     /*  Risincronizzazione della situazione in relazione ai
         precedenti eventi (evoluzione nascosta della situazione). */
     elapsed = secs;
-    getsecs ();
+    getsecs();
     elapsed = secs - elapsed;
 
     if (helptime && secs > helptime + 20) {
         helptime = 0;
-        charge = 4;
-        gburst = 0;
+        charge   = 4;
+        gburst   = 0;
     }
 
     /* Ricostruzione del sistema stellare attuale. */
     npcs = -12345;
-    prepare_nearstar ();
+    prepare_nearstar();
 
     if (lithium_collector) {
         while (elapsed >= 30 && charge < 120) {
@@ -2378,8 +2342,8 @@ void unfreeze() {
         if (charge == 120) {
             pwr = 20000;
         } else {
-            srand(static_cast<uint32_t>(secs));
-            pwr = static_cast<int16_t>((rand() % 5000) + 15000);
+            srand((uint32_t) (secs));
+            pwr = (int16_t) ((rand() % 5000) + 15000);
         }
     }
 
@@ -2435,31 +2399,41 @@ void unfreeze() {
 /* Programma principale. */
 
 float starmass_correction[star_classes] = {
-    1.886, // Class 0
-    1.50, // Class 1
+    1.886,   // Class 0
+    1.50,    // Class 1
     8000.40, // Class 2
-    0.05, // Class 3
-    2.44, // Class 4
-    3.10, // Class 5
-    9.30, // Class 6
-    48.00, // Class 7
-    1.00, // Class 8
-    1.00, // Class 9
-    0.07, // Class 10
-    15000.00  // Class 11
+    0.05,    // Class 3
+    2.44,    // Class 4
+    3.10,    // Class 5
+    9.30,    // Class 6
+    48.00,   // Class 7
+    1.00,    // Class 8
+    1.00,    // Class 9
+    0.07,    // Class 10
+    15000.00 // Class 11
 };
 
 extern uint16_t _stklen = 0x1800;
 
-int main() {
+int main(int argc, char **argv) {
+    // Initialize SDL.
+    SDL_Surface *surface =
+        SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF000000, 0xFF0000, 0xFF00, 0xFF);
+    SDL_Window *window = SDL_CreateWindow("Noctis IV LR", SDL_WINDOWPOS_CENTERED,
+                                          SDL_WINDOWPOS_CENTERED, 640, 400, SDL_WINDOW_RESIZABLE | SDL_WINDOW_INPUT_GRABBED);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
+    SDL_Renderer *renderer =
+        SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE);
+
+    // Actual noctis stuff starts here.
     float satur, DfCoS;
     // float user_drawing_range;
-    long  ir,  ig,  ib,  ire  = 0, ige  = 0, ibe  = 0;
-    long  ir2, ig2, ib2, ir2e = 0, ig2e = 0, ib2e = 0;
-    long  ir3, ig3, ib3, ir3e = 0, ig3e = 0, ib3e = 0;
-    int16_t   c, p_mpul = 0;
-    int8_t  sky_palette_ok = 0;
-    int8_t  select, lrv, right_dblclick = 0;
+    long ir, ig, ib, ire = 0, ige = 0, ibe = 0;
+    long ir2, ig2, ib2, ir2e = 0, ig2e = 0, ib2e = 0;
+    long ir3, ig3, ib3, ir3e = 0, ig3e = 0, ib3e = 0;
+    int16_t c, p_mpul = 0;
+    int8_t sky_palette_ok = 0;
+    int8_t select, lrv, right_dblclick = 0;
     float right_dblclick_dir;
     double dpz, ras, rap, dasp, eclipse;
     double dxx, dyy, dzz, l_dsd, p_dsd, stz, ang;
@@ -2473,68 +2447,62 @@ int main() {
     float tmp_float;
     long p1, p2, p3, p4;
 
-    for (ir = 0; ir < 200; ir ++) {
+    for (ir = 0; ir < 200; ir++) {
         m200[ir] = ir * 200;
     }
 
-    if (!test_and_init_mouse()) {
-        printf ("\nMouse not present or mouse driver not installed.\n");
-        return 1;
-    }
+    n_offsets_map = (uint8_t *) malloc(om_bytes);
+    n_globes_map  = (int8_t *)  malloc((uint16_t)gl_bytes + (uint16_t)gl_brest);
+    s_background  = (uint8_t *) malloc(st_bytes);
+    p_background  = (uint8_t *) malloc(pl_bytes);
+    p_surfacemap  = (uint8_t *) malloc(ps_bytes);
+    objectschart  = (quadrant *)malloc(oc_bytes);
+    ruinschart    = (uint8_t *) objectschart; // oc alias
+    pvfile        = (uint8_t *) malloc(pv_bytes);
+    adapted       = (uint8_t *) malloc(sc_bytes);
+    txtr          = (uint8_t *) p_background;             // txtr alias
+    digimap2      = (uint32_t *)&n_globes_map[gl_bytes]; // font alias
+    reach_your_dir(argv);
 
-    n_offsets_map = (uint8_t*) malloc (om_bytes);
-    n_globes_map  = (int8_t*) malloc ((uint16_t)gl_bytes +
-                    (uint16_t)gl_brest);
-    s_background  = (uint8_t*) malloc (st_bytes);
-    p_background  = (uint8_t*) malloc (pl_bytes);
-    p_surfacemap  = (uint8_t*) malloc (ps_bytes);
-    objectschart  = (quadrant*) malloc (oc_bytes);
-    ruinschart    = (uint8_t*) objectschart;   // oc alias
-    pvfile        = (uint8_t*) malloc (pv_bytes);
-    adaptor       = (uint8_t*) malloc(sc_bytes);
-    adapted       = (uint8_t*) malloc (sc_bytes);
-    txtr          = (uint8_t*) p_background;  // txtr alias
-    digimap2      = (uint32_t*) &n_globes_map[gl_bytes];  // font alias
-    reach_your_dir ();
-
-    if (pvfile && adapted && n_offsets_map && n_globes_map
-            && p_background && s_background && p_surfacemap
-            && objectschart && lens_flares_init()) {
-        lrv = loadpv (vehicle_handle, vehicle_ncc, 15, 15, 15, 0, 0, 0, 0, 1);
+    if (pvfile && adapted && n_offsets_map && n_globes_map && p_background &&
+        s_background && p_surfacemap && objectschart && lens_flares_init()) {
+        lrv = loadpv(vehicle_handle, vehicle_ncc, 15, 15, 15, 0, 0, 0, 0, 1);
 
         if (lrv < 1) {
-            printf ("\nLoad error.\n");
+            printf("\nLoad error.\n");
             return 1;
         }
 
-        load_QVRmaps ();
-        load_starface ();
-        load_digimap2 ();
+        load_QVRmaps();
+        load_starface();
+        load_digimap2();
     } else {
-        printf ("\nNot enough free conventional memory to run.");
-        printf ("\nType MEM and hit ENTER to check it out.");
-        printf ("\n550 KB are needed to run Noctis!\n");
+        printf("\nNot enough free conventional memory to run.");
+        printf("\nType MEM and hit ENTER to check it out.");
+        printf("\n550 KB are needed to run Noctis!\n");
         return 1;
     }
 
-    //tweakedVGA (X320Y200C4YPAL); // INIZIALIZZAZIONE GRAFICA.
-    _320_200_256 (); // INIZIALIZZAZIONE GRAFICA.
-    initscanlines ();
-    unfreeze ();
-    pclear (adapted, 0);
+    // tweakedVGA (X320Y200C4YPAL); // INIZIALIZZAZIONE GRAFICA.
+    _320_200_256(); // INIZIALIZZAZIONE GRAFICA.
+    initscanlines();
+    unfreeze();
+    memset(adapted, 0, QUADWORDS * 4);
     QUADWORDS -= 1440;
     pqw = QUADWORDS;
-    mouse_input ();
-    mpul = 0;
+    handle_input(window);
+    mpul                          = 0;
     clock_t right_dblclick_timing = 0;
-    dpp  = 210;
-    change_camera_lens ();
-    //   0..64  veicolo, selezioni computer, artefatti. BLU COBALTO, ma dipende dalla luce delle stelle.
-    //  64..128 cosmo, sfondo galattico, cieli sereni e "suplucsi effect". dal BLU ELETTRICO al BIANCO.
-    // 128..192 stelle (continue sfumature cicliche) o lune (non costanti)
-    // 192..256 pianeti (non costanti)
-    tavola_colori (range8088, 0, 64, 16, 32, 63);
-    tavola_colori (tmppal, 0, 256, 64, 64, 64);
+    dpp                           = 210;
+    change_camera_lens();
+    //   0..64  Vehicle, computer selections, artifacts. Cobalt Blue, depending
+    //   on the color from the star.
+    //  64..128 cosmos, galactic background, clear skies and "suplucsi effect".
+    //  from the white electric blue.
+    // 128..192 Stars (Continuous cyclic shaders) or moons (non-constant)
+    // 192..256 Planets (Non constant)
+    tavola_colori(range8088, 0, 64, 16, 32, 63);
+    tavola_colori(tmppal, 0, 256, 64, 64, 64);
     int16_t resolve = 64;
     // causa il recupero dell'eventuale contenuto dello schermo
     // di output della GOES command net
@@ -2544,15 +2512,15 @@ int main() {
 
     if (sfh > -1) {
         // lettura precedenti coordinate di sbarco
-        read (sfh, &landing_pt_lon, 2);
-        read (sfh, &landing_pt_lat, 2);
-        close (sfh);
+        read(sfh, &landing_pt_lon, 2);
+        read(sfh, &landing_pt_lat, 2);
+        close(sfh);
         // recupero labels del pianeta e della stella-bersaglio
-        update_star_label ();
-        update_planet_label ();
+        update_star_label();
+        update_planet_label();
         // risincronizzazione istantanea della posizione della navicella
-        getsecs ();
-        planet_xyz (ip_targetted);
+        getsecs();
+        planet_xyz(ip_targetted);
         dzat_x = plx;
         dzat_y = ply;
         dzat_z = plz;
@@ -2560,11 +2528,11 @@ int main() {
         dxx = dzat_x - nearstar_x;
         dyy = dzat_y - nearstar_y;
         dzz = dzat_z - nearstar_z;
-        dsd = sqrt (dxx * dxx + dyy * dyy + dzz * dzz) + 1;
+        dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
         // rielaborazione superficie planetaria
-        from_vehicle ();
+        from_vehicle();
         landing_point = 1;
-        planets ();
+        planets();
         landing_point = 0;
         // ripresa del ciclo di esplorazione planetaria
         entryflag = 1;
@@ -2573,10 +2541,9 @@ int main() {
         opencapcount = 86;
         opencapdelta = -2;
         holdtomiddle = 1;
-        pp_gravity = 1;
-        QUADWORDS = 16000;
-        pclear (adapted, 0);
-        pclear (adaptor, 0);
+        pp_gravity   = 1;
+        QUADWORDS    = 16000;
+        memset(adapted, 0, QUADWORDS * 4);
         QUADWORDS = pqw;
 
         if (exitflag) {
@@ -2585,7 +2552,7 @@ int main() {
     }
 
     do {
-        sync_start ();
+        sync_start();
         //
         // Controllo del flag che indica quando ci si trova
         // sulla "terrazza panoramica", il tetto dello stardrifter.
@@ -2612,18 +2579,18 @@ int main() {
             }
 
             if (pos_y < -325 && pos_y > -715) {
-                step = - pos_y;
+                step = -pos_y;
             }
         }
 
         if (pos_y > 0) {
             lifter = 0;
-            pos_y = 0;
+            pos_y  = 0;
         }
 
         if (pos_y < -750) {
             lifter = 0;
-            pos_y = -750;
+            pos_y  = -750;
         }
 
         if (pos_y < -500) {
@@ -2637,7 +2604,7 @@ int main() {
             DfCoS = sqrt(pos_x * pos_x + DfCoS * DfCoS);
 
             if (DfCoS + step < 1100) {
-                lifter = + 75;
+                lifter = +75;
             }
         }
 
@@ -2653,73 +2620,73 @@ int main() {
         if (reset_signal) {
             switch (reset_signal) {
             case 150:
-                elight         = 1;
-                ilight         = 0;
-                ilightv        = 0;
-                status ("----------", 100);
+                elight  = 1;
+                ilight  = 0;
+                ilightv = 0;
+                status("----------", 100);
                 break;
 
             case 140:
-                ip_targetted       = -1;
-                ip_reaching        = 0;
+                ip_targetted = -1;
+                ip_reaching  = 0;
                 break;
 
             case 130:
-                ap_targetted       = 0;
-                stspeed        = 0;
+                ap_targetted = 0;
+                stspeed      = 0;
                 break;
 
             case 120:
-                gburst         = 0;
-                nsync           = 1;
-                anti_rad       = 1;
-                pl_search      = 0;
-                field_amplificator     = 0;
+                gburst             = 0;
+                nsync              = 1;
+                anti_rad           = 1;
+                pl_search          = 0;
+                field_amplificator = 0;
                 break;
 
             case 115:
-                sys            = 4;
-                psys           = 4;
+                sys  = 4;
+                psys = 4;
                 break;
 
             case 110:
-                lithium_collector  = 0;
-                autoscreenoff      = 0;
+                lithium_collector = 0;
+                autoscreenoff     = 0;
                 break;
 
             case 101:
-                status ("_^*^-!_$[]", 100);
-                ap_reached     = 0;
-                ip_reached     = 0;
-                landing_point      = 0;
+                status("_^*^-!_$[]", 100);
+                ap_reached    = 0;
+                ip_reached    = 0;
+                landing_point = 0;
                 break;
 
             case 75:
-                elight         = 0;
-                ilightv        = 1;
+                elight  = 0;
+                ilightv = 1;
                 break;
 
             case 55:
-                mslocate (0, 0, 0);
-                mswrite (0, "G.O.E.S. COMMAND NET:");
+                mslocate(0, 0, 0);
+                mswrite(0, "G.O.E.S. COMMAND NET:");
                 break;
 
             case 35:
-                mslocate (0, 0, 1);
-                mswrite (0, "REVISION ID 6011/0200");
+                mslocate(0, 0, 1);
+                mswrite(0, "REVISION ID 6011/0200");
                 break;
 
             case 25:
-                mslocate (0, 0, 2);
-                mswrite (0, "SESSION ID ");
-                fast_srand (secs * 18);
-                sprintf (temp_distance_buffer, "%05lu%05lu", fast_random (0x7FFF),
-                         fast_random (0x7FFF));
-                mswrite (0, temp_distance_buffer);
+                mslocate(0, 0, 2);
+                mswrite(0, "SESSION ID ");
+                fast_srand(secs * 18);
+                sprintf(temp_distance_buffer, "%05lu%05lu", fast_random(0x7FFF),
+                        fast_random(0x7FFF));
+                mswrite(0, temp_distance_buffer);
                 break;
 
             case 10:
-                status ("STANDBY", 100);
+                status("STANDBY", 100);
                 break;
             }
 
@@ -2729,38 +2696,37 @@ int main() {
         //
         // Controlla il timer di sistema.
         //
-        getsecs ();
+        getsecs();
 
         //
         // Accensione luci d'emergenza.
         // Comportamento dell'astrozattera in mancanza di litio.
         //
         if (pwr <= 15000 && !charge) {
-            elight = 1;
-            nsync = 0;
-            anti_rad = 0;
-            pl_search = 0;
+            elight             = 1;
+            nsync              = 0;
+            anti_rad           = 0;
+            pl_search          = 0;
             field_amplificator = 0;
-            ip_targetted = -1;
-            ap_reached = 0;
-            datasheetdelta = -100;
+            ip_targetted       = -1;
+            ap_reached         = 0;
+            datasheetdelta     = -100;
         } else {
             if (elight && !reset_signal) {
-                elight = 0;
-                ilight = 0;
-                ilightv = 1;
+                elight       = 0;
+                ilight       = 0;
+                ilightv      = 1;
                 reset_signal = 200;
             }
         }
 
         // Mouse input for user movements.
         p_mpul = mpul;
-        mpul = 0;
-        mouse_input();
+        handle_input(window);
 
         if (mpul & 2) {
             shift += 3 * mdltx;
-            dlt_alfa -= (float) mdlty / 8;
+            dlt_alfa -= (float)mdlty / 8;
         } else {
             step -= 3 * mdlty;
 
@@ -2768,7 +2734,7 @@ int main() {
                 dlt_alfa = -user_alfa / 6;
             }
 
-            dlt_beta -= (float) mdltx / 3;
+            dlt_beta -= (float)mdltx / 3;
         }
 
         // Mouse input for double left and right click.
@@ -2787,7 +2753,7 @@ int main() {
                 right_dblclick_timing = clock();
             } else {
                 if (clock() - right_dblclick_timing < DBL_CLICK_CUTOFF) {
-                    right_dblclick = 1;
+                    right_dblclick     = 1;
                     right_dblclick_dir = user_beta;
                 } else {
                     right_dblclick_timing = clock();
@@ -2797,21 +2763,21 @@ int main() {
 
         if (right_dblclick) {
             if (ap_targetting) {
-                ap_targetting = 0;
+                ap_targetting  = 0;
                 right_dblclick = 0;
-                extract_ap_target_infos ();
-                fix_remote_target ();
+                extract_ap_target_infos();
+                fix_remote_target();
                 goto nop;
             }
 
             if (ip_targetting) {
-                ip_targetting = 0;
+                ip_targetting  = 0;
                 right_dblclick = 0;
 
                 if (ip_targetted != -1) {
-                    fix_local_target ();
+                    fix_local_target();
                 } else {
-                    status ("NO TARGET", 50);
+                    status("NO TARGET", 50);
                 }
 
                 goto nop;
@@ -2834,7 +2800,7 @@ int main() {
 
                     if (fabs(xx) < 25 && fabs(zz) < 25 && fabs(user_beta) < 1) {
                         right_dblclick_timing = 0;
-                        right_dblclick = 0;
+                        right_dblclick        = 0;
                     }
 
                     user_beta -= 90;
@@ -2846,7 +2812,7 @@ int main() {
                     if (sys != 4) {
                         if (fabs(zz) < 25 && fabs(user_beta) < 1) {
                             right_dblclick_timing = 0;
-                            right_dblclick = 0;
+                            right_dblclick        = 0;
                         }
                     } else {
                         xx = pos_x + 1700;
@@ -2854,7 +2820,7 @@ int main() {
 
                         if (fabs(zz) < 25 && fabs(xx) < 25 && fabs(user_beta) < 1) {
                             right_dblclick_timing = 0;
-                            right_dblclick = 0;
+                            right_dblclick        = 0;
                         }
                     }
                 }
@@ -2864,7 +2830,7 @@ int main() {
         //
         // Variazione angoli visivi.
         //
-nop:
+    nop:
         user_alfa += dlt_alfa;
         dlt_alfa /= 1.5;
 
@@ -2874,12 +2840,12 @@ nop:
 
         if (user_alfa < -44.9) {
             user_alfa = -44.9;
-            dlt_alfa = 0;
+            dlt_alfa  = 0;
         }
 
         if (user_alfa > 44.9) {
             user_alfa = 44.9;
-            dlt_alfa = 0;
+            dlt_alfa  = 0;
         }
 
         user_beta += dlt_beta;
@@ -2900,11 +2866,11 @@ nop:
         // Variation of the user's position in the spacecraft.
         alfa = user_alfa;
         beta = user_beta - 90;
-        change_angle_of_view ();
-        p_Forward (shift);
+        change_angle_of_view();
+        p_Forward(shift);
         beta = user_beta;
-        change_angle_of_view ();
-        p_Forward (step);
+        change_angle_of_view();
+        p_Forward(step);
         shift /= 1.5;
 
         if (fabs(shift) < 0.5) {
@@ -2925,8 +2891,8 @@ nop:
             pos_x = +3100;
         }
 
-        if (pos_z > - 300) {
-            pos_z = - 300;
+        if (pos_z > -300) {
+            pos_z = -300;
         }
 
         if (pos_z < -5800) {
@@ -2935,19 +2901,19 @@ nop:
 
         // Black background, which will be made hazy.
         if (!stspeed) {
-            pclear (adapted + 2880, 0);
+            memset(adapted + 2880, 0, QUADWORDS * 4);
         } else {
-            pfade (adapted, 180, 8);
+            pfade(adapted, 180, 8);
         }
 
         // Close star management
-        from_vehicle ();
+        from_vehicle();
         dxx   = dzat_x - nearstar_x;
         dyy   = dzat_y - nearstar_y;
         dzz   = dzat_z - nearstar_z;
-        l_dsd = sqrt (dxx * dxx + dyy * dyy + dzz * dzz) + 1;
+        l_dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
         satur = (12 * dsd) / nearstar_ray;
-        fast_srand (nearstar_z);
+        fast_srand(nearstar_z);
         ir = fast_random(31) + 29;
 
         if (satur < ir) {
@@ -2960,44 +2926,47 @@ nop:
 
         //
         if (l_dsd < 100 * nearstar_ray)
-            whiteglobe (adapted, nearstar_x, nearstar_y, nearstar_z,
-                        3 * nearstar_ray, 0.3);
+            whiteglobe(adapted, nearstar_x, nearstar_y, nearstar_z,
+                       3 * nearstar_ray, 0.3);
 
         for (ir = 0; ir < nearstar_nop; ir++) {
             if (nearstar_p_type[ir] == 10) {
-                planet_xyz (ir);
+                planet_xyz(ir);
                 p_dsd = nearstar_p_qsortdist[ir];
-                fast_srand (ir + nearstar_x);
-                whiteglobe (adapted, plx, ply, plz,
-                            3 * nearstar_p_ray[ir], 0.15 - fast_flandom() * 0.3);
+                fast_srand(ir + nearstar_x);
+                whiteglobe(adapted, plx, ply, plz, 3 * nearstar_p_ray[ir],
+                           0.15 - fast_flandom() * 0.3);
 
-                if (p_dsd > 5 * nearstar_p_ray[ir] && p_dsd < 1000 * nearstar_p_ray[ir])
-                    lens_flares_for (dzat_x, dzat_y, dzat_z, plx, ply, plz,
-                                     (10 * nearstar_p_ray[ir]) / p_dsd,
-                                     1 + (0.001 * p_dsd), 1, 0, 3, 0);
+                if (p_dsd > 5 * nearstar_p_ray[ir] &&
+                    p_dsd < 1000 * nearstar_p_ray[ir])
+                    lens_flares_for(dzat_x, dzat_y, dzat_z, plx, ply, plz,
+                                    (10 * nearstar_p_ray[ir]) / p_dsd,
+                                    1 + (0.001 * p_dsd), 1, 0, 3, 0);
             }
         }
 
         if (l_dsd > 6 * nearstar_ray) {
-            if (nearstar_class != 5 && nearstar_class != 6 && nearstar_class != 10) {
+            if (nearstar_class != 5 && nearstar_class != 6 &&
+                nearstar_class != 10) {
                 if (nearstar_class != 11 || gl_start < 90) {
                     if (l_dsd > 5 * nearstar_ray && l_dsd < 1000 * nearstar_ray) {
-                        lens_flares_for (dzat_x, dzat_y, dzat_z,
-                                         nearstar_x, nearstar_y, nearstar_z,
-                                         (10 * nearstar_ray) / l_dsd, 1 + (0.001 * l_dsd), 1, 0, 3, 0);
+                        lens_flares_for(dzat_x, dzat_y, dzat_z, nearstar_x,
+                                        nearstar_y, nearstar_z,
+                                        (10 * nearstar_ray) / l_dsd,
+                                        1 + (0.001 * l_dsd), 1, 0, 3, 0);
                     }
                 }
             }
 
-            psmooth_grays (adapted + 2880);
+            psmooth_grays(adapted + 2880);
         }
 
-        mask_pixels (adapted + 2880, 64);
+        mask_pixels(adapted + 2880, 64);
 
         if (l_dsd < 8 * nearstar_ray) {
             if (farstar) {
                 farstar = 0;
-                load_starface ();
+                load_starface();
             }
 
             glass_bubble = 0;
@@ -3005,12 +2974,13 @@ nop:
             if (nearstar_spin) {
                 gl_start += nearstar_spin;
                 gl_start %= 360;
-                globe (gl_start, adapted, s_background, (uint8_t*) n_globes_map, gl_bytes,
-                       nearstar_x, nearstar_y, nearstar_z, nearstar_ray, 64, satur);
+                globe(gl_start, adapted, s_background, (uint8_t *)n_globes_map,
+                      gl_bytes, nearstar_x, nearstar_y, nearstar_z, nearstar_ray,
+                      64, satur);
             } else {
-                globe ((clock() / 360) % 360, adapted, s_background,
-                       (uint8_t*) n_globes_map, gl_bytes, nearstar_x, nearstar_y,
-                       nearstar_z, nearstar_ray, 64, satur);
+                globe((clock() / 360) % 360, adapted, s_background,
+                      (uint8_t *)n_globes_map, gl_bytes, nearstar_x, nearstar_y,
+                      nearstar_z, nearstar_ray, 64, satur);
             }
         } else {
             farstar = 1;
@@ -3025,12 +2995,9 @@ nop:
             }
 
             ir += 0x30;
-            far_pixel_at (nearstar_x, nearstar_y,
-                          nearstar_z, 0, ir);
-            far_pixel_at (nearstar_x, nearstar_y,
-                          nearstar_z, 0, ir);
-            far_pixel_at (nearstar_x, nearstar_y,
-                          nearstar_z, 0, ir);
+            far_pixel_at(nearstar_x, nearstar_y, nearstar_z, 0, ir);
+            far_pixel_at(nearstar_x, nearstar_y, nearstar_z, 0, ir);
+            far_pixel_at(nearstar_x, nearstar_y, nearstar_z, 0, ir);
         }
 
         //
@@ -3064,7 +3031,7 @@ nop:
         // Controllo gestore (indicando i comandi con lo sguardo).
         //
         active_screen = -1;
-        from_user ();
+        from_user();
         leftturn  = 0;
         rightturn = 0;
         infoarea  = 0;
@@ -3076,9 +3043,9 @@ nop:
         }
 
         do {
-            zz = fabs (cam_z);
-            xx = fabs (cam_x);
-            Forward (zz / 2);
+            zz = fabs(cam_z);
+            xx = fabs(cam_x);
+            Forward(zz / 2);
         } while (zz > 25 && xx < 3000);
 
         if (zz < 25) {
@@ -3097,8 +3064,8 @@ nop:
                     if (select) {
                         if (!ap_targetting && !ip_targetting) {
                             aso_countdown = 100;
-                            sys = s_control;
-                            dev_page = 0;
+                            sys           = s_control;
+                            dev_page      = 0;
                         }
                     }
                 }
@@ -3118,7 +3085,7 @@ nop:
                         if (select) {
                             if (!ap_targetting && !ip_targetting) {
                                 aso_countdown = 100;
-                                commands ();
+                                commands();
                                 goto jpr;
                             }
                         }
@@ -3133,22 +3100,22 @@ nop:
             if (revcontrols) {
                 if (cam_x > 2500) {
                     dlt_nav_beta += 1.5;
-                    status ("PITCH - R", 25);
+                    status("PITCH - R", 25);
                 }
 
                 if (cam_x < -2500) {
                     dlt_nav_beta -= 1.5;
-                    status ("PITCH - L", 25);
+                    status("PITCH - L", 25);
                 }
             } else {
                 if (cam_x > 2500) {
                     dlt_nav_beta -= 1.5;
-                    status ("PITCH - L", 25);
+                    status("PITCH - L", 25);
                 }
 
                 if (cam_x < -2500) {
                     dlt_nav_beta += 1.5;
-                    status ("PITCH - R", 25);
+                    status("PITCH - R", 25);
                 }
             }
         }
@@ -3165,18 +3132,19 @@ nop:
         // Rotazione della navicella.
         // Attivazione schermi.
         //
-jpr:
+    jpr:
 
         if (!elight) {
             // Paratia destra:
-            if (user_beta > -135 && user_beta < -45 && pos_z < -104 * 15
-                    && pos_z > -262 * 15 && pos_x > 172 * 15) {
+            if (user_beta > -135 && user_beta < -45 && pos_z < -104 * 15 &&
+                pos_z > -262 * 15 && pos_x > 172 * 15) {
                 active_screen = (pos_z + 104 * 15) / (-54 * 15);
             }
 
             // Paratia sinistra:
-            //if (user_beta > +45 && user_beta < +135 && pos_z < -104*15 && pos_z > -154*15 && pos_x < -172*15)
-            //active_screen = (pos_z + 104*15) / (-54*15) + 2;
+            // if (user_beta > +45 && user_beta < +135 && pos_z < -104*15 &&
+            // pos_z > -154*15 && pos_x < -172*15) active_screen = (pos_z +
+            // 104*15) / (-54*15) + 2;
         }
 
         navigation_beta += dlt_nav_beta;
@@ -3197,15 +3165,15 @@ jpr:
         //
         // Tracciamento pianeti.
         //
-        from_vehicle ();
-        planets ();
+        from_vehicle();
+        planets();
 
         //
         // Controllo sulle richieste d'aiuto.
         //
         if (helptime && secs > helptime) {
             if (gburst) {
-                status ("HELP CAME!", 50);
+                status("HELP CAME!", 50);
                 gburst = 0;
             }
 
@@ -3213,20 +3181,20 @@ jpr:
                 stz = 0;
 
                 if (secs < helptime + 20) {
-                    stz = pow (helptime + 20 - secs, 2) * 2000;
+                    stz = pow(helptime + 20 - secs, 2) * 2000;
                 }
 
                 if (secs > helptime + 100) {
-                    stz = pow (helptime + 100 - secs, 2) * 2000;
+                    stz = pow(helptime + 100 - secs, 2) * 2000;
                 }
 
                 if (!stz && charge < 3) {
                     charge = 3;
                 }
 
-                other_vehicle_at ((stz + 16000) * cos (secs / 10),
-                                  4000 * sin (secs / 100),
-                                  (stz + 16000) * sin (secs / 10));
+                other_vehicle_at((stz + 16000) * cos(secs / 10),
+                                 4000 * sin(secs / 100),
+                                 (stz + 16000) * sin(secs / 10));
             } else {
                 helptime = 0;
             }
@@ -3235,8 +3203,8 @@ jpr:
         //
         // Tracciamento della navicella.
         //
-        from_user ();
-        vehicle (opencapcount);
+        from_user();
+        vehicle(opencapcount);
 
         //
         // Tracciamento riflessi, aggiornamento dello schermo
@@ -3247,55 +3215,55 @@ jpr:
             goto ext_1;
         }
 
-        from_user ();
+        from_user();
 
         if (!opencapcount) {
-            reflexes ();
+            reflexes();
         }
 
         if (!(clock() % 10)) {
-            clear_onboard_screen ();
-            control (0, "flight control drive");
-            control (1, "onboard devices");
-            control (2, "preferences");
-            control (3, "disable display");
+            clear_onboard_screen();
+            control(0, "flight control drive");
+            control(1, "onboard devices");
+            control(2, "preferences");
+            control(3, "disable display");
 
             switch (sys) {
             case 1:
-                control (0, "FLIGHT CONTROL DRIVE");
+                control(0, "FLIGHT CONTROL DRIVE");
 
                 if (sys != psys) {
-                    status ("FCS MENU", 50);
+                    status("FCS MENU", 50);
                 }
 
-                fcs ();
+                fcs();
                 break;
 
             case 2:
-                control (1, "ONBOARD DEVICES");
+                control(1, "ONBOARD DEVICES");
 
                 if (sys != psys) {
-                    status ("SELECT SUB", 50);
+                    status("SELECT SUB", 50);
                 }
 
-                devices ();
+                devices();
                 break;
 
             case 3:
-                control (2, "PREFERENCES");
+                control(2, "PREFERENCES");
 
                 if (sys != psys) {
-                    status ("PREFS MENU", 50);
+                    status("PREFS MENU", 50);
                 }
 
-                prefs ();
+                prefs();
                 break;
 
             case 4:
-                control (3, "DISABLE DISPLAY");
+                control(3, "DISABLE DISPLAY");
 
                 if (sys != psys) {
-                    status ("SCREEN OFF", 50);
+                    status("SCREEN OFF", 50);
                 }
             }
 
@@ -3304,7 +3272,7 @@ jpr:
 
         //
         if (!ap_targetting && !ip_targetting) {
-            setfx (4);
+            setfx(4);
             dxx = pos_z / 88;
 
             if (dxx < -16) {
@@ -3312,30 +3280,30 @@ jpr:
             }
 
             entity = dxx;
-            screen ();
-            setfx (0);
+            screen();
+            setfx(0);
         }
 
         //
         if (leftturn) {
             arrowcolor = 127 - 16 * (clock() % 4);
-            digit_at ('-', -2900, -50, 12, arrowcolor, 0);
+            digit_at('-', -2900, -50, 12, arrowcolor, 0);
 
             if (revcontrols) {
-                digit_at ('>', -3000, -50, 12, arrowcolor, 0);
+                digit_at('>', -3000, -50, 12, arrowcolor, 0);
             } else {
-                digit_at ('<', -3000, -50, 12, arrowcolor, 0);
+                digit_at('<', -3000, -50, 12, arrowcolor, 0);
             }
         }
 
         if (rightturn) {
             arrowcolor = 127 - 16 * (clock() % 4);
-            digit_at ('-', +2900, -50, 12, arrowcolor, 0);
+            digit_at('-', +2900, -50, 12, arrowcolor, 0);
 
             if (revcontrols) {
-                digit_at ('<', +3000, -50, 12, arrowcolor, 0);
+                digit_at('<', +3000, -50, 12, arrowcolor, 0);
             } else {
-                digit_at ('>', +3000, -50, 12, arrowcolor, 0);
+                digit_at('>', +3000, -50, 12, arrowcolor, 0);
             }
         }
 
@@ -3356,49 +3324,49 @@ jpr:
         if (ap_targetting || ap_targetted) {
             alfa = 0;
             beta = 0;
-            change_angle_of_view ();
+            change_angle_of_view();
             cam_x = 450;
             cam_y = 250;
             cam_z = -750;
 
             for (c = 0; c < 24; c++) {
                 if (labstar && c == labstar_char) {
-                    digit_at ('_', -6, -15, 5, 127 - 2 * (clock() % 32), 0);
+                    digit_at('_', -6, -15, 5, 127 - 2 * (clock() % 32), 0);
                 }
 
-                digit_at (star_label[c], -6, -15, 5, 127, 1);
+                digit_at(star_label[c], -6, -15, 5, 127, 1);
                 cam_x -= 40;
             }
 
-            dxx = dzat_x - ap_target_x;
-            dyy = dzat_y - ap_target_y;
-            dzz = dzat_z - ap_target_z;
-            l_dsd = sqrt (dxx * dxx + dyy * dyy + dzz * dzz) * 5E-5;
+            dxx   = dzat_x - ap_target_x;
+            dyy   = dzat_y - ap_target_y;
+            dzz   = dzat_z - ap_target_z;
+            l_dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) * 5E-5;
 
             if (ap_reached && ap_target_id == nearstar_identity) {
                 l_dsd *= 0.01;
             }
 
-            sprintf (temp_distance_buffer, "%01.2f", l_dsd);
+            sprintf(temp_distance_buffer, "%01.2f", l_dsd);
             cam_x = 450;
             cam_y = -180;
             cam_z = -750;
-            c = 0;
+            c     = 0;
 
             while (temp_distance_buffer[c] != 0) {
-                digit_at (temp_distance_buffer[c], -6, -15, 5, 127, 1);
+                digit_at(temp_distance_buffer[c], -6, -15, 5, 127, 1);
                 cam_x -= 40;
                 c++;
             }
 
             cam_x -= 40;
-            digit_at ('L', -6, -15, 5, 112, 1);
+            digit_at('L', -6, -15, 5, 112, 1);
             cam_x -= 40;
-            digit_at ('.', -6, -15, 5, 112, 1);
+            digit_at('.', -6, -15, 5, 112, 1);
             cam_x -= 40;
-            digit_at ('Y', -6, -15, 5, 112, 1);
+            digit_at('Y', -6, -15, 5, 112, 1);
             cam_x -= 40;
-            digit_at ('.', -6, -15, 5, 112, 1);
+            digit_at('.', -6, -15, 5, 112, 1);
         }
 
         //
@@ -3407,50 +3375,50 @@ jpr:
         // aggiornamento nome del pianeta-bersaglio.
         //
         if (ip_targetted != -1) {
-            update_planet_label ();
+            update_planet_label();
             alfa = 0;
             beta = 0;
-            change_angle_of_view ();
+            change_angle_of_view();
             cam_x = 450;
             cam_y = 180;
             cam_z = -750;
 
             for (c = 0; c < 24; c++) {
                 if (labplanet && c == labplanet_char) {
-                    digit_at ('_', -6, -15, 5, 127 - 2 * (clock() % 32), 0);
+                    digit_at('_', -6, -15, 5, 127 - 2 * (clock() % 32), 0);
                 }
 
-                digit_at (planet_label[c], -6, -15, 5, 112, 1);
+                digit_at(planet_label[c], -6, -15, 5, 112, 1);
                 cam_x -= 40;
             }
 
-            planet_xyz (ip_targetted);
-            dxx = dzat_x - plx;
-            dyy = dzat_y - ply;
-            dzz = dzat_z - plz;
-            l_dsd = sqrt (dxx * dxx + dyy * dyy + dzz * dzz) * 1E-2;
-            sprintf (temp_distance_buffer, "%01.2f", l_dsd);
+            planet_xyz(ip_targetted);
+            dxx   = dzat_x - plx;
+            dyy   = dzat_y - ply;
+            dzz   = dzat_z - plz;
+            l_dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) * 1E-2;
+            sprintf(temp_distance_buffer, "%01.2f", l_dsd);
             cam_x = 450;
             cam_y = -250;
             cam_z = -750;
-            c = 0;
+            c     = 0;
 
             while (temp_distance_buffer[c] != 0) {
-                digit_at (temp_distance_buffer[c], -6, -15, 5, 120, 1);
+                digit_at(temp_distance_buffer[c], -6, -15, 5, 120, 1);
                 cam_x -= 40;
                 c++;
             }
 
             cam_x -= 40;
-            digit_at ('D', -6, -15, 5, 105, 1);
+            digit_at('D', -6, -15, 5, 105, 1);
             cam_x -= 40;
-            digit_at ('Y', -6, -15, 5, 105, 1);
+            digit_at('Y', -6, -15, 5, 105, 1);
             cam_x -= 40;
-            digit_at ('A', -6, -15, 5, 105, 1);
+            digit_at('A', -6, -15, 5, 105, 1);
             cam_x -= 40;
-            digit_at ('M', -6, -15, 5, 105, 1);
+            digit_at('M', -6, -15, 5, 105, 1);
             cam_x -= 40;
-            digit_at ('S', -6, -15, 5, 105, 1);
+            digit_at('S', -6, -15, 5, 105, 1);
         }
 
         //
@@ -3459,33 +3427,33 @@ jpr:
         if (reset_signal && (reset_signal % 10) < 5) {
             alfa = 0;
             beta = 0;
-            change_angle_of_view ();
+            change_angle_of_view();
             cam_x = 300;
             cam_y = 0;
             cam_z = -750;
-            c = 0;
+            c     = 0;
 
             while (sr_message[c] != 0) {
-                digit_at (sr_message[c], -6, -15, 8, 127, 1);
+                digit_at(sr_message[c], -6, -15, 8, 127, 1);
                 cam_x -= 60;
                 c++;
             }
         }
 
         //
-        // Tracciamento dello stato attuale dell'FCS.
+        // Tracing the current FCS status.
         //
-nohud_1:
+    nohud_1:
         alfa = 0;
         beta = 0;
-        change_angle_of_view ();
+        change_angle_of_view();
         cam_x = -512;
         cam_y = -275;
         cam_z = -750;
-        c = strlen(fcs_status) - 1;
+        c     = strlen(fcs_status) - 1;
 
         while (c >= 0) {
-            digit_at (fcs_status[c], -6, -15, 6, 120, 1);
+            digit_at(fcs_status[c], -6, -15, 6, 120, 1);
             cam_x += 45;
             c--;
         }
@@ -3494,41 +3462,38 @@ nohud_1:
         // Link alla funzione di ricerca dei targets in real-time.
         //
         if (collecting_targets) {
-            status ("SCANNING..", 100);
-            collect_targets ();
+            status("SCANNING..", 100);
+            collect_targets();
 
             if (!collecting_targets) {
                 if (targets) {
-                    status ("DONE!", 100);
+                    status("DONE!", 100);
                 } else {
-                    status ("NO TARGETS", 100);
+                    status("NO TARGETS", 100);
                 }
             }
         }
 
         //
-        // Visualizzazione/aggiornamento tabella "targets in range".
+        // Display / update table "targets in range".
         //
         if (targets_in_range) {
             if (update_targets) {
                 tgts_in_show = 0;
-                c = topmost_target;
+                c            = topmost_target;
 
                 while (targets && c < targets && tgts_in_show < 3) {
-                    tgt_label_pos = search_id_code (targets_table_id[c], 'S');
+                    tgt_label_pos = search_id_code(targets_table_id[c], 'S');
 
                     if (tgt_label_pos > -1) {
-                        #if 0
-                        smh = _rtl_open (starmap_file, 0);
+                        smh = open(starmap_file, 0);
 
                         if (smh > -1) {
-                            lseek (smh, tgt_label_pos + 8, SEEK_SET);
-                            _rtl_read (smh, &target_name[tgts_in_show], 24);
-                            _rtl_close (smh);
+                            lseek(smh, tgt_label_pos + 8, SEEK_SET);
+                            read(smh, &target_name[tgts_in_show], 24);
+                            close(smh);
                             tgts_in_show++;
                         }
-                        #endif
-                        STUB
                     }
 
                     c++;
@@ -3540,19 +3505,19 @@ nohud_1:
             cam_x = 175;
             cam_y = 40;
             cam_z = -500;
-            frame (225, 48, 285, 96, 2, 90);
+            frame(225, 48, 285, 96, 2, 90);
             cam_y = 8 + 40;
-            c = 0;
+            c     = 0;
 
             while (c < tgts_in_show) {
                 cam_x = 35 + 175;
 
                 if (c == target_line) {
-                    frame (226 + 35, 0, 277, 30, 1, 120);
+                    frame(226 + 35, 0, 277, 30, 1, 120);
                 }
 
                 for (ir = 0; ir < 24; ir++) {
-                    digit_at (target_name[c][ir], -5, -10, 3.5, 174, 1);
+                    digit_at(target_name[c][ir], -5, -10, 3.5, 174, 1);
                     cam_x -= 23;
                 }
 
@@ -3561,7 +3526,7 @@ nohud_1:
             }
         }
 
-ext_1:   //
+    ext_1: //
         // Anti-aliasing e dithering (error-diffusion).
         // E` un procedimento molto peculiare, che fornisce effetti
         // straordinariamente belli su uno schermo che, di per s�,
@@ -3574,8 +3539,8 @@ ext_1:   //
         //
         // Tracciamento di tutte le stelle visibili.
         //
-        from_vehicle ();
-        sky (0x405C);
+        from_vehicle();
+        sky(0x405C);
 
         //
         // ***** H.U.D. INNER LAYER *****
@@ -3583,8 +3548,8 @@ ext_1:   //
         // Qualsiasi glifo non verr� trattato con dithering.
         //
         if (datasheetscroll) {
-            areaclear (adapted, 11, 85, 0, 0, 1 + datasheetscroll, 9, 72);
-            areaclear (adapted, 11, 95, 0, 0, 1 + datasheetscroll, 40, 112);
+            areaclear(adapted, 11, 85, 0, 0, 1 + datasheetscroll, 9, 72);
+            areaclear(adapted, 11, 95, 0, 0, 1 + datasheetscroll, 40, 112);
             c = (datasheetscroll / 4) - 1;
 
             if (c > 0) {
@@ -3592,12 +3557,13 @@ ext_1:   //
                 case 1: // remote target data
                     if (ap_targetted) {
                         if (ap_targetted == 1) {
-                            wrouthud (14, 87, c, (char*) star_label);
-                            tmp_float = 1e-3 * qt_M_PI * ap_target_ray * ap_target_ray * ap_target_ray;
+                            wrouthud(14, 87, c, (char *)star_label);
+                            tmp_float = 1e-3 * qt_M_PI * ap_target_ray *
+                                        ap_target_ray * ap_target_ray;
                             tmp_float *= starmass_correction[ap_target_class];
 
                             if (nearstar_class == 8 || nearstar_class == 9) {
-                                fast_srand ((long)ap_target_x % 32000);
+                                fast_srand((long)ap_target_x % 32000);
 
                                 switch (fast_random(5)) {
                                 case 0:
@@ -3621,37 +3587,40 @@ ext_1:   //
                                 }
                             }
 
-                            wrouthud (14, 97, c, "PRIMARY MASS:");
-                            sprintf ((char*) outhudbuffer, "%1.8f BAL. M.", tmp_float);
-                            wrouthud (14, 103, c, (char*) outhudbuffer);
+                            wrouthud(14, 97, c, (char*) "PRIMARY MASS:");
+                            sprintf((char *)outhudbuffer, "%1.8f BAL. M.",
+                                    tmp_float);
+                            wrouthud(14, 103, c, (char *)outhudbuffer);
                             tmp_float /= 0.38e-4 * ap_target_ray;
 
                             if (ap_target_class == 6) {
                                 tmp_float *= 0.0022;
                             }
 
-                            wrouthud (14, 113, c, "SURFACE TEMPERATURE:");
-                            sprintf ((char*) outhudbuffer, "%1.0f@K&%1.0f@C&%1.0f@F", tmp_float + 273.15, tmp_float,
-                                     tmp_float * 1.8 + 32);
-                            wrouthud (14, 119, c, (char*) outhudbuffer);
-                            sprintf ((char*) outhudbuffer, "MAJOR BODIES: %d EST.", starnop (ap_target_x,
-                                     ap_target_y, ap_target_z));
-                            wrouthud (14, 129, c, (char*) outhudbuffer);
+                            wrouthud(14, 113, c, (char*) "SURFACE TEMPERATURE:");
+                            sprintf((char *)outhudbuffer, "%1.0f@K&%1.0f@C&%1.0f@F",
+                                    tmp_float + 273.15, tmp_float,
+                                    tmp_float * 1.8 + 32);
+                            wrouthud(14, 119, c, (char *)outhudbuffer);
+                            sprintf((char *)outhudbuffer, "MAJOR BODIES: %d EST.",
+                                    starnop(ap_target_x, ap_target_y, ap_target_z));
+                            wrouthud(14, 129, c, (char *)outhudbuffer);
                         } else {
-                            wrouthud (14, 87, c, "DIRECT PARSIS TARGET");
+                            wrouthud(14, 87, c, (char*) "DIRECT PARSIS TARGET");
                         }
                     } else {
-                        wrouthud (14, 87, c, "REMOTE TARGET NOT SET");
+                        wrouthud(14, 87, c, (char*) "REMOTE TARGET NOT SET");
                     }
 
                     break;
 
                 case 2: // local target data
                     if (ip_targetted != -1) {
-                        wrouthud (14, 87, c, (char*) planet_label);
-                        wrouthud (14, 97, c, "PERIOD OF ROTATION:");
+                        wrouthud(14, 87, c, (char *)planet_label);
+                        wrouthud(14, 97, c, (char*) "PERIOD OF ROTATION:");
 
-                        if (nearstar_p_qsortindex[nearstar_nob - 1] == ip_targetted) {
+                        if (nearstar_p_qsortindex[nearstar_nob - 1] ==
+                            ip_targetted) {
                             if (nearstar_p_rtperiod[ip_targetted] > 0) {
                                 p1 = nearstar_p_rtperiod[ip_targetted];
                                 p1 *= 360;
@@ -3660,52 +3629,56 @@ ext_1:   //
                                 p3 = p1 / 1000;
                                 p3 %= 1000;
                                 p4 = p1 % 1000;
-                                sprintf ((char*) outhudbuffer, "TRIADS %03ld:%03ld:%03ld", p2, p3, p4);
-                                wrouthud (14, 103, c, (char*) outhudbuffer);
+                                sprintf((char *)outhudbuffer,
+                                        "TRIADS %03ld:%03ld:%03ld", p2, p3, p4);
+                                wrouthud(14, 103, c, (char *)outhudbuffer);
                             } else {
                                 if (ip_reaching || ip_reached) {
                                     if (nearstar_p_type[ip_targetted] != 10) {
-                                        wrouthud (14, 103, c, "COMPUTING...");
+                                        wrouthud(14, 103, c, (char*) "COMPUTING...");
                                     } else {
-                                        wrouthud (14, 103, c, "NOT RESOLVABLE");
+                                        wrouthud(14, 103, c, (char*) "NOT RESOLVABLE");
                                     }
                                 } else {
-                                    wrouthud (14, 103, c, "TOO FAR TO ESTIMATE");
+                                    wrouthud(14, 103, c, (char*) "TOO FAR TO ESTIMATE");
                                 }
                             }
                         } else {
-                            wrouthud (14, 103, c, "TOO FAR TO ESTIMATE");
+                            wrouthud(14, 103, c, (char*) "TOO FAR TO ESTIMATE");
                         }
 
-                        wrouthud (14, 113, c, "PERIOD OF REVOLUTION:");
+                        wrouthud(14, 113, c, (char*) "PERIOD OF REVOLUTION:");
                         tmp_float = rtp(ip_targetted);
-                        p1 = tmp_float * 1e-9;
-                        p2 = tmp_float * 1e-6;
+                        p1        = tmp_float * 1e-9;
+                        p2        = tmp_float * 1e-6;
                         p2 %= 1000;
                         p3 = tmp_float * 1e-3;
                         p3 %= 1000;
                         p4 = (long)(tmp_float) % 1000;
 
                         if (p1 < 2) {
-                            sprintf ((char*) outhudbuffer, "%ld EPOCS, %03ld:%03ld:%03ld", p1, p2, p3, p4);
+                            sprintf((char *)outhudbuffer,
+                                    "%ld EPOCS, %03ld:%03ld:%03ld", p1, p2, p3, p4);
                         } else {
                             if (p1 < 2047) {
-                                sprintf ((char*) outhudbuffer, "%ld EPOCS, %03ld:%03ld:???", p1, p2, p3);
+                                sprintf((char *)outhudbuffer,
+                                        "%ld EPOCS, %03ld:%03ld:???", p1, p2, p3);
                             } else {
-                                sprintf ((char*) outhudbuffer, "%ld EPOCS, %03ld:???:???", p1, p2);
+                                sprintf((char *)outhudbuffer,
+                                        "%ld EPOCS, %03ld:???:???", p1, p2);
                             }
                         }
 
-                        wrouthud (14, 119, c, (char*) outhudbuffer);
+                        wrouthud(14, 119, c, (char *)outhudbuffer);
                     } else {
-                        wrouthud (14, 87, 21, "LOCAL TARGET NOT SET");
+                        wrouthud(14, 87, 21, "LOCAL TARGET NOT SET");
                     }
 
                     break;
 
                 case 3: // environment data
-                    wrouthud (14, 87, c, "EXTERNAL ENVIRONMENT");
-                    fast_srand (secs / 2);
+                    wrouthud(14, 87, c, "EXTERNAL ENVIRONMENT");
+                    fast_srand(secs / 2);
                     tmp_float = 16 - dsd * 0.044;
                     tmp_float *= fabs(tmp_float);
                     tmp_float -= (tmp_float + 273.15) * eclipse;
@@ -3714,47 +3687,43 @@ ext_1:   //
                         tmp_float = fast_flandom() - 269;
                     }
 
-                    sprintf ((char*) outhudbuffer, "TEMP. %1.2f@K", tmp_float + 273.15);
-                    wrouthud (14, 97, c, (char*) outhudbuffer);
-                    sprintf ((char*) outhudbuffer, "      %1.2f@C", tmp_float);
-                    wrouthud (14, 103, c, (char*) outhudbuffer);
-                    sprintf ((char*) outhudbuffer, "      %1.2f@F", tmp_float * 1.8 + 32);
-                    wrouthud (14, 109, c, (char*) outhudbuffer);
-                    srand (nearstar_identity);
+                    sprintf((char *)outhudbuffer, "TEMP. %1.2f@K",
+                            tmp_float + 273.15);
+                    wrouthud(14, 97, c, (char *)outhudbuffer);
+                    sprintf((char *)outhudbuffer, "      %1.2f@C", tmp_float);
+                    wrouthud(14, 103, c, (char *)outhudbuffer);
+                    sprintf((char *)outhudbuffer, "      %1.2f@F",
+                            tmp_float * 1.8 + 32);
+                    wrouthud(14, 109, c, (char *)outhudbuffer);
+                    srand(nearstar_identity);
 
                     if (nearstar_class == 6 || nearstar_class == 5) {
-                        #if 0
-                        ir = random (50);
-                        #endif
-                        STUB
+                        ir = rand() % 50;
                         if (nearstar_class == 5) {
                             ir -= 125 / dsd;
 
                             if (ir <= 0) {
                                 ir = 1;
                             }
-                        } else {
+                        }
+                        else {
                             ir -= 25 / dsd;
                         }
                     } else {
                         ir = 0;
                     }
 
-                    sprintf ((char*) outhudbuffer, "LI+ IONS: %ld MTPD EST.", ir);
-                    wrouthud (14, 119, c, (char*) outhudbuffer);
-                    #if 0
-                    tmp_float = 50 + random (10) - random (10);
-                    #endif
-                    STUB
+                    sprintf((char *)outhudbuffer, "LI+ IONS: %ld MTPD EST.", ir);
+                    wrouthud(14, 119, c, (char *)outhudbuffer);
+
+                    tmp_float = 50 + (rand() % 10) - (rand() % 10);
+
                     tmp_float *= (1 - eclipse);
                     tmp_float *= 100 / dsd;
 
                     if (nearstar_class == 11) {
                         if (gl_start < 90) {
-                            #if 0
-                            tmp_float *= 75 + random (50);
-                            #endif
-                            STUB
+                            tmp_float *= 75 + rand() % 50;
                         } else {
                             tmp_float *= 50;
                         }
@@ -3800,22 +3769,19 @@ ext_1:   //
                         tmp_float *= 5;
                     }
 
-                    srand (secs);
-                    #if 0
+                    srand(secs);
                     tmp_float *= 1
-                                 + (float)(random(100)) * 0.001
-                                 - (float)(random(100)) * 0.001;
-                    #endif
-                    STUB
-                    sprintf ((char*) outhudbuffer, "RADIATION: %1.1f KR", tmp_float);
-                    wrouthud (14, 126, c, (char*) outhudbuffer);
+                                 + (float)(rand() % 100) * 0.001
+                                 - (float)(rand() % 100) * 0.001;
+                    sprintf((char *)outhudbuffer, "RADIATION: %1.1f KR",
+                                 tmp_float);
+                    wrouthud(14, 126, c, (char *)outhudbuffer);
                     break;
                 }
             }
         }
 
-        datasheetscroll +=
-            datasheetdelta;
+        datasheetscroll += datasheetdelta;
 
         if (datasheetscroll > 100) {
             datasheetscroll = 100;
@@ -3823,19 +3789,19 @@ ext_1:   //
 
         if (datasheetscroll < 0) {
             datasheetscroll = 0;
-            data = 0;
+            data            = 0;
         }
 
         // Draw planetary targeting cross.
         if ((ip_targetted != -1 && !ip_reached) || ip_targetting) {
-            planet_xyz (ip_targetted);
+            planet_xyz(ip_targetted);
 
-            if (far_pixel_at (plx, ply, plz, 0, 1)) {
+            if (far_pixel_at(plx, ply, plz, 0, 1)) {
                 uint16_t index = vptr - 640;
 
                 for (int16_t i = 0; i < 4; i++) {
                     int16_t voffset = (i > 1) ? 320 : 1;
-                    int16_t signmod = (i % 2 == 0) ?  -1 : 1;
+                    int16_t signmod = (i % 2 == 0) ? -1 : 1;
 
                     for (int16_t j = 4; j < 8; j++) {
                         adapted[index + signmod * voffset * j] = 126;
@@ -3849,19 +3815,17 @@ ext_1:   //
         // aggiornamento nome della stella-bersaglio,
         // spostamenti interstellari suplucsi.
         //
-        dxx = dzat_x - ap_target_x;
-        dyy = dzat_y - ap_target_y;
-        dzz = dzat_z - ap_target_z;
-        l_dsd = sqrt (dxx * dxx + dyy * dyy + dzz * dzz);
+        dxx   = dzat_x - ap_target_x;
+        dyy   = dzat_y - ap_target_y;
+        dzz   = dzat_z - ap_target_z;
+        l_dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz);
 
         if (ap_targetting || l_dsd > 10000) {
-            pointer_cross_for (ap_target_x,
-                               ap_target_y,
-                               ap_target_z);
+            pointer_cross_for(ap_target_x, ap_target_y, ap_target_z);
         }
 
         if (ap_targetting || ap_targetted) {
-            update_star_label ();
+            update_star_label();
 
             if (stspeed == 1) {
                 if (ap_targetted == -1) {
@@ -3874,56 +3838,55 @@ ext_1:   //
                     }
 
                     if (l_dsd < 20000 && nsnp) {
-                        prepare_nearstar ();
+                        prepare_nearstar();
                         nsnp = 0;
                     }
                 }
 
                 if (l_dsd < ras) {
-                    status ("CALIBRATED", 50);
+                    status("CALIBRATED", 50);
                     ap_reached = 1;
-                    stspeed = 0;
+                    stspeed    = 0;
                 } else {
                     if (l_dsd > 0.9999 * ap_target_initial_d) {
-                        requested_vimana_coefficient =   0.001 * l_dsd;
-                        status ("CHARGING", 0);
+                        requested_vimana_coefficient = 0.001 * l_dsd;
+                        status("CHARGING", 0);
                         vimana_reaction_time = 0.1;
                         goto ap_drive_mode;
                     }
 
                     if (l_dsd < 7500 + ras) {
-                        requested_vimana_coefficient =   0.005 * l_dsd;
-                        status ("PARKING", 0);
+                        requested_vimana_coefficient = 0.005 * l_dsd;
+                        status("PARKING", 0);
                         vimana_reaction_time = 0.01;
                         goto ap_drive_mode;
                     }
 
                     if (l_dsd < 15000 + ras) {
-                        requested_vimana_coefficient =   0.005 * l_dsd;
-                        status ("LINKING", 0);
+                        requested_vimana_coefficient = 0.005 * l_dsd;
+                        status("LINKING", 0);
                         vimana_reaction_time = 0.0025;
                         goto ap_drive_mode;
                     }
 
                     if (l_dsd < 0.9990 * ap_target_initial_d) {
                         requested_vimana_coefficient = 0.00001 * l_dsd;
-                        status ("DRIVING", 0);
+                        status("DRIVING", 0);
                         vimana_reaction_time = 0.05;
                         goto ap_drive_mode;
                     }
 
                     requested_vimana_coefficient = 0.0002 * l_dsd;
-                    status ("IGNITION", 0);
+                    status("IGNITION", 0);
 
                     if (vimana_reaction_time != 0.08) {
                         vimana_reaction_time = 0.08;
                     }
 
-ap_drive_mode:
-                    current_vimana_coefficient +=
-                        (requested_vimana_coefficient -
-                         current_vimana_coefficient)
-                        * vimana_reaction_time;
+                ap_drive_mode:
+                    current_vimana_coefficient += (requested_vimana_coefficient -
+                                                   current_vimana_coefficient) *
+                                                  vimana_reaction_time;
 
                     if (current_vimana_coefficient < 10) {
                         current_vimana_coefficient = 10;
@@ -3932,7 +3895,7 @@ ap_drive_mode:
                     dzat_x -= dxx / current_vimana_coefficient;
                     dzat_y -= dyy / current_vimana_coefficient;
                     dzat_z -= dzz / current_vimana_coefficient;
-                    pwr    -= l_dsd * 1E-5;
+                    pwr -= l_dsd * 1E-5;
                 }
             }
         }
@@ -3941,24 +3904,24 @@ ap_drive_mode:
         // Sincronizzazione della navicella con i moti planetari,
         // spostamenti interplanetari suplucsi.
         //
-resynctoplanet:
+    resynctoplanet:
 
         if (ip_targetted != -1 && pwr > 15000) {
-            planet_xyz (ip_targetted);
+            planet_xyz(ip_targetted);
             dxx = dzat_x - plx;
             dyy = dzat_y - ply;
             dzz = dzat_z - plz;
 
             if (ip_reached && nsync) {
-                status ("TRACKING", 0);
+                status("TRACKING", 0);
 
                 if (nsync == 1) { // fixed-point chase
-                    ang = (double)deg * (double)navigation_beta;
+                    ang    = (double)deg * (double)navigation_beta;
                     hold_z = 1.8;
                 }
 
                 if (nsync == 2) { // far chase
-                    ang = (double)deg * (double)navigation_beta;
+                    ang    = (double)deg * (double)navigation_beta;
                     hold_z = 5.4;
                 }
 
@@ -3968,17 +3931,17 @@ resynctoplanet:
                 }
 
                 if (nsync == 4) { // vimana orbit
-                    ang = 7 * secs * (double)deg;
+                    ang    = 7 * secs * (double)deg;
                     hold_z = 3.6;
                 }
 
                 if (nsync == 5) { // near chase
-                    ang = (double)deg * (double)navigation_beta;
+                    ang    = (double)deg * (double)navigation_beta;
                     hold_z = 1.2;
                 }
 
-                dxx += hold_z * nearstar_p_ray[ip_targetted] * sin (ang);
-                dzz -= hold_z * nearstar_p_ray[ip_targetted] * cos (ang);
+                dxx += hold_z * nearstar_p_ray[ip_targetted] * sin(ang);
+                dzz -= hold_z * nearstar_p_ray[ip_targetted] * cos(ang);
 
                 if (_delay < 5) {
                     dzat_x -= dxx * 0.05;
@@ -3992,44 +3955,43 @@ resynctoplanet:
             }
 
             if (ip_reaching) {
-                l_dsd = sqrt (dxx * dxx + dyy * dyy + dzz * dzz);
+                l_dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz);
 
                 if (l_dsd > 0.99999 * ip_target_initial_d) {
-                    requested_approach_coefficient =  25 * l_dsd;
-                    status ("WARMING UP", 0);
+                    requested_approach_coefficient = 25 * l_dsd;
+                    status("WARMING UP", 0);
                     reaction_time = 0.001;
                     goto ip_drive_mode;
                 }
 
                 if (l_dsd < 25 && ip_target_initial_d > 500) {
-                    requested_approach_coefficient =  50 * l_dsd;
-                    status ("REFINING", 0);
+                    requested_approach_coefficient = 50 * l_dsd;
+                    status("REFINING", 0);
                     reaction_time = 0.0002;
                     goto ip_drive_mode;
                 }
 
                 if (l_dsd < 100 && ip_target_initial_d > 500) {
-                    requested_approach_coefficient =  15 * l_dsd;
-                    status ("BREAKING", 0);
+                    requested_approach_coefficient = 15 * l_dsd;
+                    status("BREAKING", 0);
                     reaction_time = 0.0003;
                     goto ip_drive_mode;
                 }
 
                 if (l_dsd < 0.99500 * ip_target_initial_d) {
                     requested_approach_coefficient = 0.05 * l_dsd;
-                    status ("APPROACH", 0);
+                    status("APPROACH", 0);
                     reaction_time = 0.025;
                     goto ip_drive_mode;
                 }
 
                 requested_approach_coefficient = 1.5 * l_dsd;
-                status ("IGNITION", 0);
+                status("IGNITION", 0);
                 reaction_time = 0.05;
-ip_drive_mode:
-                current_approach_coefficient +=
-                    (requested_approach_coefficient -
-                     current_approach_coefficient)
-                    * reaction_time;
+            ip_drive_mode:
+                current_approach_coefficient += (requested_approach_coefficient -
+                                                 current_approach_coefficient) *
+                                                reaction_time;
 
                 if (current_approach_coefficient < 10) {
                     current_approach_coefficient = 10;
@@ -4038,12 +4000,12 @@ ip_drive_mode:
                 dzat_x -= dxx / current_approach_coefficient;
                 dzat_z -= dzz / current_approach_coefficient;
                 dzat_y -= dyy / (0.5 * current_approach_coefficient);
-                pwr    -= l_dsd * 0.5E-5;
+                pwr -= l_dsd * 0.5E-5;
 
                 if (l_dsd < 2 * nearstar_p_ray[ip_targetted]) {
-                    status ("STANDBY", 0);
+                    status("STANDBY", 0);
                     ip_reaching = 0;
-                    ip_reached = 1;
+                    ip_reached  = 1;
                 }
             }
         }
@@ -4052,7 +4014,7 @@ ip_drive_mode:
         // Gestione del consumo di litio.
         // Consumi supplementari, gestione ricariche.
         //
-        additional_consumes ();
+        additional_consumes();
         //
         // Calcolo della distanza dalla stella pi� vicina,
         // per il controllo su radiazioni, eclissi, temperatura.
@@ -4060,13 +4022,13 @@ ip_drive_mode:
         dxx = dzat_x - nearstar_x;
         dyy = dzat_y - nearstar_y;
         dzz = dzat_z - nearstar_z;
-        dsd = sqrt (dxx * dxx + dyy * dyy + dzz * dzz) + 1;
+        dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
 
         //
         // Allontanamento d'emergenza della navicella dalla stella.
         //
-        if (dsd < (0.44 + (double)(2 * anti_rad))*nearstar_ray) {
-            status ("CORRECTION", 100);
+        if (dsd < (0.44 + (double)(2 * anti_rad)) * nearstar_ray) {
+            status("CORRECTION", 100);
             dzat_x += (dxx / dsd) * 0.1;
             dzat_y += (dyy / dsd) * 0.1;
             dzat_z += (dzz / dsd) * 0.1;
@@ -4080,25 +4042,23 @@ ip_drive_mode:
         // sempre adatte, ma con scarsi risultati.
         //
         if (lithium_collector) {
-            srand (nearstar_identity);
-            #if 0
-            ir = random (50);
-            #endif
-            STUB
+            srand(nearstar_identity);
+            ir = rand() % 50;
 
-            if (nearstar_class == 5) {
+                if (nearstar_class == 5) {
                 ir -= 125 / dsd;
 
                 if (ir <= 0) {
                     ir = 1;
                 }
-            } else {
+            }
+            else {
                 ir -= 25 / dsd;
             }
 
             if (ir > 0) {
                 if (pwr >= 20000 && charge >= 120) {
-                    status ("! FULL !", 100);
+                    status("! FULL !", 100);
                     lithium_collector = 0;
                 } else {
                     pwr += ir;
@@ -4112,10 +4072,10 @@ ip_drive_mode:
                         }
                     }
 
-                    status ("SCOPING...", 25);
+                    status("SCOPING...", 25);
                 }
             } else {
-                status ("GET CLOSER", 100);
+                status("GET CLOSER", 100);
 
                 if (!reset_signal) {
                     lithium_collector = 0;
@@ -4126,9 +4086,8 @@ ip_drive_mode:
         //
         // Controllo eclissi.
         //
-        stz = dzz * cos (deg * navigation_beta)
-              - dxx * sin (deg * navigation_beta)
-              - fabs (dyy) / 2;
+        stz = dzz * cos(deg * navigation_beta) - dxx * sin(deg * navigation_beta) -
+              fabs(dyy) / 2;
 
         if (stz > dsd) {
             stz = dsd;
@@ -4153,20 +4112,20 @@ ip_drive_mode:
 
         for (c = 0; c < nearstar_nob; c++) {
             if (nearstar_p_type[c] != -1) {
-                planet_xyz (c);
+                planet_xyz(c);
                 dxx = dzat_x - plx;
                 dyy = dzat_y - ply;
                 dzz = dzat_z - plz;
-                dpz = sqrt (dxx * dxx + dyy * dyy + dzz * dzz) + 0.001;
+                dpz = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 0.001;
 
                 if (dpz < 10 * nearstar_p_ray[c]) {
-                    watch (dzat_x, dzat_y, dzat_z,
-                           nearstar_x, nearstar_y, nearstar_z);
-                    change_angle_of_view ();
+                    watch(dzat_x, dzat_y, dzat_z, nearstar_x, nearstar_y,
+                          nearstar_z);
+                    change_angle_of_view();
 
-                    if (xy (dzat_x, dzat_y, dzat_z, plx, ply, plz)) {
-                        dasp = sqrt (delta_x * delta_x + delta_y * delta_y);
-                        rap = (105 * nearstar_p_ray[c]) / dpz;
+                    if (xy(dzat_x, dzat_y, dzat_z, plx, ply, plz)) {
+                        dasp = sqrt(delta_x * delta_x + delta_y * delta_y);
+                        rap  = (105 * nearstar_p_ray[c]) / dpz;
 
                         if (rap > 66) {
                             rap = 66;
@@ -4193,7 +4152,7 @@ ip_drive_mode:
         // Also lower the internal temperature by a little, but not
         // too much because it is contrasted by air conditioning.
         //
-        fast_srand (secs / 2);
+        fast_srand(secs / 2);
         pp_temp = 90 - dsd * 0.33;
         pp_temp -= 44;
         pp_temp *= fabs(pp_temp * 0.44);
@@ -4314,7 +4273,7 @@ ip_drive_mode:
         }
 
         if (ir3 != ir3e || ig3 != ig3e || ib3 != ib3e) {
-            tavola_colori (range8088, 0, 64, ir3, ig3, ib3);
+            tavola_colori(range8088, 0, 64, ir3, ig3, ib3);
             ir3e = ir3;
             ig3e = ig3;
             ib3e = ib3;
@@ -4324,12 +4283,12 @@ ip_drive_mode:
         // Controllo del flag di richiesta di atterraggio.
         //
         if (land_now) {
-            land_now = 0;
-            landing_point = 0;
-            holdtomiddle = 1;
-            opencapdelta = 2;
+            land_now       = 0;
+            landing_point  = 0;
+            holdtomiddle   = 1;
+            opencapdelta   = 2;
             right_dblclick = 0;
-            status ("UNLOCKING", 50);
+            status("UNLOCKING", 50);
         }
 
         //
@@ -4340,7 +4299,7 @@ ip_drive_mode:
 
             if (!gburst) {
                 gburst = 63;
-                status ("SIGNAL", 50);
+                status("SIGNAL", 50);
             }
         }
 
@@ -4359,7 +4318,7 @@ ip_drive_mode:
 
             if (aso_countdown <= 0) {
                 aso_countdown = 100;
-                sys = 4;
+                sys           = 4;
             }
         }
 
@@ -4370,15 +4329,15 @@ ip_drive_mode:
         // disegna i bordi dello scafandro, illuminati in relazione
         // all'ambiente circostante.
         //
-        surrounding (0, 180);
+        surrounding(0, 180);
         // riduzione stanchezza (continua, eventualmente
         // dall'ultima volta che si � scesi in superficie)
         // e variazioni nelle pulsazioni, pi� verosimili...
-        fast_srand (secs / 2);
+        fast_srand(secs / 2);
         tiredness *= 0.9977;
         pp_pulse = (1 + tiredness) * 118;
-        pp_pulse += fast_flandom () * 8;
-        pp_pulse -= fast_flandom () * 8;
+        pp_pulse += fast_flandom() * 8;
+        pp_pulse -= fast_flandom() * 8;
 
         // se si sta per scendere o si � appena risaliti,
         // si deve trattenere il player nel mezzo della navicella,
@@ -4398,8 +4357,9 @@ ip_drive_mode:
             if (opencapcount <= 0) {
                 opencapdelta = 0;
                 holdtomiddle = 0;
-                sprintf (temp_distance_buffer, "LQ %03d:%03d", landing_pt_lon, landing_pt_lat);
-                status (temp_distance_buffer, 100);
+                sprintf(temp_distance_buffer, "LQ %03d:%03d", landing_pt_lon,
+                        landing_pt_lat);
+                status(temp_distance_buffer, 100);
             }
         }
 
@@ -4411,7 +4371,7 @@ ip_drive_mode:
 
             if (opencapcount >= 85) {
                 entryflag = 0;
-                planetary_main ();
+                planetary_main();
 
                 if (exitflag) {
                     goto allstop;
@@ -4419,9 +4379,9 @@ ip_drive_mode:
 
                 opencapdelta = -2;
                 holdtomiddle = 1;
-                pp_gravity = 1;
-                resolve = 0;
-                _delay = 13; // solo al ritorno da superficie
+                pp_gravity   = 1;
+                resolve      = 0;
+                _delay       = 13; // solo al ritorno da superficie
                 goto resynctoplanet;
             }
         }
@@ -4434,24 +4394,36 @@ ip_drive_mode:
         }
 
         if (!_delay) {
-            pcopy(adaptor, adapted);
-        } else {
-            pcopy(adapted, adapted);
+            SDL_RenderClear(renderer);
+            auto dest = static_cast<uint32_t *>(surface->pixels);
+            for (int i = 0; i < 64000; i++) {
+                uint8_t color_index = adapted[i];
+                uint32_t color_r    = tmppal[color_index * 3] * 4;
+                uint32_t color_g    = tmppal[color_index * 3 + 1] * 4;
+                uint32_t color_b    = tmppal[color_index * 3 + 2] * 4;
 
-            if (_delay > 0 && _delay < 10) {
-                _delay--;
+                uint32_t color =
+                    (color_r << 24u) + (color_g << 16u) + (color_b << 8u) + 255;
+                dest[i] = color;
             }
+            SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+            SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+            SDL_RenderPresent(renderer);
+            SDL_DestroyTexture(texture);
+        } else if (_delay > 0 && _delay < 10) {
+            _delay--;
         }
 
         QUADWORDS = pqw;
 
         if (resolve == 1) {
             while (resolve <= 63) {
-                tavola_colori ((uint8_t*) return_palette, 0, 256,
-                               resolve, resolve, resolve);
+                tavola_colori((uint8_t *)return_palette, 0, 256, resolve, resolve,
+                              resolve);
                 ir = clock();
 
-                while (ir == clock());
+                while (ir == clock())
+                    ;
 
                 resolve += 4;
             }
@@ -4462,32 +4434,29 @@ ip_drive_mode:
         }
 
         //
-        // Questa sezione controlla i pixels a ciclo continuo
-        // che raffigurano le correnti convettive interne alle stelle,
-        // ma entra in azione solo se la stella � abbastanza vicina,
-        // altrimenti non si vede che un globo bianco: i colori
-        // delle stelle non sono propriamente colori, ma solo tenui
-        // sfumature; in pratica, essendo quasi tutte ben oltre il
-        // livello di saturazione dell'occhio, le stelle appaiono
-        // in genere tutte bianche, a meno che non le si avvicini
-        // davvero moltissimo.
+        // This section controls the pixels in a continuous loop
+        // depicting the convective currents inside the stars,
+        // but goes into action only if the star is close enough,
+        // otherwise you can not see a white globe: The colors
+        // of the stars are not really colors, but only soft
+        // nuances; in practice, being almost all well beyond the
+        // saturation level of the eye, the stars appear generally
+        // all white, unless you approach them really very much.
         //
+
         if (dsd < 1000 * nearstar_ray) {
             ir = nearstar_r;
             ig = nearstar_g;
             ib = nearstar_b;
-            c = nearstar_class;
+            c  = nearstar_class;
 
             if (c == 8) {
-                fast_srand (nearstar_identity);
-                srand (fast_random(0x7FFF));
-                #if 0
-                c = random (star_classes);
-                #endif
-                STUB
+                fast_srand(nearstar_identity);
+                srand(fast_random(0x7FFF));
+                c = rand() % star_classes;
                 ir = class_rgb[c * 3 + 0];
-                ig = class_rgb[c * 3 + 1];
-                ib = class_rgb[c * 3 + 2];
+                ig      = class_rgb[c * 3 + 1];
+                ib      = class_rgb[c * 3 + 2];
             }
 
             switch (c) {
@@ -4546,7 +4515,7 @@ ip_drive_mode:
                 break;
 
             case 9:
-                fast_srand (nearstar_identity);
+                fast_srand(nearstar_identity);
                 ir2 = 32 + fast_random(31);
                 ig2 = 32 + fast_random(31);
                 ib2 = 16 + fast_random(31);
@@ -4594,23 +4563,23 @@ ip_drive_mode:
                 ib2 = satur;
             }
         } else {
-            ir = 48;
-            ig = 56;
-            ib = 64;
+            ir  = 48;
+            ig  = 56;
+            ib  = 64;
             ir2 = 24;
             ig2 = 32;
             ib2 = 40;
         }
 
-        if (ire == ir && ige == ig && ibe == ib &&
-                ir2e == ir2 && ig2e == ig2 && ib2e == ib2) {
+        if (ire == ir && ige == ig && ibe == ib && ir2e == ir2 && ig2e == ig2 &&
+            ib2e == ib2) {
             if (!sky_palette_ok) {
                 sky_palette_ok = 1;
                 goto last_sky_palette_redefinition;
             }
         } else {
             sky_palette_ok = 0;
-last_sky_palette_redefinition:
+        last_sky_palette_redefinition:
 
             if (ire < ir) {
                 ire++;
@@ -4660,22 +4629,22 @@ last_sky_palette_redefinition:
                 ib2e--;
             }
 
-            shade (tmppal, 64 + 00, 24, 0, 0, 0, ir2e, ig2e, ib2e);
-            shade (tmppal, 64 + 24, 16, ir2e, ig2e, ib2e, ire, ige, ibe);
-            shade (tmppal, 64 + 40, 24, ire, ige, ibe, 64, 70, 76);
-            tavola_colori (tmppal + 3 * 64, 64, 64, 63, 63, 63);
+            shade(tmppal, 64 + 00, 24, 0, 0, 0, ir2e, ig2e, ib2e);
+            shade(tmppal, 64 + 24, 16, ir2e, ig2e, ib2e, ire, ige, ibe);
+            shade(tmppal, 64 + 40, 24, ire, ige, ibe, 64, 70, 76);
+            tavola_colori(tmppal + 3 * 64, 64, 64, 63, 63, 63);
         }
 
         if (!farstar) {
             for (ir = 0; ir < 64800; ir++) {
-                ig = (s_background[ir] + 1) % 64;
-                ib = (s_background[ir] >> 6) << 6;
+                ig               = (s_background[ir] + 1) % 64;
+                ib               = (s_background[ir] >> 6) << 6;
                 s_background[ir] = ig + ib;
             }
         }
 
         //
-        sync_stop ();
+        sync_stop();
 
         //
         // Hook per la gestione dei moti delle caratteristiche
@@ -4690,15 +4659,15 @@ last_sky_palette_redefinition:
         }
 
         //
-        // Input da tastiera: snapshot, fine sessione,
-        // selezione bersagli, attribuzione labels etc...
+        // Keyboard input: snapshot, end of session
+        // selection of targets, attribution of labels, etc...
         //
         if (ontheroof) {
             if (tasto_premuto()) {
                 c = attendi_pressione_tasto();
 
                 if (c == '*') {
-                    snapshot (0, 1);
+                    snapshot(0, 1);
                 }
             } else {
                 c = 0;
@@ -4708,13 +4677,13 @@ last_sky_palette_redefinition:
         }
 
         if (goesk_e != -1) {
-            c = goesk_e;
+            c       = goesk_e;
             goesk_e = -1;
             goto goesk_e_reentry;
         }
 
         if (goesk_a != -1) {
-            c = goesk_a;
+            c       = goesk_a;
             goesk_a = -1;
             goto goesk_a_reentry;
         }
@@ -4725,17 +4694,17 @@ last_sky_palette_redefinition:
 
                 if (!c) {
                     c = attendi_pressione_tasto();
-goesk_e_reentry:
+                goesk_e_reentry:
 
                     if (targets_in_range) {
                         if (c == 80) {
                             if (target_line < 2) {
                                 if (topmost_target + target_line < targets - 1) {
-                                    target_line ++;
+                                    target_line++;
                                 }
                             } else {
                                 if (topmost_target < targets - 3) {
-                                    topmost_target ++;
+                                    topmost_target++;
                                     update_targets = 1;
                                 }
                             }
@@ -4743,10 +4712,10 @@ goesk_e_reentry:
 
                         if (c == 72) {
                             if (target_line > 0) {
-                                target_line --;
+                                target_line--;
                             } else {
                                 if (topmost_target > 0) {
-                                    topmost_target --;
+                                    topmost_target--;
                                     update_targets = 1;
                                 }
                             }
@@ -4757,28 +4726,28 @@ goesk_e_reentry:
 
                     if (c == 75) {
                         dlt_nav_beta += 1.5;
-                        status ("PITCH - R", 25);
+                        status("PITCH - R", 25);
                     }
 
                     if (c == 77) {
                         dlt_nav_beta -= 1.5;
-                        status ("PITCH - L", 25);
+                        status("PITCH - L", 25);
                     }
 
                     if (c == 72) {
                         lifter = -100;
                     }
                 } else {
-goesk_a_reentry:
+                goesk_a_reentry:
 
                     if (c == '*') {
-                        snapshot (0, 1);
+                        snapshot(0, 1);
                         goto endmain;
                     }
 
                     if (data) {
                         if (c == 27) {
-                            c = 0;
+                            c              = 0;
                             datasheetdelta = -2;
                             goto endmain;
                         }
@@ -4786,18 +4755,18 @@ goesk_a_reentry:
 
                     if (ap_targetting) {
                         if (c == 27) {
-                            c = 0;
+                            c             = 0;
                             ap_targetting = 0;
-                            ap_targetted = 0;
-                            status ("CANCELLED", 50);
+                            ap_targetted  = 0;
+                            status("CANCELLED", 50);
                             goto endmain;
                         }
                     }
 
                     if (labstar) {
                         if (c == 27) {
-                            c = 0;
-                            labstar = 0;
+                            c                = 0;
+                            labstar          = 0;
                             ap_target_previd = -1;
                             goto endmain;
                         }
@@ -4817,9 +4786,9 @@ goesk_a_reentry:
                         }
 
                         if (c == 13) {
-                            dev_page = 3;
+                            dev_page  = 3;
                             s_command = 1;
-                            dev_commands ();
+                            dev_commands();
                         }
 
                         goto endmain;
@@ -4827,8 +4796,8 @@ goesk_a_reentry:
 
                     if (labplanet) {
                         if (c == 27) {
-                            c = 0;
-                            labplanet = 0;
+                            c              = 0;
+                            labplanet      = 0;
                             prev_planet_id = -1;
                             goto endmain;
                         }
@@ -4848,9 +4817,9 @@ goesk_a_reentry:
                         }
 
                         if (c == 13) {
-                            dev_page = 3;
+                            dev_page  = 3;
                             s_command = 2;
-                            dev_commands ();
+                            dev_commands();
                         }
 
                         goto endmain;
@@ -4858,18 +4827,22 @@ goesk_a_reentry:
 
                     if (targets_in_range) {
                         if (c == 27) {
-                            c = 0;
+                            c                = 0;
                             targets_in_range = 0;
                             goto endmain;
                         }
 
                         if (c == 13) {
-                            if (!collecting_targets && topmost_target + target_line < targets) {
-                                ap_target_x = targets_table_px[topmost_target + target_line];
-                                ap_target_y = targets_table_py[topmost_target + target_line];
-                                ap_target_z = targets_table_pz[topmost_target + target_line];
-                                extract_ap_target_infos ();
-                                fix_remote_target ();
+                            if (!collecting_targets &&
+                                topmost_target + target_line < targets) {
+                                ap_target_x =
+                                    targets_table_px[topmost_target + target_line];
+                                ap_target_y =
+                                    targets_table_py[topmost_target + target_line];
+                                ap_target_z =
+                                    targets_table_pz[topmost_target + target_line];
+                                extract_ap_target_infos();
+                                fix_remote_target();
                             }
 
                             goto endmain;
@@ -4878,20 +4851,21 @@ goesk_a_reentry:
 
                     if (ip_targetting) {
                         if (c == 27) {
-                            c = 0;
-                            ip_targetted = -1;
+                            c             = 0;
+                            ip_targetted  = -1;
                             ip_targetting = 0;
-                            status ("CANCELLED", 50);
+                            status("CANCELLED", 50);
                             goto endmain;
                         }
 
                         if (c == 8 && iptargetchar > 0) {
                             iptargetchar--;
                             iptargetstring[iptargetchar] = 0;
-                            status ((char*) iptargetstring, 100);
+                            status((char *)iptargetstring, 100);
                         }
 
-                        if (((c >= '0' && c <= '9') || c == '/') && iptargetchar < 10) {
+                        if (((c >= '0' && c <= '9') || c == '/') &&
+                            iptargetchar < 10) {
                             if (c == '/') {
                                 if (iptargetchar == 0) {
                                     goto endmain;
@@ -4908,10 +4882,10 @@ goesk_a_reentry:
                                 }
                             }
 
-                            iptargetstring[iptargetchar] = c;
+                            iptargetstring[iptargetchar]     = c;
                             iptargetstring[iptargetchar + 1] = 0;
                             iptargetchar++;
-                            status ((char*) iptargetstring, 100);
+                            status((char *)iptargetstring, 100);
                         }
 
                         if (c == 13) {
@@ -4924,39 +4898,41 @@ goesk_a_reentry:
                             while (ir < iptargetchar) {
                                 if (iptargetstring[ir] == '/') {
                                     iptargetstring[ir] = 0;
-                                    iptargetmoon = atoi ((char*) iptargetstring);
+                                    iptargetmoon = atoi((char *)iptargetstring);
                                     iptargetstring[ir] = '/';
 
                                     if (iptargetstring[ir + 1] != 0) {
-                                        iptargetplanet = atoi ((char*) iptargetstring + ir + 1);
+                                        iptargetplanet =
+                                            atoi((char *)iptargetstring + ir + 1);
                                         goto searchmoon;
                                     }
 
-                                    status ("NOT EXTANT", 100);
+                                    status("NOT EXTANT", 100);
                                     goto endmain;
                                 }
 
                                 ir++;
                             }
 
-                            iptargetplanet = atoi ((char*) iptargetstring);
+                            iptargetplanet = atoi((char *)iptargetstring);
 
-                            if (iptargetplanet != 0 && iptargetplanet <= nearstar_nop) {
+                            if (iptargetplanet != 0 &&
+                                iptargetplanet <= nearstar_nop) {
                                 ip_targetted = iptargetplanet - 1;
-                                fix_local_target ();
+                                fix_local_target();
                                 ip_targetting = 0;
                             }
 
-                            status ("NOT EXTANT", 100);
+                            status("NOT EXTANT", 100);
                             goto endmain;
-searchmoon:
+                        searchmoon:
                             ir = 0;
 
                             while (ir < nearstar_nob) {
-                                if (nearstar_p_owner[ir] == iptargetplanet - 1
-                                        && nearstar_p_moonid[ir] == iptargetmoon - 1) {
+                                if (nearstar_p_owner[ir] == iptargetplanet - 1 &&
+                                    nearstar_p_moonid[ir] == iptargetmoon - 1) {
                                     ip_targetted = ir;
-                                    fix_local_target ();
+                                    fix_local_target();
                                     ip_targetting = 0;
                                     goto endmain;
                                 }
@@ -4964,7 +4940,7 @@ searchmoon:
                                 ir++;
                             }
 
-                            status ("NOT EXTANT", 100);
+                            status("NOT EXTANT", 100);
                         }
 
                         goto endmain;
@@ -4972,10 +4948,10 @@ searchmoon:
 
                     if (manual_target) {
                         if (c == 27) {
-                            c = 0;
+                            c             = 0;
                             manual_target = 0;
-                            ap_targetted = 0;
-                            status ("CANCELLED", 50);
+                            ap_targetted  = 0;
+                            status("CANCELLED", 50);
                             goto endmain;
                         }
 
@@ -4996,21 +4972,21 @@ searchmoon:
                             }
                         }
 
-                        if ((c >= '0' && c <= '9' && mt_string_char < 10) || (c == '-'
-                                && mt_string_char == 0)) {
+                        if ((c >= '0' && c <= '9' && mt_string_char < 10) ||
+                            (c == '-' && mt_string_char == 0)) {
                             switch (mt_coord) {
                             case 0:
-                                manual_x_string[mt_string_char] = c;
+                                manual_x_string[mt_string_char]     = c;
                                 manual_x_string[mt_string_char + 1] = 0;
                                 break;
 
                             case 1:
-                                manual_y_string[mt_string_char] = c;
+                                manual_y_string[mt_string_char]     = c;
                                 manual_y_string[mt_string_char + 1] = 0;
                                 break;
 
                             case 2:
-                                manual_z_string[mt_string_char] = c;
+                                manual_z_string[mt_string_char]     = c;
                                 manual_z_string[mt_string_char + 1] = 0;
                             }
 
@@ -5020,44 +4996,44 @@ searchmoon:
                         if (c == 13) {
                             switch (mt_coord) {
                             case 0:
-                                ap_target_x = atol ((char*) manual_x_string);
+                                ap_target_x        = atol((char *)manual_x_string);
                                 manual_y_string[0] = 0;
                                 break;
 
                             case 1:
-                                ap_target_y = - atol ((char*) manual_y_string);
+                                ap_target_y        = -atol((char *)manual_y_string);
                                 manual_z_string[0] = 0;
                                 break;
 
                             case 2:
-                                ap_target_z = atol ((char*) manual_z_string);
+                                ap_target_z = atol((char *)manual_z_string);
                             }
 
                             mt_string_char = 0;
-                            mt_coord ++;
+                            mt_coord++;
 
                             if (mt_coord > 2) {
                                 manual_target = 0;
-                                fix_remote_target ();
+                                fix_remote_target();
                                 ap_targetted = -1;
                             }
                         }
 
                         switch (mt_coord) {
                         case 0:
-                            sprintf (temp_distance_buffer, "%s", manual_x_string);
+                            sprintf(temp_distance_buffer, "%s", manual_x_string);
                             break;
 
                         case 1:
-                            sprintf (temp_distance_buffer, "%s", manual_y_string);
+                            sprintf(temp_distance_buffer, "%s", manual_y_string);
                             break;
 
                         case 2:
-                            sprintf (temp_distance_buffer, "%s", manual_z_string);
+                            sprintf(temp_distance_buffer, "%s", manual_z_string);
                         }
 
                         if (mt_coord <= 2) {
-                            status (temp_distance_buffer, 100);
+                            status(temp_distance_buffer, 100);
                         }
 
                         goto endmain;
@@ -5068,43 +5044,43 @@ searchmoon:
 
                         switch (c) {
                         case '5':
-                            sys = 1;
+                            sys      = 1;
                             dev_page = 0;
                             break;
 
                         case 'r':
-                            sys = 2;
+                            sys      = 2;
                             dev_page = 0;
                             break;
 
                         case 'd':
-                            sys = 3;
+                            sys      = 3;
                             dev_page = 0;
                             break;
 
                         case 'x':
-                            sys = 4;
+                            sys      = 4;
                             dev_page = 0;
                             break;
 
                         case '6':
                             s_command = 1;
-                            commands ();
+                            commands();
                             break;
 
                         case '7':
                             s_command = 2;
-                            commands ();
+                            commands();
                             break;
 
                         case '8':
                             s_command = 3;
-                            commands ();
+                            commands();
                             break;
 
                         case '9':
                             s_command = 4;
-                            commands ();
+                            commands();
                             break;
                         }
                     }
@@ -5118,19 +5094,14 @@ searchmoon:
                     }
                 }
 
-endmain:
+            endmain:
                 uint8_t argblarg = 5;
             }
         } else {
             c = 0;
         }
     } while ((c != 27) || stspeed || ip_reaching || lifter);
-
-    #if 0
     remove (surface_file);
-    #endif
-    STUB
-allstop:
-    _80_25_C ();
-    freeze ();
+    allstop : _80_25_C();
+    freeze();
 }
