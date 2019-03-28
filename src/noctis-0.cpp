@@ -3500,6 +3500,7 @@ void getsecs() {
 // information about the chosen star.
 
 void extract_ap_target_infos() {
+#if 0
     srand (ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z / 100000);
     ap_target_class = rand() % star_classes;
     ap_target_ray = ((float)class_ray[ap_target_class] + (float)(rand() % class_rayvar[ap_target_class])) * 0.001;
@@ -3519,6 +3520,8 @@ void extract_ap_target_infos() {
     if (ap_target_class == 2) {
         ap_target_spin = (random() % 4)+ 1;
     }
+#endif
+    STUB_RAND
 }
 
 // Extracts a whole-type pseudo-random number by converting it to f-p.

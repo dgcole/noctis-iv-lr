@@ -1371,6 +1371,7 @@ int8_t moon_no_label[25]   = "NAMELESS MOON #../../...";
 const char *sr_message = "SYSTEM RESET";
 
 void update_star_label() {
+#if 0
     if (ap_targetted == -1) {
         strcpy ((char*) star_label, "- DIRECT PARSIS TARGET -");
     } else {
@@ -1394,6 +1395,8 @@ void update_star_label() {
             sprintf ((char*) (star_label + 21), "S%02d", rand() % star_classes);
         }
     }
+#endif
+STUB_RAND
 }
 
 void update_planet_label() {
@@ -2337,6 +2340,7 @@ void unfreeze() {
     npcs = -12345;
     prepare_nearstar();
 
+#if 0
     if (lithium_collector) {
         while (elapsed >= 30 && charge < 120) {
             elapsed -= 30;
@@ -2350,6 +2354,8 @@ void unfreeze() {
             pwr = (int16_t) ((rand() % 5000) + 15000);
         }
     }
+#endif
+STUB_RAND
 
     /* Aggiornamento consumi supplementari. */
     dpwr = pwr;
@@ -2569,7 +2575,6 @@ int main(int argc, char **argv) {
 #else
     do {
         loop();
-        printf("Loop\n");
     } while ((mc != 27) || stspeed || ip_reaching || lifter);
 #endif
     remove (surface_file);
@@ -3721,6 +3726,7 @@ void loop() {
                 sprintf((char *)outhudbuffer, "      %1.2f@F",
                         tmp_float * 1.8 + 32);
                 wrouthud(14, 109, mc, (char *)outhudbuffer);
+                #if 0
                 srand(nearstar_identity);
 
                 if (nearstar_class == 6 || nearstar_class == 5) {
@@ -3738,6 +3744,7 @@ void loop() {
                 } else {
                     ir = 0;
                 }
+
 
                 sprintf((char *)outhudbuffer, "LI+ IONS: %ld MTPD EST.", ir);
                 wrouthud(14, 119, mc, (char *)outhudbuffer);
@@ -3803,6 +3810,8 @@ void loop() {
                         tmp_float);
                 wrouthud(14, 126, mc, (char *)outhudbuffer);
                 break;
+                #endif
+                STUB_RAND
             }
         }
     }
@@ -4067,6 +4076,7 @@ void loop() {
     // ma danno i migliori risultati. Quelle di classe 5 sono
     // sempre adatte, ma con scarsi risultati.
     //
+    #if 0
     if (lithium_collector) {
         srand(nearstar_identity);
         ir = rand() % 50;
@@ -4108,6 +4118,8 @@ void loop() {
             }
         }
     }
+    #endif
+    STUB_RAND
 
     //
     // Controllo eclissi.
@@ -4469,7 +4481,7 @@ void loop() {
     // saturation level of the eye, the stars appear generally
     // all white, unless you approach them really very much.
     //
-
+    #if 0
     if (dsd < 1000 * nearstar_ray) {
         ir = nearstar_r;
         ig = nearstar_g;
@@ -4596,6 +4608,8 @@ void loop() {
         ig2 = 32;
         ib2 = 40;
     }
+    #endif
+    STUB_RAND
 
     if (ire == ir && ige == ig && ibe == ib && ir2e == ir2 && ig2e == ig2 &&
         ib2e == ib2) {
