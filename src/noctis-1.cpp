@@ -3,7 +3,6 @@
 
 const double deg = M_PI / 180;
 
-int16_t opencapcount;
 float refx, refy, refz;
 float sp_x, sp_y, sp_z;
 

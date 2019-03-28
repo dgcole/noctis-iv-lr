@@ -2,7 +2,7 @@
 
 #include <ctype.h>
 
-void strupr(char *str) {
+void brtl_strupr(char *str) {
     while (*str) {
         *str = toupper(*str);
         str++;

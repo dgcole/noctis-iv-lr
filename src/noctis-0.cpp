@@ -3545,7 +3545,6 @@ int16_t smh;
 double idscale = 0.00001;
 
 int32_t search_id_code(double id_code, int8_t type) {
-#if 0
     int32_t        pos = 4;
     int8_t        found = 0;
     uint16_t    n, ptr, index;
@@ -3553,12 +3552,12 @@ int32_t search_id_code(double id_code, int8_t type) {
     double*  buffer_double = (double*)p_surfacemap;
     double      id_low = id_code - idscale;
     double      id_high = id_code + idscale;
-    smh = _rtl_open (starmap_file, 0);
+    smh = open (starmap_file, 0);
 
     if (smh > -1) {
         lseek (smh, 4, SEEK_SET);
 
-        while ((n = _rtl_read (smh, buffer_ascii, ps_bytes)) > 0) {
+        while ((n = read (smh, buffer_ascii, ps_bytes)) > 0) {
             ptr = 0;
             index = 0;
 
@@ -3578,7 +3577,7 @@ int32_t search_id_code(double id_code, int8_t type) {
         }
 
         stop:
-        _rtl_close (smh);
+        close (smh);
     }
 
     if (found) {
@@ -3586,8 +3585,6 @@ int32_t search_id_code(double id_code, int8_t type) {
     } else {
         return (-1);
     }
-#endif
-    FIXME
 }
 
 /*  Prepara le informazioni sulla stella vicina, quella attorno alla quale
@@ -6299,7 +6296,7 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
                 outhudbuffer[cpos + 40] = '\\';
                 memcpy (outhudbuffer + cpos + 41, ctb + 20 + 27 * 3, 10);
                 outhudbuffer[cpos + 51] = 0;
-                strupr((char*) outhudbuffer);
+                brtl_strupr((char*) outhudbuffer);
             }
         }
     }

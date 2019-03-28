@@ -172,11 +172,11 @@ struct pvlist {
 
 #define FIXME                                                                      \
     {                                                                              \
-        printf("FIXME: %s\n", __FUNCTION__);                                       \
+        /*printf("FIXME: %s\n", __FUNCTION__);*/                                       \
         assert(false);                                                             \
     }
 #define STUB                                                                       \
-    { printf("STUB: %s\n", __FUNCTION__); }
+    { /*printf("STUB: %s\n", __FUNCTION__);*/ }
 
 // Some stuff to make porting assembly easier for now.
 

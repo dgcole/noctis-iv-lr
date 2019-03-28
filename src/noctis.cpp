@@ -6,6 +6,10 @@
 #include "noctis-0.h"
 #include "noctis-d.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 const double deg = M_PI / 180;
 
 extern int8_t exitflag;
@@ -2415,37 +2419,48 @@ float starmass_correction[star_classes] = {
 
 extern uint16_t _stklen = 0x1800;
 
+SDL_Surface* sdl_surface;
+SDL_Window* window;
+SDL_Renderer* renderer;
+
+// Actual noctis stuff starts here.
+float satur, DfCoS;
+
+// float user_drawing_range;
+long ir, ig, ib, ire = 0, ige = 0, ibe = 0;
+long ir2, ig2, ib2, ir2e = 0, ig2e = 0, ib2e = 0;
+long ir3, ig3, ib3, ir3e = 0, ig3e = 0, ib3e = 0;
+int16_t mc, p_mpul = 0;
+int8_t sky_palette_ok = 0;
+int8_t mselect, lrv, right_dblclick = 0;
+float right_dblclick_dir;
+double dpz, ras, rap, dasp, eclipse;
+double dxx, dyy, dzz, l_dsd, p_dsd, stz, ang;
+int16_t opencapcount = 0;
+int16_t opencapdelta = 0;
+int16_t holdtomiddle = 0;
+int8_t leftturn, rightturn, arrowcolor, farstar = 0;
+char temp_distance_buffer[16];
+uint16_t pqw;
+float hold_z;
+float tmp_float;
+long p1, p2, p3, p4;
+
+clock_t right_dblclick_timing = 0;
+
+int16_t resolve = 64;
+
+void loop();
+
 int main(int argc, char **argv) {
     // Initialize SDL.
-    SDL_Surface *surface =
+    sdl_surface =
         SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF000000, 0xFF0000, 0xFF00, 0xFF);
-    SDL_Window *window = SDL_CreateWindow("Noctis IV LR", SDL_WINDOWPOS_CENTERED,
-                                          SDL_WINDOWPOS_CENTERED, 640, 400, SDL_WINDOW_RESIZABLE | SDL_WINDOW_INPUT_GRABBED);
+    window = SDL_CreateWindow("Noctis IV LR", SDL_WINDOWPOS_CENTERED,
+                                          SDL_WINDOWPOS_CENTERED, 960, 600, SDL_WINDOW_RESIZABLE | SDL_WINDOW_INPUT_GRABBED);
     SDL_SetRelativeMouseMode(SDL_TRUE);
-    SDL_Renderer *renderer =
+    renderer =
         SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE);
-
-    // Actual noctis stuff starts here.
-    float satur, DfCoS;
-    // float user_drawing_range;
-    long ir, ig, ib, ire = 0, ige = 0, ibe = 0;
-    long ir2, ig2, ib2, ir2e = 0, ig2e = 0, ib2e = 0;
-    long ir3, ig3, ib3, ir3e = 0, ig3e = 0, ib3e = 0;
-    int16_t c, p_mpul = 0;
-    int8_t sky_palette_ok = 0;
-    int8_t select, lrv, right_dblclick = 0;
-    float right_dblclick_dir;
-    double dpz, ras, rap, dasp, eclipse;
-    double dxx, dyy, dzz, l_dsd, p_dsd, stz, ang;
-    int16_t opencapcount = 0;
-    int16_t opencapdelta = 0;
-    int16_t holdtomiddle = 0;
-    int8_t leftturn, rightturn, arrowcolor, farstar = 0;
-    char temp_distance_buffer[16];
-    uint16_t pqw;
-    float hold_z;
-    float tmp_float;
-    long p1, p2, p3, p4;
 
     for (ir = 0; ir < 200; ir++) {
         m200[ir] = ir * 200;
@@ -2492,7 +2507,6 @@ int main(int argc, char **argv) {
     pqw = QUADWORDS;
     handle_input(window);
     mpul                          = 0;
-    clock_t right_dblclick_timing = 0;
     dpp                           = 210;
     change_camera_lens();
     //   0..64  Vehicle, computer selections, artifacts. Cobalt Blue, depending
@@ -2503,7 +2517,6 @@ int main(int argc, char **argv) {
     // 192..256 Planets (Non constant)
     tavola_colori(range8088, 0, 64, 16, 32, 63);
     tavola_colori(tmppal, 0, 256, 64, 64, 64);
-    int16_t resolve = 64;
     // causa il recupero dell'eventuale contenuto dello schermo
     // di output della GOES command net
     force_update = 1;
@@ -2551,2344 +2564,2335 @@ int main(int argc, char **argv) {
         }
     }
 
+#ifdef __EMSCRIPTEN__
+    emscripten_set_main_loop(loop, 24, 1);
+#else
     do {
-        sync_start();
-        //
-        // Controllo del flag che indica quando ci si trova
-        // sulla "terrazza panoramica", il tetto dello stardrifter.
-        //
-        pos_y += lifter;
+        loop();
+        printf("Loop\n");
+    } while ((mc != 27) || stspeed || ip_reaching || lifter);
+#endif
+    remove (surface_file);
+    allstop : _80_25_C();
+    freeze();
+}
 
-        if (lifter > 0) {
-            lifter--;
+void loop() {
+    sync_start();
+    //
+    // Controllo del flag che indica quando ci si trova
+    // sulla "terrazza panoramica", il tetto dello stardrifter.
+    //
+    pos_y += lifter;
 
-            if (lifter > 65) {
-                user_alfa += 0.11 * (40 - user_alfa);
-            } else {
-                user_alfa -= 0.25 * user_alfa;
-            }
+    if (lifter > 0) {
+        lifter--;
 
-            step = 0.5 * lifter;
-        }
-
-        if (lifter < 0) {
-            lifter++;
-
-            if (pos_y > -325) {
-                user_alfa += 0.12 * (user_alfa - 40);
-            }
-
-            if (pos_y < -325 && pos_y > -715) {
-                step = -pos_y;
-            }
-        }
-
-        if (pos_y > 0) {
-            lifter = 0;
-            pos_y  = 0;
-        }
-
-        if (pos_y < -750) {
-            lifter = 0;
-            pos_y  = -750;
-        }
-
-        if (pos_y < -500) {
-            ontheroof = 1;
+        if (lifter > 65) {
+            user_alfa += 0.11 * (40 - user_alfa);
         } else {
-            ontheroof = 0;
+            user_alfa -= 0.25 * user_alfa;
         }
 
-        if (!lifter && ontheroof) {
-            DfCoS = pos_z + 3100;
-            DfCoS = sqrt(pos_x * pos_x + DfCoS * DfCoS);
+        step = 0.5 * lifter;
+    }
 
-            if (DfCoS + step < 1100) {
-                lifter = +75;
-            }
+    if (lifter < 0) {
+        lifter++;
+
+        if (pos_y > -325) {
+            user_alfa += 0.12 * (user_alfa - 40);
         }
 
-        //
-        // Risposta al reset del sistema operativo di bordo.
-        // La variabile "reset_signal" controlla la procedura
-        // di reset, che reimposta tutti i parametri operativi
-        // allo stato originario.
-        //
-        // Impostanto reset_signal a 150 si resetta tutto il sistema.
-        // Impostanto reset_signal a 60 si resetta la rete GOES.
-        //
-        if (reset_signal) {
-            switch (reset_signal) {
-            case 150:
-                elight  = 1;
-                ilight  = 0;
-                ilightv = 0;
-                status("----------", 100);
-                break;
-
-            case 140:
-                ip_targetted = -1;
-                ip_reaching  = 0;
-                break;
-
-            case 130:
-                ap_targetted = 0;
-                stspeed      = 0;
-                break;
-
-            case 120:
-                gburst             = 0;
-                nsync              = 1;
-                anti_rad           = 1;
-                pl_search          = 0;
-                field_amplificator = 0;
-                break;
-
-            case 115:
-                sys  = 4;
-                psys = 4;
-                break;
-
-            case 110:
-                lithium_collector = 0;
-                autoscreenoff     = 0;
-                break;
-
-            case 101:
-                status("_^*^-!_$[]", 100);
-                ap_reached    = 0;
-                ip_reached    = 0;
-                landing_point = 0;
-                break;
-
-            case 75:
-                elight  = 0;
-                ilightv = 1;
-                break;
-
-            case 55:
-                mslocate(0, 0, 0);
-                mswrite(0, "G.O.E.S. COMMAND NET:");
-                break;
-
-            case 35:
-                mslocate(0, 0, 1);
-                mswrite(0, "REVISION ID 6011/0200");
-                break;
-
-            case 25:
-                mslocate(0, 0, 2);
-                mswrite(0, "SESSION ID ");
-                fast_srand(secs * 18);
-                sprintf(temp_distance_buffer, "%05lu%05lu", fast_random(0x7FFF),
-                        fast_random(0x7FFF));
-                mswrite(0, temp_distance_buffer);
-                break;
-
-            case 10:
-                status("STANDBY", 100);
-                break;
-            }
-
-            reset_signal--;
+        if (pos_y < -325 && pos_y > -715) {
+            step = -pos_y;
         }
+    }
 
-        //
-        // Controlla il timer di sistema.
-        //
-        getsecs();
+    if (pos_y > 0) {
+        lifter = 0;
+        pos_y  = 0;
+    }
 
-        //
-        // Accensione luci d'emergenza.
-        // Comportamento dell'astrozattera in mancanza di litio.
-        //
-        if (pwr <= 15000 && !charge) {
-            elight             = 1;
-            nsync              = 0;
-            anti_rad           = 0;
+    if (pos_y < -750) {
+        lifter = 0;
+        pos_y  = -750;
+    }
+
+    if (pos_y < -500) {
+        ontheroof = 1;
+    } else {
+        ontheroof = 0;
+    }
+
+    if (!lifter && ontheroof) {
+        DfCoS = pos_z + 3100;
+        DfCoS = sqrt(pos_x * pos_x + DfCoS * DfCoS);
+
+        if (DfCoS + step < 1100) {
+            lifter = +75;
+        }
+    }
+
+    //
+    // Risposta al reset del sistema operativo di bordo.
+    // La variabile "reset_signal" controlla la procedura
+    // di reset, che reimposta tutti i parametri operativi
+    // allo stato originario.
+    //
+    // Impostanto reset_signal a 150 si resetta tutto il sistema.
+    // Impostanto reset_signal a 60 si resetta la rete GOES.
+    //
+    if (reset_signal) {
+        switch (reset_signal) {
+        case 150:
+            elight  = 1;
+            ilight  = 0;
+            ilightv = 0;
+            status("----------", 100);
+            break;
+
+        case 140:
+            ip_targetted = -1;
+            ip_reaching  = 0;
+            break;
+
+        case 130:
+            ap_targetted = 0;
+            stspeed      = 0;
+            break;
+
+        case 120:
+            gburst             = 0;
+            nsync              = 1;
+            anti_rad           = 1;
             pl_search          = 0;
             field_amplificator = 0;
-            ip_targetted       = -1;
-            ap_reached         = 0;
-            datasheetdelta     = -100;
-        } else {
-            if (elight && !reset_signal) {
-                elight       = 0;
-                ilight       = 0;
-                ilightv      = 1;
-                reset_signal = 200;
-            }
+            break;
+
+        case 115:
+            sys  = 4;
+            psys = 4;
+            break;
+
+        case 110:
+            lithium_collector = 0;
+            autoscreenoff     = 0;
+            break;
+
+        case 101:
+            status("_^*^-!_$[]", 100);
+            ap_reached    = 0;
+            ip_reached    = 0;
+            landing_point = 0;
+            break;
+
+        case 75:
+            elight  = 0;
+            ilightv = 1;
+            break;
+
+        case 55:
+            mslocate(0, 0, 0);
+            mswrite(0, "G.O.E.S. COMMAND NET:");
+            break;
+
+        case 35:
+            mslocate(0, 0, 1);
+            mswrite(0, "REVISION ID 6011/0200");
+            break;
+
+        case 25:
+            mslocate(0, 0, 2);
+            mswrite(0, "SESSION ID ");
+            fast_srand(secs * 18);
+            sprintf(temp_distance_buffer, "%05lu%05lu", fast_random(0x7FFF),
+                    fast_random(0x7FFF));
+            mswrite(0, temp_distance_buffer);
+            break;
+
+        case 10:
+            status("STANDBY", 100);
+            break;
         }
 
-        // Mouse input for user movements.
-        p_mpul = mpul;
-        handle_input(window);
+        reset_signal--;
+    }
 
-        if (mpul & 2) {
-            shift += 3 * mdltx;
-            dlt_alfa -= (float)mdlty / 8;
-        } else {
-            step -= 3 * mdlty;
+    //
+    // Controlla il timer di sistema.
+    //
+    getsecs();
 
-            if (abs(mdlty) > 7) {
-                dlt_alfa = -user_alfa / 6;
-            }
+    //
+    // Accensione luci d'emergenza.
+    // Comportamento dell'astrozattera in mancanza di litio.
+    //
+    if (pwr <= 15000 && !charge) {
+        elight             = 1;
+        nsync              = 0;
+        anti_rad           = 0;
+        pl_search          = 0;
+        field_amplificator = 0;
+        ip_targetted       = -1;
+        ap_reached         = 0;
+        datasheetdelta     = -100;
+    } else {
+        if (elight && !reset_signal) {
+            elight       = 0;
+            ilight       = 0;
+            ilightv      = 1;
+            reset_signal = 200;
+        }
+    }
 
-            dlt_beta -= (float)mdltx / 3;
+    // Mouse input for user movements.
+    p_mpul = mpul;
+    handle_input(window);
+
+    if (mpul & 2) {
+        shift += 3 * mdltx;
+        dlt_alfa -= (float)mdlty / 8;
+    } else {
+        step -= 3 * mdlty;
+
+        if (abs(mdlty) > 7) {
+            dlt_alfa = -user_alfa / 6;
         }
 
-        // Mouse input for double left and right click.
-        if (ontheroof) {
+        dlt_beta -= (float)mdltx / 3;
+    }
+
+    // Mouse input for double left and right click.
+    if (ontheroof) {
+        goto nop;
+    }
+
+    if ((mpul & 1) && !(p_mpul & 1)) {
+        mselect = 1;
+    } else {
+        mselect = 0;
+    }
+
+    if ((mpul & 2) && !(p_mpul & 2) && !right_dblclick) {
+        if (!right_dblclick_timing) {
+            right_dblclick_timing = clock();
+        } else {
+            if (clock() - right_dblclick_timing < DBL_CLICK_CUTOFF) {
+                right_dblclick     = 1;
+                right_dblclick_dir = user_beta;
+            } else {
+                right_dblclick_timing = clock();
+            }
+        }
+    }
+
+    if (right_dblclick) {
+        if (ap_targetting) {
+            ap_targetting  = 0;
+            right_dblclick = 0;
+            extract_ap_target_infos();
+            fix_remote_target();
             goto nop;
         }
 
-        if ((mpul & 1) && !(p_mpul & 1)) {
-            select = 1;
-        } else {
-            select = 0;
-        }
+        if (ip_targetting) {
+            ip_targetting  = 0;
+            right_dblclick = 0;
 
-        if ((mpul & 2) && !(p_mpul & 2) && !right_dblclick) {
-            if (!right_dblclick_timing) {
-                right_dblclick_timing = clock();
+            if (ip_targetted != -1) {
+                fix_local_target();
             } else {
-                if (clock() - right_dblclick_timing < DBL_CLICK_CUTOFF) {
-                    right_dblclick     = 1;
-                    right_dblclick_dir = user_beta;
-                } else {
-                    right_dblclick_timing = clock();
-                }
+                status("NO TARGET", 50);
             }
+
+            goto nop;
         }
 
-        if (right_dblclick) {
-            if (ap_targetting) {
-                ap_targetting  = 0;
-                right_dblclick = 0;
-                extract_ap_target_infos();
-                fix_remote_target();
-                goto nop;
-            }
+        if (!holdtomiddle) {
+            if (right_dblclick_dir > -135 && right_dblclick_dir < -45) {
+                user_beta += 90;
+                user_beta /= 1.5;
+                xx = pos_x - 2900;
+                pos_x -= xx * 0.25;
 
-            if (ip_targetting) {
-                ip_targetting  = 0;
-                right_dblclick = 0;
-
-                if (ip_targetted != -1) {
-                    fix_local_target();
+                if (landing_point) {
+                    zz = pos_z + 104 * 15 + 1980;
                 } else {
-                    status("NO TARGET", 50);
+                    zz = pos_z + 1940;
                 }
 
-                goto nop;
-            }
+                pos_z -= zz * 0.25;
 
-            if (!holdtomiddle) {
-                if (right_dblclick_dir > -135 && right_dblclick_dir < -45) {
-                    user_beta += 90;
-                    user_beta /= 1.5;
-                    xx = pos_x - 2900;
-                    pos_x -= xx * 0.25;
+                if (fabs(xx) < 25 && fabs(zz) < 25 && fabs(user_beta) < 1) {
+                    right_dblclick_timing = 0;
+                    right_dblclick        = 0;
+                }
 
-                    if (landing_point) {
-                        zz = pos_z + 104 * 15 + 1980;
-                    } else {
-                        zz = pos_z + 1940;
-                    }
+                user_beta -= 90;
+            } else {
+                user_beta /= 1.5;
+                zz = pos_z + 500;
+                pos_z -= zz * 0.25;
 
-                    pos_z -= zz * 0.25;
-
-                    if (fabs(xx) < 25 && fabs(zz) < 25 && fabs(user_beta) < 1) {
+                if (sys != 4) {
+                    if (fabs(zz) < 25 && fabs(user_beta) < 1) {
                         right_dblclick_timing = 0;
                         right_dblclick        = 0;
                     }
-
-                    user_beta -= 90;
                 } else {
-                    user_beta /= 1.5;
-                    zz = pos_z + 500;
-                    pos_z -= zz * 0.25;
+                    xx = pos_x + 1700;
+                    pos_x -= xx * 0.25;
 
-                    if (sys != 4) {
-                        if (fabs(zz) < 25 && fabs(user_beta) < 1) {
-                            right_dblclick_timing = 0;
-                            right_dblclick        = 0;
-                        }
-                    } else {
-                        xx = pos_x + 1700;
-                        pos_x -= xx * 0.25;
-
-                        if (fabs(zz) < 25 && fabs(xx) < 25 && fabs(user_beta) < 1) {
-                            right_dblclick_timing = 0;
-                            right_dblclick        = 0;
-                        }
+                    if (fabs(zz) < 25 && fabs(xx) < 25 && fabs(user_beta) < 1) {
+                        right_dblclick_timing = 0;
+                        right_dblclick        = 0;
                     }
                 }
             }
         }
+    }
 
-        //
-        // Variazione angoli visivi.
-        //
+    //
+    // Variazione angoli visivi.
+    //
     nop:
-        user_alfa += dlt_alfa;
-        dlt_alfa /= 1.5;
+    user_alfa += dlt_alfa;
+    dlt_alfa /= 1.5;
 
-        if (fabs(dlt_alfa) < 0.25) {
-            dlt_alfa = 0;
+    if (fabs(dlt_alfa) < 0.25) {
+        dlt_alfa = 0;
+    }
+
+    if (user_alfa < -44.9) {
+        user_alfa = -44.9;
+        dlt_alfa  = 0;
+    }
+
+    if (user_alfa > 44.9) {
+        user_alfa = 44.9;
+        dlt_alfa  = 0;
+    }
+
+    user_beta += dlt_beta;
+    dlt_beta /= 1.5;
+
+    if (fabs(dlt_beta) < 0.25) {
+        dlt_beta = 0;
+    }
+
+    if (user_beta > 180) {
+        user_beta -= 360;
+    }
+
+    if (user_beta < -180) {
+        user_beta += 360;
+    }
+
+    // Variation of the user's position in the spacecraft.
+    alfa = user_alfa;
+    beta = user_beta - 90;
+    change_angle_of_view();
+    p_Forward(shift);
+    beta = user_beta;
+    change_angle_of_view();
+    p_Forward(step);
+    shift /= 1.5;
+
+    if (fabs(shift) < 0.5) {
+        shift = 0;
+    }
+
+    step /= 1.25;
+
+    if (fabs(step) < 0.5) {
+        step = 0;
+    }
+
+    if (pos_x < -3100) {
+        pos_x = -3100;
+    }
+
+    if (pos_x > +3100) {
+        pos_x = +3100;
+    }
+
+    if (pos_z > -300) {
+        pos_z = -300;
+    }
+
+    if (pos_z < -5800) {
+        pos_z = -5800;
+    }
+
+    // Black background, which will be made hazy.
+    if (!stspeed) {
+        memset(adapted + 2880, 0, QUADWORDS * 4);
+    } else {
+        pfade(adapted, 180, 8);
+    }
+
+    // Close star management
+    from_vehicle();
+    dxx   = dzat_x - nearstar_x;
+    dyy   = dzat_y - nearstar_y;
+    dzz   = dzat_z - nearstar_z;
+    l_dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
+    satur = (12 * dsd) / nearstar_ray;
+    fast_srand(nearstar_z);
+    ir = fast_random(31) + 29;
+
+    if (satur < ir) {
+        satur = ir;
+    }
+
+    if (satur > 63) {
+        satur = 63;
+    }
+
+    //
+    if (l_dsd < 100 * nearstar_ray)
+        whiteglobe(adapted, nearstar_x, nearstar_y, nearstar_z,
+                   3 * nearstar_ray, 0.3);
+
+    for (ir = 0; ir < nearstar_nop; ir++) {
+        if (nearstar_p_type[ir] == 10) {
+            planet_xyz(ir);
+            p_dsd = nearstar_p_qsortdist[ir];
+            fast_srand(ir + nearstar_x);
+            whiteglobe(adapted, plx, ply, plz, 3 * nearstar_p_ray[ir],
+                       0.15 - fast_flandom() * 0.3);
+
+            if (p_dsd > 5 * nearstar_p_ray[ir] &&
+                p_dsd < 1000 * nearstar_p_ray[ir])
+                lens_flares_for(dzat_x, dzat_y, dzat_z, plx, ply, plz,
+                                (10 * nearstar_p_ray[ir]) / p_dsd,
+                                1 + (0.001 * p_dsd), 1, 0, 3, 0);
+        }
+    }
+
+    if (l_dsd > 6 * nearstar_ray) {
+        if (nearstar_class != 5 && nearstar_class != 6 &&
+            nearstar_class != 10) {
+            if (nearstar_class != 11 || gl_start < 90) {
+                if (l_dsd > 5 * nearstar_ray && l_dsd < 1000 * nearstar_ray) {
+                    lens_flares_for(dzat_x, dzat_y, dzat_z, nearstar_x,
+                                    nearstar_y, nearstar_z,
+                                    (10 * nearstar_ray) / l_dsd,
+                                    1 + (0.001 * l_dsd), 1, 0, 3, 0);
+                }
+            }
         }
 
-        if (user_alfa < -44.9) {
-            user_alfa = -44.9;
-            dlt_alfa  = 0;
+        psmooth_grays(adapted + 2880);
+    }
+
+    mask_pixels(adapted + 2880, 64);
+
+    if (l_dsd < 8 * nearstar_ray) {
+        if (farstar) {
+            farstar = 0;
+            load_starface();
         }
 
-        if (user_alfa > 44.9) {
-            user_alfa = 44.9;
-            dlt_alfa  = 0;
+        glass_bubble = 0;
+
+        if (nearstar_spin) {
+            gl_start += nearstar_spin;
+            gl_start %= 360;
+            globe(gl_start, adapted, s_background, (uint8_t *)n_globes_map,
+                  gl_bytes, nearstar_x, nearstar_y, nearstar_z, nearstar_ray,
+                  64, satur);
+        } else {
+            globe((clock() / 360) % 360, adapted, s_background,
+                  (uint8_t *)n_globes_map, gl_bytes, nearstar_x, nearstar_y,
+                  nearstar_z, nearstar_ray, 64, satur);
+        }
+    } else {
+        farstar = 1;
+    }
+
+    //
+    if (l_dsd > 100 * nearstar_ray && l_dsd < 1550 * nearstar_ray) {
+        ir = ((1600 * nearstar_ray) - l_dsd) / (100 * nearstar_ray);
+
+        if (ir < 0) {
+            ir = 0;
         }
 
-        user_beta += dlt_beta;
-        dlt_beta /= 1.5;
+        ir += 0x30;
+        far_pixel_at(nearstar_x, nearstar_y, nearstar_z, 0, ir);
+        far_pixel_at(nearstar_x, nearstar_y, nearstar_z, 0, ir);
+        far_pixel_at(nearstar_x, nearstar_y, nearstar_z, 0, ir);
+    }
 
-        if (fabs(dlt_beta) < 0.25) {
-            dlt_beta = 0;
-        }
-
-        if (user_beta > 180) {
-            user_beta -= 360;
-        }
-
-        if (user_beta < -180) {
-            user_beta += 360;
-        }
-
-        // Variation of the user's position in the spacecraft.
-        alfa = user_alfa;
-        beta = user_beta - 90;
-        change_angle_of_view();
-        p_Forward(shift);
-        beta = user_beta;
-        change_angle_of_view();
-        p_Forward(step);
-        shift /= 1.5;
-
-        if (fabs(shift) < 0.5) {
-            shift = 0;
-        }
-
-        step /= 1.25;
-
-        if (fabs(step) < 0.5) {
-            step = 0;
-        }
-
-        if (pos_x < -3100) {
-            pos_x = -3100;
-        }
-
-        if (pos_x > +3100) {
-            pos_x = +3100;
-        }
-
-        if (pos_z > -300) {
-            pos_z = -300;
-        }
-
-        if (pos_z < -5800) {
-            pos_z = -5800;
-        }
-
-        // Black background, which will be made hazy.
+    //
+    // Riflessi del protagonista sulla vetrata (rimossi).
+    /*
         if (!stspeed) {
-            memset(adapted + 2880, 0, QUADWORDS * 4);
-        } else {
-            pfade(adapted, 180, 8);
-        }
-
-        // Close star management
-        from_vehicle();
-        dxx   = dzat_x - nearstar_x;
-        dyy   = dzat_y - nearstar_y;
-        dzz   = dzat_z - nearstar_z;
-        l_dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
-        satur = (12 * dsd) / nearstar_ray;
-        fast_srand(nearstar_z);
-        ir = fast_random(31) + 29;
-
-        if (satur < ir) {
-            satur = ir;
-        }
-
-        if (satur > 63) {
-            satur = 63;
-        }
-
-        //
-        if (l_dsd < 100 * nearstar_ray)
-            whiteglobe(adapted, nearstar_x, nearstar_y, nearstar_z,
-                       3 * nearstar_ray, 0.3);
-
-        for (ir = 0; ir < nearstar_nop; ir++) {
-            if (nearstar_p_type[ir] == 10) {
-                planet_xyz(ir);
-                p_dsd = nearstar_p_qsortdist[ir];
-                fast_srand(ir + nearstar_x);
-                whiteglobe(adapted, plx, ply, plz, 3 * nearstar_p_ray[ir],
-                           0.15 - fast_flandom() * 0.3);
-
-                if (p_dsd > 5 * nearstar_p_ray[ir] &&
-                    p_dsd < 1000 * nearstar_p_ray[ir])
-                    lens_flares_for(dzat_x, dzat_y, dzat_z, plx, ply, plz,
-                                    (10 * nearstar_p_ray[ir]) / p_dsd,
-                                    1 + (0.001 * p_dsd), 1, 0, 3, 0);
-            }
-        }
-
-        if (l_dsd > 6 * nearstar_ray) {
-            if (nearstar_class != 5 && nearstar_class != 6 &&
-                nearstar_class != 10) {
-                if (nearstar_class != 11 || gl_start < 90) {
-                    if (l_dsd > 5 * nearstar_ray && l_dsd < 1000 * nearstar_ray) {
-                        lens_flares_for(dzat_x, dzat_y, dzat_z, nearstar_x,
-                                        nearstar_y, nearstar_z,
-                                        (10 * nearstar_ray) / l_dsd,
-                                        1 + (0.001 * l_dsd), 1, 0, 3, 0);
-                    }
-                }
-            }
-
-            psmooth_grays(adapted + 2880);
-        }
-
-        mask_pixels(adapted + 2880, 64);
-
-        if (l_dsd < 8 * nearstar_ray) {
-            if (farstar) {
-                farstar = 0;
-                load_starface();
-            }
-
-            glass_bubble = 0;
-
-            if (nearstar_spin) {
-                gl_start += nearstar_spin;
-                gl_start %= 360;
-                globe(gl_start, adapted, s_background, (uint8_t *)n_globes_map,
-                      gl_bytes, nearstar_x, nearstar_y, nearstar_z, nearstar_ray,
-                      64, satur);
-            } else {
-                globe((clock() / 360) % 360, adapted, s_background,
-                      (uint8_t *)n_globes_map, gl_bytes, nearstar_x, nearstar_y,
-                      nearstar_z, nearstar_ray, 64, satur);
-            }
-        } else {
-            farstar = 1;
-        }
-
-        //
-        if (l_dsd > 100 * nearstar_ray && l_dsd < 1550 * nearstar_ray) {
-            ir = ((1600 * nearstar_ray) - l_dsd) / (100 * nearstar_ray);
-
-            if (ir < 0) {
-                ir = 0;
-            }
-
-            ir += 0x30;
-            far_pixel_at(nearstar_x, nearstar_y, nearstar_z, 0, ir);
-            far_pixel_at(nearstar_x, nearstar_y, nearstar_z, 0, ir);
-            far_pixel_at(nearstar_x, nearstar_y, nearstar_z, 0, ir);
-        }
-
-        //
-        // Riflessi del protagonista sulla vetrata (rimossi).
-        /*
-            if (!stspeed) {
-            if (ilight) {
-                from_user ();
-                if (cam_z>-1000) {
-                    if (alfa>-10&&alfa<10)
-                        user_drawing_range = 55;
-                    else
-                        user_drawing_range = 70;
-                }
+        if (ilight) {
+            from_user ();
+            if (cam_z>-1000) {
+                if (alfa>-10&&alfa<10)
+                    user_drawing_range = 55;
                 else
-                    user_drawing_range = 40;
-                if (beta>-user_drawing_range&&beta<user_drawing_range) {
-                    cam_x = -4*beta;
-                    cam_y = 10*alfa;
-                    cam_z = 0;
-                    Forward (2*pos_z);
-                    alfa *= 2; beta *= 2;
-                    change_angle_of_view ();
-                    flares = 2;
-                    user ();
-                    flares = 0;
+                    user_drawing_range = 70;
+            }
+            else
+                user_drawing_range = 40;
+            if (beta>-user_drawing_range&&beta<user_drawing_range) {
+                cam_x = -4*beta;
+                cam_y = 10*alfa;
+                cam_z = 0;
+                Forward (2*pos_z);
+                alfa *= 2; beta *= 2;
+                change_angle_of_view ();
+                flares = 2;
+                user ();
+                flares = 0;
+            }
+        }
+        }
+    */
+    // Controllo gestore (indicando i comandi con lo sguardo).
+    //
+    active_screen = -1;
+    from_user();
+    leftturn  = 0;
+    rightturn = 0;
+    infoarea  = 0;
+    s_control = 0;
+    s_command = 0;
+
+    if (ontheroof) {
+        goto jpr;
+    }
+
+    do {
+        zz = fabs(cam_z);
+        xx = fabs(cam_x);
+        Forward(zz / 2);
+    } while (zz > 25 && xx < 3000);
+
+    if (zz < 25) {
+        if (cam_x < -44 * 30) {
+            if (cam_x > -68 * 30) {
+                s_control = (cam_y + 25) / 50 + 3;
+
+                if (s_control < 1) {
+                    s_control = 1;
+                }
+
+                if (s_control > 4) {
+                    s_control = 4;
+                }
+
+                if (mselect) {
+                    if (!ap_targetting && !ip_targetting) {
+                        aso_countdown = 100;
+                        sys           = s_control;
+                        dev_page      = 0;
+                    }
                 }
             }
-            }
-        */
-        // Controllo gestore (indicando i comandi con lo sguardo).
-        //
-        active_screen = -1;
-        from_user();
-        leftturn  = 0;
-        rightturn = 0;
-        infoarea  = 0;
-        s_control = 0;
-        s_command = 0;
+        } else {
+            if (cam_y < -50) {
+                if (cam_x < 68 * 30) {
+                    s_command = (cam_x + 44 * 30) / (27 * 30) + 1;
 
-        if (ontheroof) {
-            goto jpr;
-        }
-
-        do {
-            zz = fabs(cam_z);
-            xx = fabs(cam_x);
-            Forward(zz / 2);
-        } while (zz > 25 && xx < 3000);
-
-        if (zz < 25) {
-            if (cam_x < -44 * 30) {
-                if (cam_x > -68 * 30) {
-                    s_control = (cam_y + 25) / 50 + 3;
-
-                    if (s_control < 1) {
-                        s_control = 1;
+                    if (s_command < 1) {
+                        s_command = 1;
                     }
 
-                    if (s_control > 4) {
-                        s_control = 4;
+                    if (s_command > 4) {
+                        s_command = 4;
                     }
 
-                    if (select) {
+                    if (mselect) {
                         if (!ap_targetting && !ip_targetting) {
                             aso_countdown = 100;
-                            sys           = s_control;
-                            dev_page      = 0;
+                            commands();
+                            goto jpr;
                         }
                     }
                 }
             } else {
-                if (cam_y < -50) {
-                    if (cam_x < 68 * 30) {
-                        s_command = (cam_x + 44 * 30) / (27 * 30) + 1;
-
-                        if (s_command < 1) {
-                            s_command = 1;
-                        }
-
-                        if (s_command > 4) {
-                            s_command = 4;
-                        }
-
-                        if (select) {
-                            if (!ap_targetting && !ip_targetting) {
-                                aso_countdown = 100;
-                                commands();
-                                goto jpr;
-                            }
-                        }
-                    }
-                } else {
-                    infoarea = 1;
-                }
+                infoarea = 1;
             }
         }
+    }
 
-        if (select && pwr > 15000) {
-            if (revcontrols) {
-                if (cam_x > 2500) {
-                    dlt_nav_beta += 1.5;
-                    status("PITCH - R", 25);
-                }
+    if (mselect && pwr > 15000) {
+        if (revcontrols) {
+            if (cam_x > 2500) {
+                dlt_nav_beta += 1.5;
+                status("PITCH - R", 25);
+            }
 
-                if (cam_x < -2500) {
-                    dlt_nav_beta -= 1.5;
-                    status("PITCH - L", 25);
-                }
-            } else {
-                if (cam_x > 2500) {
-                    dlt_nav_beta -= 1.5;
-                    status("PITCH - L", 25);
-                }
+            if (cam_x < -2500) {
+                dlt_nav_beta -= 1.5;
+                status("PITCH - L", 25);
+            }
+        } else {
+            if (cam_x > 2500) {
+                dlt_nav_beta -= 1.5;
+                status("PITCH - L", 25);
+            }
 
-                if (cam_x < -2500) {
-                    dlt_nav_beta += 1.5;
-                    status("PITCH - R", 25);
-                }
+            if (cam_x < -2500) {
+                dlt_nav_beta += 1.5;
+                status("PITCH - R", 25);
             }
         }
+    }
 
-        if (cam_x > 2500) {
-            rightturn = 1;
-        }
+    if (cam_x > 2500) {
+        rightturn = 1;
+    }
 
-        if (cam_x < -2500) {
-            leftturn = 1;
-        }
+    if (cam_x < -2500) {
+        leftturn = 1;
+    }
 
-        //
-        // Rotazione della navicella.
-        // Attivazione schermi.
-        //
+    //
+    // Rotazione della navicella.
+    // Attivazione schermi.
+    //
     jpr:
 
-        if (!elight) {
-            // Paratia destra:
-            if (user_beta > -135 && user_beta < -45 && pos_z < -104 * 15 &&
-                pos_z > -262 * 15 && pos_x > 172 * 15) {
-                active_screen = (pos_z + 104 * 15) / (-54 * 15);
+    if (!elight) {
+        // Paratia destra:
+        if (user_beta > -135 && user_beta < -45 && pos_z < -104 * 15 &&
+            pos_z > -262 * 15 && pos_x > 172 * 15) {
+            active_screen = (pos_z + 104 * 15) / (-54 * 15);
+        }
+
+        // Paratia sinistra:
+        // if (user_beta > +45 && user_beta < +135 && pos_z < -104*15 &&
+        // pos_z > -154*15 && pos_x < -172*15) active_screen = (pos_z +
+        // 104*15) / (-54*15) + 2;
+    }
+
+    navigation_beta += dlt_nav_beta;
+    dlt_nav_beta /= 1.1;
+
+    if (fabs(dlt_nav_beta) < 0.5) {
+        dlt_nav_beta = 0;
+    }
+
+    if (navigation_beta >= 360) {
+        navigation_beta -= 360;
+    }
+
+    if (navigation_beta < 0) {
+        navigation_beta += 360;
+    }
+
+    //
+    // Tracciamento pianeti.
+    //
+    from_vehicle();
+    planets();
+
+    //
+    // Controllo sulle richieste d'aiuto.
+    //
+    if (helptime && secs > helptime) {
+        if (gburst) {
+            status("HELP CAME!", 50);
+            gburst = 0;
+        }
+
+        if (secs < helptime + 120) {
+            stz = 0;
+
+            if (secs < helptime + 20) {
+                stz = pow(helptime + 20 - secs, 2) * 2000;
             }
 
-            // Paratia sinistra:
-            // if (user_beta > +45 && user_beta < +135 && pos_z < -104*15 &&
-            // pos_z > -154*15 && pos_x < -172*15) active_screen = (pos_z +
-            // 104*15) / (-54*15) + 2;
-        }
-
-        navigation_beta += dlt_nav_beta;
-        dlt_nav_beta /= 1.1;
-
-        if (fabs(dlt_nav_beta) < 0.5) {
-            dlt_nav_beta = 0;
-        }
-
-        if (navigation_beta >= 360) {
-            navigation_beta -= 360;
-        }
-
-        if (navigation_beta < 0) {
-            navigation_beta += 360;
-        }
-
-        //
-        // Tracciamento pianeti.
-        //
-        from_vehicle();
-        planets();
-
-        //
-        // Controllo sulle richieste d'aiuto.
-        //
-        if (helptime && secs > helptime) {
-            if (gburst) {
-                status("HELP CAME!", 50);
-                gburst = 0;
+            if (secs > helptime + 100) {
+                stz = pow(helptime + 100 - secs, 2) * 2000;
             }
 
-            if (secs < helptime + 120) {
-                stz = 0;
-
-                if (secs < helptime + 20) {
-                    stz = pow(helptime + 20 - secs, 2) * 2000;
-                }
-
-                if (secs > helptime + 100) {
-                    stz = pow(helptime + 100 - secs, 2) * 2000;
-                }
-
-                if (!stz && charge < 3) {
-                    charge = 3;
-                }
-
-                other_vehicle_at((stz + 16000) * cos(secs / 10),
-                                 4000 * sin(secs / 100),
-                                 (stz + 16000) * sin(secs / 10));
-            } else {
-                helptime = 0;
-            }
-        }
-
-        //
-        // Tracciamento della navicella.
-        //
-        from_user();
-        vehicle(opencapcount);
-
-        //
-        // Tracciamento riflessi, aggiornamento dello schermo
-        // del gestore, tracciamento dello schermo del gestore,
-        // reazione visiva agli eventi interni alla navicella.
-        //
-        if (ontheroof) {
-            goto ext_1;
-        }
-
-        from_user();
-
-        if (!opencapcount) {
-            reflexes();
-        }
-
-        if (!(clock() % 10)) {
-            clear_onboard_screen();
-            control(0, "flight control drive");
-            control(1, "onboard devices");
-            control(2, "preferences");
-            control(3, "disable display");
-
-            switch (sys) {
-            case 1:
-                control(0, "FLIGHT CONTROL DRIVE");
-
-                if (sys != psys) {
-                    status("FCS MENU", 50);
-                }
-
-                fcs();
-                break;
-
-            case 2:
-                control(1, "ONBOARD DEVICES");
-
-                if (sys != psys) {
-                    status("SELECT SUB", 50);
-                }
-
-                devices();
-                break;
-
-            case 3:
-                control(2, "PREFERENCES");
-
-                if (sys != psys) {
-                    status("PREFS MENU", 50);
-                }
-
-                prefs();
-                break;
-
-            case 4:
-                control(3, "DISABLE DISPLAY");
-
-                if (sys != psys) {
-                    status("SCREEN OFF", 50);
-                }
+            if (!stz && charge < 3) {
+                charge = 3;
             }
 
-            psys = sys;
+            other_vehicle_at((stz + 16000) * cos(secs / 10),
+                             4000 * sin(secs / 100),
+                             (stz + 16000) * sin(secs / 10));
+        } else {
+            helptime = 0;
         }
+    }
 
-        //
-        if (!ap_targetting && !ip_targetting) {
-            setfx(4);
-            dxx = pos_z / 88;
+    //
+    // Tracciamento della navicella.
+    //
+    from_user();
+    vehicle(opencapcount);
 
-            if (dxx < -16) {
-                dxx = -16;
+    //
+    // Tracciamento riflessi, aggiornamento dello schermo
+    // del gestore, tracciamento dello schermo del gestore,
+    // reazione visiva agli eventi interni alla navicella.
+    //
+    if (ontheroof) {
+        goto ext_1;
+    }
+
+    from_user();
+
+    if (!opencapcount) {
+        reflexes();
+    }
+
+    if (!(clock() % 10)) {
+        clear_onboard_screen();
+        control(0, "flight control drive");
+        control(1, "onboard devices");
+        control(2, "preferences");
+        control(3, "disable display");
+
+        switch (sys) {
+        case 1:
+            control(0, "FLIGHT CONTROL DRIVE");
+
+            if (sys != psys) {
+                status("FCS MENU", 50);
             }
 
-            entity = dxx;
-            screen();
-            setfx(0);
-        }
+            fcs();
+            break;
 
-        //
-        if (leftturn) {
-            arrowcolor = 127 - 16 * (clock() % 4);
-            digit_at('-', -2900, -50, 12, arrowcolor, 0);
+        case 2:
+            control(1, "ONBOARD DEVICES");
 
-            if (revcontrols) {
-                digit_at('>', -3000, -50, 12, arrowcolor, 0);
-            } else {
-                digit_at('<', -3000, -50, 12, arrowcolor, 0);
+            if (sys != psys) {
+                status("SELECT SUB", 50);
+            }
+
+            devices();
+            break;
+
+        case 3:
+            control(2, "PREFERENCES");
+
+            if (sys != psys) {
+                status("PREFS MENU", 50);
+            }
+
+            prefs();
+            break;
+
+        case 4:
+            control(3, "DISABLE DISPLAY");
+
+            if (sys != psys) {
+                status("SCREEN OFF", 50);
             }
         }
 
-        if (rightturn) {
-            arrowcolor = 127 - 16 * (clock() % 4);
-            digit_at('-', +2900, -50, 12, arrowcolor, 0);
+        psys = sys;
+    }
 
-            if (revcontrols) {
-                digit_at('<', +3000, -50, 12, arrowcolor, 0);
-            } else {
-                digit_at('>', +3000, -50, 12, arrowcolor, 0);
-            }
+    //
+    if (!ap_targetting && !ip_targetting) {
+        setfx(4);
+        dxx = pos_z / 88;
+
+        if (dxx < -16) {
+            dxx = -16;
         }
 
-        //
-        // ***** H.U.D. OUTER LAYER *****
-        // Fornisce informazioni sullo strato esterno dell'H.U.D.
-        // Qualsiasi glifo verr� in seguito trattato con dithering.
-        //
-        if (active_screen != -1) {
-            goto nohud_1;
+        entity = dxx;
+        screen();
+        setfx(0);
+    }
+
+    //
+    if (leftturn) {
+        arrowcolor = 127 - 16 * (clock() % 4);
+        digit_at('-', -2900, -50, 12, arrowcolor, 0);
+
+        if (revcontrols) {
+            digit_at('>', -3000, -50, 12, arrowcolor, 0);
+        } else {
+            digit_at('<', -3000, -50, 12, arrowcolor, 0);
         }
+    }
 
-        //
-        // Informazioni e schemi addizionali sull'H.U.D.
-        // Tracciamento label della stella selezionata.
-        // Tracciamento distanza dalla stella selezionata.
-        //
-        if (ap_targetting || ap_targetted) {
-            alfa = 0;
-            beta = 0;
-            change_angle_of_view();
-            cam_x = 450;
-            cam_y = 250;
-            cam_z = -750;
+    if (rightturn) {
+        arrowcolor = 127 - 16 * (clock() % 4);
+        digit_at('-', +2900, -50, 12, arrowcolor, 0);
 
-            for (c = 0; c < 24; c++) {
-                if (labstar && c == labstar_char) {
-                    digit_at('_', -6, -15, 5, 127 - 2 * (clock() % 32), 0);
-                }
-
-                digit_at(star_label[c], -6, -15, 5, 127, 1);
-                cam_x -= 40;
-            }
-
-            dxx   = dzat_x - ap_target_x;
-            dyy   = dzat_y - ap_target_y;
-            dzz   = dzat_z - ap_target_z;
-            l_dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) * 5E-5;
-
-            if (ap_reached && ap_target_id == nearstar_identity) {
-                l_dsd *= 0.01;
-            }
-
-            sprintf(temp_distance_buffer, "%01.2f", l_dsd);
-            cam_x = 450;
-            cam_y = -180;
-            cam_z = -750;
-            c     = 0;
-
-            while (temp_distance_buffer[c] != 0) {
-                digit_at(temp_distance_buffer[c], -6, -15, 5, 127, 1);
-                cam_x -= 40;
-                c++;
-            }
-
-            cam_x -= 40;
-            digit_at('L', -6, -15, 5, 112, 1);
-            cam_x -= 40;
-            digit_at('.', -6, -15, 5, 112, 1);
-            cam_x -= 40;
-            digit_at('Y', -6, -15, 5, 112, 1);
-            cam_x -= 40;
-            digit_at('.', -6, -15, 5, 112, 1);
+        if (revcontrols) {
+            digit_at('<', +3000, -50, 12, arrowcolor, 0);
+        } else {
+            digit_at('>', +3000, -50, 12, arrowcolor, 0);
         }
+    }
 
-        //
-        // Tracciamento label del pianeta selezionato,
-        // tracciamento distanza dal pianeta selezionato,
-        // aggiornamento nome del pianeta-bersaglio.
-        //
-        if (ip_targetted != -1) {
-            update_planet_label();
-            alfa = 0;
-            beta = 0;
-            change_angle_of_view();
-            cam_x = 450;
-            cam_y = 180;
-            cam_z = -750;
+    //
+    // ***** H.U.D. OUTER LAYER *****
+    // Fornisce informazioni sullo strato esterno dell'H.U.D.
+    // Qualsiasi glifo verr� in seguito trattato con dithering.
+    //
+    if (active_screen != -1) {
+        goto nohud_1;
+    }
 
-            for (c = 0; c < 24; c++) {
-                if (labplanet && c == labplanet_char) {
-                    digit_at('_', -6, -15, 5, 127 - 2 * (clock() % 32), 0);
-                }
-
-                digit_at(planet_label[c], -6, -15, 5, 112, 1);
-                cam_x -= 40;
-            }
-
-            planet_xyz(ip_targetted);
-            dxx   = dzat_x - plx;
-            dyy   = dzat_y - ply;
-            dzz   = dzat_z - plz;
-            l_dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) * 1E-2;
-            sprintf(temp_distance_buffer, "%01.2f", l_dsd);
-            cam_x = 450;
-            cam_y = -250;
-            cam_z = -750;
-            c     = 0;
-
-            while (temp_distance_buffer[c] != 0) {
-                digit_at(temp_distance_buffer[c], -6, -15, 5, 120, 1);
-                cam_x -= 40;
-                c++;
-            }
-
-            cam_x -= 40;
-            digit_at('D', -6, -15, 5, 105, 1);
-            cam_x -= 40;
-            digit_at('Y', -6, -15, 5, 105, 1);
-            cam_x -= 40;
-            digit_at('A', -6, -15, 5, 105, 1);
-            cam_x -= 40;
-            digit_at('M', -6, -15, 5, 105, 1);
-            cam_x -= 40;
-            digit_at('S', -6, -15, 5, 105, 1);
-        }
-
-        //
-        // Messaggio di reset, lampeggiante.
-        //
-        if (reset_signal && (reset_signal % 10) < 5) {
-            alfa = 0;
-            beta = 0;
-            change_angle_of_view();
-            cam_x = 300;
-            cam_y = 0;
-            cam_z = -750;
-            c     = 0;
-
-            while (sr_message[c] != 0) {
-                digit_at(sr_message[c], -6, -15, 8, 127, 1);
-                cam_x -= 60;
-                c++;
-            }
-        }
-
-        //
-        // Tracing the current FCS status.
-        //
-    nohud_1:
+    //
+    // Informazioni e schemi addizionali sull'H.U.D.
+    // Tracciamento label della stella selezionata.
+    // Tracciamento distanza dalla stella selezionata.
+    //
+    if (ap_targetting || ap_targetted) {
         alfa = 0;
         beta = 0;
         change_angle_of_view();
-        cam_x = -512;
-        cam_y = -275;
+        cam_x = 450;
+        cam_y = 250;
         cam_z = -750;
-        c     = strlen(fcs_status) - 1;
 
-        while (c >= 0) {
-            digit_at(fcs_status[c], -6, -15, 6, 120, 1);
-            cam_x += 45;
-            c--;
-        }
-
-        //
-        // Link alla funzione di ricerca dei targets in real-time.
-        //
-        if (collecting_targets) {
-            status("SCANNING..", 100);
-            collect_targets();
-
-            if (!collecting_targets) {
-                if (targets) {
-                    status("DONE!", 100);
-                } else {
-                    status("NO TARGETS", 100);
-                }
-            }
-        }
-
-        //
-        // Display / update table "targets in range".
-        //
-        if (targets_in_range) {
-            if (update_targets) {
-                tgts_in_show = 0;
-                c            = topmost_target;
-
-                while (targets && c < targets && tgts_in_show < 3) {
-                    tgt_label_pos = search_id_code(targets_table_id[c], 'S');
-
-                    if (tgt_label_pos > -1) {
-                        smh = open(starmap_file, 0);
-
-                        if (smh > -1) {
-                            lseek(smh, tgt_label_pos + 8, SEEK_SET);
-                            read(smh, &target_name[tgts_in_show], 24);
-                            close(smh);
-                            tgts_in_show++;
-                        }
-                    }
-
-                    c++;
-                }
-
-                update_targets = 0;
+        for (mc = 0; mc < 24; mc++) {
+            if (labstar && mc == labstar_char) {
+                digit_at('_', -6, -15, 5, 127 - 2 * (clock() % 32), 0);
             }
 
-            cam_x = 175;
-            cam_y = 40;
-            cam_z = -500;
-            frame(225, 48, 285, 96, 2, 90);
-            cam_y = 8 + 40;
-            c     = 0;
-
-            while (c < tgts_in_show) {
-                cam_x = 35 + 175;
-
-                if (c == target_line) {
-                    frame(226 + 35, 0, 277, 30, 1, 120);
-                }
-
-                for (ir = 0; ir < 24; ir++) {
-                    digit_at(target_name[c][ir], -5, -10, 3.5, 174, 1);
-                    cam_x -= 23;
-                }
-
-                cam_y -= 55;
-                c++;
-            }
+            digit_at(star_label[mc], -6, -15, 5, 127, 1);
+            cam_x -= 40;
         }
 
-    ext_1: //
-        // Anti-aliasing e dithering (error-diffusion).
-        // E` un procedimento molto peculiare, che fornisce effetti
-        // straordinariamente belli su uno schermo che, di per s�,
-        // � poco risolutivo, sia fisicamente che cromaticamente.
-        //
-        QUADWORDS -= 240;
-        psmooth_64(adapted, 200);
-        psmooth_64(adapted, 200);
-        QUADWORDS += 240;
-        //
-        // Tracciamento di tutte le stelle visibili.
-        //
-        from_vehicle();
-        sky(0x405C);
-
-        //
-        // ***** H.U.D. INNER LAYER *****
-        // Fornisce informazioni sullo strato interno dell'H.U.D.
-        // Qualsiasi glifo non verr� trattato con dithering.
-        //
-        if (datasheetscroll) {
-            areaclear(adapted, 11, 85, 0, 0, 1 + datasheetscroll, 9, 72);
-            areaclear(adapted, 11, 95, 0, 0, 1 + datasheetscroll, 40, 112);
-            c = (datasheetscroll / 4) - 1;
-
-            if (c > 0) {
-                switch (data) {
-                case 1: // remote target data
-                    if (ap_targetted) {
-                        if (ap_targetted == 1) {
-                            wrouthud(14, 87, c, (char *)star_label);
-                            tmp_float = 1e-3 * qt_M_PI * ap_target_ray *
-                                        ap_target_ray * ap_target_ray;
-                            tmp_float *= starmass_correction[ap_target_class];
-
-                            if (nearstar_class == 8 || nearstar_class == 9) {
-                                fast_srand((long)ap_target_x % 32000);
-
-                                switch (fast_random(5)) {
-                                case 0:
-                                    tmp_float /= 1 + 5 * fast_flandom();
-                                    break;
-
-                                case 1:
-                                    tmp_float /= 1 + fast_flandom();
-                                    break;
-
-                                case 2:
-                                    tmp_float *= 1 + fast_flandom();
-                                    break;
-
-                                case 3:
-                                    tmp_float *= 1 + 20 * fast_flandom();
-                                    break;
-
-                                case 4:
-                                    tmp_float *= 1 + 50 * fast_flandom();
-                                }
-                            }
-
-                            wrouthud(14, 97, c, (char*) "PRIMARY MASS:");
-                            sprintf((char *)outhudbuffer, "%1.8f BAL. M.",
-                                    tmp_float);
-                            wrouthud(14, 103, c, (char *)outhudbuffer);
-                            tmp_float /= 0.38e-4 * ap_target_ray;
-
-                            if (ap_target_class == 6) {
-                                tmp_float *= 0.0022;
-                            }
-
-                            wrouthud(14, 113, c, (char*) "SURFACE TEMPERATURE:");
-                            sprintf((char *)outhudbuffer, "%1.0f@K&%1.0f@C&%1.0f@F",
-                                    tmp_float + 273.15, tmp_float,
-                                    tmp_float * 1.8 + 32);
-                            wrouthud(14, 119, c, (char *)outhudbuffer);
-                            sprintf((char *)outhudbuffer, "MAJOR BODIES: %d EST.",
-                                    starnop(ap_target_x, ap_target_y, ap_target_z));
-                            wrouthud(14, 129, c, (char *)outhudbuffer);
-                        } else {
-                            wrouthud(14, 87, c, (char*) "DIRECT PARSIS TARGET");
-                        }
-                    } else {
-                        wrouthud(14, 87, c, (char*) "REMOTE TARGET NOT SET");
-                    }
-
-                    break;
-
-                case 2: // local target data
-                    if (ip_targetted != -1) {
-                        wrouthud(14, 87, c, (char *)planet_label);
-                        wrouthud(14, 97, c, (char*) "PERIOD OF ROTATION:");
-
-                        if (nearstar_p_qsortindex[nearstar_nob - 1] ==
-                            ip_targetted) {
-                            if (nearstar_p_rtperiod[ip_targetted] > 0) {
-                                p1 = nearstar_p_rtperiod[ip_targetted];
-                                p1 *= 360;
-                                p2 = p1 / 1000;
-                                p2 /= 1000;
-                                p3 = p1 / 1000;
-                                p3 %= 1000;
-                                p4 = p1 % 1000;
-                                sprintf((char *)outhudbuffer,
-                                        "TRIADS %03ld:%03ld:%03ld", p2, p3, p4);
-                                wrouthud(14, 103, c, (char *)outhudbuffer);
-                            } else {
-                                if (ip_reaching || ip_reached) {
-                                    if (nearstar_p_type[ip_targetted] != 10) {
-                                        wrouthud(14, 103, c, (char*) "COMPUTING...");
-                                    } else {
-                                        wrouthud(14, 103, c, (char*) "NOT RESOLVABLE");
-                                    }
-                                } else {
-                                    wrouthud(14, 103, c, (char*) "TOO FAR TO ESTIMATE");
-                                }
-                            }
-                        } else {
-                            wrouthud(14, 103, c, (char*) "TOO FAR TO ESTIMATE");
-                        }
-
-                        wrouthud(14, 113, c, (char*) "PERIOD OF REVOLUTION:");
-                        tmp_float = rtp(ip_targetted);
-                        p1        = tmp_float * 1e-9;
-                        p2        = tmp_float * 1e-6;
-                        p2 %= 1000;
-                        p3 = tmp_float * 1e-3;
-                        p3 %= 1000;
-                        p4 = (long)(tmp_float) % 1000;
-
-                        if (p1 < 2) {
-                            sprintf((char *)outhudbuffer,
-                                    "%ld EPOCS, %03ld:%03ld:%03ld", p1, p2, p3, p4);
-                        } else {
-                            if (p1 < 2047) {
-                                sprintf((char *)outhudbuffer,
-                                        "%ld EPOCS, %03ld:%03ld:???", p1, p2, p3);
-                            } else {
-                                sprintf((char *)outhudbuffer,
-                                        "%ld EPOCS, %03ld:???:???", p1, p2);
-                            }
-                        }
-
-                        wrouthud(14, 119, c, (char *)outhudbuffer);
-                    } else {
-                        wrouthud(14, 87, 21, "LOCAL TARGET NOT SET");
-                    }
-
-                    break;
-
-                case 3: // environment data
-                    wrouthud(14, 87, c, "EXTERNAL ENVIRONMENT");
-                    fast_srand(secs / 2);
-                    tmp_float = 16 - dsd * 0.044;
-                    tmp_float *= fabs(tmp_float);
-                    tmp_float -= (tmp_float + 273.15) * eclipse;
-
-                    if (tmp_float < -269) {
-                        tmp_float = fast_flandom() - 269;
-                    }
-
-                    sprintf((char *)outhudbuffer, "TEMP. %1.2f@K",
-                            tmp_float + 273.15);
-                    wrouthud(14, 97, c, (char *)outhudbuffer);
-                    sprintf((char *)outhudbuffer, "      %1.2f@C", tmp_float);
-                    wrouthud(14, 103, c, (char *)outhudbuffer);
-                    sprintf((char *)outhudbuffer, "      %1.2f@F",
-                            tmp_float * 1.8 + 32);
-                    wrouthud(14, 109, c, (char *)outhudbuffer);
-                    srand(nearstar_identity);
-
-                    if (nearstar_class == 6 || nearstar_class == 5) {
-                        ir = rand() % 50;
-                        if (nearstar_class == 5) {
-                            ir -= 125 / dsd;
-
-                            if (ir <= 0) {
-                                ir = 1;
-                            }
-                        }
-                        else {
-                            ir -= 25 / dsd;
-                        }
-                    } else {
-                        ir = 0;
-                    }
-
-                    sprintf((char *)outhudbuffer, "LI+ IONS: %ld MTPD EST.", ir);
-                    wrouthud(14, 119, c, (char *)outhudbuffer);
-
-                    tmp_float = 50 + (rand() % 10) - (rand() % 10);
-
-                    tmp_float *= (1 - eclipse);
-                    tmp_float *= 100 / dsd;
-
-                    if (nearstar_class == 11) {
-                        if (gl_start < 90) {
-                            tmp_float *= 75 + rand() % 50;
-                        } else {
-                            tmp_float *= 50;
-                        }
-                    }
-
-                    if (nearstar_class == 10) {
-                        tmp_float *= 0.25;
-                    }
-
-                    if (nearstar_class == 9) {
-                        tmp_float *= 3;
-                    }
-
-                    if (nearstar_class == 8) {
-                        tmp_float *= 1.5;
-                    }
-
-                    if (nearstar_class == 7) {
-                        tmp_float *= 25;
-                    }
-
-                    if (nearstar_class == 6) {
-                        tmp_float *= 0.01;
-                    }
-
-                    if (nearstar_class == 5) {
-                        tmp_float *= 0.1;
-                    }
-
-                    if (nearstar_class == 4) {
-                        tmp_float *= 10;
-                    }
-
-                    if (nearstar_class == 3) {
-                        tmp_float *= 0.5;
-                    }
-
-                    if (nearstar_class == 2) {
-                        tmp_float *= 18;
-                    }
-
-                    if (nearstar_class == 1) {
-                        tmp_float *= 5;
-                    }
-
-                    srand(secs);
-                    tmp_float *= 1
-                                 + (float)(rand() % 100) * 0.001
-                                 - (float)(rand() % 100) * 0.001;
-                    sprintf((char *)outhudbuffer, "RADIATION: %1.1f KR",
-                                 tmp_float);
-                    wrouthud(14, 126, c, (char *)outhudbuffer);
-                    break;
-                }
-            }
-        }
-
-        datasheetscroll += datasheetdelta;
-
-        if (datasheetscroll > 100) {
-            datasheetscroll = 100;
-        }
-
-        if (datasheetscroll < 0) {
-            datasheetscroll = 0;
-            data            = 0;
-        }
-
-        // Draw planetary targeting cross.
-        if ((ip_targetted != -1 && !ip_reached) || ip_targetting) {
-            planet_xyz(ip_targetted);
-
-            if (far_pixel_at(plx, ply, plz, 0, 1)) {
-                uint16_t index = vptr - 640;
-
-                for (int16_t i = 0; i < 4; i++) {
-                    int16_t voffset = (i > 1) ? 320 : 1;
-                    int16_t signmod = (i % 2 == 0) ? -1 : 1;
-
-                    for (int16_t j = 4; j < 8; j++) {
-                        adapted[index + signmod * voffset * j] = 126;
-                    }
-                }
-            }
-        }
-
-        //
-        // Croce di puntamento della stella-bersaglio,
-        // aggiornamento nome della stella-bersaglio,
-        // spostamenti interstellari suplucsi.
-        //
         dxx   = dzat_x - ap_target_x;
         dyy   = dzat_y - ap_target_y;
         dzz   = dzat_z - ap_target_z;
-        l_dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz);
+        l_dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) * 5E-5;
 
-        if (ap_targetting || l_dsd > 10000) {
-            pointer_cross_for(ap_target_x, ap_target_y, ap_target_z);
+        if (ap_reached && ap_target_id == nearstar_identity) {
+            l_dsd *= 0.01;
         }
 
-        if (ap_targetting || ap_targetted) {
-            update_star_label();
+        sprintf(temp_distance_buffer, "%01.2f", l_dsd);
+        cam_x = 450;
+        cam_y = -180;
+        cam_z = -750;
+        mc     = 0;
 
-            if (stspeed == 1) {
-                if (ap_targetted == -1) {
-                    ras = 25000;
-                } else {
-                    if (anti_rad) {
-                        ras = 44 * ap_target_ray;
-                    } else {
-                        ras = 1.5 * ap_target_ray;
-                    }
+        while (temp_distance_buffer[mc] != 0) {
+            digit_at(temp_distance_buffer[mc], -6, -15, 5, 127, 1);
+            cam_x -= 40;
+            mc++;
+        }
 
-                    if (l_dsd < 20000 && nsnp) {
-                        prepare_nearstar();
-                        nsnp = 0;
+        cam_x -= 40;
+        digit_at('L', -6, -15, 5, 112, 1);
+        cam_x -= 40;
+        digit_at('.', -6, -15, 5, 112, 1);
+        cam_x -= 40;
+        digit_at('Y', -6, -15, 5, 112, 1);
+        cam_x -= 40;
+        digit_at('.', -6, -15, 5, 112, 1);
+    }
+
+    //
+    // Tracciamento label del pianeta selezionato,
+    // tracciamento distanza dal pianeta selezionato,
+    // aggiornamento nome del pianeta-bersaglio.
+    //
+    if (ip_targetted != -1) {
+        update_planet_label();
+        alfa = 0;
+        beta = 0;
+        change_angle_of_view();
+        cam_x = 450;
+        cam_y = 180;
+        cam_z = -750;
+
+        for (mc = 0; mc < 24; mc++) {
+            if (labplanet && mc == labplanet_char) {
+                digit_at('_', -6, -15, 5, 127 - 2 * (clock() % 32), 0);
+            }
+
+            digit_at(planet_label[mc], -6, -15, 5, 112, 1);
+            cam_x -= 40;
+        }
+
+        planet_xyz(ip_targetted);
+        dxx   = dzat_x - plx;
+        dyy   = dzat_y - ply;
+        dzz   = dzat_z - plz;
+        l_dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) * 1E-2;
+        sprintf(temp_distance_buffer, "%01.2f", l_dsd);
+        cam_x = 450;
+        cam_y = -250;
+        cam_z = -750;
+        mc     = 0;
+
+        while (temp_distance_buffer[mc] != 0) {
+            digit_at(temp_distance_buffer[mc], -6, -15, 5, 120, 1);
+            cam_x -= 40;
+            mc++;
+        }
+
+        cam_x -= 40;
+        digit_at('D', -6, -15, 5, 105, 1);
+        cam_x -= 40;
+        digit_at('Y', -6, -15, 5, 105, 1);
+        cam_x -= 40;
+        digit_at('A', -6, -15, 5, 105, 1);
+        cam_x -= 40;
+        digit_at('M', -6, -15, 5, 105, 1);
+        cam_x -= 40;
+        digit_at('S', -6, -15, 5, 105, 1);
+    }
+
+    //
+    // Messaggio di reset, lampeggiante.
+    //
+    if (reset_signal && (reset_signal % 10) < 5) {
+        alfa = 0;
+        beta = 0;
+        change_angle_of_view();
+        cam_x = 300;
+        cam_y = 0;
+        cam_z = -750;
+        mc     = 0;
+
+        while (sr_message[mc] != 0) {
+            digit_at(sr_message[mc], -6, -15, 8, 127, 1);
+            cam_x -= 60;
+            mc++;
+        }
+    }
+
+    //
+    // Tracing the current FCS status.
+    //
+    nohud_1:
+    alfa = 0;
+    beta = 0;
+    change_angle_of_view();
+    cam_x = -512;
+    cam_y = -275;
+    cam_z = -750;
+    mc     = strlen(fcs_status) - 1;
+
+    while (mc >= 0) {
+        digit_at(fcs_status[mc], -6, -15, 6, 120, 1);
+        cam_x += 45;
+        mc--;
+    }
+
+    //
+    // Link alla funzione di ricerca dei targets in real-time.
+    //
+    if (collecting_targets) {
+        status("SCANNING..", 100);
+        collect_targets();
+
+        if (!collecting_targets) {
+            if (targets) {
+                status("DONE!", 100);
+            } else {
+                status("NO TARGETS", 100);
+            }
+        }
+    }
+
+    //
+    // Display / update table "targets in range".
+    //
+    if (targets_in_range) {
+        if (update_targets) {
+            tgts_in_show = 0;
+            mc            = topmost_target;
+
+            while (targets && mc < targets && tgts_in_show < 3) {
+                tgt_label_pos = search_id_code(targets_table_id[mc], 'S');
+
+                if (tgt_label_pos > -1) {
+                    smh = open(starmap_file, 0);
+
+                    if (smh > -1) {
+                        lseek(smh, tgt_label_pos + 8, SEEK_SET);
+                        read(smh, &target_name[tgts_in_show], 24);
+                        close(smh);
+                        tgts_in_show++;
                     }
                 }
 
-                if (l_dsd < ras) {
-                    status("CALIBRATED", 50);
-                    ap_reached = 1;
-                    stspeed    = 0;
+                mc++;
+            }
+
+            update_targets = 0;
+        }
+
+        cam_x = 175;
+        cam_y = 40;
+        cam_z = -500;
+        frame(225, 48, 285, 96, 2, 90);
+        cam_y = 8 + 40;
+        mc     = 0;
+
+        while (mc < tgts_in_show) {
+            cam_x = 35 + 175;
+
+            if (mc == target_line) {
+                frame(226 + 35, 0, 277, 30, 1, 120);
+            }
+
+            for (ir = 0; ir < 24; ir++) {
+                digit_at(target_name[mc][ir], -5, -10, 3.5, 174, 1);
+                cam_x -= 23;
+            }
+
+            cam_y -= 55;
+            mc++;
+        }
+    }
+
+    ext_1: //
+    // Anti-aliasing e dithering (error-diffusion).
+    // E` un procedimento molto peculiare, che fornisce effetti
+    // straordinariamente belli su uno schermo che, di per s�,
+    // � poco risolutivo, sia fisicamente che cromaticamente.
+    //
+    QUADWORDS -= 240;
+    psmooth_64(adapted, 200);
+    psmooth_64(adapted, 200);
+    QUADWORDS += 240;
+    //
+    // Tracciamento di tutte le stelle visibili.
+    //
+    from_vehicle();
+    sky(0x405C);
+
+    //
+    // ***** H.U.D. INNER LAYER *****
+    // Fornisce informazioni sullo strato interno dell'H.U.D.
+    // Qualsiasi glifo non verr� trattato con dithering.
+    //
+    if (datasheetscroll) {
+        areaclear(adapted, 11, 85, 0, 0, 1 + datasheetscroll, 9, 72);
+        areaclear(adapted, 11, 95, 0, 0, 1 + datasheetscroll, 40, 112);
+        mc = (datasheetscroll / 4) - 1;
+
+        if (mc > 0) {
+            switch (data) {
+            case 1: // remote target data
+                if (ap_targetted) {
+                    if (ap_targetted == 1) {
+                        wrouthud(14, 87, mc, (char *)star_label);
+                        tmp_float = 1e-3 * qt_M_PI * ap_target_ray *
+                                    ap_target_ray * ap_target_ray;
+                        tmp_float *= starmass_correction[ap_target_class];
+
+                        if (nearstar_class == 8 || nearstar_class == 9) {
+                            fast_srand((long)ap_target_x % 32000);
+
+                            switch (fast_random(5)) {
+                            case 0:
+                                tmp_float /= 1 + 5 * fast_flandom();
+                                break;
+
+                            case 1:
+                                tmp_float /= 1 + fast_flandom();
+                                break;
+
+                            case 2:
+                                tmp_float *= 1 + fast_flandom();
+                                break;
+
+                            case 3:
+                                tmp_float *= 1 + 20 * fast_flandom();
+                                break;
+
+                            case 4:
+                                tmp_float *= 1 + 50 * fast_flandom();
+                            }
+                        }
+
+                        wrouthud(14, 97, mc, (char*) "PRIMARY MASS:");
+                        sprintf((char *)outhudbuffer, "%1.8f BAL. M.",
+                                tmp_float);
+                        wrouthud(14, 103, mc, (char *)outhudbuffer);
+                        tmp_float /= 0.38e-4 * ap_target_ray;
+
+                        if (ap_target_class == 6) {
+                            tmp_float *= 0.0022;
+                        }
+
+                        wrouthud(14, 113, mc, (char*) "SURFACE TEMPERATURE:");
+                        sprintf((char *)outhudbuffer, "%1.0f@K&%1.0f@C&%1.0f@F",
+                                tmp_float + 273.15, tmp_float,
+                                tmp_float * 1.8 + 32);
+                        wrouthud(14, 119, mc, (char *)outhudbuffer);
+                        sprintf((char *)outhudbuffer, "MAJOR BODIES: %d EST.",
+                                starnop(ap_target_x, ap_target_y, ap_target_z));
+                        wrouthud(14, 129, mc, (char *)outhudbuffer);
+                    } else {
+                        wrouthud(14, 87, mc, (char*) "DIRECT PARSIS TARGET");
+                    }
                 } else {
-                    if (l_dsd > 0.9999 * ap_target_initial_d) {
-                        requested_vimana_coefficient = 0.001 * l_dsd;
-                        status("CHARGING", 0);
-                        vimana_reaction_time = 0.1;
-                        goto ap_drive_mode;
+                    wrouthud(14, 87, mc, (char*) "REMOTE TARGET NOT SET");
+                }
+
+                break;
+
+            case 2: // local target data
+                if (ip_targetted != -1) {
+                    wrouthud(14, 87, mc, (char *)planet_label);
+                    wrouthud(14, 97, mc, (char*) "PERIOD OF ROTATION:");
+
+                    if (nearstar_p_qsortindex[nearstar_nob - 1] ==
+                        ip_targetted) {
+                        if (nearstar_p_rtperiod[ip_targetted] > 0) {
+                            p1 = nearstar_p_rtperiod[ip_targetted];
+                            p1 *= 360;
+                            p2 = p1 / 1000;
+                            p2 /= 1000;
+                            p3 = p1 / 1000;
+                            p3 %= 1000;
+                            p4 = p1 % 1000;
+                            sprintf((char *)outhudbuffer,
+                                    "TRIADS %03ld:%03ld:%03ld", p2, p3, p4);
+                            wrouthud(14, 103, mc, (char *)outhudbuffer);
+                        } else {
+                            if (ip_reaching || ip_reached) {
+                                if (nearstar_p_type[ip_targetted] != 10) {
+                                    wrouthud(14, 103, mc, (char*) "COMPUTING...");
+                                } else {
+                                    wrouthud(14, 103, mc, (char*) "NOT RESOLVABLE");
+                                }
+                            } else {
+                                wrouthud(14, 103, mc, (char*) "TOO FAR TO ESTIMATE");
+                            }
+                        }
+                    } else {
+                        wrouthud(14, 103, mc, (char*) "TOO FAR TO ESTIMATE");
                     }
 
-                    if (l_dsd < 7500 + ras) {
-                        requested_vimana_coefficient = 0.005 * l_dsd;
-                        status("PARKING", 0);
-                        vimana_reaction_time = 0.01;
-                        goto ap_drive_mode;
+                    wrouthud(14, 113, mc, (char*) "PERIOD OF REVOLUTION:");
+                    tmp_float = rtp(ip_targetted);
+                    p1        = tmp_float * 1e-9;
+                    p2        = tmp_float * 1e-6;
+                    p2 %= 1000;
+                    p3 = tmp_float * 1e-3;
+                    p3 %= 1000;
+                    p4 = (long)(tmp_float) % 1000;
+
+                    if (p1 < 2) {
+                        sprintf((char *)outhudbuffer,
+                                "%ld EPOCS, %03ld:%03ld:%03ld", p1, p2, p3, p4);
+                    } else {
+                        if (p1 < 2047) {
+                            sprintf((char *)outhudbuffer,
+                                    "%ld EPOCS, %03ld:%03ld:???", p1, p2, p3);
+                        } else {
+                            sprintf((char *)outhudbuffer,
+                                    "%ld EPOCS, %03ld:???:???", p1, p2);
+                        }
                     }
 
-                    if (l_dsd < 15000 + ras) {
-                        requested_vimana_coefficient = 0.005 * l_dsd;
-                        status("LINKING", 0);
-                        vimana_reaction_time = 0.0025;
-                        goto ap_drive_mode;
+                    wrouthud(14, 119, mc, (char *)outhudbuffer);
+                } else {
+                    wrouthud(14, 87, 21, "LOCAL TARGET NOT SET");
+                }
+
+                break;
+
+            case 3: // environment data
+                wrouthud(14, 87, mc, "EXTERNAL ENVIRONMENT");
+                fast_srand(secs / 2);
+                tmp_float = 16 - dsd * 0.044;
+                tmp_float *= fabs(tmp_float);
+                tmp_float -= (tmp_float + 273.15) * eclipse;
+
+                if (tmp_float < -269) {
+                    tmp_float = fast_flandom() - 269;
+                }
+
+                sprintf((char *)outhudbuffer, "TEMP. %1.2f@K",
+                        tmp_float + 273.15);
+                wrouthud(14, 97, mc, (char *)outhudbuffer);
+                sprintf((char *)outhudbuffer, "      %1.2f@C", tmp_float);
+                wrouthud(14, 103, mc, (char *)outhudbuffer);
+                sprintf((char *)outhudbuffer, "      %1.2f@F",
+                        tmp_float * 1.8 + 32);
+                wrouthud(14, 109, mc, (char *)outhudbuffer);
+                srand(nearstar_identity);
+
+                if (nearstar_class == 6 || nearstar_class == 5) {
+                    ir = rand() % 50;
+                    if (nearstar_class == 5) {
+                        ir -= 125 / dsd;
+
+                        if (ir <= 0) {
+                            ir = 1;
+                        }
                     }
-
-                    if (l_dsd < 0.9990 * ap_target_initial_d) {
-                        requested_vimana_coefficient = 0.00001 * l_dsd;
-                        status("DRIVING", 0);
-                        vimana_reaction_time = 0.05;
-                        goto ap_drive_mode;
+                    else {
+                        ir -= 25 / dsd;
                     }
+                } else {
+                    ir = 0;
+                }
 
-                    requested_vimana_coefficient = 0.0002 * l_dsd;
-                    status("IGNITION", 0);
+                sprintf((char *)outhudbuffer, "LI+ IONS: %ld MTPD EST.", ir);
+                wrouthud(14, 119, mc, (char *)outhudbuffer);
 
-                    if (vimana_reaction_time != 0.08) {
-                        vimana_reaction_time = 0.08;
+                tmp_float = 50 + (rand() % 10) - (rand() % 10);
+
+                tmp_float *= (1 - eclipse);
+                tmp_float *= 100 / dsd;
+
+                if (nearstar_class == 11) {
+                    if (gl_start < 90) {
+                        tmp_float *= 75 + rand() % 50;
+                    } else {
+                        tmp_float *= 50;
                     }
+                }
 
-                ap_drive_mode:
-                    current_vimana_coefficient += (requested_vimana_coefficient -
-                                                   current_vimana_coefficient) *
-                                                  vimana_reaction_time;
+                if (nearstar_class == 10) {
+                    tmp_float *= 0.25;
+                }
 
-                    if (current_vimana_coefficient < 10) {
-                        current_vimana_coefficient = 10;
-                    }
+                if (nearstar_class == 9) {
+                    tmp_float *= 3;
+                }
 
-                    dzat_x -= dxx / current_vimana_coefficient;
-                    dzat_y -= dyy / current_vimana_coefficient;
-                    dzat_z -= dzz / current_vimana_coefficient;
-                    pwr -= l_dsd * 1E-5;
+                if (nearstar_class == 8) {
+                    tmp_float *= 1.5;
+                }
+
+                if (nearstar_class == 7) {
+                    tmp_float *= 25;
+                }
+
+                if (nearstar_class == 6) {
+                    tmp_float *= 0.01;
+                }
+
+                if (nearstar_class == 5) {
+                    tmp_float *= 0.1;
+                }
+
+                if (nearstar_class == 4) {
+                    tmp_float *= 10;
+                }
+
+                if (nearstar_class == 3) {
+                    tmp_float *= 0.5;
+                }
+
+                if (nearstar_class == 2) {
+                    tmp_float *= 18;
+                }
+
+                if (nearstar_class == 1) {
+                    tmp_float *= 5;
+                }
+
+                srand(secs);
+                tmp_float *= 1
+                             + (float)(rand() % 100) * 0.001
+                             - (float)(rand() % 100) * 0.001;
+                sprintf((char *)outhudbuffer, "RADIATION: %1.1f KR",
+                        tmp_float);
+                wrouthud(14, 126, mc, (char *)outhudbuffer);
+                break;
+            }
+        }
+    }
+
+    datasheetscroll += datasheetdelta;
+
+    if (datasheetscroll > 100) {
+        datasheetscroll = 100;
+    }
+
+    if (datasheetscroll < 0) {
+        datasheetscroll = 0;
+        data            = 0;
+    }
+
+    // Draw planetary targeting cross.
+    if ((ip_targetted != -1 && !ip_reached) || ip_targetting) {
+        planet_xyz(ip_targetted);
+
+        if (far_pixel_at(plx, ply, plz, 0, 1)) {
+            uint16_t index = vptr - 640;
+
+            for (int16_t i = 0; i < 4; i++) {
+                int16_t voffset = (i > 1) ? 320 : 1;
+                int16_t signmod = (i % 2 == 0) ? -1 : 1;
+
+                for (int16_t j = 4; j < 8; j++) {
+                    adapted[index + signmod * voffset * j] = 126;
                 }
             }
         }
+    }
 
-        //
-        // Sincronizzazione della navicella con i moti planetari,
-        // spostamenti interplanetari suplucsi.
-        //
+    //
+    // Croce di puntamento della stella-bersaglio,
+    // aggiornamento nome della stella-bersaglio,
+    // spostamenti interstellari suplucsi.
+    //
+    dxx   = dzat_x - ap_target_x;
+    dyy   = dzat_y - ap_target_y;
+    dzz   = dzat_z - ap_target_z;
+    l_dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz);
+
+    if (ap_targetting || l_dsd > 10000) {
+        pointer_cross_for(ap_target_x, ap_target_y, ap_target_z);
+    }
+
+    if (ap_targetting || ap_targetted) {
+        update_star_label();
+
+        if (stspeed == 1) {
+            if (ap_targetted == -1) {
+                ras = 25000;
+            } else {
+                if (anti_rad) {
+                    ras = 44 * ap_target_ray;
+                } else {
+                    ras = 1.5 * ap_target_ray;
+                }
+
+                if (l_dsd < 20000 && nsnp) {
+                    prepare_nearstar();
+                    nsnp = 0;
+                }
+            }
+
+            if (l_dsd < ras) {
+                status("CALIBRATED", 50);
+                ap_reached = 1;
+                stspeed    = 0;
+            } else {
+                if (l_dsd > 0.9999 * ap_target_initial_d) {
+                    requested_vimana_coefficient = 0.001 * l_dsd;
+                    status("CHARGING", 0);
+                    vimana_reaction_time = 0.1;
+                    goto ap_drive_mode;
+                }
+
+                if (l_dsd < 7500 + ras) {
+                    requested_vimana_coefficient = 0.005 * l_dsd;
+                    status("PARKING", 0);
+                    vimana_reaction_time = 0.01;
+                    goto ap_drive_mode;
+                }
+
+                if (l_dsd < 15000 + ras) {
+                    requested_vimana_coefficient = 0.005 * l_dsd;
+                    status("LINKING", 0);
+                    vimana_reaction_time = 0.0025;
+                    goto ap_drive_mode;
+                }
+
+                if (l_dsd < 0.9990 * ap_target_initial_d) {
+                    requested_vimana_coefficient = 0.00001 * l_dsd;
+                    status("DRIVING", 0);
+                    vimana_reaction_time = 0.05;
+                    goto ap_drive_mode;
+                }
+
+                requested_vimana_coefficient = 0.0002 * l_dsd;
+                status("IGNITION", 0);
+
+                if (vimana_reaction_time != 0.08) {
+                    vimana_reaction_time = 0.08;
+                }
+
+                ap_drive_mode:
+                current_vimana_coefficient += (requested_vimana_coefficient -
+                                               current_vimana_coefficient) *
+                                              vimana_reaction_time;
+
+                if (current_vimana_coefficient < 10) {
+                    current_vimana_coefficient = 10;
+                }
+
+                dzat_x -= dxx / current_vimana_coefficient;
+                dzat_y -= dyy / current_vimana_coefficient;
+                dzat_z -= dzz / current_vimana_coefficient;
+                pwr -= l_dsd * 1E-5;
+            }
+        }
+    }
+
+    //
+    // Sincronizzazione della navicella con i moti planetari,
+    // spostamenti interplanetari suplucsi.
+    //
     resynctoplanet:
 
-        if (ip_targetted != -1 && pwr > 15000) {
-            planet_xyz(ip_targetted);
+    if (ip_targetted != -1 && pwr > 15000) {
+        planet_xyz(ip_targetted);
+        dxx = dzat_x - plx;
+        dyy = dzat_y - ply;
+        dzz = dzat_z - plz;
+
+        if (ip_reached && nsync) {
+            status("TRACKING", 0);
+
+            if (nsync == 1) { // fixed-point chase
+                ang    = (double)deg * (double)navigation_beta;
+                hold_z = 1.8;
+            }
+
+            if (nsync == 2) { // far chase
+                ang    = (double)deg * (double)navigation_beta;
+                hold_z = 5.4;
+            }
+
+            if (nsync == 3) { // syncrone orbit
+                ang = (double)nearstar_p_rotation[ip_targetted] * (double)deg;
+                hold_z = 1.8 + 0.1 * nearstar_p_ray[ip_targetted];
+            }
+
+            if (nsync == 4) { // vimana orbit
+                ang    = 7 * secs * (double)deg;
+                hold_z = 3.6;
+            }
+
+            if (nsync == 5) { // near chase
+                ang    = (double)deg * (double)navigation_beta;
+                hold_z = 1.2;
+            }
+
+            dxx += hold_z * nearstar_p_ray[ip_targetted] * sin(ang);
+            dzz -= hold_z * nearstar_p_ray[ip_targetted] * cos(ang);
+
+            if (_delay < 5) {
+                dzat_x -= dxx * 0.05;
+                dzat_y -= dyy * 0.05;
+                dzat_z -= dzz * 0.05;
+            } else {
+                dzat_x -= dxx;
+                dzat_y -= dyy;
+                dzat_z -= dzz;
+            }
+        }
+
+        if (ip_reaching) {
+            l_dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz);
+
+            if (l_dsd > 0.99999 * ip_target_initial_d) {
+                requested_approach_coefficient = 25 * l_dsd;
+                status("WARMING UP", 0);
+                reaction_time = 0.001;
+                goto ip_drive_mode;
+            }
+
+            if (l_dsd < 25 && ip_target_initial_d > 500) {
+                requested_approach_coefficient = 50 * l_dsd;
+                status("REFINING", 0);
+                reaction_time = 0.0002;
+                goto ip_drive_mode;
+            }
+
+            if (l_dsd < 100 && ip_target_initial_d > 500) {
+                requested_approach_coefficient = 15 * l_dsd;
+                status("BREAKING", 0);
+                reaction_time = 0.0003;
+                goto ip_drive_mode;
+            }
+
+            if (l_dsd < 0.99500 * ip_target_initial_d) {
+                requested_approach_coefficient = 0.05 * l_dsd;
+                status("APPROACH", 0);
+                reaction_time = 0.025;
+                goto ip_drive_mode;
+            }
+
+            requested_approach_coefficient = 1.5 * l_dsd;
+            status("IGNITION", 0);
+            reaction_time = 0.05;
+            ip_drive_mode:
+            current_approach_coefficient += (requested_approach_coefficient -
+                                             current_approach_coefficient) *
+                                            reaction_time;
+
+            if (current_approach_coefficient < 10) {
+                current_approach_coefficient = 10;
+            }
+
+            dzat_x -= dxx / current_approach_coefficient;
+            dzat_z -= dzz / current_approach_coefficient;
+            dzat_y -= dyy / (0.5 * current_approach_coefficient);
+            pwr -= l_dsd * 0.5E-5;
+
+            if (l_dsd < 2 * nearstar_p_ray[ip_targetted]) {
+                status("STANDBY", 0);
+                ip_reaching = 0;
+                ip_reached  = 1;
+            }
+        }
+    }
+
+    //
+    // Gestione del consumo di litio.
+    // Consumi supplementari, gestione ricariche.
+    //
+    additional_consumes();
+    //
+    // Calcolo della distanza dalla stella pi� vicina,
+    // per il controllo su radiazioni, eclissi, temperatura.
+    //
+    dxx = dzat_x - nearstar_x;
+    dyy = dzat_y - nearstar_y;
+    dzz = dzat_z - nearstar_z;
+    dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
+
+    //
+    // Allontanamento d'emergenza della navicella dalla stella.
+    //
+    if (dsd < (0.44 + (double)(2 * anti_rad)) * nearstar_ray) {
+        status("CORRECTION", 100);
+        dzat_x += (dxx / dsd) * 0.1;
+        dzat_y += (dyy / dsd) * 0.1;
+        dzat_z += (dzz / dsd) * 0.1;
+    }
+
+    //
+    // Manovre di approvvigionamento litio dallo spazio
+    // attorno alle stelle di classe 5 o a certe di classe 6.
+    // Le stelle di classe 6 sono pi� difficili da sfruttare,
+    // ma danno i migliori risultati. Quelle di classe 5 sono
+    // sempre adatte, ma con scarsi risultati.
+    //
+    if (lithium_collector) {
+        srand(nearstar_identity);
+        ir = rand() % 50;
+
+        if (nearstar_class == 5) {
+            ir -= 125 / dsd;
+
+            if (ir <= 0) {
+                ir = 1;
+            }
+        }
+        else {
+            ir -= 25 / dsd;
+        }
+
+        if (ir > 0) {
+            if (pwr >= 20000 && charge >= 120) {
+                status("! FULL !", 100);
+                lithium_collector = 0;
+            } else {
+                pwr += ir;
+
+                if (pwr >= 20000) {
+                    if (charge < 120) {
+                        pwr = 15001;
+                        charge++;
+                    } else {
+                        pwr = 20000;
+                    }
+                }
+
+                status("SCOPING...", 25);
+            }
+        } else {
+            status("GET CLOSER", 100);
+
+            if (!reset_signal) {
+                lithium_collector = 0;
+            }
+        }
+    }
+
+    //
+    // Controllo eclissi.
+    //
+    stz = dzz * cos(deg * navigation_beta) - dxx * sin(deg * navigation_beta) -
+          fabs(dyy) / 2;
+
+    if (stz > dsd) {
+        stz = dsd;
+    }
+
+    if (stz < 0) {
+        stz = 0;
+    }
+
+    stz /= 1.25;
+    ras = (105 * nearstar_ray) / dsd;
+
+    if (ras > 66) {
+        ras = 66;
+    }
+
+    if (ras < 1) {
+        ras = 1;
+    }
+
+    eclipse = 0;
+
+    for (mc = 0; mc < nearstar_nob; mc++) {
+        if (nearstar_p_type[mc] != -1) {
+            planet_xyz(mc);
             dxx = dzat_x - plx;
             dyy = dzat_y - ply;
             dzz = dzat_z - plz;
+            dpz = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 0.001;
 
-            if (ip_reached && nsync) {
-                status("TRACKING", 0);
+            if (dpz < 10 * nearstar_p_ray[mc]) {
+                watch(dzat_x, dzat_y, dzat_z, nearstar_x, nearstar_y,
+                      nearstar_z);
+                change_angle_of_view();
 
-                if (nsync == 1) { // fixed-point chase
-                    ang    = (double)deg * (double)navigation_beta;
-                    hold_z = 1.8;
-                }
+                if (xy(dzat_x, dzat_y, dzat_z, plx, ply, plz)) {
+                    dasp = sqrt(delta_x * delta_x + delta_y * delta_y);
+                    rap  = (105 * nearstar_p_ray[mc]) / dpz;
 
-                if (nsync == 2) { // far chase
-                    ang    = (double)deg * (double)navigation_beta;
-                    hold_z = 5.4;
-                }
-
-                if (nsync == 3) { // syncrone orbit
-                    ang = (double)nearstar_p_rotation[ip_targetted] * (double)deg;
-                    hold_z = 1.8 + 0.1 * nearstar_p_ray[ip_targetted];
-                }
-
-                if (nsync == 4) { // vimana orbit
-                    ang    = 7 * secs * (double)deg;
-                    hold_z = 3.6;
-                }
-
-                if (nsync == 5) { // near chase
-                    ang    = (double)deg * (double)navigation_beta;
-                    hold_z = 1.2;
-                }
-
-                dxx += hold_z * nearstar_p_ray[ip_targetted] * sin(ang);
-                dzz -= hold_z * nearstar_p_ray[ip_targetted] * cos(ang);
-
-                if (_delay < 5) {
-                    dzat_x -= dxx * 0.05;
-                    dzat_y -= dyy * 0.05;
-                    dzat_z -= dzz * 0.05;
-                } else {
-                    dzat_x -= dxx;
-                    dzat_y -= dyy;
-                    dzat_z -= dzz;
-                }
-            }
-
-            if (ip_reaching) {
-                l_dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz);
-
-                if (l_dsd > 0.99999 * ip_target_initial_d) {
-                    requested_approach_coefficient = 25 * l_dsd;
-                    status("WARMING UP", 0);
-                    reaction_time = 0.001;
-                    goto ip_drive_mode;
-                }
-
-                if (l_dsd < 25 && ip_target_initial_d > 500) {
-                    requested_approach_coefficient = 50 * l_dsd;
-                    status("REFINING", 0);
-                    reaction_time = 0.0002;
-                    goto ip_drive_mode;
-                }
-
-                if (l_dsd < 100 && ip_target_initial_d > 500) {
-                    requested_approach_coefficient = 15 * l_dsd;
-                    status("BREAKING", 0);
-                    reaction_time = 0.0003;
-                    goto ip_drive_mode;
-                }
-
-                if (l_dsd < 0.99500 * ip_target_initial_d) {
-                    requested_approach_coefficient = 0.05 * l_dsd;
-                    status("APPROACH", 0);
-                    reaction_time = 0.025;
-                    goto ip_drive_mode;
-                }
-
-                requested_approach_coefficient = 1.5 * l_dsd;
-                status("IGNITION", 0);
-                reaction_time = 0.05;
-            ip_drive_mode:
-                current_approach_coefficient += (requested_approach_coefficient -
-                                                 current_approach_coefficient) *
-                                                reaction_time;
-
-                if (current_approach_coefficient < 10) {
-                    current_approach_coefficient = 10;
-                }
-
-                dzat_x -= dxx / current_approach_coefficient;
-                dzat_z -= dzz / current_approach_coefficient;
-                dzat_y -= dyy / (0.5 * current_approach_coefficient);
-                pwr -= l_dsd * 0.5E-5;
-
-                if (l_dsd < 2 * nearstar_p_ray[ip_targetted]) {
-                    status("STANDBY", 0);
-                    ip_reaching = 0;
-                    ip_reached  = 1;
-                }
-            }
-        }
-
-        //
-        // Gestione del consumo di litio.
-        // Consumi supplementari, gestione ricariche.
-        //
-        additional_consumes();
-        //
-        // Calcolo della distanza dalla stella pi� vicina,
-        // per il controllo su radiazioni, eclissi, temperatura.
-        //
-        dxx = dzat_x - nearstar_x;
-        dyy = dzat_y - nearstar_y;
-        dzz = dzat_z - nearstar_z;
-        dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
-
-        //
-        // Allontanamento d'emergenza della navicella dalla stella.
-        //
-        if (dsd < (0.44 + (double)(2 * anti_rad)) * nearstar_ray) {
-            status("CORRECTION", 100);
-            dzat_x += (dxx / dsd) * 0.1;
-            dzat_y += (dyy / dsd) * 0.1;
-            dzat_z += (dzz / dsd) * 0.1;
-        }
-
-        //
-        // Manovre di approvvigionamento litio dallo spazio
-        // attorno alle stelle di classe 5 o a certe di classe 6.
-        // Le stelle di classe 6 sono pi� difficili da sfruttare,
-        // ma danno i migliori risultati. Quelle di classe 5 sono
-        // sempre adatte, ma con scarsi risultati.
-        //
-        if (lithium_collector) {
-            srand(nearstar_identity);
-            ir = rand() % 50;
-
-                if (nearstar_class == 5) {
-                ir -= 125 / dsd;
-
-                if (ir <= 0) {
-                    ir = 1;
-                }
-            }
-            else {
-                ir -= 25 / dsd;
-            }
-
-            if (ir > 0) {
-                if (pwr >= 20000 && charge >= 120) {
-                    status("! FULL !", 100);
-                    lithium_collector = 0;
-                } else {
-                    pwr += ir;
-
-                    if (pwr >= 20000) {
-                        if (charge < 120) {
-                            pwr = 15001;
-                            charge++;
-                        } else {
-                            pwr = 20000;
-                        }
+                    if (rap > 66) {
+                        rap = 66;
                     }
 
-                    status("SCOPING...", 25);
-                }
-            } else {
-                status("GET CLOSER", 100);
+                    eclipse = (dasp + ras - rap) / (2 * ras);
 
-                if (!reset_signal) {
-                    lithium_collector = 0;
-                }
-            }
-        }
-
-        //
-        // Controllo eclissi.
-        //
-        stz = dzz * cos(deg * navigation_beta) - dxx * sin(deg * navigation_beta) -
-              fabs(dyy) / 2;
-
-        if (stz > dsd) {
-            stz = dsd;
-        }
-
-        if (stz < 0) {
-            stz = 0;
-        }
-
-        stz /= 1.25;
-        ras = (105 * nearstar_ray) / dsd;
-
-        if (ras > 66) {
-            ras = 66;
-        }
-
-        if (ras < 1) {
-            ras = 1;
-        }
-
-        eclipse = 0;
-
-        for (c = 0; c < nearstar_nob; c++) {
-            if (nearstar_p_type[c] != -1) {
-                planet_xyz(c);
-                dxx = dzat_x - plx;
-                dyy = dzat_y - ply;
-                dzz = dzat_z - plz;
-                dpz = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 0.001;
-
-                if (dpz < 10 * nearstar_p_ray[c]) {
-                    watch(dzat_x, dzat_y, dzat_z, nearstar_x, nearstar_y,
-                          nearstar_z);
-                    change_angle_of_view();
-
-                    if (xy(dzat_x, dzat_y, dzat_z, plx, ply, plz)) {
-                        dasp = sqrt(delta_x * delta_x + delta_y * delta_y);
-                        rap  = (105 * nearstar_p_ray[c]) / dpz;
-
-                        if (rap > 66) {
-                            rap = 66;
-                        }
-
-                        eclipse = (dasp + ras - rap) / (2 * ras);
-
-                        if (eclipse > 1) {
-                            eclipse = 1;
-                        }
-
-                        if (eclipse < 0) {
-                            eclipse = 0;
-                        }
-
-                        eclipse = 1 - eclipse;
+                    if (eclipse > 1) {
+                        eclipse = 1;
                     }
+
+                    if (eclipse < 0) {
+                        eclipse = 0;
+                    }
+
+                    eclipse = 1 - eclipse;
                 }
             }
         }
+    }
 
-        //
-        // Reactions to eclipses (obscure the color of the spacecraft).
-        // Also lower the internal temperature by a little, but not
-        // too much because it is contrasted by air conditioning.
-        //
-        fast_srand(secs / 2);
-        pp_temp = 90 - dsd * 0.33;
-        pp_temp -= 44;
-        pp_temp *= fabs(pp_temp * 0.44);
-        pp_temp -= (pp_temp + 273.15) * eclipse;
+    //
+    // Reactions to eclipses (obscure the color of the spacecraft).
+    // Also lower the internal temperature by a little, but not
+    // too much because it is contrasted by air conditioning.
+    //
+    fast_srand(secs / 2);
+    pp_temp = 90 - dsd * 0.33;
+    pp_temp -= 44;
+    pp_temp *= fabs(pp_temp * 0.44);
+    pp_temp -= (pp_temp + 273.15) * eclipse;
 
-        if (pp_temp < -269) {
-            pp_temp = fast_flandom() - 269;
+    if (pp_temp < -269) {
+        pp_temp = fast_flandom() - 269;
+    }
+
+    if (!ontheroof) {
+        if (pp_temp < 0) {
+            pp_temp = 0;
         }
 
-        if (!ontheroof) {
-            if (pp_temp < 0) {
-                pp_temp = 0;
-            }
-
-            if (pp_temp > 40) {
-                pp_temp = 40;
-            }
-
-            while (pp_temp < 14) {
-                pp_temp += fast_flandom() * 2.5;
-            }
-
-            while (pp_temp > 32) {
-                pp_temp -= fast_flandom() * 2.5;
-            }
-
-            l_dsd = (24 * nearstar_ray) / (dsd - stz);
-            l_dsd -= l_dsd * eclipse;
-            pp_temp += l_dsd;
-
-            if (pp_temp > 40) {
-                pp_temp = 40;
-            }
-
-            while (pp_temp > 38) {
-                pp_temp -= fast_flandom() * 2.5;
-            }
-
-            pp_pressure = 1;
-        } else {
-            pp_pressure = 0;
+        if (pp_temp > 40) {
+            pp_temp = 40;
         }
 
-        //
-        ilight += ilightv;
-
-        if (ilight < 0) {
-            ilight = 0;
+        while (pp_temp < 14) {
+            pp_temp += fast_flandom() * 2.5;
         }
 
-        if (ilight > 63) {
-            ilight = 63;
+        while (pp_temp > 32) {
+            pp_temp -= fast_flandom() * 2.5;
         }
 
-        l_dsd = (15 * nearstar_ray * nearstar_r) / (dsd - stz);
+        l_dsd = (24 * nearstar_ray) / (dsd - stz);
         l_dsd -= l_dsd * eclipse;
+        pp_temp += l_dsd;
 
-        if (elight) {
-            ir3 = ilight + 30 - clock() % 30 + l_dsd;
-        } else {
-            ir3 = ilight / 4 + l_dsd;
+        if (pp_temp > 40) {
+            pp_temp = 40;
         }
 
-        if (ir3 > nearstar_r + 16) {
-            ir3 = nearstar_r + 16;
+        while (pp_temp > 38) {
+            pp_temp -= fast_flandom() * 2.5;
         }
 
-        if (nearstar_class == 11 && gl_start < 90) {
-            ir = 5 * ir3;
+        pp_pressure = 1;
+    } else {
+        pp_pressure = 0;
+    }
+
+    //
+    ilight += ilightv;
+
+    if (ilight < 0) {
+        ilight = 0;
+    }
+
+    if (ilight > 63) {
+        ilight = 63;
+    }
+
+    l_dsd = (15 * nearstar_ray * nearstar_r) / (dsd - stz);
+    l_dsd -= l_dsd * eclipse;
+
+    if (elight) {
+        ir3 = ilight + 30 - clock() % 30 + l_dsd;
+    } else {
+        ir3 = ilight / 4 + l_dsd;
+    }
+
+    if (ir3 > nearstar_r + 16) {
+        ir3 = nearstar_r + 16;
+    }
+
+    if (nearstar_class == 11 && gl_start < 90) {
+        ir = 5 * ir3;
+    }
+
+    if (ir3 > 63) {
+        ir3 = 63;
+    }
+
+    l_dsd = (7 * nearstar_ray * nearstar_g) / (dsd - stz);
+    l_dsd -= l_dsd * eclipse;
+
+    if (elight) {
+        ig3 = (ilight + 30 - clock() % 30) / 2 + l_dsd;
+    } else {
+        ig3 = ilight / 2 + l_dsd;
+    }
+
+    if (ig3 > nearstar_g + 32) {
+        ig3 = nearstar_g + 32;
+    }
+
+    if (nearstar_class == 11 && gl_start < 90) {
+        ig3 = 5 * ig3;
+    }
+
+    if (ig3 > 63) {
+        ig3 = 63;
+    }
+
+    l_dsd = (7 * nearstar_ray * nearstar_b) / (dsd - stz);
+    l_dsd -= l_dsd * eclipse;
+
+    if (elight) {
+        ib3 = (ilight + 30 - clock() % 30) / 4 + l_dsd;
+    } else {
+        ib3 = ilight + l_dsd;
+    }
+
+    if (nearstar_class == 11 && gl_start < 90) {
+        ib3 = 5 * ib3;
+    }
+
+    if (ib3 > 63) {
+        ib3 = 63;
+    }
+
+    if (gburst > 0 && gburst < 5) {
+        ir3 += 8 * gburst;
+        ig3 += 8 * gburst;
+        ib3 += 8 * gburst;
+    }
+
+    if (ir3 != ir3e || ig3 != ig3e || ib3 != ib3e) {
+        tavola_colori(range8088, 0, 64, ir3, ig3, ib3);
+        ir3e = ir3;
+        ig3e = ig3;
+        ib3e = ib3;
+    }
+
+    //
+    // Controllo del flag di richiesta di atterraggio.
+    //
+    if (land_now) {
+        land_now       = 0;
+        landing_point  = 0;
+        holdtomiddle   = 1;
+        opencapdelta   = 2;
+        right_dblclick = 0;
+        status("UNLOCKING", 50);
+    }
+
+    //
+    // Avanzamento contatore per le richieste d'aiuto.
+    //
+    if (gburst > 0) {
+        gburst--;
+
+        if (!gburst) {
+            gburst = 63;
+            status("SIGNAL", 50);
         }
+    }
 
-        if (ir3 > 63) {
-            ir3 = 63;
+    //
+    // Countdown per il delay dei messaggi di stato dell'FCS.
+    //
+    if (fcs_status_delay) {
+        fcs_status_delay--;
+    }
+
+    //
+    // Countdown per il delay della funzione auto-sleep.
+    //
+    if (autoscreenoff) {
+        aso_countdown--;
+
+        if (aso_countdown <= 0) {
+            aso_countdown = 100;
+            sys           = 4;
         }
+    }
 
-        l_dsd = (7 * nearstar_ray * nearstar_g) / (dsd - stz);
-        l_dsd -= l_dsd * eclipse;
+    //
+    // Il protagonista sta sempre in una tutina... � normale.
+    // Vede le cose attraverso uno scafandro, non ingombrante
+    // ma pur sempre uno scafandro. La funzione "surrounding"
+    // disegna i bordi dello scafandro, illuminati in relazione
+    // all'ambiente circostante.
+    //
+    surrounding(0, 180);
+    // riduzione stanchezza (continua, eventualmente
+    // dall'ultima volta che si � scesi in superficie)
+    // e variazioni nelle pulsazioni, pi� verosimili...
+    fast_srand(secs / 2);
+    tiredness *= 0.9977;
+    pp_pulse = (1 + tiredness) * 118;
+    pp_pulse += fast_flandom() * 8;
+    pp_pulse -= fast_flandom() * 8;
 
-        if (elight) {
-            ig3 = (ilight + 30 - clock() % 30) / 2 + l_dsd;
-        } else {
-            ig3 = ilight / 2 + l_dsd;
+    // se si sta per scendere o si � appena risaliti,
+    // si deve trattenere il player nel mezzo della navicella,
+    // in quanto si suppone che sia bloccato nella capsula.
+    if (holdtomiddle || lifter) {
+        pos_x *= 0.75;
+        hold_z = pos_z + 3100;
+        pos_z -= hold_z * 0.25;
+    }
+
+    // effetto di apertura della capsula:
+    // quando � totalmente aperta, si pu� scendere.
+    // LQ significa Last Quadrant (ultimo quadrante visitato)
+    if (opencapdelta < 0) {
+        opencapcount += opencapdelta;
+
+        if (opencapcount <= 0) {
+            opencapdelta = 0;
+            holdtomiddle = 0;
+            sprintf(temp_distance_buffer, "LQ %03d:%03d", landing_pt_lon,
+                    landing_pt_lat);
+            status(temp_distance_buffer, 100);
         }
+    }
 
-        if (ig3 > nearstar_g + 32) {
-            ig3 = nearstar_g + 32;
-        }
+    // effetto di chiusura della capsula:
+    // quando � totalmente sigillata, scotty beam me down.
+    // al ritorno, comincia a riaprire la capsula...
+    if (opencapdelta > 0) {
+        opencapcount += opencapdelta;
 
-        if (nearstar_class == 11 && gl_start < 90) {
-            ig3 = 5 * ig3;
-        }
+        if (opencapcount >= 85) {
+            entryflag = 0;
+            planetary_main();
 
-        if (ig3 > 63) {
-            ig3 = 63;
-        }
-
-        l_dsd = (7 * nearstar_ray * nearstar_b) / (dsd - stz);
-        l_dsd -= l_dsd * eclipse;
-
-        if (elight) {
-            ib3 = (ilight + 30 - clock() % 30) / 4 + l_dsd;
-        } else {
-            ib3 = ilight + l_dsd;
-        }
-
-        if (nearstar_class == 11 && gl_start < 90) {
-            ib3 = 5 * ib3;
-        }
-
-        if (ib3 > 63) {
-            ib3 = 63;
-        }
-
-        if (gburst > 0 && gburst < 5) {
-            ir3 += 8 * gburst;
-            ig3 += 8 * gburst;
-            ib3 += 8 * gburst;
-        }
-
-        if (ir3 != ir3e || ig3 != ig3e || ib3 != ib3e) {
-            tavola_colori(range8088, 0, 64, ir3, ig3, ib3);
-            ir3e = ir3;
-            ig3e = ig3;
-            ib3e = ib3;
-        }
-
-        //
-        // Controllo del flag di richiesta di atterraggio.
-        //
-        if (land_now) {
-            land_now       = 0;
-            landing_point  = 0;
-            holdtomiddle   = 1;
-            opencapdelta   = 2;
-            right_dblclick = 0;
-            status("UNLOCKING", 50);
-        }
-
-        //
-        // Avanzamento contatore per le richieste d'aiuto.
-        //
-        if (gburst > 0) {
-            gburst--;
-
-            if (!gburst) {
-                gburst = 63;
-                status("SIGNAL", 50);
-            }
-        }
-
-        //
-        // Countdown per il delay dei messaggi di stato dell'FCS.
-        //
-        if (fcs_status_delay) {
-            fcs_status_delay--;
-        }
-
-        //
-        // Countdown per il delay della funzione auto-sleep.
-        //
-        if (autoscreenoff) {
-            aso_countdown--;
-
-            if (aso_countdown <= 0) {
-                aso_countdown = 100;
-                sys           = 4;
-            }
-        }
-
-        //
-        // Il protagonista sta sempre in una tutina... � normale.
-        // Vede le cose attraverso uno scafandro, non ingombrante
-        // ma pur sempre uno scafandro. La funzione "surrounding"
-        // disegna i bordi dello scafandro, illuminati in relazione
-        // all'ambiente circostante.
-        //
-        surrounding(0, 180);
-        // riduzione stanchezza (continua, eventualmente
-        // dall'ultima volta che si � scesi in superficie)
-        // e variazioni nelle pulsazioni, pi� verosimili...
-        fast_srand(secs / 2);
-        tiredness *= 0.9977;
-        pp_pulse = (1 + tiredness) * 118;
-        pp_pulse += fast_flandom() * 8;
-        pp_pulse -= fast_flandom() * 8;
-
-        // se si sta per scendere o si � appena risaliti,
-        // si deve trattenere il player nel mezzo della navicella,
-        // in quanto si suppone che sia bloccato nella capsula.
-        if (holdtomiddle || lifter) {
-            pos_x *= 0.75;
-            hold_z = pos_z + 3100;
-            pos_z -= hold_z * 0.25;
-        }
-
-        // effetto di apertura della capsula:
-        // quando � totalmente aperta, si pu� scendere.
-        // LQ significa Last Quadrant (ultimo quadrante visitato)
-        if (opencapdelta < 0) {
-            opencapcount += opencapdelta;
-
-            if (opencapcount <= 0) {
-                opencapdelta = 0;
-                holdtomiddle = 0;
-                sprintf(temp_distance_buffer, "LQ %03d:%03d", landing_pt_lon,
-                        landing_pt_lat);
-                status(temp_distance_buffer, 100);
-            }
-        }
-
-        // effetto di chiusura della capsula:
-        // quando � totalmente sigillata, scotty beam me down.
-        // al ritorno, comincia a riaprire la capsula...
-        if (opencapdelta > 0) {
-            opencapcount += opencapdelta;
-
-            if (opencapcount >= 85) {
-                entryflag = 0;
-                planetary_main();
-
-                if (exitflag) {
-                    goto allstop;
-                }
-
-                opencapdelta = -2;
-                holdtomiddle = 1;
-                pp_gravity   = 1;
-                resolve      = 0;
-                _delay       = 13; // solo al ritorno da superficie
-                goto resynctoplanet;
-            }
-        }
-
-        // Page swap.
-        QUADWORDS = 16000;
-
-        if (_delay == 13) {
-            _delay = 0;
-        }
-
-        if (!_delay) {
-            SDL_RenderClear(renderer);
-            auto dest = static_cast<uint32_t *>(surface->pixels);
-            for (int i = 0; i < 64000; i++) {
-                uint8_t color_index = adapted[i];
-                uint32_t color_r    = tmppal[color_index * 3] * 4;
-                uint32_t color_g    = tmppal[color_index * 3 + 1] * 4;
-                uint32_t color_b    = tmppal[color_index * 3 + 2] * 4;
-
-                uint32_t color =
-                    (color_r << 24u) + (color_g << 16u) + (color_b << 8u) + 255;
-                dest[i] = color;
-            }
-            SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
-            SDL_RenderCopy(renderer, texture, nullptr, nullptr);
-            SDL_RenderPresent(renderer);
-            SDL_DestroyTexture(texture);
-        } else if (_delay > 0 && _delay < 10) {
-            _delay--;
-        }
-
-        QUADWORDS = pqw;
-
-        if (resolve == 1) {
-            while (resolve <= 63) {
-                tavola_colori((uint8_t *)return_palette, 0, 256, resolve, resolve,
-                              resolve);
-                ir = clock();
-
-                while (ir == clock())
-                    ;
-
-                resolve += 4;
-            }
-        }
-
-        if (resolve == 0) {
-            resolve = 1;
-        }
-
-        //
-        // This section controls the pixels in a continuous loop
-        // depicting the convective currents inside the stars,
-        // but goes into action only if the star is close enough,
-        // otherwise you can not see a white globe: The colors
-        // of the stars are not really colors, but only soft
-        // nuances; in practice, being almost all well beyond the
-        // saturation level of the eye, the stars appear generally
-        // all white, unless you approach them really very much.
-        //
-
-        if (dsd < 1000 * nearstar_ray) {
-            ir = nearstar_r;
-            ig = nearstar_g;
-            ib = nearstar_b;
-            c  = nearstar_class;
-
-            if (c == 8) {
-                fast_srand(nearstar_identity);
-                srand(fast_random(0x7FFF));
-                c = rand() % star_classes;
-                ir = class_rgb[c * 3 + 0];
-                ig      = class_rgb[c * 3 + 1];
-                ib      = class_rgb[c * 3 + 2];
+            if (exitflag) {
+                exit(0);
             }
 
-            switch (c) {
-            case 0:
-                ir2 = 64;
-                ig2 = 54;
-                ib2 = 28;
-                break;
+            opencapdelta = -2;
+            holdtomiddle = 1;
+            pp_gravity   = 1;
+            resolve      = 0;
+            _delay       = 13; // solo al ritorno da superficie
+            goto resynctoplanet;
+        }
+    }
 
-            case 1:
-                ir2 = 36;
-                ig2 = 50;
-                ib2 = 64;
-                break;
+    // Page swap.
+    QUADWORDS = 16000;
 
-            case 2:
-                ir2 = 24;
-                ig2 = 32;
-                ib2 = 48;
-                break;
+    if (_delay == 13) {
+        _delay = 0;
+    }
 
-            case 3:
-                ir2 = 64;
-                ig2 = 24;
-                ib2 = 12;
-                break;
+    if (!_delay) {
+        SDL_RenderClear(renderer);
+        auto dest = static_cast<uint32_t *>(sdl_surface->pixels);
+        for (int i = 0; i < 64000; i++) {
+            uint8_t color_index = adapted[i];
+            uint32_t color_r    = tmppal[color_index * 3] * 4;
+            uint32_t color_g    = tmppal[color_index * 3 + 1] * 4;
+            uint32_t color_b    = tmppal[color_index * 3 + 2] * 4;
 
-            case 4:
-                ir2 = 64;
-                ig2 = 40;
-                ib2 = 32;
-                break;
+            uint32_t color =
+                (color_r << 24u) + (color_g << 16u) + (color_b << 8u) + 255;
+            dest[i] = color;
+        }
+        SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, sdl_surface);
+        SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+        SDL_RenderPresent(renderer);
+        SDL_DestroyTexture(texture);
+    } else if (_delay > 0 && _delay < 10) {
+        _delay--;
+    }
 
-            case 5:
-                ir2 = 28;
-                ig2 = 20;
-                ib2 = 12;
-                break;
+    QUADWORDS = pqw;
 
-            case 6:
-                ir2 = 32;
-                ig2 = 32;
-                ib2 = 32;
-                break;
+    if (resolve == 1) {
+        while (resolve <= 63) {
+            tavola_colori((uint8_t *)return_palette, 0, 256, resolve, resolve,
+                          resolve);
+            ir = clock();
 
-            case 7:
-                ir2 = 32;
-                ig2 = 44;
-                ib2 = 64;
-                break;
+            while (ir == clock())
+                ;
 
-            case 8:
-                ir2 = 64;
-                ig2 = 60;
-                ib2 = 32;
-                break;
+            resolve += 4;
+        }
+    }
 
-            case 9:
-                fast_srand(nearstar_identity);
-                ir2 = 32 + fast_random(31);
-                ig2 = 32 + fast_random(31);
-                ib2 = 16 + fast_random(31);
-                break;
+    if (resolve == 0) {
+        resolve = 1;
+    }
 
-            case 10:
-                ir2 = 32;
-                ig2 = 26;
-                ib2 = 22;
-                break;
+    //
+    // This section controls the pixels in a continuous loop
+    // depicting the convective currents inside the stars,
+    // but goes into action only if the star is close enough,
+    // otherwise you can not see a white globe: The colors
+    // of the stars are not really colors, but only soft
+    // nuances; in practice, being almost all well beyond the
+    // saturation level of the eye, the stars appear generally
+    // all white, unless you approach them really very much.
+    //
 
-            case 11:
-                ir2 = 36;
-                ig2 = 48;
-                ib2 = 64;
-            }
+    if (dsd < 1000 * nearstar_ray) {
+        ir = nearstar_r;
+        ig = nearstar_g;
+        ib = nearstar_b;
+        mc  = nearstar_class;
 
-            satur = (6.4 * dsd) / nearstar_ray;
+        if (mc == 8) {
+            fast_srand(nearstar_identity);
+            srand(fast_random(0x7FFF));
+            mc = rand() % star_classes;
+            ir = class_rgb[mc * 3 + 0];
+            ig      = class_rgb[mc * 3 + 1];
+            ib      = class_rgb[mc * 3 + 2];
+        }
 
-            if (satur > 44) {
-                satur = 44;
-            }
+        switch (mc) {
+        case 0:
+            ir2 = 64;
+            ig2 = 54;
+            ib2 = 28;
+            break;
 
-            if (ir < satur) {
-                ir = satur;
-            }
+        case 1:
+            ir2 = 36;
+            ig2 = 50;
+            ib2 = 64;
+            break;
 
-            if (ig < satur) {
-                ig = satur;
-            }
-
-            if (ib < satur) {
-                ib = satur;
-            }
-
-            if (ir2 < satur) {
-                ir2 = satur;
-            }
-
-            if (ig2 < satur) {
-                ig2 = satur;
-            }
-
-            if (ib2 < satur) {
-                ib2 = satur;
-            }
-        } else {
-            ir  = 48;
-            ig  = 56;
-            ib  = 64;
+        case 2:
             ir2 = 24;
             ig2 = 32;
-            ib2 = 40;
+            ib2 = 48;
+            break;
+
+        case 3:
+            ir2 = 64;
+            ig2 = 24;
+            ib2 = 12;
+            break;
+
+        case 4:
+            ir2 = 64;
+            ig2 = 40;
+            ib2 = 32;
+            break;
+
+        case 5:
+            ir2 = 28;
+            ig2 = 20;
+            ib2 = 12;
+            break;
+
+        case 6:
+            ir2 = 32;
+            ig2 = 32;
+            ib2 = 32;
+            break;
+
+        case 7:
+            ir2 = 32;
+            ig2 = 44;
+            ib2 = 64;
+            break;
+
+        case 8:
+            ir2 = 64;
+            ig2 = 60;
+            ib2 = 32;
+            break;
+
+        case 9:
+            fast_srand(nearstar_identity);
+            ir2 = 32 + fast_random(31);
+            ig2 = 32 + fast_random(31);
+            ib2 = 16 + fast_random(31);
+            break;
+
+        case 10:
+            ir2 = 32;
+            ig2 = 26;
+            ib2 = 22;
+            break;
+
+        case 11:
+            ir2 = 36;
+            ig2 = 48;
+            ib2 = 64;
         }
 
-        if (ire == ir && ige == ig && ibe == ib && ir2e == ir2 && ig2e == ig2 &&
-            ib2e == ib2) {
-            if (!sky_palette_ok) {
-                sky_palette_ok = 1;
-                goto last_sky_palette_redefinition;
-            }
-        } else {
-            sky_palette_ok = 0;
+        satur = (6.4 * dsd) / nearstar_ray;
+
+        if (satur > 44) {
+            satur = 44;
+        }
+
+        if (ir < satur) {
+            ir = satur;
+        }
+
+        if (ig < satur) {
+            ig = satur;
+        }
+
+        if (ib < satur) {
+            ib = satur;
+        }
+
+        if (ir2 < satur) {
+            ir2 = satur;
+        }
+
+        if (ig2 < satur) {
+            ig2 = satur;
+        }
+
+        if (ib2 < satur) {
+            ib2 = satur;
+        }
+    } else {
+        ir  = 48;
+        ig  = 56;
+        ib  = 64;
+        ir2 = 24;
+        ig2 = 32;
+        ib2 = 40;
+    }
+
+    if (ire == ir && ige == ig && ibe == ib && ir2e == ir2 && ig2e == ig2 &&
+        ib2e == ib2) {
+        if (!sky_palette_ok) {
+            sky_palette_ok = 1;
+            goto last_sky_palette_redefinition;
+        }
+    } else {
+        sky_palette_ok = 0;
         last_sky_palette_redefinition:
 
-            if (ire < ir) {
-                ire++;
-            }
-
-            if (ire > ir) {
-                ire--;
-            }
-
-            if (ige < ig) {
-                ige++;
-            }
-
-            if (ige > ig) {
-                ige--;
-            }
-
-            if (ibe < ib) {
-                ibe++;
-            }
-
-            if (ibe > ib) {
-                ibe--;
-            }
-
-            if (ir2e < ir2) {
-                ir2e++;
-            }
-
-            if (ir2e > ir2) {
-                ir2e--;
-            }
-
-            if (ig2e < ig2) {
-                ig2e++;
-            }
-
-            if (ig2e > ig2) {
-                ig2e--;
-            }
-
-            if (ib2e < ib2) {
-                ib2e++;
-            }
-
-            if (ib2e > ib2) {
-                ib2e--;
-            }
-
-            shade(tmppal, 64 + 00, 24, 0, 0, 0, ir2e, ig2e, ib2e);
-            shade(tmppal, 64 + 24, 16, ir2e, ig2e, ib2e, ire, ige, ibe);
-            shade(tmppal, 64 + 40, 24, ire, ige, ibe, 64, 70, 76);
-            tavola_colori(tmppal + 3 * 64, 64, 64, 63, 63, 63);
+        if (ire < ir) {
+            ire++;
         }
 
-        if (!farstar) {
-            for (ir = 0; ir < 64800; ir++) {
-                ig               = (s_background[ir] + 1) % 64;
-                ib               = (s_background[ir] >> 6) << 6;
-                s_background[ir] = ig + ib;
+        if (ire > ir) {
+            ire--;
+        }
+
+        if (ige < ig) {
+            ige++;
+        }
+
+        if (ige > ig) {
+            ige--;
+        }
+
+        if (ibe < ib) {
+            ibe++;
+        }
+
+        if (ibe > ib) {
+            ibe--;
+        }
+
+        if (ir2e < ir2) {
+            ir2e++;
+        }
+
+        if (ir2e > ir2) {
+            ir2e--;
+        }
+
+        if (ig2e < ig2) {
+            ig2e++;
+        }
+
+        if (ig2e > ig2) {
+            ig2e--;
+        }
+
+        if (ib2e < ib2) {
+            ib2e++;
+        }
+
+        if (ib2e > ib2) {
+            ib2e--;
+        }
+
+        shade(tmppal, 64 + 00, 24, 0, 0, 0, ir2e, ig2e, ib2e);
+        shade(tmppal, 64 + 24, 16, ir2e, ig2e, ib2e, ire, ige, ibe);
+        shade(tmppal, 64 + 40, 24, ire, ige, ibe, 64, 70, 76);
+        tavola_colori(tmppal + 3 * 64, 64, 64, 63, 63, 63);
+    }
+
+    if (!farstar) {
+        for (ir = 0; ir < 64800; ir++) {
+            ig               = (s_background[ir] + 1) % 64;
+            ib               = (s_background[ir] >> 6) << 6;
+            s_background[ir] = ig + ib;
+        }
+    }
+
+    //
+    sync_stop();
+
+    //
+    // Hook per la gestione dei moti delle caratteristiche
+    // di superficie dei pianeti (come le macchie che si
+    // spostano e la turbolenza atmosferica): l'hook aggiorna
+    // l'aspetto della superficie una volta ogni 5 minuti.
+    //
+    if (ip_targetted != -1 && ip_reached) {
+        if ((long)secs % 300 == 0) {
+            npcs = -12345;
+        }
+    }
+
+    //
+    // Keyboard input: snapshot, end of session
+    // selection of targets, attribution of labels, etc...
+    //
+    if (ontheroof) {
+        if (tasto_premuto()) {
+            mc = attendi_pressione_tasto();
+
+            if (mc == '*') {
+                snapshot(0, 1);
             }
+        } else {
+            mc = 0;
         }
 
-        //
-        sync_stop();
+        goto endmain;
+    }
 
-        //
-        // Hook per la gestione dei moti delle caratteristiche
-        // di superficie dei pianeti (come le macchie che si
-        // spostano e la turbolenza atmosferica): l'hook aggiorna
-        // l'aspetto della superficie una volta ogni 5 minuti.
-        //
-        if (ip_targetted != -1 && ip_reached) {
-            if ((long)secs % 300 == 0) {
-                npcs = -12345;
-            }
-        }
+    if (goesk_e != -1) {
+        mc       = goesk_e;
+        goesk_e = -1;
+        goto goesk_e_reentry;
+    }
 
-        //
-        // Keyboard input: snapshot, end of session
-        // selection of targets, attribution of labels, etc...
-        //
-        if (ontheroof) {
-            if (tasto_premuto()) {
-                c = attendi_pressione_tasto();
+    if (goesk_a != -1) {
+        mc       = goesk_a;
+        goesk_a = -1;
+        goto goesk_a_reentry;
+    }
 
-                if (c == '*') {
-                    snapshot(0, 1);
-                }
-            } else {
-                c = 0;
-            }
+    if (active_screen == -1 && tasto_premuto()) {
+        while (tasto_premuto()) {
+            mc = attendi_pressione_tasto();
 
-            goto endmain;
-        }
-
-        if (goesk_e != -1) {
-            c       = goesk_e;
-            goesk_e = -1;
-            goto goesk_e_reentry;
-        }
-
-        if (goesk_a != -1) {
-            c       = goesk_a;
-            goesk_a = -1;
-            goto goesk_a_reentry;
-        }
-
-        if (active_screen == -1 && tasto_premuto()) {
-            while (tasto_premuto()) {
-                c = attendi_pressione_tasto();
-
-                if (!c) {
-                    c = attendi_pressione_tasto();
+            if (!mc) {
+                mc = attendi_pressione_tasto();
                 goesk_e_reentry:
 
-                    if (targets_in_range) {
-                        if (c == 80) {
-                            if (target_line < 2) {
-                                if (topmost_target + target_line < targets - 1) {
-                                    target_line++;
-                                }
-                            } else {
-                                if (topmost_target < targets - 3) {
-                                    topmost_target++;
-                                    update_targets = 1;
-                                }
+                if (targets_in_range) {
+                    if (mc == 80) {
+                        if (target_line < 2) {
+                            if (topmost_target + target_line < targets - 1) {
+                                target_line++;
+                            }
+                        } else {
+                            if (topmost_target < targets - 3) {
+                                topmost_target++;
+                                update_targets = 1;
                             }
                         }
+                    }
 
-                        if (c == 72) {
-                            if (target_line > 0) {
-                                target_line--;
-                            } else {
-                                if (topmost_target > 0) {
-                                    topmost_target--;
-                                    update_targets = 1;
-                                }
+                    if (mc == 72) {
+                        if (target_line > 0) {
+                            target_line--;
+                        } else {
+                            if (topmost_target > 0) {
+                                topmost_target--;
+                                update_targets = 1;
                             }
                         }
-
-                        goto endmain;
                     }
 
-                    if (c == 75) {
-                        dlt_nav_beta += 1.5;
-                        status("PITCH - R", 25);
-                    }
+                    goto endmain;
+                }
 
-                    if (c == 77) {
-                        dlt_nav_beta -= 1.5;
-                        status("PITCH - L", 25);
-                    }
+                if (mc == 75) {
+                    dlt_nav_beta += 1.5;
+                    status("PITCH - R", 25);
+                }
 
-                    if (c == 72) {
-                        lifter = -100;
-                    }
-                } else {
+                if (mc == 77) {
+                    dlt_nav_beta -= 1.5;
+                    status("PITCH - L", 25);
+                }
+
+                if (mc == 72) {
+                    lifter = -100;
+                }
+            } else {
                 goesk_a_reentry:
 
-                    if (c == '*') {
-                        snapshot(0, 1);
+                if (mc == '*') {
+                    snapshot(0, 1);
+                    goto endmain;
+                }
+
+                if (data) {
+                    if (mc == 27) {
+                        mc              = 0;
+                        datasheetdelta = -2;
+                        goto endmain;
+                    }
+                }
+
+                if (ap_targetting) {
+                    if (mc == 27) {
+                        mc             = 0;
+                        ap_targetting = 0;
+                        ap_targetted  = 0;
+                        status("CANCELLED", 50);
+                        goto endmain;
+                    }
+                }
+
+                if (labstar) {
+                    if (mc == 27) {
+                        mc                = 0;
+                        labstar          = 0;
+                        ap_target_previd = -1;
                         goto endmain;
                     }
 
-                    if (data) {
-                        if (c == 27) {
-                            c              = 0;
-                            datasheetdelta = -2;
-                            goto endmain;
+                    if (mc >= 32 && mc <= 126 && labstar_char < 20) {
+                        if (mc >= 'a' && mc <= 'z') {
+                            mc -= 32;
                         }
+
+                        star_label[labstar_char] = mc;
+                        labstar_char++;
                     }
 
-                    if (ap_targetting) {
-                        if (c == 27) {
-                            c             = 0;
-                            ap_targetting = 0;
-                            ap_targetted  = 0;
-                            status("CANCELLED", 50);
-                            goto endmain;
-                        }
+                    if (mc == 8 && labstar_char > 0) {
+                        labstar_char--;
+                        star_label[labstar_char] = 32;
                     }
 
-                    if (labstar) {
-                        if (c == 27) {
-                            c                = 0;
-                            labstar          = 0;
-                            ap_target_previd = -1;
-                            goto endmain;
+                    if (mc == 13) {
+                        dev_page  = 3;
+                        s_command = 1;
+                        dev_commands();
+                    }
+
+                    goto endmain;
+                }
+
+                if (labplanet) {
+                    if (mc == 27) {
+                        mc              = 0;
+                        labplanet      = 0;
+                        prev_planet_id = -1;
+                        goto endmain;
+                    }
+
+                    if (mc >= 32 && mc <= 126 && labplanet_char < 20) {
+                        if (mc >= 'a' && mc <= 'z') {
+                            mc -= 32;
                         }
 
-                        if (c >= 32 && c <= 126 && labstar_char < 20) {
-                            if (c >= 'a' && c <= 'z') {
-                                c -= 32;
-                            }
+                        planet_label[labplanet_char] = mc;
+                        labplanet_char++;
+                    }
 
-                            star_label[labstar_char] = c;
-                            labstar_char++;
-                        }
+                    if (mc == 8 && labplanet_char > 0) {
+                        labplanet_char--;
+                        planet_label[labplanet_char] = 32;
+                    }
 
-                        if (c == 8 && labstar_char > 0) {
-                            labstar_char--;
-                            star_label[labstar_char] = 32;
-                        }
+                    if (mc == 13) {
+                        dev_page  = 3;
+                        s_command = 2;
+                        dev_commands();
+                    }
 
-                        if (c == 13) {
-                            dev_page  = 3;
-                            s_command = 1;
-                            dev_commands();
+                    goto endmain;
+                }
+
+                if (targets_in_range) {
+                    if (mc == 27) {
+                        mc                = 0;
+                        targets_in_range = 0;
+                        goto endmain;
+                    }
+
+                    if (mc == 13) {
+                        if (!collecting_targets &&
+                            topmost_target + target_line < targets) {
+                            ap_target_x =
+                                targets_table_px[topmost_target + target_line];
+                            ap_target_y =
+                                targets_table_py[topmost_target + target_line];
+                            ap_target_z =
+                                targets_table_pz[topmost_target + target_line];
+                            extract_ap_target_infos();
+                            fix_remote_target();
                         }
 
                         goto endmain;
                     }
+                }
 
-                    if (labplanet) {
-                        if (c == 27) {
-                            c              = 0;
-                            labplanet      = 0;
-                            prev_planet_id = -1;
-                            goto endmain;
-                        }
-
-                        if (c >= 32 && c <= 126 && labplanet_char < 20) {
-                            if (c >= 'a' && c <= 'z') {
-                                c -= 32;
-                            }
-
-                            planet_label[labplanet_char] = c;
-                            labplanet_char++;
-                        }
-
-                        if (c == 8 && labplanet_char > 0) {
-                            labplanet_char--;
-                            planet_label[labplanet_char] = 32;
-                        }
-
-                        if (c == 13) {
-                            dev_page  = 3;
-                            s_command = 2;
-                            dev_commands();
-                        }
-
+                if (ip_targetting) {
+                    if (mc == 27) {
+                        mc             = 0;
+                        ip_targetted  = -1;
+                        ip_targetting = 0;
+                        status("CANCELLED", 50);
                         goto endmain;
                     }
 
-                    if (targets_in_range) {
-                        if (c == 27) {
-                            c                = 0;
-                            targets_in_range = 0;
-                            goto endmain;
-                        }
-
-                        if (c == 13) {
-                            if (!collecting_targets &&
-                                topmost_target + target_line < targets) {
-                                ap_target_x =
-                                    targets_table_px[topmost_target + target_line];
-                                ap_target_y =
-                                    targets_table_py[topmost_target + target_line];
-                                ap_target_z =
-                                    targets_table_pz[topmost_target + target_line];
-                                extract_ap_target_infos();
-                                fix_remote_target();
-                            }
-
-                            goto endmain;
-                        }
+                    if (mc == 8 && iptargetchar > 0) {
+                        iptargetchar--;
+                        iptargetstring[iptargetchar] = 0;
+                        status((char *)iptargetstring, 100);
                     }
 
-                    if (ip_targetting) {
-                        if (c == 27) {
-                            c             = 0;
-                            ip_targetted  = -1;
-                            ip_targetting = 0;
-                            status("CANCELLED", 50);
-                            goto endmain;
-                        }
-
-                        if (c == 8 && iptargetchar > 0) {
-                            iptargetchar--;
-                            iptargetstring[iptargetchar] = 0;
-                            status((char *)iptargetstring, 100);
-                        }
-
-                        if (((c >= '0' && c <= '9') || c == '/') &&
-                            iptargetchar < 10) {
-                            if (c == '/') {
-                                if (iptargetchar == 0) {
-                                    goto endmain;
-                                }
-
-                                ir = 0;
-
-                                while (ir < iptargetchar) {
-                                    if (iptargetstring[ir] == '/') {
-                                        goto endmain;
-                                    }
-
-                                    ir++;
-                                }
-                            }
-
-                            iptargetstring[iptargetchar]     = c;
-                            iptargetstring[iptargetchar + 1] = 0;
-                            iptargetchar++;
-                            status((char *)iptargetstring, 100);
-                        }
-
-                        if (c == 13) {
+                    if (((mc >= '0' && mc <= '9') || mc == '/') &&
+                        iptargetchar < 10) {
+                        if (mc == '/') {
                             if (iptargetchar == 0) {
                                 goto endmain;
                             }
@@ -4897,211 +4901,229 @@ int main(int argc, char **argv) {
 
                             while (ir < iptargetchar) {
                                 if (iptargetstring[ir] == '/') {
-                                    iptargetstring[ir] = 0;
-                                    iptargetmoon = atoi((char *)iptargetstring);
-                                    iptargetstring[ir] = '/';
-
-                                    if (iptargetstring[ir + 1] != 0) {
-                                        iptargetplanet =
-                                            atoi((char *)iptargetstring + ir + 1);
-                                        goto searchmoon;
-                                    }
-
-                                    status("NOT EXTANT", 100);
                                     goto endmain;
                                 }
 
                                 ir++;
                             }
-
-                            iptargetplanet = atoi((char *)iptargetstring);
-
-                            if (iptargetplanet != 0 &&
-                                iptargetplanet <= nearstar_nop) {
-                                ip_targetted = iptargetplanet - 1;
-                                fix_local_target();
-                                ip_targetting = 0;
-                            }
-
-                            status("NOT EXTANT", 100);
-                            goto endmain;
-                        searchmoon:
-                            ir = 0;
-
-                            while (ir < nearstar_nob) {
-                                if (nearstar_p_owner[ir] == iptargetplanet - 1 &&
-                                    nearstar_p_moonid[ir] == iptargetmoon - 1) {
-                                    ip_targetted = ir;
-                                    fix_local_target();
-                                    ip_targetting = 0;
-                                    goto endmain;
-                                }
-
-                                ir++;
-                            }
-
-                            status("NOT EXTANT", 100);
                         }
 
+                        iptargetstring[iptargetchar]     = mc;
+                        iptargetstring[iptargetchar + 1] = 0;
+                        iptargetchar++;
+                        status((char *)iptargetstring, 100);
+                    }
+
+                    if (mc == 13) {
+                        if (iptargetchar == 0) {
+                            goto endmain;
+                        }
+
+                        ir = 0;
+
+                        while (ir < iptargetchar) {
+                            if (iptargetstring[ir] == '/') {
+                                iptargetstring[ir] = 0;
+                                iptargetmoon = atoi((char *)iptargetstring);
+                                iptargetstring[ir] = '/';
+
+                                if (iptargetstring[ir + 1] != 0) {
+                                    iptargetplanet =
+                                        atoi((char *)iptargetstring + ir + 1);
+                                    goto searchmoon;
+                                }
+
+                                status("NOT EXTANT", 100);
+                                goto endmain;
+                            }
+
+                            ir++;
+                        }
+
+                        iptargetplanet = atoi((char *)iptargetstring);
+
+                        if (iptargetplanet != 0 &&
+                            iptargetplanet <= nearstar_nop) {
+                            ip_targetted = iptargetplanet - 1;
+                            fix_local_target();
+                            ip_targetting = 0;
+                        }
+
+                        status("NOT EXTANT", 100);
+                        goto endmain;
+                        searchmoon:
+                        ir = 0;
+
+                        while (ir < nearstar_nob) {
+                            if (nearstar_p_owner[ir] == iptargetplanet - 1 &&
+                                nearstar_p_moonid[ir] == iptargetmoon - 1) {
+                                ip_targetted = ir;
+                                fix_local_target();
+                                ip_targetting = 0;
+                                goto endmain;
+                            }
+
+                            ir++;
+                        }
+
+                        status("NOT EXTANT", 100);
+                    }
+
+                    goto endmain;
+                }
+
+                if (manual_target) {
+                    if (mc == 27) {
+                        mc             = 0;
+                        manual_target = 0;
+                        ap_targetted  = 0;
+                        status("CANCELLED", 50);
                         goto endmain;
                     }
 
-                    if (manual_target) {
-                        if (c == 27) {
-                            c             = 0;
-                            manual_target = 0;
-                            ap_targetted  = 0;
-                            status("CANCELLED", 50);
-                            goto endmain;
-                        }
-
-                        if (c == 8 && mt_string_char > 0) {
-                            mt_string_char--;
-
-                            switch (mt_coord) {
-                            case 0:
-                                manual_x_string[mt_string_char] = 0;
-                                break;
-
-                            case 1:
-                                manual_y_string[mt_string_char] = 0;
-                                break;
-
-                            case 2:
-                                manual_z_string[mt_string_char] = 0;
-                            }
-                        }
-
-                        if ((c >= '0' && c <= '9' && mt_string_char < 10) ||
-                            (c == '-' && mt_string_char == 0)) {
-                            switch (mt_coord) {
-                            case 0:
-                                manual_x_string[mt_string_char]     = c;
-                                manual_x_string[mt_string_char + 1] = 0;
-                                break;
-
-                            case 1:
-                                manual_y_string[mt_string_char]     = c;
-                                manual_y_string[mt_string_char + 1] = 0;
-                                break;
-
-                            case 2:
-                                manual_z_string[mt_string_char]     = c;
-                                manual_z_string[mt_string_char + 1] = 0;
-                            }
-
-                            mt_string_char++;
-                        }
-
-                        if (c == 13) {
-                            switch (mt_coord) {
-                            case 0:
-                                ap_target_x        = atol((char *)manual_x_string);
-                                manual_y_string[0] = 0;
-                                break;
-
-                            case 1:
-                                ap_target_y        = -atol((char *)manual_y_string);
-                                manual_z_string[0] = 0;
-                                break;
-
-                            case 2:
-                                ap_target_z = atol((char *)manual_z_string);
-                            }
-
-                            mt_string_char = 0;
-                            mt_coord++;
-
-                            if (mt_coord > 2) {
-                                manual_target = 0;
-                                fix_remote_target();
-                                ap_targetted = -1;
-                            }
-                        }
+                    if (mc == 8 && mt_string_char > 0) {
+                        mt_string_char--;
 
                         switch (mt_coord) {
                         case 0:
-                            sprintf(temp_distance_buffer, "%s", manual_x_string);
+                            manual_x_string[mt_string_char] = 0;
                             break;
 
                         case 1:
-                            sprintf(temp_distance_buffer, "%s", manual_y_string);
+                            manual_y_string[mt_string_char] = 0;
                             break;
 
                         case 2:
-                            sprintf(temp_distance_buffer, "%s", manual_z_string);
-                        }
-
-                        if (mt_coord <= 2) {
-                            status(temp_distance_buffer, 100);
-                        }
-
-                        goto endmain;
-                    }
-
-                    if (!ap_targetting && !ip_targetting) {
-                        aso_countdown = 100;
-
-                        switch (c) {
-                        case '5':
-                            sys      = 1;
-                            dev_page = 0;
-                            break;
-
-                        case 'r':
-                            sys      = 2;
-                            dev_page = 0;
-                            break;
-
-                        case 'd':
-                            sys      = 3;
-                            dev_page = 0;
-                            break;
-
-                        case 'x':
-                            sys      = 4;
-                            dev_page = 0;
-                            break;
-
-                        case '6':
-                            s_command = 1;
-                            commands();
-                            break;
-
-                        case '7':
-                            s_command = 2;
-                            commands();
-                            break;
-
-                        case '8':
-                            s_command = 3;
-                            commands();
-                            break;
-
-                        case '9':
-                            s_command = 4;
-                            commands();
-                            break;
+                            manual_z_string[mt_string_char] = 0;
                         }
                     }
 
-                    if (c == '+' && surlight < 63) {
-                        surlight++;
+                    if ((mc >= '0' && mc <= '9' && mt_string_char < 10) ||
+                        (mc == '-' && mt_string_char == 0)) {
+                        switch (mt_coord) {
+                        case 0:
+                            manual_x_string[mt_string_char]     = mc;
+                            manual_x_string[mt_string_char + 1] = 0;
+                            break;
+
+                        case 1:
+                            manual_y_string[mt_string_char]     = mc;
+                            manual_y_string[mt_string_char + 1] = 0;
+                            break;
+
+                        case 2:
+                            manual_z_string[mt_string_char]     = mc;
+                            manual_z_string[mt_string_char + 1] = 0;
+                        }
+
+                        mt_string_char++;
                     }
 
-                    if (c == '-' && surlight > 10) {
-                        surlight--;
+                    if (mc == 13) {
+                        switch (mt_coord) {
+                        case 0:
+                            ap_target_x        = atol((char *)manual_x_string);
+                            manual_y_string[0] = 0;
+                            break;
+
+                        case 1:
+                            ap_target_y        = -atol((char *)manual_y_string);
+                            manual_z_string[0] = 0;
+                            break;
+
+                        case 2:
+                            ap_target_z = atol((char *)manual_z_string);
+                        }
+
+                        mt_string_char = 0;
+                        mt_coord++;
+
+                        if (mt_coord > 2) {
+                            manual_target = 0;
+                            fix_remote_target();
+                            ap_targetted = -1;
+                        }
+                    }
+
+                    switch (mt_coord) {
+                    case 0:
+                        sprintf(temp_distance_buffer, "%s", manual_x_string);
+                        break;
+
+                    case 1:
+                        sprintf(temp_distance_buffer, "%s", manual_y_string);
+                        break;
+
+                    case 2:
+                        sprintf(temp_distance_buffer, "%s", manual_z_string);
+                    }
+
+                    if (mt_coord <= 2) {
+                        status(temp_distance_buffer, 100);
+                    }
+
+                    goto endmain;
+                }
+
+                if (!ap_targetting && !ip_targetting) {
+                    aso_countdown = 100;
+
+                    switch (mc) {
+                    case '5':
+                        sys      = 1;
+                        dev_page = 0;
+                        break;
+
+                    case 'r':
+                        sys      = 2;
+                        dev_page = 0;
+                        break;
+
+                    case 'd':
+                        sys      = 3;
+                        dev_page = 0;
+                        break;
+
+                    case 'x':
+                        sys      = 4;
+                        dev_page = 0;
+                        break;
+
+                    case '6':
+                        s_command = 1;
+                        commands();
+                        break;
+
+                    case '7':
+                        s_command = 2;
+                        commands();
+                        break;
+
+                    case '8':
+                        s_command = 3;
+                        commands();
+                        break;
+
+                    case '9':
+                        s_command = 4;
+                        commands();
+                        break;
                     }
                 }
 
-            endmain:
-                uint8_t argblarg = 5;
+                if (mc == '+' && surlight < 63) {
+                    surlight++;
+                }
+
+                if (mc == '-' && surlight > 10) {
+                    surlight--;
+                }
             }
-        } else {
-            c = 0;
+
+            endmain:
+            uint8_t argblarg = 5;
         }
-    } while ((c != 27) || stspeed || ip_reaching || lifter);
-    remove (surface_file);
-    allstop : _80_25_C();
-    freeze();
+    } else {
+        mc = 0;
+    }
 }
