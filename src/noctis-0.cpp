@@ -1257,8 +1257,8 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
             rHigh = ((uint8_t*) riga)[tempB + 1];
             index += (rHigh << 8) + rLow;
 
-            truncated[index + 4] = 0x00;
-            truncated[index + 5] = 0x3E;
+            truncated[index] = 0x00;
+            truncated[index + 1] = 0x3E;
         }
         break;
     case 1: // Intrinsically luminous sticks.
@@ -1274,7 +1274,7 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
             rHigh = ((uint8_t*) riga)[tempB + 1];
             index += (rHigh << 8) + rLow;
 
-            uint16_t color = truncated[index + 4] << 2;
+            uint16_t color = truncated[index] << 2;
 
             if ((color & 0xFF) <= 0xDF) {
                 color += 32;
@@ -1282,7 +1282,7 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
                 color = (color & 0xFF00) + 0xFB;
             }
 
-            truncated[index + 4] = (color >> 2) & 0xFF;
+            truncated[index] = (color >> 2) & 0xFF;
         }
         break;
     case 2: // Sticks that absorb light ("smoked")
@@ -1298,13 +1298,13 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
             rHigh = ((uint8_t*) riga)[tempB + 1];
             index += (rHigh << 8) + rLow;
 
-            uint16_t color = truncated[index + 4];
+            uint16_t color = truncated[index];
 
             color &= 0x3F;
-            truncated[index + 4] &= 0xC0;
+            truncated[index] &= 0xC0;
 
             color >>= 1;
-            truncated[index +4] += color;
+            truncated[index] += color;
         }
 
         break;
@@ -1322,10 +1322,10 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
             rHigh = ((uint8_t*) riga)[tempB + 1];
             index += (rHigh << 8) + rLow;
 
-            truncated[index + 4] = 0xCE;
-            truncated[index + 5] = 0xD3;
-            truncated[index + 6] = 0xDE;
-            truncated[index + 7] = 0xEE;
+            truncated[index] = 0xCE;
+            truncated[index + 1] = 0xD3;
+            truncated[index + 2] = 0xDE;
+            truncated[index + 3] = 0xEE;
         }
     }
 }

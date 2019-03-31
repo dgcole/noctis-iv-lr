@@ -890,7 +890,7 @@ void poly3d (float* x, float* y, float* z,
 
     switch (flares) {
     case 0:
-        /*for (fakedi = segmptr; fakedi <= lim_y; fakedi += 320) {
+        for (fakedi = segmptr; fakedi <= lim_y; fakedi += 320) {
             tempBytes = bytes;
             tempfakedi = fakedi;
 
@@ -918,11 +918,11 @@ void poly3d (float* x, float* y, float* z,
                 loc1--;
                 memset(&adapted[loc0], colore, loc1 - loc0);
             }
-        }*/
+        }
         break;
 
     case 1:
-        /*colore &= 0x3F;
+        colore &= 0x3F;
         for (fakedi = segmptr; fakedi <= lim_y; fakedi += 320) {
             tempBytes = bytes;
             tempfakedi = fakedi;
@@ -975,10 +975,10 @@ void poly3d (float* x, float* y, float* z,
                     adapted[tempfakedi] = dipsy;
                 }
             }
-        }*/
+        }
         break;
     case 2:
-        /*for (fakedi = segmptr; fakedi <= lim_y; fakedi += 320) {
+        for (fakedi = segmptr; fakedi <= lim_y; fakedi += 320) {
             tempBytes = bytes;
             tempfakedi = fakedi;
 
@@ -1032,7 +1032,7 @@ void poly3d (float* x, float* y, float* z,
                     adapted[tempfakedi] = dipsy;
                 }
             }
-        }*/
+        }
         break;
         // effetto flares = 3 spostato a "polymap"
     case 4:
