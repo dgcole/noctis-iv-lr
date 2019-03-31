@@ -797,10 +797,7 @@ int16_t ranged_fast_random(int16_t range) {
 }
 
 float flandom() {
-#if 0
-    return ((float) random(32767) * 0.000030518);
-#endif
-    FIXME
+    return ((float) brtl_random(32767) * 0.000030518);
 }
 
 float fast_flandom() { return ((float)fast_random(32767) * 0.000030518); }
@@ -3500,7 +3497,6 @@ void getsecs() {
 // information about the chosen star.
 
 void extract_ap_target_infos() {
-#if 0
     srand (ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z / 100000);
     ap_target_class = rand() % star_classes;
     ap_target_ray = ((float)class_ray[ap_target_class] + (float)(rand() % class_rayvar[ap_target_class])) * 0.001;
@@ -3510,28 +3506,22 @@ void extract_ap_target_infos() {
     ap_target_spin = 0;
 
     if (ap_target_class == 11) {
-        ap_target_spin = (random() % 30)+ 1;
+        ap_target_spin = brtl_random(30) + 1;
     }
 
     if (ap_target_class == 7) {
-        ap_target_spin = (random() % 12)+ 1;
+        ap_target_spin = brtl_random(12) + 1;
     }
 
     if (ap_target_class == 2) {
-        ap_target_spin = (random() % 4)+ 1;
+        ap_target_spin = brtl_random(4) + 1;
     }
-#endif
-    STUB_RAND
 }
 
 // Extracts a whole-type pseudo-random number by converting it to f-p.
 
 float zrandom(int16_t range) {
-#if 0
-    return (random(range) - random(range));
-#endif
-    FIXME
-    return 0;
+    return (brtl_random(range) - brtl_random(range));
 }
 
 /*  Parte della gestione della cartografia.
@@ -3597,26 +3587,22 @@ int32_t search_id_code(double id_code, int8_t type) {
 int16_t starnop(double star_x, double star_y, double star_z)
 // stima il numero di pianeti maggiori associato alle coord. di una stella
 {
-#if 0
     int16_t r;
     srand ((int32_t)star_x % 10000 * (int32_t)star_y % 10000 *
            (int32_t)star_z % 10000);
-    r = random (class_planets[ap_target_class] + 1);
-    r += random (2);
-    r -= random (2);
+    r = brtl_random (class_planets[ap_target_class] + 1);
+    r += brtl_random (2);
+    r -= brtl_random (2);
 
     if (r < 0) {
         r = 0;
     }
 
     return (r);
-#endif
-    FIXME
     return 0;
 }
 
 void prepare_nearstar() {
-#if 0
     int16_t    n, c, q, r, s, t;
     double key_radius;
 
@@ -3637,32 +3623,32 @@ void prepare_nearstar() {
                         100000;
     srand ((int32_t)nearstar_x % 10000 * (int32_t)nearstar_y % 10000 *
            (int32_t)nearstar_z % 10000);
-    nearstar_nop = random (class_planets[nearstar_class] + 1);
+    nearstar_nop = brtl_random (class_planets[nearstar_class] + 1);
 
     /* Prima estrazione (pressoch� casuale, non realistica). */
 
     for (n = 0; n < nearstar_nop; n++) {
         nearstar_p_owner[n]  = -1;
-        nearstar_p_orb_orient[n] = (double) deg * (double) random (360);
-        nearstar_p_orb_seed[n]   = 3 * (n * n + 1) * nearstar_ray + (float) random (
+        nearstar_p_orb_orient[n] = (double) deg * (double) brtl_random (360);
+        nearstar_p_orb_seed[n]   = 3 * (n * n + 1) * nearstar_ray + (float) brtl_random (
                                        300 * nearstar_ray) / 100;
         nearstar_p_tilt[n]       = zrandom (10 * nearstar_p_orb_seed[n]) / 500;
         nearstar_p_orb_tilt[n]   = zrandom (10 * nearstar_p_orb_seed[n]) / 5000;
-        nearstar_p_orb_ecc[n]    = 1 - (double) random (nearstar_p_orb_seed[n] + 10 *
+        nearstar_p_orb_ecc[n]    = 1 - (double) brtl_random (nearstar_p_orb_seed[n] + 10 *
                                    fabs(nearstar_p_orb_tilt[n])) / 2000;
-        nearstar_p_ray[n]        = (double) random (nearstar_p_orb_seed[n]) * 0.001 +
+        nearstar_p_ray[n]        = (double) brtl_random (nearstar_p_orb_seed[n]) * 0.001 +
                                    0.01;
-        nearstar_p_ring[n]   = zrandom (nearstar_p_ray[n]) * (1 + (double) random (
+        nearstar_p_ring[n]   = zrandom (nearstar_p_ray[n]) * (1 + (double) brtl_random (
                                    1000) / 100);
 
         if (nearstar_class != 8) {
-            nearstar_p_type[n] = random (planet_types);
+            nearstar_p_type[n] = brtl_random (planet_types);
         } else {
-            if (random(2)) {
+            if (brtl_random(2)) {
                 nearstar_p_type[n] = 10;
                 nearstar_p_orb_tilt[n] *= 100;
             } else {
-                nearstar_p_type[n] = random (planet_types);
+                nearstar_p_type[n] = brtl_random (planet_types);
             }
         }
 
@@ -3674,15 +3660,15 @@ void prepare_nearstar() {
     /* Aumento delle probabilit� di pianeti abitabili su classe zero. */
 
     if (!nearstar_class) {
-        if (random(4) == 2) {
+        if (brtl_random(4) == 2) {
             nearstar_p_type[2] = 3;
         }
 
-        if (random(4) == 2) {
+        if (brtl_random(4) == 2) {
             nearstar_p_type[3] = 3;
         }
 
-        if (random(4) == 2) {
+        if (brtl_random(4) == 2) {
             nearstar_p_type[4] = 3;
         }
     }
@@ -3694,7 +3680,7 @@ void prepare_nearstar() {
         switch (nearstar_class) {
         case 2:
             while (nearstar_p_type[n] == 3) {
-                nearstar_p_type[n] = random (10);
+                nearstar_p_type[n] = brtl_random (10);
             }
 
             break;
@@ -3702,7 +3688,7 @@ void prepare_nearstar() {
         case 5:
             while (nearstar_p_type[n] == 6 ||
                     nearstar_p_type[n] == 9) {
-                nearstar_p_type[n] = random (10);
+                nearstar_p_type[n] = brtl_random (10);
             }
 
             break;
@@ -3715,7 +3701,7 @@ void prepare_nearstar() {
             while (nearstar_p_type[n] != 0 &&
                     nearstar_p_type[n] != 6 &&
                     nearstar_p_type[n] != 9) {
-                nearstar_p_type[n] = random (10);
+                nearstar_p_type[n] = brtl_random (10);
             }
 
             break;
@@ -3723,7 +3709,7 @@ void prepare_nearstar() {
         case 11:
             while (nearstar_p_type[n] != 1 &&
                     nearstar_p_type[n] != 7) {
-                nearstar_p_type[n] = random (10);
+                nearstar_p_type[n] = brtl_random (10);
             }
         }
     }
@@ -3734,15 +3720,15 @@ void prepare_nearstar() {
     for (n = 0; n < nearstar_nop; n++) {
         switch (nearstar_p_type[n]) {
         case 0:
-            if (random(8)) {
+            if (brtl_random(8)) {
                 nearstar_p_type[n] ++;
             }
 
             break;
 
         case 3:
-            if ((n < 2) || (n > 6) || (nearstar_class && random(4))) {
-                if (random(2)) {
+            if ((n < 2) || (n > 6) || (nearstar_class && brtl_random(4))) {
+                if (brtl_random(2)) {
                     nearstar_p_type[n]++;
                 } else {
                     nearstar_p_type[n]--;
@@ -3753,7 +3739,7 @@ void prepare_nearstar() {
 
         case 7:
             if (n < 7) {
-                if (random(2)) {
+                if (brtl_random(2)) {
                     nearstar_p_type[n] --;
                 } else {
                     nearstar_p_type[n] -= 2;
@@ -3779,10 +3765,10 @@ void prepare_nearstar() {
             t = 0;
 
             if (s == 10) {
-                t = random (3);
+                t = brtl_random (3);
             }
         } else {
-            t = random (planet_possiblemoons[s] + 1);
+            t = brtl_random (planet_possiblemoons[s] + 1);
         }
 
         if (nearstar_nob + t > maxbodies) {
@@ -3794,17 +3780,17 @@ void prepare_nearstar() {
             q            = nearstar_nob + c;
             nearstar_p_owner[q]  = n;
             nearstar_p_moonid[q]     = c;
-            nearstar_p_orb_orient[q] = (double) deg * (double) random (360);
+            nearstar_p_orb_orient[q] = (double) deg * (double) brtl_random (360);
             nearstar_p_orb_seed[q]   = (c * c + 4) * nearstar_p_ray[n] + (float) zrandom (
                                            300 * nearstar_p_ray[n]) / 100;
             nearstar_p_tilt[q]       = zrandom (10 * nearstar_p_orb_seed[q]) / 50;
             nearstar_p_orb_tilt[q]   = zrandom (10 * nearstar_p_orb_seed[q]) / 500;
-            nearstar_p_orb_ecc[q]    = 1 - (double) random (nearstar_p_orb_seed[q] + 10 *
+            nearstar_p_orb_ecc[q]    = 1 - (double) brtl_random (nearstar_p_orb_seed[q] + 10 *
                                        fabs(nearstar_p_orb_tilt[q])) / 2000;
-            nearstar_p_ray[q]        = (double) random (nearstar_p_orb_seed[n]) * 0.05 +
+            nearstar_p_ray[q]        = (double) brtl_random (nearstar_p_orb_seed[n]) * 0.05 +
                                        0.1;
             nearstar_p_ring[q]   = 0;
-            nearstar_p_type[q]       = random (planet_types);
+            nearstar_p_type[q]       = brtl_random (planet_types);
             // Estrazione tipologia di satellite:
             r = nearstar_p_type[q];
 
@@ -3823,11 +3809,11 @@ void prepare_nearstar() {
 
             // "Raffreddamento" satelliti esterni, lontani sia
             // dal pianeta che dalla stella, in genere congelati.
-            if (n > 7 && random(c)) {
+            if (n > 7 && brtl_random(c)) {
                 r = 7;
             }
 
-            if (n > 9 && random(c)) {
+            if (n > 9 && brtl_random(c)) {
                 r = 7;
             }
 
@@ -3858,7 +3844,7 @@ void prepare_nearstar() {
                     r = 7;
                 }
 
-                if (nearstar_class && random(4)) {
+                if (nearstar_class && brtl_random(4)) {
                     r = 5;
                 }
 
@@ -3882,7 +3868,7 @@ void prepare_nearstar() {
             // che lo scaldano. Una luna no.
             if ((nearstar_class == 2 || nearstar_class == 5 ||
                     nearstar_class == 7 || nearstar_class == 11)
-                    && random(n)) {
+                    && brtl_random(n)) {
                 r = 7;
             }
 
@@ -4004,18 +3990,18 @@ no_moons:
     for (n = 0; n < nearstar_nop; n++) {
         // A meno di un raggio e mezzo dal centro del pianeta,
         // sar� un po' difficile trovarci un anello stabile.
-        nearstar_p_ring[n] = 0.75 * nearstar_p_ray[n] * (2 + random(3));
+        nearstar_p_ring[n] = 0.75 * nearstar_p_ray[n] * (2 + brtl_random(3));
         // I pianeti piccoli raramente hanno degli anelli.
         // Non hanno abbastanza massa per frantumare
         // una luna che arrivi troppo vicina.
         s = nearstar_p_type[n];
 
         if (s != 6 && s != 9) {
-            if (random(5)) {
+            if (brtl_random(5)) {
                 nearstar_p_ring[n] = 0;
             }
         } else {
-            if (random(2)) {
+            if (brtl_random(2)) {
                 nearstar_p_ring[n] = 0;
             }
         }
@@ -4036,8 +4022,6 @@ no_moons:
     for (n = 0; n < nearstar_nob; n++) {
         nearstar_p_rtperiod[n] = 0;
     }
-#endif
-    FIXME
 }
 
 // Smooth the surface of a planet: fast 4x4 average.
@@ -4194,8 +4178,8 @@ void crater() { // un cratere.
                 mov ax, 0x013E
                 mov es:[di], ax }
 
-        if (crays && !random(crays)) {
-            b = (2 + random(2)) * cr;
+        if (crays && !brtl_random(crays)) {
+            b = (2 + brtl_random(2)) * cr;
 
             if (cy - b > 0 && cy + b < 179) {
                 for (gr = cr + 1; gr < b; gr++) {
@@ -4273,13 +4257,13 @@ void fracture(uint8_t *target, float max_latitude) {
     // solco scuro: tipo le linee su Europa.
     // ha dei parametri perch� viene usata anche per simulare i fulmini
     // quando piove sulla superficie dei pianeti abitabili.
-    a = random (360) * deg;
+    a = brtl_random (360) * deg;
     gr ++;
     float px = cx;
     float py = cy;
 
     do {
-        a += (random (g) - random (g)) * deg;
+        a += (brtl_random (g) - brtl_random (g)) * deg;
         px += kfract * cos(a);
 
         if (px > 359) {
@@ -4363,8 +4347,8 @@ void randoface(int16_t range, int16_t upon) {
         gr = p_background[c];
 
         if ((upon > 0 && gr >= upon) || (upon < 0 && gr <= -upon)) {
-            gr += random (range);
-            gr -= random (range);
+            gr += brtl_random (range);
+            gr -= brtl_random (range);
 
             if (gr > 63) {
                 gr = 63;
@@ -4398,18 +4382,18 @@ void negate() {
 
 void crater_juice() {
 #if 0
-    lave = random (3);
-    crays = random (3) * 2;
+    lave = brtl_random (3);
+    crays = brtl_random (3) * 2;
 
     for (c = 0; c < r; c++) {
-        cx = random (360);
-        cr = 2 + random (1 + r - c);
+        cx = brtl_random (360);
+        cr = 2 + brtl_random (1 + r - c);
 
         while (cr > 20) {
             cr -= 10;
         }
 
-        cy = random (178 - 2 * cr) + cr;
+        cy = brtl_random (178 - 2 * cr) + cr;
         crater ();
 
         if (cr > 15) {
@@ -4468,15 +4452,15 @@ void atm_cyclon() { // ciclone atmosferico: un'ammasso di nubi a spirale.
         py = cy + cr * sin (a);
         py *= 360;
         cirrus ();
-        px += random(4);
+        px += brtl_random(4);
         cirrus ();
         py += 359;
         cirrus ();
-        px -= random(4);
+        px -= brtl_random(4);
         cirrus ();
         py += 361;
         cirrus ();
-        px += random(4);
+        px += brtl_random(4);
         cirrus ();
         b++;
         b %= g;
@@ -4659,7 +4643,7 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
             cr = ranged_fast_random (20) + 1;
             cy = ranged_fast_random (178 - 2 * cr) + cr;
 
-            switch (random(2)) {
+            switch (brtl_random(2)) {
             case 0:
                 cx = ((int32_t)(10 * secs) / (ranged_fast_random (3600) + 180)) % 360;
                 gr = ranged_fast_random (12) + 2;
@@ -4981,7 +4965,7 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
     /* ritocchi specifici finali alla superficie - pianeti venusiani */
 
     if (type == 2) {
-        if (!random(3)) {
+        if (!brtl_random(3)) {
             psmooth_grays(p_background);
             knot1 = 1;
         }
@@ -5064,15 +5048,15 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
     b <<= 1;
     b += nearstar_b;
     b >>= 1;
-    r1 = r + random(c) - random(c);
-    g1 = g + random(c) - random(c);
-    b1 = b + random(c) - random(c);
-    r2 = r + random(c) - random(c);
-    g2 = g + random(c) - random(c);
-    b2 = b + random(c) - random(c);
-    r3 = r + random(c) - random(c);
-    g3 = g + random(c) - random(c);
-    b3 = b + random(c) - random(c);
+    r1 = r + brtl_random(c) - brtl_random(c);
+    g1 = g + brtl_random(c) - brtl_random(c);
+    b1 = b + brtl_random(c) - brtl_random(c);
+    r2 = r + brtl_random(c) - brtl_random(c);
+    g2 = g + brtl_random(c) - brtl_random(c);
+    b2 = b + brtl_random(c) - brtl_random(c);
+    r3 = r + brtl_random(c) - brtl_random(c);
+    g3 = g + brtl_random(c) - brtl_random(c);
+    b3 = b + brtl_random(c) - brtl_random(c);
     r1 *= 0.25;
     g1 *= 0.25;
     b1 *= 0.25;

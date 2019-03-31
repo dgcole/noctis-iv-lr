@@ -3,6 +3,7 @@
     Supervision functions for the base module.
 */
 
+#include "brtl.h"
 #include "noctis-0.h"
 #include "noctis-d.h"
 
@@ -1371,7 +1372,6 @@ int8_t moon_no_label[25]   = "NAMELESS MOON #../../...";
 const char *sr_message = "SYSTEM RESET";
 
 void update_star_label() {
-#if 0
     if (ap_targetted == -1) {
         strcpy ((char*) star_label, "- DIRECT PARSIS TARGET -");
     } else {
@@ -1391,12 +1391,10 @@ void update_star_label() {
                 memcpy (star_label, star_no_label, 24);
             }
 
-            srand (ap_target_id);
-            sprintf ((char*) (star_label + 21), "S%02d", rand() % star_classes);
+            brtl_srand (ap_target_id);
+            sprintf ((char*) (star_label + 21), "S%02d", brtl_random(star_classes));
         }
     }
-#endif
-STUB_RAND
 }
 
 void update_planet_label() {
@@ -2340,7 +2338,7 @@ void unfreeze() {
     npcs = -12345;
     prepare_nearstar();
 
-#if 0
+
     if (lithium_collector) {
         while (elapsed >= 30 && charge < 120) {
             elapsed -= 30;
@@ -2350,12 +2348,10 @@ void unfreeze() {
         if (charge == 120) {
             pwr = 20000;
         } else {
-            srand((uint32_t) (secs));
-            pwr = (int16_t) ((rand() % 5000) + 15000);
+            brtl_srand((uint32_t) (secs));
+            pwr = (int16_t) (brtl_random(5000) + 15000);
         }
     }
-#endif
-STUB_RAND
 
     /* Aggiornamento consumi supplementari. */
     dpwr = pwr;
@@ -2463,8 +2459,8 @@ int main(int argc, char **argv) {
     sdl_surface =
         SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF000000, 0xFF0000, 0xFF00, 0xFF);
     window = SDL_CreateWindow("Noctis IV LR", SDL_WINDOWPOS_CENTERED,
-                                          SDL_WINDOWPOS_CENTERED, 960, 600, SDL_WINDOW_RESIZABLE | SDL_WINDOW_INPUT_GRABBED);
-    SDL_SetRelativeMouseMode(SDL_TRUE);
+                                          SDL_WINDOWPOS_CENTERED, 960, 600, SDL_WINDOW_RESIZABLE /*| SDL_WINDOW_INPUT_GRABBED*/);
+    //SDL_SetRelativeMouseMode(SDL_TRUE);
     renderer =
         SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE);
 
@@ -3726,11 +3722,10 @@ void loop() {
                 sprintf((char *)outhudbuffer, "      %1.2f@F",
                         tmp_float * 1.8 + 32);
                 wrouthud(14, 109, mc, (char *)outhudbuffer);
-                #if 0
-                srand(nearstar_identity);
+                brtl_srand(nearstar_identity);
 
                 if (nearstar_class == 6 || nearstar_class == 5) {
-                    ir = rand() % 50;
+                    ir = brtl_random(50);
                     if (nearstar_class == 5) {
                         ir -= 125 / dsd;
 
@@ -3749,14 +3744,14 @@ void loop() {
                 sprintf((char *)outhudbuffer, "LI+ IONS: %ld MTPD EST.", ir);
                 wrouthud(14, 119, mc, (char *)outhudbuffer);
 
-                tmp_float = 50 + (rand() % 10) - (rand() % 10);
+                tmp_float = 50 + (brtl_random(10)) - (brtl_random(10));
 
                 tmp_float *= (1 - eclipse);
                 tmp_float *= 100 / dsd;
 
                 if (nearstar_class == 11) {
                     if (gl_start < 90) {
-                        tmp_float *= 75 + rand() % 50;
+                        tmp_float *= 75 + brtl_random(50);
                     } else {
                         tmp_float *= 50;
                     }
@@ -3802,16 +3797,14 @@ void loop() {
                     tmp_float *= 5;
                 }
 
-                srand(secs);
+                brtl_srand(secs);
                 tmp_float *= 1
-                             + (float)(rand() % 100) * 0.001
-                             - (float)(rand() % 100) * 0.001;
+                             + (float)(brtl_random(100)) * 0.001
+                             - (float)(brtl_random(100)) * 0.001;
                 sprintf((char *)outhudbuffer, "RADIATION: %1.1f KR",
                         tmp_float);
                 wrouthud(14, 126, mc, (char *)outhudbuffer);
                 break;
-                #endif
-                STUB_RAND
             }
         }
     }
@@ -4076,10 +4069,9 @@ void loop() {
     // ma danno i migliori risultati. Quelle di classe 5 sono
     // sempre adatte, ma con scarsi risultati.
     //
-    #if 0
     if (lithium_collector) {
-        srand(nearstar_identity);
-        ir = rand() % 50;
+        brtl_srand(nearstar_identity);
+        ir = brtl_random(50);
 
         if (nearstar_class == 5) {
             ir -= 125 / dsd;
@@ -4118,8 +4110,6 @@ void loop() {
             }
         }
     }
-    #endif
-    STUB_RAND
 
     //
     // Controllo eclissi.
@@ -4481,7 +4471,6 @@ void loop() {
     // saturation level of the eye, the stars appear generally
     // all white, unless you approach them really very much.
     //
-    #if 0
     if (dsd < 1000 * nearstar_ray) {
         ir = nearstar_r;
         ig = nearstar_g;
@@ -4490,8 +4479,8 @@ void loop() {
 
         if (mc == 8) {
             fast_srand(nearstar_identity);
-            srand(fast_random(0x7FFF));
-            mc = rand() % star_classes;
+            brtl_srand(fast_random(0x7FFF));
+            mc = brtl_random(star_classes);
             ir = class_rgb[mc * 3 + 0];
             ig      = class_rgb[mc * 3 + 1];
             ib      = class_rgb[mc * 3 + 2];
@@ -4608,8 +4597,6 @@ void loop() {
         ig2 = 32;
         ib2 = 40;
     }
-    #endif
-    STUB_RAND
 
     if (ire == ir && ige == ig && ibe == ib && ir2e == ir2 && ig2e == ig2 &&
         ib2e == ib2) {

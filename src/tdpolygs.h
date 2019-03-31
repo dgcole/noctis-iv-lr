@@ -367,1246 +367,480 @@ float uno = 1; // sempre uno: � una costante di comodo.
 uint8_t entity = 1; /* controlla quantit� generiche nel riempimento
                  dei poligoni con alcuni effetti speciali. */
 
-void poly3d(float *x, float *y, float *z, uint16_t nrv, uint8_t colore) {
-#if 0
+void poly3d (float* x, float* y, float* z,
+             uint16_t nrv, uint8_t colore) {
     uint16_t _8n;
     uint8_t ent = entity;
-    // Matrici 3d: tutto sullo stack.
+    // 3D Matrices: Everything on the stack
     float ultima_x[2 * VERTICI_PER_POLIGONO];
     float ultima_y[2 * VERTICI_PER_POLIGONO];
     float ultima_z[2 * VERTICI_PER_POLIGONO];
-    // Matrici 2d: idem come sopra.
+
+    // 2D Matrices: Same as above.
     float video_x0[2 * VERTICI_PER_POLIGONO], video_y0[2 * VERTICI_PER_POLIGONO];
     float video_x1[3 * VERTICI_PER_POLIGONO], video_y1[3 * VERTICI_PER_POLIGONO];
     float video_x2[4 * VERTICI_PER_POLIGONO], video_y2[4 * VERTICI_PER_POLIGONO];
     float video_x3[6 * VERTICI_PER_POLIGONO], video_y3[6 * VERTICI_PER_POLIGONO];
-    // Rototraslazione dei vertici; i dati rimangono ancora 3d.
+    // Rototranslations of the vertices; the data still remains 3D.
+
     doflag = 0;
-    asm {   xor di, di
-            xor si, si }
-    vertex:
-    asm {   les bx, dword ptr z
-            fld dword ptr es:[bx+si]
-            fsub cam_z
-            fst zz
-            fmul opt_psinbeta
-            les bx, dword ptr x
-            fld dword ptr es:[bx+si]
-            fsub cam_x
-            fst xx
-            fmul opt_pcosbeta
-            faddp
-            fstp dword ptr rxf[si]
-            fld zz
-            fmul opt_tcosbeta
-            fld xx
-            fmul opt_tsinbeta
-            fsubp
-            fst z2
-            fmul opt_tcosalfa
-            les bx, dword ptr y
-            fld dword ptr es:[bx+si]
-            fsub cam_y
-            fst yy
-            fmul opt_tsinalfa
-            faddp
-            fst dword ptr rzf[si]
-            fcomp uneg
-            fstsw ax
-            fld yy
-            fmul opt_pcosalfa
-            fld z2
-            fmul opt_psinalfa
-            fsubp
-            fstp dword ptr ryf[si]
-            sahf
-            jb rzf_min_uneg
-            inc doflag
-            mov byte ptr rwf[di], 1
-            jmp convert }
-    rzf_min_uneg:
-    asm   mov byte ptr rwf[di], 0
-convert:      asm { add si, 4
-                        inc di
-                        cmp di, nrv
-                        je end_convert
-                        jmp vertex }
-    end_convert:
+    for (uint16_t i = 0; i < nrv; i++) {
+        zz = z[i] - cam_z;
+        xx = x[i] - cam_x;
+        yy = y[i] - cam_y;
+
+        z2 = (zz * opt_tcosbeta) - (xx * opt_tsinbeta);
+
+        rxf[i] = (zz * opt_psinbeta) + (xx * opt_pcosbeta);
+        rzf[i] = (z2 * opt_tcosalfa) + (yy * opt_tsinalfa);
+        ryf[i] = (yy * opt_pcosalfa) - (z2 * opt_psinalfa);
+
+        if (rzf[i] >= uneg) {
+            doflag++;
+            rwf[i] = 1;
+        } else {
+            rwf[i] = 0;
+        }
+    }
 
     if (!doflag) {
         return;
     }
 
-    // Fast-load per poligoni completamente visibili.
-
+    // Fast-load for completely visible polygons.
     if (doflag == nrv) {
-        asm {   xor si, si
-                mov cx, nrv
-                mov vr2, cx }
-        load:
-        asm {   db 0x66;
-                mov ax, word ptr rxf[si]
-                db 0x66;
-                mov bx, word ptr ryf[si]
-                db 0x66;
-                mov dx, word ptr rzf[si]
-                db 0x66;
-                mov word ptr ultima_x[si], ax
-                db 0x66;
-                mov word ptr ultima_y[si], bx
-                db 0x66;
-                mov word ptr ultima_z[si], dx
-                add si, 4
-                dec cx
-                jnz load }
-        goto to_2d;
+        vr2 = nrv;
+        memcpy(ultima_x, rxf, nrv * sizeof(float));
+        memcpy(ultima_y, ryf, nrv * sizeof(float));
+        memcpy(ultima_z, rzf, nrv * sizeof(float));
+    } else {
+        // Convert points behind the observer compared to the screen plane
+        uint16_t fakedi = 0;
+        for (vr = 0; vr < nrv; vr++) {
+            if (rwf[vr] != 0) {
+                ultima_x[fakedi / 4] = rxf[vr];
+                ultima_y[fakedi / 4] = ryf[vr];
+                ultima_z[fakedi / 4] = rzf[vr];
+                fakedi += 4;
+                continue;
+            }
+
+            if (vr >= 1) {
+                pvert = vr - 1;
+            } else {
+                pvert = nrv - 1;
+            }
+
+            if ((vr + 1) <= (nrv - 1)) {
+                nvert = vr + 1;
+            } else {
+                nvert = 0;
+            }
+
+            if (rwf[pvert] == 0 && rwf[nvert] == 0) continue;
+
+            if (rwf[pvert] + rwf[nvert] == 2) {
+                if (rzf[vr] == rzf[pvert]) {
+                    ultima_x[fakedi / 4] = rxf[vr];
+                    ultima_y[fakedi / 4] = ryf[vr];
+                } else {
+                    zk = (uneg - rzf[pvert]) / (rzf[vr] - rzf[pvert]);
+
+                    ultima_x[fakedi / 4] = zk * (rxf[vr] - rxf[pvert]) + rxf[pvert];
+                    ultima_y[fakedi / 4] = zk * (ryf[vr] - ryf[pvert]) + ryf[pvert];
+                }
+                ultima_z[fakedi / 4] = uneg;
+
+                if (rzf[vr] == rzf[nvert]) {
+                    ultima_x[(fakedi / 4) + 1] = rxf[vr];
+                    ultima_y[(fakedi / 4) + 1] = ryf[vr];
+                } else {
+                    zk = (uneg - rzf[nvert]) / (rzf[vr] - rzf[nvert]);
+
+                    ultima_x[(fakedi / 4) + 1] = zk * (rxf[vr] - rxf[nvert]) + rxf[nvert];
+                    ultima_y[(fakedi / 4) + 1] = zk * (ryf[vr] - ryf[nvert]) + ryf[nvert];
+                }
+                ultima_z[(fakedi / 4) + 1] = uneg;
+                fakedi += 8;
+            } else {
+                if (rwf[pvert] == 0) {
+                    vvert = nvert;
+                } else {
+                    vvert = pvert;
+                }
+
+                if (rzf[vvert] == rzf[vr]) {
+                    ultima_x[fakedi / 4] = rxf[vr];
+                    ultima_y[fakedi / 4] = ryf[vr];
+                } else {
+                    zk = (uneg - rzf[vvert]) / (rzf[vr] - rzf[vvert]);
+
+                    ultima_x[fakedi / 4] = zk * (rxf[vr] - rxf[vvert]) + rxf[vvert];
+                    ultima_y[fakedi / 4] = zk * (ryf[vr] - ryf[vvert]) + ryf[vvert];
+                }
+
+                ultima_z[fakedi / 4] = uneg;
+                fakedi += 4;
+            }
+        }
+
+        vr2 = fakedi / 4;
+
+        if (vr2 < 3) {
+            return;
+        }
     }
 
-    /*  Conversione punti alle spalle dell'osservatore
-        rispetto al piano dello schermo. */
-    asm {   mov vr, 0
-            xor di, di
-            mov dx, nrv
-            dec dx }
-    the_for_1:
-    asm {   mov si, vr
-            cmp byte ptr rwf[si], 0
-            je CONT1
-            jmp bypass }
-    CONT1:
-    asm {   mov ax, vr
-            sub ax, 1
-            jnc pvert1ok
-            mov pvert, dx
-            jmp pvert1no }
-    pvert1ok:
-    asm     mov pvert, ax
-    pvert1no: asm {   mov ax, vr
-                      inc ax
-                      cmp ax, dx
-                      jbe nvert1ok
-                      mov nvert, 0
-                      jmp nvert1no }
-    nvert1ok:
-    asm     mov nvert, ax
-    nvert1no: asm {   mov si, pvert
-                      cmp byte ptr rwf[si], 0
-                      je ctrl1
-                      jmp JMPR11 }
-    ctrl1:
-    asm {   mov si, nvert
-            cmp byte ptr rwf[si], 0
-            jne JMPR11
-            jmp STOP1 }
-    JMPR11:
-    asm {   mov bx, vr
-            shl bx, 2
-            mov si, pvert
-            mov al, byte ptr rwf[si]
-            mov si, nvert
-            add al, byte ptr rwf[si]
-            cmp al, 2
-            je if11
-            jmp else11 }
-    if11:
-    asm {   shl pvert, 2
-            shl nvert, 2
-            mov si, bx
-            fld dword ptr rzf[si]
-            mov si, pvert
-            fcomp dword ptr rzf[si]
-            fstsw ax
-            sahf
-            jne if12
-            jmp else12 }
-    if12:
-    asm {   fld dword ptr uneg
-            fsub dword ptr rzf[si]
-            fld dword ptr rzf[si]
-            mov si, bx
-            fsubr dword ptr rzf[si]
-            fdivp
-            fst zk
-            fld dword ptr rxf[si]
-            mov si, pvert
-            fsub dword ptr rxf[si]
-            fmulp
-            fadd dword ptr rxf[si]
-            fstp dword ptr ultima_x[di]
-            fld zk
-            mov si, bx
-            fld dword ptr ryf[si]
-            mov si, pvert
-            fsub dword ptr ryf[si]
-            fmulp
-            fadd dword ptr ryf[si]
-            fstp dword ptr ultima_y[di]
-            jmp JMPR12 }
-    else12:
-    asm {   mov si, bx
-            db 0x66;
-            mov ax, word ptr rxf[si]
-            db 0x66;
-            mov word ptr ultima_x[di], ax
-            db 0x66;
-            mov ax, word ptr ryf[si]
-            db 0x66;
-            mov word ptr ultima_y[di], ax }
-    JMPR12:
-    asm {   db 0x66;
-            mov ax, word ptr uneg
-            db 0x66;
-            mov word ptr ultima_z[di], ax
-            mov si, bx
-            fld dword ptr rzf[si]
-            mov si, nvert
-            fcomp dword ptr rzf[si]
-            fstsw ax
-            sahf
-            jne neq1
-            jmp eq1 }
-    neq1:
-    asm {   fld dword ptr uneg
-            fsub dword ptr rzf[si]
-            fld dword ptr rzf[si]
-            mov si, bx
-            fsubr dword ptr rzf[si]
-            fdivp
-            fst zk
-            fld dword ptr rxf[si]
-            mov si, nvert
-            fsub dword ptr rxf[si]
-            fmulp
-            fadd dword ptr rxf[si]
-            fstp dword ptr ultima_x[di+4]
-            fld zk
-            mov si, bx
-            fld dword ptr ryf[si]
-            mov si, nvert
-            fsub dword ptr ryf[si]
-            fmulp
-            fadd dword ptr ryf[si]
-            fstp dword ptr ultima_y[di+4]
-            jmp JMPR13 }
-    eq1:
-    asm {   mov si, bx
-            db 0x66;
-            mov ax, word ptr rxf[si]
-            db 0x66;
-            mov word ptr ultima_x[di+4], ax
-            db 0x66;
-            mov ax, word ptr ryf[si]
-            db 0x66;
-            mov word ptr ultima_y[di+4], ax }
-    JMPR13:
-    asm {   db 0x66;
-            mov ax, word ptr uneg
-            db 0x66;
-            mov word ptr ultima_z[di+4], ax
-            add di, 8
-            jmp STOP1 }
-    else11:
-    asm {   mov si, pvert
-            cmp byte ptr rwf[si], 0
-            jne vpvert1
-            mov ax, nvert
-            mov vvert, ax
-            jmp vnvert1 }
-    vpvert1:
-    asm {   mov ax, pvert
-            mov vvert, ax }
-    vnvert1:
-    asm {   shl vvert, 2
-            mov si, bx
-            fld dword ptr rzf[si]
-            mov si, vvert
-            fcomp dword ptr rzf[si]
-            fstsw ax
-            sahf
-            jne neq2
-            jmp eq2 }
-    neq2:
-    asm {   fld dword ptr uneg
-            fsub dword ptr rzf[si]
-            fld dword ptr rzf[si]
-            mov si, bx
-            fsubr dword ptr rzf[si]
-            fdivp
-            fst zk
-            fld dword ptr rxf[si]
-            mov si, vvert
-            fsub dword ptr rxf[si]
-            fmulp
-            fadd dword ptr rxf[si]
-            fstp dword ptr ultima_x[di]
-            fld zk
-            mov si, bx
-            fld dword ptr ryf[si]
-            mov si, vvert
-            fsub dword ptr ryf[si]
-            fmulp
-            fadd dword ptr ryf[si]
-            fstp dword ptr ultima_y[di]
-            jmp JMPR14 }
-    eq2:
-    asm {   mov si, bx
-            db 0x66;
-            mov ax, word ptr rxf[si]
-            db 0x66;
-            mov word ptr ultima_x[di], ax
-            db 0x66;
-            mov ax, word ptr ryf[si]
-            db 0x66;
-            mov word ptr ultima_y[di], ax }
-    JMPR14:
-    asm {   db 0x66;
-            mov ax, word ptr uneg
-            db 0x66;
-            mov word ptr ultima_z[di], ax
-            add di, 4
-            jmp STOP1 }
-    bypass:
-    asm {   shl si, 2
-            db 0x66;
-            mov ax, word ptr rxf[si]
-            db 0x66;
-            mov word ptr ultima_x[di], ax
-            db 0x66;
-            mov ax, word ptr ryf[si]
-            db 0x66;
-            mov word ptr ultima_y[di], ax
-            db 0x66;
-            mov ax, word ptr rzf[si]
-            db 0x66;
-            mov word ptr ultima_z[di], ax
-            add di, 4 }
-    STOP1:
-    asm {   inc vr
-            mov ax, vr
-            cmp ax, nrv
-            jnb cutting_end_1
-            jmp the_for_1 }
-    cutting_end_1:
-    asm {   mov ax, di
-            shr ax, 2
-            mov vr2, ax }
+    // These are the perspective projections from 3D to 2D.
+    // A small check was included on 6/12/97 of the minimum and
+    // maximum graphs. This makes sure that the polygons which
+    // fall within the limits of the screen are not checked by
+    // the 2D clipping functions. Is it more intelligent? Before
+    // now, the minimum-maximum search cycle was at the bottom
+    // and it was executed after clipping 2D. What for? Long
+    // and complicated: therefore one thing to not always do.
+    _8n = (vr2 - 1) * 8;
 
-    if (vr2 < 3) {
-        return;
+    int32_t temp_max_x = lbxl;
+    int32_t temp_max_y = lbyl;
+    int32_t temp_min_x = ubxl;
+    int32_t temp_min_y = ubyl;
+
+    for (int32_t i = vr2 - 1; i >= 0; i--) {
+        float base = uno / ultima_z[i];
+
+        float xtest = base * ultima_x[i] + x_centro_f;
+        video_x0[i] = xtest;
+        mp[i * 2] = floor(xtest + 0.5);
+        if (mp[i * 2] > temp_max_x) temp_max_x = mp[i * 2];
+        if (mp[i * 2] < temp_min_x) temp_min_x = mp[i * 2];
+
+        float ytest = base * ultima_y[i] + y_centro_f;
+        video_y0[i] = ytest;
+        mp[i * 2 + 1] = floor(ytest + 0.5);
+        if (mp[i * 2 + 1] > temp_max_y) temp_max_y = mp[i * 2 + 1];
+        if (mp[i * 2 + 1] < temp_min_y) temp_min_y = mp[i * 2 + 1];
     }
 
-    // Queste sono le proiezioni prospettiche da 3d a 2d.
-    // E` stato incluso in data 6.12.97 anche un piccolo esame
-    // dei minimi e massimi grafici. Questo fa s� che i poligoni
-    // che rientrano nei limiti del video non vengano esaminati
-    // dalle funzioni di clipping 2-d. E` pi� intelligente.
-    // Prima d'ora, il ciclo di ricerca minimi-massimi era in fondo,
-    // e veniva eseguito dopo il clipping 2d, che per� � lungo
-    // e complicato: non � quindi una cosa da fare sempre.
-to_2d:
-    asm {   db 0x66;
-            mov ax, word ptr lbxl
-            db 0x66;
-            mov bx, word ptr lbyl
-            db 0x66;
-            mov cx, word ptr ubxl
-            db 0x66;
-            mov dx, word ptr ubyl
-            mov si, vr2
-            dec si
-            shl si, 2
-            mov di, si
-            add di, si
-            mov _8n, di }
-    projector:
-    asm {   fld uno
-            fdiv dword ptr ultima_z[si]
-            fld st(0)
-            fmul dword ptr ultima_x[si]
-            fadd dword ptr x_centro_f
-            fst dword ptr video_x0[si]
-            fistp dword ptr mp[di]
-            db 0x66;
-            cmp word ptr mp[di], cx
-            jnl outr_1
-            db 0x66;
-            mov cx, word ptr mp[di] }
-    outr_1:
-    asm {   db 0x66;
-            cmp word ptr mp[di], ax
-            jle outr_2
-            db 0x66;
-            mov ax, word ptr mp[di] }
-    outr_2:
-    asm {   fmul dword ptr ultima_y[si]
-            fadd dword ptr y_centro_f
-            fst dword ptr video_y0[si]
-            fistp dword ptr mp[di+4]
-            db 0x66;
-            cmp word ptr mp[di+4], dx
-            jnl outr_3
-            db 0x66;
-            mov dx, word ptr mp[di+4] }
-    outr_3:
-    asm {   db 0x66;
-            cmp word ptr mp[di+4], bx
-            jle outr_4
-            db 0x66;
-            mov bx, word ptr mp[di+4] }
-    outr_4:
-    asm {   sub di, 8
-            sub si, 4
-            jnc projector
-            mov max_x, ax
-            mov max_y, bx
-            mov min_x, cx
-            mov min_y, dx
-            xor si, si
-            db 0x66;
-            cmp ax, word ptr ubxl
-            jl ranged1
-            inc si
-            mov max_x, ubx }
-    ranged1:
-    asm {   db 0x66;
-            cmp bx, word ptr ubyl
-            jl ranged2
-            inc si
-            mov max_y, uby }
-    ranged2:
-    asm {   db 0x66;
-            cmp cx, word ptr lbxl
-            jnl ranged3
-            inc si
-            mov min_x, lbx }
-    ranged3:
-    asm {   db 0x66;
-            cmp dx, word ptr lbyl
-            jnl ranged4
-            inc si
-            mov min_y, lby }
-    ranged4:
-    asm {   test si, si
-            jnz yes_clip
-            jmp drawb }
-    /*  Conversione dei punti che risiedono al di fuori dell'area
-        visibile. Questi punti devono essere ridimensionati per
-        rientrare in tale area per evitare poligoni troppo grandi,
-        che oltre a rallentare notevolmente il tracciamento provocano
-        il blocco di sistema invadendo aree di memoria non-video.
-        In questa sezione i dati sui vertici del poligono da tracciare
-        vengono rimaneggiati a livello bidimensionale, aggiungendo
-        eventuali vertici per "ritagliare" solo la parte di poligono
-        visibile. */
-    // Lato superiore del video.
-    yes_clip:
-    asm {   mov vr, 0
-            xor di, di
-            mov dx, vr2
-            dec dx }
-    the_for_2:
-    asm {   mov si, vr
-            shl si, 2
-            fld dword ptr video_y0[si]
-            fcomp dword ptr lbyf
-            fstsw ax
-            sahf
-            jb if21
-            jmp else21 }
-    if21:
-    asm {   mov bx, si
-            mov ax, vr
-            sub ax, 1
-            jnc pvert2ok
-            mov pvert, dx
-            jmp pvert2no }
-    pvert2ok:
-    asm     mov pvert, ax
-    pvert2no: asm {   mov ax, vr
-                      inc ax
-                      cmp ax, dx
-                      jbe nvert2ok
-                      mov nvert, 0
-                      jmp nvert2no }
-    nvert2ok:
-    asm     mov nvert, ax
-    nvert2no: asm {   shl pvert, 2
-                      shl nvert, 2
-                      mov si, pvert
-                      fld dword ptr video_y0[si]
-                      fcomp dword ptr lbyf
-                      fstsw ax
-                      sahf
-                      jae CONT2
-                      mov si, nvert
-                      fld dword ptr video_y0[si]
-                      fcomp dword ptr lbyf
-                      fstsw ax
-                      sahf
-                      jae CONT2
-                      jmp STOP2 }
-    CONT2:
-    asm {   mov si, pvert
-            fld dword ptr video_y0[si]
-            fcomp dword ptr lbyf
-            fstsw ax
-            sahf
-            jae ctrl22
-            jmp else22 }
-    ctrl22:
-    asm {   mov si, nvert
-            fld dword ptr video_y0[si]
-            fcomp dword ptr lbyf
-            fstsw ax
-            sahf
-            jae if22
-            jmp else22 }
-    if22:
-    asm {   mov si, bx
-            fld dword ptr video_y0[si]
-            mov si, pvert
-            fcomp dword ptr video_y0[si]
-            fstsw ax
-            sahf
-            jne if23
-            jmp else23 }
-    if23:
-    asm {   fld dword ptr lbyf
-            fsub dword ptr video_y0[si]
-            fld dword ptr video_y0[si]
-            mov si, bx
-            fsubr dword ptr video_y0[si]
-            fdivp
-            fld dword ptr video_x0[si]
-            mov si, pvert
-            fsub dword ptr video_x0[si]
-            fmulp
-            fadd dword ptr video_x0[si]
-            fstp dword ptr video_x1[di]
-            jmp JMPR23 }
-    else23:
-    asm {   mov si, bx
-            db 0x66;
-            mov ax, word ptr video_x0[si]
-            db 0x66;
-            mov word ptr video_x1[di], ax }
-    JMPR23:
-    asm {   db 0x66;
-            mov ax, word ptr lbyf
-            db 0x66;
-            mov word ptr video_y1[di], ax
-            mov si, bx
-            fld dword ptr video_y0[si]
-            mov si, nvert
-            fcomp dword ptr video_y0[si]
-            fstsw ax
-            sahf
-            jne if24
-            jmp else24 }
-    if24:
-    asm {   fld dword ptr lbyf
-            fsub dword ptr video_y0[si]
-            fld dword ptr video_y0[si]
-            mov si, bx
-            fsubr dword ptr video_y0[si]
-            fdivp
-            fld dword ptr video_x0[si]
-            mov si, nvert
-            fsub dword ptr video_x0[si]
-            fmulp
-            fadd dword ptr video_x0[si]
-            fstp dword ptr video_x1[di+4]
-            jmp JMPR22 }
-    else24:
-    asm {   mov si, bx
-            db 0x66;
-            mov ax, word ptr video_x0[si]
-            db 0x66;
-            mov word ptr video_x1[di+4], ax }
-    JMPR22:
-    asm {   db 0x66;
-            mov ax, word ptr lbyf
-            db 0x66;
-            mov word ptr video_y1[di+4], ax
-            add di, 8
-            jmp STOP2 }
-    else22:
-    asm {   mov si, pvert
-            fld dword ptr video_y0[si]
-            fcomp dword ptr lbyf
-            fstsw ax
-            sahf
-            jb vnvert2
-            mov ax, pvert
-            mov vvert, ax
-            jmp vpvert2 }
-    vnvert2:
-    asm {   mov ax, nvert
-            mov vvert, ax }
-    vpvert2:
-    asm {   mov si, bx
-            fld dword ptr video_y0[si]
-            mov si, vvert
-            fcomp dword ptr video_y0[si]
-            fstsw ax
-            sahf
-            jne if25
-            jmp else35 }
-    if25:
-    asm {   fld dword ptr lbyf
-            fsub dword ptr video_y0[si]
-            fld dword ptr video_y0[si]
-            mov si, bx
-            fsubr dword ptr video_y0[si]
-            fdivp
-            fld dword ptr video_x0[si]
-            mov si, vvert
-            fsub dword ptr video_x0[si]
-            fmulp
-            fadd dword ptr video_x0[si]
-            fstp dword ptr video_x1[di]
-            jmp JMPR21 }
-    else25:
-    asm {   mov si, bx
-            db 0x66;
-            mov ax, word ptr video_x0[si]
-            db 0x66;
-            mov word ptr video_x1[di], ax }
-    JMPR21:
-    asm {   db 0x66;
-            mov ax, word ptr lbyf
-            db 0x66;
-            mov word ptr video_y1[di], ax
-            add di, 4
-            jmp STOP2 }
-    else21:
-    asm {   db 0x66;
-            mov ax, word ptr video_y0[si]
-            db 0x66;
-            mov word ptr video_y1[di], ax
-            db 0x66;
-            mov ax, word ptr video_x0[si]
-            db 0x66;
-            mov word ptr video_x1[di], ax
-            add di, 4 }
-    STOP2:
-    asm {   inc vr
-            mov ax, vr
-            cmp ax, vr2
-            jnb cutting_end_2
-            jmp the_for_2 }
-    cutting_end_2:
-    asm {   mov ax, di
-            shr ax, 2
-            mov vr3, ax }
+    max_x = temp_max_x;
+    max_y = temp_max_y;
+    min_x = temp_min_x;
+    min_y = temp_min_y;
+
+    bool oob = false;
+    if (temp_max_x >= ubxl) {
+        oob = true;
+        max_x = ubx;
+    }
+    if (temp_max_y >= ubyl) {
+        oob = true;
+        max_y = uby;
+    }
+    if (temp_min_x < lbxl) {
+        oob = true;
+        min_x = lbx;
+    }
+    if (temp_min_y < lbyl) {
+        oob = true;
+        min_y = lby;
+    }
+
+    uint16_t fakedi = 0;
+
+    if (!oob) goto drawb;
+
+    /* Conversion of points outside of the visible area. These points must be
+     * resized to be within the visible area to avoid polygons that are too
+     * large, which would lead to both buffer overruns and slow rendering.
+     * In this section the vertices of the polygon are reworked on a 2d level
+     * to retriangulate them and generate only visible polygons. */
+
+    // Top side of the video
+
+    for (vr = 0; vr < vr2; vr++) {
+        if (video_y0[vr] >= lbyf) {
+            video_y1[fakedi] = video_y0[vr];
+            video_x1[fakedi] = video_x0[vr];
+
+            fakedi += 1;
+            continue;
+        }
+
+        if (vr >= 1) {
+            pvert = vr - 1;
+        } else {
+            pvert = vr2 - 1;
+        }
+
+        if ((vr + 1) > (vr2 - 1)) {
+            nvert = 0;
+        } else {
+            nvert = vr + 1;
+        }
+
+        if ((video_y0[pvert] < lbyf) && (video_y0[nvert] < lbyf)) {
+            continue;
+        }
+
+        if ((video_y0[pvert] < lbyf) || (video_y0[nvert] < lbyf)) {
+            if (video_y0[pvert] < lbyf) {
+                vvert = nvert;
+            } else {
+                vvert = pvert;
+            }
+
+            if (video_y0[vr] == video_y0[vvert]) {
+                video_x1[fakedi] = video_x0[vr];
+            } else {
+                video_x1[fakedi] = ((lbyf - video_y0[vvert]) / (video_y0[vr] - video_y0[vvert])) * (video_x0[vr] - video_x0[vvert]) + video_x0[vvert];
+            }
+
+            video_y1[fakedi] = lbyf;
+
+            fakedi += 1;
+        } else {
+            if (video_y0[vr] == video_y0[pvert]) {
+                video_x1[fakedi] = video_x0[vr];
+            } else {
+                video_x1[fakedi] = (((lbyf - video_y0[pvert]) / (video_y0[vr] - video_y0[pvert])) * (video_x0[vr] - video_x0[pvert])) + video_x0[pvert];
+            }
+
+            video_y1[fakedi] = lbyf;
+
+            if (video_y0[vr] == video_y0[nvert]) {
+                video_x1[fakedi + 1] = video_x0[vr];
+            } else {
+                video_x1[fakedi + 1] = ((lbyf - video_y0[nvert]) / (video_y0[vr] - video_y0[nvert])) * (video_x0[vr] - video_x0[nvert]) + video_x0[nvert];
+            }
+
+            video_y1[fakedi + 1] = lbyf;
+
+            fakedi += 2;
+        }
+    }
+
+    vr3 = fakedi;
 
     if (vr3 < 3) {
         return;
     }
 
-    // Lato inferiore del video.
-    asm {   mov vr, 0
-            xor di, di
-            mov dx, vr3
-            dec dx }
-    the_for_3:
-    asm {   mov si, vr
-            shl si, 2
-            fld dword ptr video_y1[si]
-            fcomp dword ptr ubyf
-            fstsw ax
-            sahf
-            ja if31
-            jmp else31 }
-    if31:
-    asm {   mov bx, si
-            mov ax, vr
-            sub ax, 1
-            jnc pvert3ok
-            mov pvert, dx
-            jmp pvert3no }
-    pvert3ok:
-    asm     mov pvert, ax
-    pvert3no: asm {   mov ax, vr
-                      inc ax
-                      cmp ax, dx
-                      jbe nvert3ok
-                      mov nvert, 0
-                      jmp nvert3no }
-    nvert3ok:
-    asm     mov nvert, ax
-    nvert3no: asm {   shl pvert, 2
-                      shl nvert, 2
-                      mov si, pvert
-                      fld dword ptr video_y1[si]
-                      fcomp dword ptr ubyf
-                      fstsw ax
-                      sahf
-                      jbe CONT3
-                      mov si, nvert
-                      fld dword ptr video_y1[si]
-                      fcomp dword ptr ubyf
-                      fstsw ax
-                      sahf
-                      jbe CONT3
-                      jmp STOP3 }
-    CONT3:
-    asm {   mov si, pvert
-            fld dword ptr video_y1[si]
-            fcomp dword ptr ubyf
-            fstsw ax
-            sahf
-            jbe ctrl32
-            jmp else32 }
-    ctrl32:
-    asm {   mov si, nvert
-            fld dword ptr video_y1[si]
-            fcomp dword ptr ubyf
-            fstsw ax
-            sahf
-            jbe if32
-            jmp else32 }
-    if32:
-    asm {   mov si, bx
-            fld dword ptr video_y1[si]
-            mov si, pvert
-            fcomp dword ptr video_y1[si]
-            fstsw ax
-            sahf
-            jne if33
-            jmp else33 }
-    if33:
-    asm {   fld dword ptr ubyf
-            fsub dword ptr video_y1[si]
-            fld dword ptr video_y1[si]
-            mov si, bx
-            fsubr dword ptr video_y1[si]
-            fdivp
-            fld dword ptr video_x1[si]
-            mov si, pvert
-            fsub dword ptr video_x1[si]
-            fmulp
-            fadd dword ptr video_x1[si]
-            fstp dword ptr video_x2[di]
-            jmp JMPR33 }
-    else33:
-    asm {   mov si, bx
-            db 0x66;
-            mov ax, word ptr video_x1[si]
-            db 0x66;
-            mov word ptr video_x2[di], ax }
-    JMPR33:
-    asm {   db 0x66;
-            mov ax, word ptr ubyf
-            db 0x66;
-            mov word ptr video_y2[di], ax
-            mov si, bx
-            fld dword ptr video_y1[si]
-            mov si, nvert
-            fcomp dword ptr video_y1[si]
-            fstsw ax
-            sahf
-            jne if34
-            jmp else34 }
-    if34:
-    asm {   fld dword ptr ubyf
-            fsub dword ptr video_y1[si]
-            fld dword ptr video_y1[si]
-            mov si, bx
-            fsubr dword ptr video_y1[si]
-            fdivp
-            fld dword ptr video_x1[si]
-            mov si, nvert
-            fsub dword ptr video_x1[si]
-            fmulp
-            fadd dword ptr video_x1[si]
-            fstp dword ptr video_x2[di+4]
-            jmp JMPR32 }
-    else34:
-    asm {   mov si, bx
-            db 0x66;
-            mov ax, word ptr video_x1[si]
-            db 0x66;
-            mov word ptr video_x2[di+4], ax }
-    JMPR32:
-    asm {   db 0x66;
-            mov ax, word ptr ubyf
-            db 0x66;
-            mov word ptr video_y2[di+4], ax
-            add di, 8
-            jmp STOP3 }
-    else32:
-    asm {   mov si, pvert
-            fld dword ptr video_y1[si]
-            fcomp dword ptr ubyf
-            fstsw ax
-            sahf
-            ja vnvert3
-            mov ax, pvert
-            mov vvert, ax
-            jmp vpvert3 }
-    vnvert3:
-    asm {   mov ax, nvert
-            mov vvert, ax }
-    vpvert3:
-    asm {   mov si, bx
-            fld dword ptr video_y1[si]
-            mov si, vvert
-            fcomp dword ptr video_y1[si]
-            fstsw ax
-            sahf
-            jne if35
-            jmp else35 }
-    if35:
-    asm {   fld dword ptr ubyf
-            fsub dword ptr video_y1[si]
-            fld dword ptr video_y1[si]
-            mov si, bx
-            fsubr dword ptr video_y1[si]
-            fdivp
-            fld dword ptr video_x1[si]
-            mov si, vvert
-            fsub dword ptr video_x1[si]
-            fmulp
-            fadd dword ptr video_x1[si]
-            fstp dword ptr video_x2[di]
-            jmp JMPR31 }
-    else35:
-    asm {   mov si, bx
-            db 0x66;
-            mov ax, word ptr video_x1[si]
-            db 0x66;
-            mov word ptr video_x2[di], ax }
-    JMPR31:
-    asm {   db 0x66;
-            mov ax, word ptr ubyf
-            db 0x66;
-            mov word ptr video_y2[di], ax
-            add di, 4
-            jmp STOP3 }
-    else31:
-    asm {   db 0x66;
-            mov ax, word ptr video_y1[si]
-            db 0x66;
-            mov word ptr video_y2[di], ax
-            db 0x66;
-            mov ax, word ptr video_x1[si]
-            db 0x66;
-            mov word ptr video_x2[di], ax
-            add di, 4 }
-    STOP3:
-    asm {   inc vr
-            mov ax, vr
-            cmp ax, vr3
-            jnb cutting_end_3
-            jmp the_for_3 }
-    cutting_end_3:
-    asm {   mov ax, di
-            shr ax, 2
-            mov vr4, ax }
+    // Bottom side of the video.
+
+    fakedi = 0;
+    for (vr = 0; vr < vr3; vr++) {
+        if (video_y1[vr] <= ubyf) {
+            video_y2[fakedi] = video_y1[vr];
+            video_x2[fakedi] = video_x1[vr];
+
+            fakedi += 1;
+            continue;
+        }
+
+        if (vr >= 1) {
+            pvert = vr - 1;
+        } else {
+            pvert = vr3 - 1;
+        }
+
+        if ((vr + 1) > (vr3 - 1)) {
+            nvert = 0;
+        } else {
+            nvert = vr + 1;
+        }
+
+        if ((video_y1[pvert] > ubyf) && (video_y1[nvert] > ubyf)) {
+            continue;
+        }
+
+        if ((video_y1[pvert] > ubyf) || (video_y1[nvert] > ubyf)) {
+            if (video_y1[pvert] > ubyf) {
+                vvert = nvert;
+            } else {
+                vvert = pvert;
+            }
+
+            if (video_y1[vr] == video_y1[vvert]) {
+                video_x2[fakedi] = video_x1[vr];
+            } else {
+                video_x2[fakedi] = ((ubyf - video_y1[vvert]) / (video_y1[vr] - video_y1[vvert])) * (video_x1[vr] - video_x1[vvert]) + video_x1[vvert];
+            }
+
+            video_y2[fakedi] = ubyf;
+
+            fakedi += 1;
+        } else {
+            if (video_y1[vr] == video_y1[pvert]) {
+                video_x2[fakedi] = video_x1[vr];
+            } else {
+                video_x2[fakedi] = (((ubyf - video_y1[pvert]) / (video_y1[vr] - video_y1[pvert])) * (video_x1[vr] - video_x1[pvert])) + video_x1[pvert];
+            }
+
+            video_y2[fakedi] = ubyf;
+
+            if (video_y1[vr] == video_y1[nvert]) {
+                video_x2[fakedi + 1] = video_x1[vr];
+            } else {
+                video_x2[fakedi + 1] = ((ubyf - video_y1[nvert]) / (video_y1[vr] - video_y1[nvert])) * (video_x1[vr] - video_x1[nvert]) + video_x1[nvert];
+            }
+
+            video_y2[fakedi + 1] = ubyf;
+
+            fakedi += 2;
+        }
+    }
+    vr4 = fakedi;
 
     if (vr4 < 3) {
         return;
     }
 
-    // Lato sinistro del video.
-    asm {   mov vr, 0
-            xor di, di
-            mov dx, vr4
-            dec dx }
-    the_for_4:
-    asm {   mov si, vr
-            shl si, 2
-            fld dword ptr video_x2[si]
-            fcomp dword ptr lbxf
-            fstsw ax
-            sahf
-            jb if41
-            jmp else41 }
-    if41:
-    asm {   mov bx, si
-            mov ax, vr
-            sub ax, 1
-            jnc pvert4ok
-            mov pvert, dx
-            jmp pvert4no }
-    pvert4ok:
-    asm     mov pvert, ax
-    pvert4no: asm {   mov ax, vr
-                      inc ax
-                      cmp ax, dx
-                      jbe nvert4ok
-                      mov nvert, 0
-                      jmp nvert4no }
-    nvert4ok:
-    asm     mov nvert, ax
-    nvert4no: asm {   shl pvert, 2
-                      shl nvert, 2
-                      mov si, pvert
-                      fld dword ptr video_x2[si]
-                      fcomp dword ptr lbxf
-                      fstsw ax
-                      sahf
-                      jae CONT4
-                      mov si, nvert
-                      fld dword ptr video_x2[si]
-                      fcomp dword ptr lbxf
-                      fstsw ax
-                      sahf
-                      jae CONT4
-                      jmp STOP4 }
-    CONT4:
-    asm {   mov si, pvert
-            fld dword ptr video_x2[si]
-            fcomp dword ptr lbxf
-            fstsw ax
-            sahf
-            jae ctrl42
-            jmp else42 }
-    ctrl42:
-    asm {   mov si, nvert
-            fld dword ptr video_x2[si]
-            fcomp dword ptr lbxf
-            fstsw ax
-            sahf
-            jae if42
-            jmp else42 }
-    if42:
-    asm {   mov si, bx
-            fld dword ptr video_x2[si]
-            mov si, pvert
-            fcomp dword ptr video_x2[si]
-            fstsw ax
-            sahf
-            jne if43
-            jmp else43 }
-    if43:
-    asm {   fld dword ptr lbxf
-            fsub dword ptr video_x2[si]
-            fld dword ptr video_x2[si]
-            mov si, bx
-            fsubr dword ptr video_x2[si]
-            fdivp
-            fld dword ptr video_y2[si]
-            mov si, pvert
-            fsub dword ptr video_y2[si]
-            fmulp
-            fadd dword ptr video_y2[si]
-            fstp dword ptr video_y3[di]
-            jmp JMPR43 }
-    else43:
-    asm {   mov si, bx
-            db 0x66;
-            mov ax, word ptr video_y2[si]
-            db 0x66;
-            mov word ptr video_y3[di], ax }
-    JMPR43:
-    asm {   db 0x66;
-            mov ax, word ptr lbxf
-            db 0x66;
-            mov word ptr video_x3[di], ax
-            mov si, bx
-            fld dword ptr video_x2[si]
-            mov si, nvert
-            fcomp dword ptr video_x2[si]
-            fstsw ax
-            sahf
-            jne if44
-            jmp else44 }
-    if44:
-    asm {   fld dword ptr lbxf
-            fsub dword ptr video_x2[si]
-            fld dword ptr video_x2[si]
-            mov si, bx
-            fsubr dword ptr video_x2[si]
-            fdivp
-            fld dword ptr video_y2[si]
-            mov si, nvert
-            fsub dword ptr video_y2[si]
-            fmulp
-            fadd dword ptr video_y2[si]
-            fstp dword ptr video_y3[di+4]
-            jmp JMPR42 }
-    else44:
-    asm {   mov si, bx
-            db 0x66;
-            mov ax, word ptr video_y2[si]
-            db 0x66;
-            mov word ptr video_y3[di+4], ax }
-    JMPR42:
-    asm {   db 0x66;
-            mov ax, word ptr lbxf
-            db 0x66;
-            mov word ptr video_x3[di+4], ax
-            add di, 8
-            jmp STOP4 }
-    else42:
-    asm {   mov si, pvert
-            fld dword ptr video_x2[si]
-            fcomp dword ptr lbxf
-            fstsw ax
-            sahf
-            jb vnvert4
-            mov ax, pvert
-            mov vvert, ax
-            jmp vpvert4 }
-    vnvert4:
-    asm {   mov ax, nvert
-            mov vvert, ax }
-    vpvert4:
-    asm {   mov si, bx
-            fld dword ptr video_x2[si]
-            mov si, vvert
-            fcomp dword ptr video_x2[si]
-            fstsw ax
-            sahf
-            jne if45
-            jmp else45 }
-    if45:
-    asm {   fld dword ptr lbxf
-            fsub dword ptr video_x2[si]
-            fld dword ptr video_x2[si]
-            mov si, bx
-            fsubr dword ptr video_x2[si]
-            fdivp
-            fld dword ptr video_y2[si]
-            mov si, vvert
-            fsub dword ptr video_y2[si]
-            fmulp
-            fadd dword ptr video_y2[si]
-            fstp dword ptr video_y3[di]
-            jmp JMPR41 }
-    else45:
-    asm {   mov si, bx
-            db 0x66;
-            mov ax, word ptr video_y2[si]
-            db 0x66;
-            mov word ptr video_y3[di], ax }
-    JMPR41:
-    asm {   db 0x66;
-            mov ax, word ptr lbxf
-            db 0x66;
-            mov word ptr video_x3[di], ax
-            add di, 4
-            jmp STOP4 }
-    else41:
-    asm {   db 0x66;
-            mov ax, word ptr video_x2[si]
-            db 0x66;
-            mov word ptr video_x3[di], ax
-            db 0x66;
-            mov ax, word ptr video_y2[si]
-            db 0x66;
-            mov word ptr video_y3[di], ax
-            add di, 4 }
-    STOP4:
-    asm {   inc vr
-            mov ax, vr
-            cmp ax, vr4
-            jnb cutting_end_4
-            jmp the_for_4 }
-    cutting_end_4:
-    asm {   mov ax, di
-            shr ax, 2
-            mov vr5, ax }
+    // Left side of the video.
+    fakedi = 0;
+    for (vr = 0; vr < vr4; vr++) {
+        if (video_x2[vr] >= lbxf) {
+            video_x3[fakedi] = video_x2[vr];
+            video_y3[fakedi] = video_y2[vr];
+
+            fakedi += 1;
+            continue;
+        }
+
+        if (vr >= 1) {
+            pvert = vr - 1;
+        } else {
+            pvert = vr4 - 1;
+        }
+
+        if ((vr + 1) > (vr4 - 1)) {
+            nvert = 0;
+        } else {
+            nvert = vr + 1;
+        }
+
+        if ((video_x2[pvert] < lbxf) && (video_x2[nvert] < lbxf)) {
+            continue;
+        }
+
+        if ((video_x2[pvert] < lbxf) || (video_x2[nvert] < lbxf)) {
+            if (video_x2[pvert] < lbxf) {
+                vvert = nvert;
+            } else {
+                vvert = pvert;
+            }
+
+            if (video_x2[vr] == video_x2[vvert]) {
+                video_y3[fakedi] = video_y2[vr];
+            } else {
+                video_y3[fakedi] = ((lbxf - video_x2[vvert]) / (video_x2[vr] - video_x2[vvert])) * (video_y2[vr] - video_y2[vvert]) + video_y2[vvert];
+            }
+
+            video_x3[fakedi] = lbxf;
+
+            fakedi += 1;
+        } else {
+            if (video_x2[vr] == video_x2[pvert]) {
+                video_y3[fakedi] = video_y2[vr];
+            } else {
+                video_y3[fakedi] = (((lbxf - video_x2[pvert]) / (video_x2[vr] - video_x2[pvert])) * (video_y2[vr] - video_y2[pvert])) + video_y2[pvert];
+            }
+
+            video_x3[fakedi] = lbxf;
+
+            if (video_x2[vr] == video_x2[nvert]) {
+                video_y3[fakedi + 1] = video_y2[vr];
+            } else {
+                video_y3[fakedi + 1] = ((lbxf - video_x2[nvert]) / (video_x2[vr] - video_x2[nvert])) * (video_y2[vr] - video_y2[nvert]) + video_y2[nvert];
+            }
+
+            video_x3[fakedi + 1] = lbxf;
+
+            fakedi += 2;
+        }
+    }
+    vr5 = fakedi;
 
     if (vr5 < 3) {
         return;
     }
 
-    // Lato destro del video.
-    asm {   mov vr, 0
-            xor di, di // vr6 * 4
-            mov dx, vr5
-            dec dx } // vr5 - 1
-    the_for_5:
-    asm {   mov si, vr
-            shl si, 2
-            fld dword ptr video_x3[si]
-            fcomp dword ptr ubxf
-            fstsw ax
-            sahf
-            ja if51
-            jmp else51 }
-    if51:
-    asm {   mov bx, si // costante vr * 4
-            mov ax, vr
-            sub ax, 1
-            jnc pvert5ok
-            mov pvert, dx
-            jmp pvert5no }
-    pvert5ok:
-    asm     mov pvert, ax
-    pvert5no: asm {   mov ax, vr
-                      inc ax
-                      cmp ax, dx
-                      jbe nvert5ok
-                      mov nvert, 0
-                      jmp nvert5no }
-    nvert5ok:
-    asm     mov nvert, ax
-    nvert5no: asm {   shl pvert, 2
-                      shl nvert, 2
-                      mov si, pvert
-                      fld dword ptr video_x3[si]
-                      fcomp dword ptr ubxf
-                      fstsw ax
-                      sahf
-                      jbe CONT5
-                      mov si, nvert
-                      fld dword ptr video_x3[si]
-                      fcomp dword ptr ubxf
-                      fstsw ax
-                      sahf
-                      jbe CONT5
-                      jmp STOP5 }
-    CONT5:
-    asm {   mov si, pvert
-            fld dword ptr video_x3[si]
-            fcomp dword ptr ubxf
-            fstsw ax
-            sahf
-            jbe ctrl52
-            jmp else52 }
-    ctrl52:
-    asm {   mov si, nvert
-            fld dword ptr video_x3[si]
-            fcomp dword ptr ubxf
-            fstsw ax
-            sahf
-            jbe if52
-            jmp else52 }
-    if52:
-    asm {   mov si, bx
-            fld dword ptr video_x3[si]
-            mov si, pvert
-            fcomp dword ptr video_x3[si]
-            fstsw ax
-            sahf
-            jne if53
-            jmp else53 }
-    if53:
-    asm {   fld dword ptr ubxf
-            fsub dword ptr video_x3[si]
-            fld dword ptr video_x3[si]
-            mov si, bx
-            fsubr dword ptr video_x3[si]
-            fdivp
-            fld dword ptr video_y3[si]
-            mov si, pvert
-            fsub dword ptr video_y3[si]
-            fmulp
-            fadd dword ptr video_y3[si]
-            fistp dword ptr mp[di+4]
-            jmp JMPR53 }
-    else53:
-    asm {   mov si, bx
-            fld dword ptr video_y3[si]
-            fistp dword ptr mp[di+4] }
-    JMPR53:
-    asm {   mov word ptr mp[di], ubx
-            mov word ptr mp[di+2], 0
-            mov si, bx
-            fld dword ptr video_x3[si]
-            mov si, nvert
-            fcomp dword ptr video_x3[si]
-            fstsw ax
-            sahf
-            jne if54
-            jmp else54 }
-    if54:
-    asm {   fld dword ptr ubxf
-            fsub dword ptr video_x3[si]
-            fld dword ptr video_x3[si]
-            mov si, bx
-            fsubr dword ptr video_x3[si]
-            fdivp
-            fld dword ptr video_y3[si]
-            mov si, nvert
-            fsub dword ptr video_y3[si]
-            fmulp
-            fadd dword ptr video_y3[si]
-            fistp dword ptr mp[di+12]
-            jmp JMPR52 }
-    else54:
-    asm {   mov si, bx
-            fld dword ptr video_y3[si]
-            fistp dword ptr mp[di+12] }
-    JMPR52:
-    asm {   mov word ptr mp[di+8], ubx
-            mov word ptr mp[di+10], 0
-            add di, 16
-            jmp STOP5 }
-    else52:
-    asm {   mov si, pvert
-            fld dword ptr video_x3[si]
-            fcomp dword ptr ubxf
-            fstsw ax
-            sahf
-            ja vnvert5
-            mov ax, pvert
-            mov vvert, ax
-            jmp vpvert5 }
-    vnvert5:
-    asm {   mov ax, nvert
-            mov vvert, ax }
-    vpvert5:
-    asm {   mov si, bx
-            fld dword ptr video_x3[si]
-            mov si, vvert
-            fcomp dword ptr video_x3[si]
-            fstsw ax
-            sahf
-            jne if55
-            jmp else55 }
-    if55:
-    asm {   fld dword ptr ubxf
-            fsub dword ptr video_x3[si]
-            fld dword ptr video_x3[si]
-            mov si, bx
-            fsubr dword ptr video_x3[si]
-            fdivp
-            fld dword ptr video_y3[si]
-            mov si, vvert
-            fsub dword ptr video_y3[si]
-            fmulp
-            fadd dword ptr video_y3[si]
-            fistp dword ptr mp[di+4]
-            jmp JMPR51 }
-    else55:
-    asm {   mov si, bx
-            fld dword ptr video_y3[si]
-            fistp dword ptr mp[di+4] }
-    JMPR51:
-    asm {   mov word ptr mp[di], ubx
-            mov word ptr mp[di+2], 0
-            add di, 8
-            jmp STOP5 }
-    else51:
-    asm {   fld dword ptr video_x3[si]
-            fistp dword ptr mp[di]
-            fld dword ptr video_y3[si]
-            fistp dword ptr mp[di+4]
-            add di, 8 }
-    STOP5:
-    asm {   inc vr
-            mov ax, vr
-            cmp ax, vr5
-            jnb cutting_end_5
-            jmp the_for_5 }
-    cutting_end_5:
-    asm {   mov _8n, di
-            sub _8n, 8
-            shr di, 3
-            mov vr6, di }
+    // Right side of the video.
+    fakedi = 0;
+    for (vr = 0; vr < vr5; vr++) {
+        if (video_x3[vr] <= ubxf) {
+            mp[fakedi] = floor(video_x3[vr] + 0.5);
+            mp[fakedi + 1] = floor(video_y3[vr] + 0.5);
+
+            fakedi += 2;
+
+            continue;
+        }
+
+        if (vr >= 1) {
+            pvert = vr - 1;
+        } else {
+            pvert = vr5 - 1;
+        }
+
+        if ((vr + 1) > (vr5 - 1)) {
+            nvert = 0;
+        } else {
+            nvert = vr + 1;
+        }
+
+        if ((video_x3[pvert] > ubxf) && (video_x3[nvert] > ubxf)) {
+            continue;
+        }
+
+        if (video_x3[pvert] > ubxf || video_x3[nvert] > ubxf) {
+            if (video_x3[pvert] > ubxf) {
+                vvert = nvert;
+            } else {
+                vvert = pvert;
+            }
+
+            if (video_x3[vr] == video_x3[vvert]) {
+                mp[fakedi + 1] = floor(video_y3[vr] + 0.5);
+            } else {
+                mp[fakedi + 1] = floor(((ubxf - video_x3[vvert]) / (video_x3[vr] - video_x3[vvert])) * (video_y3[vr] - video_y3[vvert]) + video_y3[vvert] + 0.5);
+            }
+
+            mp[fakedi] = ubx & 0x0000FFFF; // y tho
+
+            fakedi += 2;
+            continue;
+        } else {
+            if (video_x3[vr] == video_x3[pvert]) {
+                mp[fakedi + 1] = floor(video_y3[vr] + 0.5);
+            } else {
+                mp[fakedi + 1] = floor(((ubxf - video_x3[pvert]) / (video_x3[vr] - video_x3[pvert])) * (video_y3[vr] - video_y3[pvert]) + video_y3[pvert] + 0.5);
+            }
+
+            mp[fakedi] = ubx & 0x0000FFFF;
+
+            if (video_x3[vr] == video_x3[nvert]) {
+                mp[fakedi + 3] = floor(video_y3[vr] + 0.5);
+            } else {
+                mp[fakedi + 3] = floor(((ubxf - video_x3[nvert]) / (video_x3[vr] - video_x3[nvert])) * (video_y3[vr] - video_y3[nvert]) + video_y3[nvert] + 0.5);
+            }
+
+            mp[fakedi + 2] = ubx & 0x0000FFFF;
+
+            fakedi += 4;
+            continue;
+        }
+    }
+
+    _8n = (fakedi - 2) * 4;
+    vr6 = fakedi;
 
     if (vr6 < 3) {
         return;
     }
 
-    /* Riempimento del poligono risultante. */
-    // Tracciamento rapido (nr. 3 balletti & via, per i poligoni piccoli)
-drawb:
+    /* Filling of the resulting polygon. */
+    // Quick tracing (3 ballets (Translation error..?) & away, for small polys).
+    drawb:
 
     if (!flares) {
         if (min_y == max_y) {
@@ -1626,97 +860,203 @@ drawb:
         }
     }
 
-    // Tracciamento complesso.
-    // Disegna i bordi del poligono, con la funzione Segmento.
-    asm     xor si, si
-    bordo:  asm {   db 0x66;
-                    mov ax, word ptr mp[si]
-                    db 0x66;
-                    mov word ptr xp, ax
-                    db 0x66;
-                    mov ax, word ptr mp[si+4]
-                    db 0x66;
-                    mov word ptr yp, ax
-                    db 0x66;
-                    mov ax, word ptr mp[si+8]
-                    db 0x66;
-                    mov word ptr xa, ax
-                    db 0x66;
-                    mov ax, word ptr mp[si+12]
-                    db 0x66;
-                    mov word ptr ya, ax
-                    push si }
+    // Complete tracing.
+    // Draw the edges of the polygon, with the segment function.
+    for (fakedi = 0; fakedi < (_8n / 4); fakedi += 2) {
+        xp = mp[fakedi];
+        yp = mp[fakedi + 1];
+        xa = mp[fakedi + 2];
+        ya = mp[fakedi + 3];
+
+        Segmento ();
+    }
+
+    xp = mp[fakedi];
+    yp = mp[fakedi + 1];
+    xa = mp[0];
+    ya = mp[1];
+
     Segmento ();
-    asm {   pop si
-            add si, 8
-            cmp si, _8n
-            jb bordo
-            db 0x66;
-            mov ax, word ptr mp[si]
-            db 0x66;
-            mov word ptr xp, ax
-            db 0x66;
-            mov ax, word ptr mp[si+4]
-            db 0x66;
-            mov word ptr yp, ax
-            db 0x66;
-            mov ax, word ptr mp[0]
-            db 0x66;
-            mov word ptr xa, ax
-            db 0x66;
-            mov ax, word ptr mp[4]
-            db 0x66;
-            mov word ptr ya, ax }
-    Segmento ();
-    // Pixel di Partenza.
-    uint16_t segmptr; //= riga[min_y] + min_x;
-    // Pixel d'Arrivo.
-    uint16_t lim_y; // = riga[max_y] + min_x;
-    uint16_t lim_x; // = segmptr + max_x - min_x;
-    uint16_t bytes; // = lim_x - segmptr + 2;
-    asm {   mov si, min_y
-            mov ax, min_x
-            add si, si
-            mov di, max_y
-            add ax, word ptr riga[si]
-            mov bx, min_x
-            add di, di
-            mov segmptr, ax
-            add bx, word ptr riga[di]
-            mov lim_y, bx
-            add ax, max_x
-            sub ax, min_x
-            mov lim_x, ax
-            sub ax, segmptr
-            add ax, 2
-            mov bytes, ax }
-    // Riempimento (direction flag dev'essere 0)
-    asm cld;
+    // Starting Pixels
+    uint16_t segmptr = riga[min_y] + min_x;
+    // Arrival pixels
+    uint16_t lim_y = riga[max_y] + min_x;
+    uint16_t lim_x = segmptr + max_x - min_x;
+    uint16_t bytes = lim_x - segmptr + 2;
+
+    uint16_t loc0, loc1, presip, yeet, tempBytes, tinkywinky, laalaa;
+    uint32_t tempfakedi;
+    uint8_t dipsy, po;
 
     switch (flares) {
     case 0:
-        asm {   pusha
+        for (fakedi = segmptr; fakedi <= lim_y; fakedi += 320) {
+            tempBytes = bytes;
+            tempfakedi = fakedi;
+
+            if (adapted[tempfakedi] != 255) {
+                while (--tempBytes > 0 && adapted[++tempfakedi] != 255);
+            }
+
+            if (tempBytes == 0) continue;
+            loc0 = tempfakedi;
+
+            while (tempBytes-- > 0 && adapted[tempfakedi++] == 255);
+            loc1 = tempfakedi;
+
+            if (adapted[tempfakedi] != 255 && tempBytes > 0) {
+                while (--tempBytes > 0 && adapted[++tempfakedi] != 255);
+            }
+
+            if (tempBytes > 0) {
+                while (tempBytes-- > 0 && adapted[tempfakedi++] == 255);
+
+                tempfakedi--;
+                tempfakedi = tempfakedi > 64000 ? 64000 : tempfakedi;
+                memset(&adapted[loc0], colore, tempfakedi - loc0);
+            } else {
+                loc1--;
+                memset(&adapted[loc0], colore, loc1 - loc0);
+            }
+        }
+        break;
+    case 1:
+        colore &= 0x3F;
+        for (fakedi = segmptr; fakedi <= lim_y; fakedi += 320) {
+            tempBytes = bytes;
+            tempfakedi = fakedi;
+
+            if (adapted[tempfakedi] != 255) {
+                while (--tempBytes > 0 && adapted[++tempfakedi] != 255);
+            }
+
+            if (tempBytes == 0) continue;
+            loc0 = tempfakedi;
+
+            while (tempBytes-- > 0 && adapted[tempfakedi++] == 255);
+            loc1 = tempfakedi;
+
+            if (adapted[tempfakedi] != 255 && tempBytes > 0) {
+                while (--tempBytes > 0 && adapted[++tempfakedi] != 255);
+            }
+
+            if (tempBytes > 0) {
+                while (tempBytes-- > 0 && adapted[tempfakedi++] == 255);
+                tempfakedi--;
+
+                tinkywinky = tempfakedi - loc0;
+                tempfakedi = loc0;
+
+                for(; tinkywinky > 0; tempfakedi++, tinkywinky--) {
+                    dipsy = adapted[tempfakedi - 1];
+                    dipsy &= 0x3F;
+                    dipsy += colore;
+
+                    if (dipsy >= 62) dipsy = 62;
+
+                    adapted[tempfakedi] = dipsy;
+                }
+            } else {
+                loc1--;
+
+                tinkywinky = loc1 - loc0;
+                tempfakedi = loc0;
+
+                dipsy = colore >> 1;
+
+                for (; tinkywinky > 0; tempfakedi++, tinkywinky--) {
+                    po = adapted[tempfakedi - 1];
+                    po &= 0x3F;
+                    po += dipsy;
+
+                    if (po >= 62) po = 62;
+
+                    adapted[tempfakedi] = dipsy;
+                }
+            }
+        }
+        break;
+    case 2:
+        for (fakedi = segmptr; fakedi <= lim_y; fakedi += 320) {
+            tempBytes = bytes;
+            tempfakedi = fakedi;
+
+            if (adapted[tempfakedi] != 255) {
+                while (--tempBytes > 0 && adapted[++tempfakedi] != 255);
+            }
+
+            if (tempBytes == 0) continue;
+            loc0 = tempfakedi;
+
+            while (tempBytes-- > 0 && adapted[tempfakedi++] == 255);
+            loc1 = tempfakedi;
+
+            if (adapted[tempfakedi] != 255 && tempBytes > 0) {
+                while (--tempBytes > 0 && adapted[++tempfakedi] != 255);
+            }
+
+            if (tempBytes > 0) {
+                while (tempBytes-- > 0 && adapted[tempfakedi++] == 255);
+                tempfakedi--;
+
+                tinkywinky = tempfakedi - loc0;
+                tempfakedi = loc0;
+
+                for (; tinkywinky > 0; tempfakedi++, tinkywinky--) {
+                    tempfakedi = tempfakedi > 64000 ? 64000 : tempfakedi;
+                    if (adapted[tempfakedi] == 0xFF) {
+                        dipsy = adapted[tempfakedi - 321];
+                        dipsy &= 0x3F;
+                        dipsy |= 0x40;
+                        adapted[tempfakedi] = dipsy;
+                    } else {
+                        laalaa = adapted[tempfakedi];
+                        laalaa &= 0x3F;
+                        laalaa |= 0x40;
+                        laalaa += tinkywinky;
+                        if (laalaa >= 128) laalaa = 127;
+                        adapted[tempfakedi] = laalaa;
+                    }
+                }
+            } else {
+                loc1--;
+                for (tempfakedi = loc0; tempfakedi < loc1; tempfakedi++) {
+                    dipsy = adapted[tempfakedi - 321];
+                    if (dipsy == 0xFF) {
+                        dipsy = adapted[tempfakedi - 642];
+                    }
+
+                    dipsy &= 0x3F;
+                    dipsy |= 0x40;
+                    adapted[tempfakedi] = dipsy;
+                }
+            }
+        }
+        break;
+        // effetto flares = 3 spostato a "polymap"
+    case 4:
+        /*asm {   pusha
                 les di, dword ptr adapted
                 add lim_y, di
-                add di, segmptr
-                mov al, colore
+                add di, segmptr }
+        fil4a:
+        asm {   mov al, colore
                 mov ah, colore
                 db 0x66 // macro: shl eax, 16
                 db 0xc1
                 db 0xe0
                 db 0x10
-                mov ah, colore }
-        linea:
-        asm {   push di
+                mov ah, colore
+                push di
                 mov cx, bytes
                 mov al, 255
                 repne scasb
-                jne pross
+                jne fil4d
                 mov si, di
                 repe scasb
                 mov bx, di
                 repne scasb
-                jne fb1
+                jne fil4e
                 repe scasb
                 dec di
                 dec si
@@ -1726,18 +1066,18 @@ drawb:
                 mov di, si
                 mov cx, dx
                 shr cx, 2
-                jz no_store }
-        store_stringdw:
+                jz fil4c }
+        fil4b:
         asm {   db 0x26, 0x66, 0x89, 0x05 // mov es:[di], eax
                 add di, 4
                 dec cx
-                jnz store_stringdw }
-        no_store:
+                jnz fil4b }
+        fil4c:
         asm {   mov cl, dl
                 and cl, 3
                 rep stosb
-                jmp pross }
-        fb1:
+                jmp fil4d }
+        fil4e:
         asm {   dec si
                 dec bx
                 mov cx, bx
@@ -1745,226 +1085,28 @@ drawb:
                 sub cx, si
                 mov di, si
                 rep stosb }
-        pross:
-        asm {   pop di
+        fil4d:
+        asm {   mov al, colore
+                mov ah, colore
+                and al, 0x3F
+                and ah, 0xC0
+                add al, ent
+                cmp al, 0x3F
+                jbe fil4f
+                mov al, 0x3F
+                test ent, 0x80
+                jz  fil4f
+                xor al, al }
+        fil4f:
+        asm {   or  al, ah
+                mov colore, al
+                pop di
                 add di, 320
                 cmp di, lim_y
-                jbe linea
-                popa }
+                jbe fil4a
+                popa }*/
         break;
-
-    case 1:
-            asm {   les di, dword ptr adapted
-                    add lim_y, di
-                    add di, segmptr
-                    mov al, colore
-                    and al, 0x3F
-                    mov colore, al }
-            l2:
-            asm {   push di
-                    mov cx, bytes
-                    mov al, 255
-                    repne scasb
-                    jne pross2
-                    mov si, di
-                    repe scasb
-                    mov bx, di
-                    repne scasb
-                    jne fb2
-                    repe scasb
-                    dec di
-                    dec si
-                    mov cx, di
-                    sub cx, si
-                    mov di, si }
-            fill2:
-            asm {   mov al, es:[di-1]
-                    and al, 0x3F
-                    add al, colore
-                    cmp al, 62
-                    jb flow
-                    mov al, 62 }
-            flow:
-            asm {   mov es:[di], al
-                    inc di
-                    dec cx
-                    jnz fill2
-                    jmp pross2 }
-            fb2:
-            asm {   dec si
-                    dec bx
-                    mov cx, bx
-                    sub cx, si
-                    mov di, si
-                    mov dl, colore
-                    shr dl, 1 }
-            fb2a:
-            asm {   mov al, es:[di-1]
-                    and al, 0x3F
-                    add al, dl
-                    cmp al, 62
-                    jb flow4
-                    mov al, 62 }
-            flow4:
-            asm {   mov es:[di], al
-                    inc di
-                    dec cx
-                    jnz fb2a }
-            pross2:
-            asm {   pop di
-                    add di, 320
-                    cmp di, lim_y
-                    jbe l2 }
-            break;
-
-    case 2:
-            asm {   push ds
-                    les ax, dword ptr adapted
-                    lds di, dword ptr adapted
-                    add lim_y, di
-                    add di, segmptr }
-            l3:
-            asm {   mov al, 0xFF
-                    push di
-                    mov cx, bytes
-                    repne scasb
-                    jne pross3
-                    mov si, di
-                    repe scasb
-                    mov bx, di
-                    repne scasb
-                    jne fb3
-                    repe scasb
-                    dec di
-                    dec si
-                    mov cx, di
-                    sub cx, si
-                    mov di, si }
-            fill3:
-            asm {   cmp byte ptr [di], 0xFF
-                    jne tsnob
-                    mov ah, [di-321]
-                    and ah, 0x3F
-                    or ah, 0x40
-                    mov [di], ah
-                    jmp under }
-            tsnob:
-            asm {   mov al, [di]
-                    and ax, 0x3F
-                    or  al, 0x40
-                    add ax, cx
-                    cmp ax, 128
-                    jb dnorm
-                    mov al, 127 }
-            dnorm:
-            asm mov [di], al
-            under:  asm {   inc di
-                        dec cx
-                        jnz fill3
-                        jmp pross3 }
-        fb3:
-        asm {   dec si
-                dec bx
-                mov cx, bx
-                sub cx, si
-                mov di, si }
-        fb3a:
-        asm {   mov ah, [di-321]
-                cmp ah, 0xFF
-                jne tsnoby
-                mov ah, [di-642] }
-        tsnoby:
-        asm {   and ah, 0x3F
-                or ah, 0x40
-                mov [di], ah
-                inc di
-                dec cx
-                jnz fb3a }
-        pross3:
-        asm {   pop di
-                add di, 320
-                cmp di, lim_y
-                ja l3end
-                jmp l3 }
-        l3end:
-        asm pop ds
-        break;
-
-    // effetto flares = 3 spostato a "polymap"
-    case 4:
-            asm {   pusha
-                    les di, dword ptr adapted
-                    add lim_y, di
-                    add di, segmptr }
-            fil4a:
-            asm {   mov al, colore
-                    mov ah, colore
-                    db 0x66 // macro: shl eax, 16
-                    db 0xc1
-                    db 0xe0
-                    db 0x10
-                    mov ah, colore
-                    push di
-                    mov cx, bytes
-                    mov al, 255
-                    repne scasb
-                    jne fil4d
-                    mov si, di
-                    repe scasb
-                    mov bx, di
-                    repne scasb
-                    jne fil4e
-                    repe scasb
-                    dec di
-                    dec si
-                    mov al, colore
-                    mov dx, di
-                    sub dx, si
-                    mov di, si
-                    mov cx, dx
-                    shr cx, 2
-                    jz fil4c }
-            fil4b:
-            asm {   db 0x26, 0x66, 0x89, 0x05 // mov es:[di], eax
-                    add di, 4
-                    dec cx
-                    jnz fil4b }
-            fil4c:
-            asm {   mov cl, dl
-                    and cl, 3
-                    rep stosb
-                    jmp fil4d }
-            fil4e:
-            asm {   dec si
-                    dec bx
-                    mov cx, bx
-                    mov al, colore
-                    sub cx, si
-                    mov di, si
-                    rep stosb }
-            fil4d:
-            asm {   mov al, colore
-                    mov ah, colore
-                    and al, 0x3F
-                    and ah, 0xC0
-                    add al, ent
-                    cmp al, 0x3F
-                    jbe fil4f
-                    mov al, 0x3F
-                    test ent, 0x80
-                    jz  fil4f
-                    xor al, al }
-            fil4f:
-            asm {   or  al, ah
-                    mov colore, al
-                    pop di
-                    add di, 320
-                    cmp di, lim_y
-                    jbe fil4a
-                    popa }
-        }
-#endif
-    STUB
+    }
 }
 
 /*
