@@ -2459,8 +2459,8 @@ int main(int argc, char **argv) {
     sdl_surface =
         SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF000000, 0xFF0000, 0xFF00, 0xFF);
     window = SDL_CreateWindow("Noctis IV LR", SDL_WINDOWPOS_CENTERED,
-                                          SDL_WINDOWPOS_CENTERED, 960, 600, SDL_WINDOW_RESIZABLE | SDL_WINDOW_INPUT_GRABBED);
-    SDL_SetRelativeMouseMode(SDL_TRUE);
+                                          SDL_WINDOWPOS_CENTERED, 640, 400, SDL_WINDOW_RESIZABLE /*| SDL_WINDOW_INPUT_GRABBED*/);
+    //SDL_SetRelativeMouseMode(SDL_TRUE);
     renderer =
         SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE);
 

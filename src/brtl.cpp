@@ -11,14 +11,16 @@ void brtl_strupr(char *str) {
     }
 }
 
-void brtl_srand(uint32_t seed) {
-    srand(seed);
+void brtl_srand(uint16_t seed) {
+    brtl_seed = seed;
 }
 
 int16_t brtl_rand() {
-    return (int16_t) rand();
+    brtl_seed *= 0x015a4e35;
+
+    return (int16_t) (brtl_seed >> 16) & 0x7FFF;
 }
 
 int16_t brtl_random(int16_t num) {
-    return rand() % num;
+    return brtl_rand() % num;
 }

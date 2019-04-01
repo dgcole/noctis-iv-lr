@@ -2510,14 +2510,14 @@ void sky(uint16_t limits) {
                 }
 
                 inv_rz = uno / rz;
-                rx     = ((xx * opt_pcosbeta) + (zz * opt_psinbeta)) * inv_rz;
+                rx = floor(((xx * opt_pcosbeta) + (zz * opt_psinbeta)) * inv_rz + 0.5);
 
                 index = rx + x_centro;
                 if (index <= 10 || index >= 310) {
                     continue;
                 }
 
-                ry = (yy * opt_pcosalfa - z2 * opt_psinalfa) * inv_rz - 2;
+                ry = floor((yy * opt_pcosalfa - z2 * opt_psinalfa) * inv_rz + 0.5) - 2;
 
                 uint16_t nety = ry + y_centro;
                 if (nety <= 10 || nety >= 190) {
@@ -3497,9 +3497,9 @@ void getsecs() {
 // information about the chosen star.
 
 void extract_ap_target_infos() {
-    srand (ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z / 100000);
-    ap_target_class = rand() % star_classes;
-    ap_target_ray = ((float)class_ray[ap_target_class] + (float)(rand() % class_rayvar[ap_target_class])) * 0.001;
+    brtl_srand (ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z / 100000);
+    ap_target_class = brtl_rand() % star_classes;
+    ap_target_ray = ((float)class_ray[ap_target_class] + (float)(brtl_rand() % class_rayvar[ap_target_class])) * 0.001;
     ap_target_r = class_rgb[3 * ap_target_class + 0];
     ap_target_g = class_rgb[3 * ap_target_class + 1];
     ap_target_b = class_rgb[3 * ap_target_class + 2];
@@ -3588,7 +3588,7 @@ int16_t starnop(double star_x, double star_y, double star_z)
 // stima il numero di pianeti maggiori associato alle coord. di una stella
 {
     int16_t r;
-    srand ((int32_t)star_x % 10000 * (int32_t)star_y % 10000 *
+    brtl_srand ((int32_t)star_x % 10000 * (int32_t)star_y % 10000 *
            (int32_t)star_z % 10000);
     r = brtl_random (class_planets[ap_target_class] + 1);
     r += brtl_random (2);
@@ -3621,7 +3621,7 @@ void prepare_nearstar() {
     s_m = qt_M_PI * nearstar_ray * nearstar_ray * nearstar_ray * 0.01e-7;
     nearstar_identity = nearstar_x / 100000 * nearstar_y / 100000 * nearstar_z /
                         100000;
-    srand ((int32_t)nearstar_x % 10000 * (int32_t)nearstar_y % 10000 *
+    brtl_srand ((int32_t)nearstar_x % 10000 * (int32_t)nearstar_y % 10000 *
            (int32_t)nearstar_z % 10000);
     nearstar_nop = brtl_random (class_planets[nearstar_class] + 1);
 
