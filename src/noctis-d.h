@@ -2,18 +2,17 @@
 
 // C Standard Library Includes
 
-#include <memory.h>
 #include <assert.h>
+#include <fcntl.h>
 #include <math.h>
+#include <memory.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-
 
 #include <SDL2/SDL.h>
 
@@ -171,27 +170,26 @@ struct pvlist {
 // Defines to help with porting.
 
 #ifdef __EMSCRIPTEN__
-    #define FIXME                                                                  \
+#define FIXME                                                                      \
     { assert(false); }
-    #define STUB                                                                   \
-    { }
+#define STUB                                                                       \
+    {}
 #else
-    #define FIXME                                                                  \
+#define FIXME                                                                      \
     {                                                                              \
-        printf("FIXME: %s:%d\n", __FUNCTION__, __LINE__);                            \
+        printf("FIXME: %s:%d\n", __FUNCTION__, __LINE__);                          \
         assert(false);                                                             \
     }
 
-    #define STUB                                                                   \
+#define STUB                                                                       \
     { printf("STUB: %s:%d\n", __FUNCTION__, __LINE__); }
 
-    #define STUB_RAND                                                              \
+#define STUB_RAND                                                                  \
     { printf("STUB_RAND: %s:%d\n", __FUNCTION__, __LINE__); }
 
-    #define STUB_TRIG                                                              \
+#define STUB_TRIG                                                                  \
     { printf("STUB_TRIG: %s:%d\n", __FUNCTION__, __LINE__); }
 #endif
-
 
 // Some stuff to make porting assembly easier for now.
 

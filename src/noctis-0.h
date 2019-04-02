@@ -11,9 +11,10 @@ extern uint8_t range8088[64 * 3];
 extern uint8_t tmppal[768];
 extern int8_t return_palette[768];
 extern int8_t surface_palette[768];
-extern void tavola_colori(uint8_t *nuova_tavolozza, uint16_t colore_di_partenza,
-                          uint16_t nr_colori, int8_t filtro_rosso,
-                          int8_t filtro_verde, int8_t filtro_blu);
+extern void tavola_colori(const uint8_t *nuova_tavolozza,
+                          uint16_t colore_di_partenza, uint16_t nr_colori,
+                          int8_t filtro_rosso, int8_t filtro_verde,
+                          int8_t filtro_blu);
 extern int16_t mdltx, mdlty, mx, my;
 extern uint16_t mpul;
 extern void handle_input(SDL_Window *window);
@@ -65,7 +66,7 @@ extern void change_angle_of_view();
 extern void change_camera_lens();
 extern void change_txm_repeating_mode();
 extern uint8_t entity;
-extern void poly3d(float *x, float *y, float *z, uint16_t nrv, uint8_t colore);
+extern void poly3d(const float *x, const float *y, const float *z, uint16_t nrv, uint8_t colore);
 extern void Forward(float delta);
 extern float pnx, pny, pnz;
 extern void pnorm(float *x, float *y, float *z);

@@ -629,21 +629,24 @@ int8_t ani_mtype[LFS];  // tipo di movimento.
 const int16_t bird_wings_center_p = 1;
 const int16_t bird_wings_center_v = 0;
 
-struct pvlist bird_wing1[3] = {{0, 1, 1, 1, 0}, {1, 1, 1, 1, 0}, {0xFFF, 0, 0, 0, 0}};
-struct pvlist bird_wing2[3] = {{2, 1, 1, 1, 0}, {3, 1, 1, 1, 0}, {0xFFF, 0, 0, 0, 0}};
+struct pvlist bird_wing1[3] = {
+    {0, 1, 1, 1, 0}, {1, 1, 1, 1, 0}, {0xFFF, 0, 0, 0, 0}};
+struct pvlist bird_wing2[3] = {
+    {2, 1, 1, 1, 0}, {3, 1, 1, 1, 0}, {0xFFF, 0, 0, 0, 0}};
 
 const int16_t bird_legs_center_p = 18;
 const int16_t bird_legs_center_v = 1;
 
-struct pvlist bird_legs[3] = {{18, 0, 0, 1, 0}, {19, 0, 1, 0, 0}, {0xFFF, 0, 0, 0, 0}};
+struct pvlist bird_legs[3] = {
+    {18, 0, 0, 1, 0}, {19, 0, 1, 0, 0}, {0xFFF, 0, 0, 0, 0}};
 
 // dati di definizione - classe mammiferi - relativo PVfile: "mammal_ncc"
 
 struct pvlist mamm_ears[5] = {{42, 0, 1, 0, 0},
-                       {45, 0, 0, 1, 0},
-                       {43, 1, 0, 0, 0},
-                       {44, 0, 0, 1, 0},
-                       {0xFFF, 0, 0, 0, 0}};
+                              {45, 0, 0, 1, 0},
+                              {43, 1, 0, 0, 0},
+                              {44, 0, 0, 1, 0},
+                              {0xFFF, 0, 0, 0, 0}};
 
 const int16_t mamm_wrap_center_p = 16;
 const int16_t mamm_wrap_center_v = 2;
@@ -665,9 +668,9 @@ struct pvlist mamm_legs[15] = {
 const int16_t mamm_tail_center_p = 46;
 const int16_t mamm_tail_center_v = 1;
 
-struct pvlist mamm_tail[7] = {{46, 1, 1, 1, 1},   {47, 1, 1, 1, 1}, {50, 1, 1, 1, 1},
-                       {51, 1, 1, 1, 1},   {48, 1, 1, 1, 0}, {49, 1, 1, 1, 0},
-                       {0xFFF, 0, 0, 0, 0}};
+struct pvlist mamm_tail[7] = {
+    {46, 1, 1, 1, 1}, {47, 1, 1, 1, 1}, {50, 1, 1, 1, 1},   {51, 1, 1, 1, 1},
+    {48, 1, 1, 1, 0}, {49, 1, 1, 1, 0}, {0xFFF, 0, 0, 0, 0}};
 
 /* Funzione di tracciamento ed animazione delle forme di vita animali. */
 

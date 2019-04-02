@@ -2,8 +2,7 @@
 
 #include <cstdint>
 
-void brtl_strupr(char* str);
-
+void brtl_strupr(char *str);
 
 static int32_t brtl_seed = 1;
 
