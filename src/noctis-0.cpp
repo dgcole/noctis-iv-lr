@@ -33,6 +33,9 @@
 
 */
 
+#include <iostream>
+#include <stack>
+
 #include "brtl.h"
 #include "noctis-d.h"
 
@@ -96,16 +99,29 @@ void reach_your_dir(char **argv) {
 // Initialize the 320x200x256 graphics mode.
 void _320_200_256() STUB
 
-    // Initialize the 80x25 text mode.
-    void _80_25_C() STUB
+// Initialize the 80x25 text mode.
+void _80_25_C() STUB
+
+std::stack<SDL_Scancode> keys;
 
     // Wait for a key?
-    int16_t attendi_pressione_tasto() {
-    STUB return 0;
+int16_t attendi_pressione_tasto() {
+    SDL_Scancode top = keys.top();
+    keys.pop();
+
+    switch (top) {
+    case SDL_SCANCODE_5:
+        return '5';
+    case SDL_SCANCODE_6:
+        return '6';
+    }
+    return -1;
 }
 
 // Return 1 if there is a key press to be processed.
-int16_t tasto_premuto() { STUB return 0; }
+int16_t tasto_premuto() {
+    return keys.size() != 0;
+}
 
 uint8_t range8088[64 * 3] = {
     0,  0,  0,  1,  1,  1,  2,  2,  2,  3,  3,  3,  4,  4,  4,  5,  5,  5,  6,  6,
@@ -207,6 +223,8 @@ void handle_input(SDL_Window *window) {
         } else if (event.type == SDL_KEYUP) {
             if (event.key.keysym.sym == SDLK_ESCAPE) {
                 exit(0);
+            } else {
+                keys.push(event.key.keysym.scancode);
             }
         }
     }
@@ -261,32 +279,19 @@ void psmooth_grays(uint8_t *target) {
     int index      = 0;
     for (uint16_t i = 0; i < count; i++, index++) {
         uint8_t smoothed;
-        uint16_t col1, col2, col3, col4;
         uint32_t temp;
 
-        col1 = target[index];
-        col2 = target[index + 1];
-        col3 = target[index + 2];
-        col4 = target[index + 3];
-        temp = (col4 << 24u) + (col3 << 16u) + (col2 << 8u) + col1;
+        temp = (target[index + 3] << 24u) + (target[index + 2] << 16u)
+            + (target[index + 1] << 8u) + target[index];
 
-        col1 = target[index + 320];
-        col2 = target[index + 321];
-        col3 = target[index + 322];
-        col4 = target[index + 323];
-        temp += (col4 << 24u) + (col3 << 16u) + (col2 << 8u) + col1;
+        temp += (target[index + 323] << 24u) + (target[index + 322] << 16u)
+            + (target[index + 321] << 8u) + target[index + 320];
 
-        col1 = target[index + 640];
-        col2 = target[index + 641];
-        col3 = target[index + 642];
-        col4 = target[index + 643];
-        temp += (col4 << 24u) + (col3 << 16u) + (col2 << 8u) + col1;
+        temp += (target[index + 643] << 24u) + (target[index + 642] << 16u)
+            + (target[index + 641] << 8u) + target[index + 641];
 
-        col1 = target[index + 960];
-        col2 = target[index + 961];
-        col3 = target[index + 962];
-        col4 = target[index + 963];
-        temp += (col4 << 24u) + (col3 << 16u) + (col2 << 8u) + col1;
+        temp += (target[index + 963] << 24u) + (target[index + 962] << 16u)
+            + (target[index + 961] << 8u) + target[index + 960];
 
         temp &= 0xFCFCFCFC;
         temp >>= 2u;
@@ -332,28 +337,13 @@ void psmooth_64(uint8_t *target, uint16_t segshift) {
     // the former offset clearing. Sketchy.
     uint8_t *shifted = (target + (segshift * 16));
 
+    uint8_t avg, orig;
     for (uint16_t i = 0; i < count; i++) {
-        uint8_t alow  = shifted[i + 320];
-        uint8_t ahigh = shifted[i + 321];
-        uint8_t bhigh = shifted[i + 640];
-        uint8_t blow  = shifted[i + 641];
-        uint8_t clow  = alow;
-        // Bitwise AND with 63 for some reason...
-        ahigh &= 0x3Fu;
-        alow &= 0x3Fu;
-        bhigh &= 0x3Fu;
-        blow &= 0x3Fu;
-        // Ideally these shouldn't overflow.
-        ahigh += bhigh;
-        alow += blow;
-        // No idea why we do this.
-        clow &= 0xC0u;
-        alow += ahigh;
-        // This will drop the low 2 bits of alow.
-        alow >>= 2u;
-        // Who knows why italy man does this...
-        alow |= clow;
-        shifted[i] = alow;
+        orig  = shifted[i + 320] & 0xC0u;
+        avg = (((shifted[i + 320] & 0x3Fu) + (shifted[i + 640] & 0x3Fu))
+            + ((shifted[i + 321] & 0x3Fu) + (shifted[i + 641] & 0x3Fu))) / 4;
+
+        shifted[i] = avg | orig;
     }
 }
 
@@ -2380,7 +2370,7 @@ void background(uint16_t start, uint8_t *target, uint8_t *background,
 void sky(uint16_t limits) {
     uint16_t debug;
 
-    auto min_xy            = (int32_t)1E9;
+    auto min_xy            = (int32_t) (1E9);
     int8_t visible_sectors = 9;
 
     if (field_amplificator) {

@@ -62,6 +62,7 @@ extern float opt_pcosalfa;
 extern float opt_psinalfa;
 extern float opt_tcosalfa;
 extern float opt_tsinalfa;
+
 extern void change_angle_of_view();
 extern void change_camera_lens();
 extern void change_txm_repeating_mode();

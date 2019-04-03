@@ -164,8 +164,8 @@ struct pvlist {
     uint8_t vtxflag_3 : 1;
 };
 
-// Processor time cutoff for double left and right clicks.
-#define DBL_CLICK_CUTOFF 500
+// Cutoff for double left and right clicks.
+#define DBL_CLICK_CUTOFF 250000 // 250 ms? idk...
 
 // Defines to help with porting.
 

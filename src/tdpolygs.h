@@ -1099,7 +1099,8 @@ drawb:
         break;
         // effetto flares = 3 spostato a "polymap"
     case 4:
-        /*asm {   pusha
+        #if 0
+        asm {   pusha
                 les di, dword ptr adapted
                 add lim_y, di
                 add di, segmptr }
@@ -1169,6 +1170,8 @@ drawb:
                 cmp di, lim_y
                 jbe fil4a
                 popa }*/
+        #endif
+        STUB
         break;
     }
 }
@@ -1186,29 +1189,23 @@ uint8_t *txtr; /* Area della texture (FLS a livelli di intensit�,
                  64 livelli per pixel, senza header).*/
 
 int8_t init_texture_mapping() {
-#if 0
-    _control87 (MCW_EM, MCW_EM); // disattiva i Floating Point Errors.
-    txtr = (uint8_t huge*)
-           farmalloc ((int32_t)TEXTURE_YSIZE * 256 + 16);
-
+    txtr = (uint8_t*) malloc(((int32_t) TEXTURE_YSIZE) * 256 + 16);
     if (txtr) {
         return (OK);
     } else {
         return (NOT_OK);
     }
-#endif
-    STUB
 }
 
+
 int8_t load_texture(int8_t *fname, int32_t offset)
-/*  Carica una bitmap:
-    formato FLS a livelli di luminanza,
-    64 livelli per pixel, senza header. */
+/*  Load a bitmap:
+    FLS format at luminance levels,
+    64 levels per pixel, without header. */
 {
-#if 0
     int16_t fh, sl;
     uint32_t p;
-    fh = _rtl_open (fname, 0);
+    fh = open ((char*) fname, 0);
 
     if (fh > -1) {
         if (offset >= 0) {
@@ -1220,13 +1217,14 @@ int8_t load_texture(int8_t *fname, int32_t offset)
         sl = 0;
         p  = 12;
 
-        while (sl < TEXTURE_YSIZE && !eof(fh)) {
-            _rtl_read (fh, &txtr[p], TEXTURE_XSIZE);
+        while (sl < TEXTURE_YSIZE) {
+            uint8_t result = read (fh, &txtr[p], TEXTURE_XSIZE);
+            if (result == 0) break;
             p += 256;
             sl++;
         }
 
-        _rtl_close (fh);
+        close(fh);
 
         if (sl == TEXTURE_YSIZE) {
             return (OK);
@@ -1236,28 +1234,23 @@ int8_t load_texture(int8_t *fname, int32_t offset)
     } else {
         return (NOT_OK);
     }
-#endif
-    STUB
 }
 
-int8_t fast_load_texture(int8_t *fname) { /* Solo per bitmaps 256 x 256. */
-#if 0
+int8_t fast_load_texture(int8_t *fname) { /* Only for 256 x 256 bitmaps. */
     int16_t fh;
     uint32_t p;
-    fh = _rtl_open (fname, 0);
+    fh = open((char*) fname, 0);
 
     if (fh > -1) {
         p  = 12;
-        _rtl_read (fh, &txtr[p], 32768);
+        read (fh, &txtr[p], 32768);
         p += 32768;
-        _rtl_read (fh, &txtr[p], 32768);
-        _rtl_close (fh);
+        read (fh, &txtr[p], 32768);
+        close (fh);
         return (OK);
     } else {
         return (NOT_OK);
     }
-#endif
-    STUB
 }
 
 /*  Variabili e funzioni per i procedimenti di shading.

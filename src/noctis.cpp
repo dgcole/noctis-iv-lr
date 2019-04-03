@@ -271,6 +271,7 @@ void frame(float x, float y, float l, float h, float borderwidth, uint8_t color)
 }
 
 // Draw star targeting cross.
+// TODO; Doesn't snap to stars like it should.
 void pointer_cross_for(double xlight, double ylight, double zlight) {
     double xx, yy, zz, z2, rx, ry, rz;
     xx = xlight - dzat_x;
@@ -288,7 +289,7 @@ void pointer_cross_for(double xlight, double ylight, double zlight) {
         ry += y_centro - 2;
 
         if (rx > 10 && ry > 10 && rx < 310 && ry < 190) {
-            uint16_t offsetmaybe = 320 * (int16_t)(ry + rx);
+            uint16_t offsetmaybe = 320 * (int16_t) ry + rx;
 
             for (int16_t i = 0; i < 4; i++) {
                 int16_t mod1 = (i == 1 || i == 3) ? 1 : -1;
@@ -563,9 +564,13 @@ void digit_at(int8_t digit, float x, float y, float size, uint8_t color,
         txtr = p_surfacemap;
         d    = (digit - 32) * 36;
 
-        for (n = 0; n < 36; n++) {
+        // TODO; Valgrind said there was a big bad invalid write happening here,
+        //  so I just blindly changed this loop to start at one. It probably breaks
+        //  things...
+        for (n = 1; n < 36; n++) {
+
             i           = 256 * n - 5;
-            txtr[i - 1] = 0; // evita aliasing a fine scanline.
+            txtr[i - 1] = 0; // Avoid aliasing at the end of the scanline.
 
             for (m = 0; m < 32; m++) {
                 if (digimap2[n + d] & pp[m]) {
@@ -582,7 +587,7 @@ void digit_at(int8_t digit, float x, float y, float size, uint8_t color,
             }
         }
 
-        txtr[256 * 36 - 6] = 0; // evita aliasing a fine matrice.
+        txtr[256 * 36 - 6] = 0; // Avoids aliasing at the end of the matrix.
         vx[3]              = x + size_x_left;
         vx[0]              = x + size_x_right;
         vx[1]              = x + size_x_right;
@@ -2468,27 +2473,34 @@ int main(int argc, char **argv) {
     // Initialize SDL.
     sdl_surface =
         SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF000000, 0xFF0000, 0xFF00, 0xFF);
+#ifdef NDEBUG
     window = SDL_CreateWindow("Noctis IV LR", SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED, 640, 400,
                               SDL_WINDOW_RESIZABLE | SDL_WINDOW_INPUT_GRABBED);
     SDL_SetRelativeMouseMode(SDL_TRUE);
+#else
+    window = SDL_CreateWindow("Noctis IV LR", SDL_WINDOWPOS_CENTERED,
+                              SDL_WINDOWPOS_CENTERED, 640, 400,
+                              SDL_WINDOW_RESIZABLE);
+#endif
+
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE);
 
     for (ir = 0; ir < 200; ir++) {
         m200[ir] = ir * 200;
     }
 
-    n_offsets_map = (uint8_t *)malloc(om_bytes);
-    n_globes_map  = (int8_t *)malloc((uint16_t)gl_bytes + (uint16_t)gl_brest);
-    s_background  = (uint8_t *)malloc(st_bytes);
-    p_background  = (uint8_t *)malloc(pl_bytes);
-    p_surfacemap  = (uint8_t *)malloc(ps_bytes);
-    objectschart  = (quadrant *)malloc(oc_bytes);
-    ruinschart    = (uint8_t *)objectschart; // oc alias
-    pvfile        = (uint8_t *)malloc(pv_bytes);
-    adapted       = (uint8_t *)malloc(sc_bytes);
-    txtr          = (uint8_t *)p_background;             // txtr alias
-    digimap2      = (uint32_t *)&n_globes_map[gl_bytes]; // font alias
+    n_offsets_map = (uint8_t *)     malloc(om_bytes);
+    n_globes_map  = (int8_t *)      malloc((uint16_t)gl_bytes + (uint16_t)gl_brest);
+    s_background  = (uint8_t *)     malloc(st_bytes);
+    p_background  = (uint8_t *)     malloc(pl_bytes);
+    p_surfacemap  = (uint8_t *)     malloc(ps_bytes);
+    objectschart  = (quadrant *)    malloc(oc_bytes);
+    ruinschart    = (uint8_t *)     objectschart; // oc alias
+    pvfile        = (uint8_t *)     malloc(pv_bytes);
+    adapted       = (uint8_t *)     malloc(sc_bytes);
+    txtr          = (uint8_t *)     p_background;             // txtr alias
+    digimap2      = (uint32_t *)    &n_globes_map[gl_bytes]; // font alias
     reach_your_dir(argv);
 
     if (pvfile && adapted && n_offsets_map && n_globes_map && p_background &&
@@ -3571,15 +3583,15 @@ ext_1: //
     psmooth_64(adapted, 200);
     QUADWORDS += 240;
     //
-    // Tracciamento di tutte le stelle visibili.
+    // Tracking of all visible stars.
     //
     from_vehicle();
     sky(0x405C);
 
     //
     // ***** H.U.D. INNER LAYER *****
-    // Fornisce informazioni sullo strato interno dell'H.U.D.
-    // Qualsiasi glifo non verr� trattato con dithering.
+    // Provides information on the inner layer of the HUD.
+    // Any glyph will not be treated with dithering.
     //
     if (datasheetscroll) {
         areaclear(adapted, 11, 85, 0, 0, 1 + datasheetscroll, 9, 72);
@@ -3840,9 +3852,7 @@ ext_1: //
     }
 
     //
-    // Croce di puntamento della stella-bersaglio,
-    // aggiornamento nome della stella-bersaglio,
-    // spostamenti interstellari suplucsi.
+    // Star-Target pointing cross, update star-target name, shift interstellar (suplucsi?)
     //
     dxx   = dzat_x - ap_target_x;
     dyy   = dzat_y - ap_target_y;
