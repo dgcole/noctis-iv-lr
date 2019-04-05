@@ -104,16 +104,74 @@ void _80_25_C() STUB
 
 std::stack<SDL_Scancode> keys;
 
-    // Wait for a key?
+// Wait for a key?
 int16_t attendi_pressione_tasto() {
+    if (keys.empty()) return 0;
     SDL_Scancode top = keys.top();
     keys.pop();
 
+    static bool first = false;
     switch (top) {
+    case SDL_SCANCODE_1:
+    case SDL_SCANCODE_2:
+    case SDL_SCANCODE_3:
+    case SDL_SCANCODE_4:
     case SDL_SCANCODE_5:
-        return '5';
     case SDL_SCANCODE_6:
-        return '6';
+    case SDL_SCANCODE_7:
+    case SDL_SCANCODE_8:
+    case SDL_SCANCODE_9:
+        return top + ('1' - SDL_SCANCODE_1);
+    case SDL_SCANCODE_0:
+        return '0';
+    case SDL_SCANCODE_A:
+    case SDL_SCANCODE_B:
+    case SDL_SCANCODE_C:
+    case SDL_SCANCODE_D:
+    case SDL_SCANCODE_E:
+    case SDL_SCANCODE_F:
+    case SDL_SCANCODE_G:
+    case SDL_SCANCODE_H:
+    case SDL_SCANCODE_I:
+    case SDL_SCANCODE_J:
+    case SDL_SCANCODE_K:
+    case SDL_SCANCODE_L:
+    case SDL_SCANCODE_M:
+    case SDL_SCANCODE_N:
+    case SDL_SCANCODE_O:
+    case SDL_SCANCODE_P:
+    case SDL_SCANCODE_Q:
+    case SDL_SCANCODE_R:
+    case SDL_SCANCODE_S:
+    case SDL_SCANCODE_T:
+    case SDL_SCANCODE_U:
+    case SDL_SCANCODE_V:
+    case SDL_SCANCODE_W:
+    case SDL_SCANCODE_X:
+    case SDL_SCANCODE_Y:
+    case SDL_SCANCODE_Z:
+        return top + ('a' - SDL_SCANCODE_A);
+    case SDL_SCANCODE_UP:
+    case SDL_SCANCODE_DOWN:
+    case SDL_SCANCODE_LEFT:
+    case SDL_SCANCODE_RIGHT:
+        if (first) {
+            first = false;
+            switch(top) {
+            case SDL_SCANCODE_UP:
+                return 72;
+            case SDL_SCANCODE_DOWN:
+                return 80;
+            case SDL_SCANCODE_LEFT:
+                return 75;
+            case SDL_SCANCODE_RIGHT:
+                return 77;
+            }
+        } else {
+            first = true;
+            keys.push(top);
+            return 0;
+        }
     }
     return -1;
 }
