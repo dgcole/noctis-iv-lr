@@ -19,4 +19,7 @@ int16_t brtl_rand() {
     return (int16_t)(brtl_seed >> 16) & 0x7FFF;
 }
 
-int16_t brtl_random(int16_t num) { return brtl_rand() % num; }
+int16_t brtl_random(int16_t num) {
+    if (num == 0) return 0;
+    return brtl_rand() % num;
+}

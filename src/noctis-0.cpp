@@ -315,7 +315,7 @@ void pfade(uint8_t *target, uint16_t segshift, uint8_t speed) {
     uint8_t *shifted = (target + segshift * 16);
     // Quasi-offset might need to be cleared.
 
-    for (int16_t i = 0; i < count; i++) {
+    for (uint16_t i = 0; i < count; i++) {
         uint8_t color = shifted[i];
         color &= 0x3Fu;
 
