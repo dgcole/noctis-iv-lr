@@ -1387,7 +1387,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         rxf[i] = (xx * opt_tcosbeta) + (zz * opt_tsinbeta);
         rzf[i] = (yy * opt_tsinalfa) + (z2 * opt_tcosalfa);
 
-        if (gamma == 0) {
+        if (ngamma == 0) {
             ryf[i] = (yy * opt_tcosalfa) - (z2 * opt_tsinalfa);
         } else {
             // TODO; Untested.
