@@ -1340,8 +1340,7 @@ int8_t halfscan_needed = 0; // flag: traccia due linee per volta.
 
 uint8_t escrescenze = 0xE0; // primo colore dei bumps (escrescenze)
 
-void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
-#if 0
+void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
     float ultima_x[2 * VERTICI_PER_POLIGONO];
     float ultima_y[2 * VERTICI_PER_POLIGONO];
     float ultima_z[2 * VERTICI_PER_POLIGONO];
@@ -1359,15 +1358,15 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
     int32_t  i_low_lim = -10000;
     int32_t  i_hig_lim = +10000;
     int32_t  u, v, min_y, max_y;
-    int32_t  x1, y1, x2, y2, ity, jty;
+    int32_t  x1, y1, x2, y2, ity, jty, h;
     float k1, k2, k3, k4;
     float hx, vx, ox, hy, vy, oy, hz, vz, oz, _x, _y, _z;
     float kx, rx, ry, rz, mx, my, mz, nx, ny, nz, xx, yy, zz;
     float midx, midy, midz;
     float trxf[4], tryf[4], trzf[4];
 
-    // Polymap ha routines fatte per 4 vertici.
-    // Se sono 3, l'ultimo va duplicato.
+    // Polymap is made to draw quads.
+    // If drawing a triangle, the last vertex must be duplicated.
 
     if (nv == 3) {
         x[3] = x[2];
@@ -1375,134 +1374,41 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         z[3] = z[2];
     }
 
-    // Rototraslazione dei vertici; i dati rimangono ancora 3d.
-    asm mov doflag, 0
-    asm {// if (ngamma)
-        db 0x66;
-        mov ax, word ptr _0
-        db 0x66;
-        cmp ax, word ptr ngamma
-        jne t_axis
-        jmp no_t_axis }
-    t_axis:
-    asm {   xor di, di
-            xor si, si }
-    _vertex:
-    asm {   les bx, dword ptr z
-            fld dword ptr es:[bx+si]
-            fsub cam_z
-            fst zz
-            fmul opt_tsinbeta
-            les bx, dword ptr x
-            fld dword ptr es:[bx+si]
-            fsub cam_x
-            fst xx
-            fmul opt_tcosbeta
-            faddp
-            fstp dword ptr rxf[si]
-            fld zz
-            fmul opt_tcosbeta
-            fld xx
-            fmul opt_tsinbeta
-            fsubp
-            fst z2
-            fmul opt_tcosalfa
-            les bx, dword ptr y
-            fld dword ptr es:[bx+si]
-            fsub cam_y
-            fst yy
-            fmul opt_tsinalfa
-            faddp
-            fst dword ptr rzf[si]
-            fcomp uneg
-            fstsw ax
-            fld yy
-            fmul opt_tcosalfa
-            fld z2
-            fmul opt_tsinalfa
-            fsubp
-            fst my
-            fmul opt_tcosngamma
-            fld dword ptr rxf[si]
-            fmul opt_tsinngamma
-            fsubp
-            fstp dword ptr ryf[si]
-            fld my
-            fmul opt_tsinngamma
-            fld dword ptr rxf[si]
-            fmul opt_tcosngamma
-            faddp
-            fstp dword ptr rxf[si]
-            sahf
-            jb _rzf_min_uneg
-            inc doflag
-            mov byte ptr rwf[di], 1
-            jmp _convert }
-    _rzf_min_uneg:
-    asm     mov byte ptr rwf[di], 0
-_convert: asm {   add si, 4
-                      inc di
-                      cmp di, 4
-                      je _end_convert
-                      jmp _vertex }
-    _end_convert:
-    asm jmp end_convert
-    no_t_axis: asm {   xor di, di
-                       xor si, si }
-    vertex:
-    asm {   les bx, dword ptr z
-            fld dword ptr es:[bx+si]
-            fsub cam_z
-            fst zz
-            fmul opt_tsinbeta
-            les bx, dword ptr x
-            fld dword ptr es:[bx+si]
-            fsub cam_x
-            fst xx
-            fmul opt_tcosbeta
-            faddp
-            fstp dword ptr rxf[si]
-            fld zz
-            fmul opt_tcosbeta
-            fld xx
-            fmul opt_tsinbeta
-            fsubp
-            fst z2
-            fmul opt_tcosalfa
-            les bx, dword ptr y
-            fld dword ptr es:[bx+si]
-            fsub cam_y
-            fst yy
-            fmul opt_tsinalfa
-            faddp
-            fst dword ptr rzf[si]
-            fcomp uneg
-            fstsw ax
-            fld yy
-            fmul opt_tcosalfa
-            fld z2
-            fmul opt_tsinalfa
-            fsubp
-            fstp dword ptr ryf[si]
-            sahf
-            jb rzf_min_uneg
-            inc doflag
-            mov byte ptr rwf[di], 1
-            jmp convert }
-    rzf_min_uneg:
-    asm     mov byte ptr rwf[di], 0
-convert: asm {   add si, 4
-                     inc di
-                     cmp di, 4
-                     je end_convert
-                     jmp vertex }
-    end_convert:
-    asm {// if (!doflag) return;
-        cmp doflag, 0
-        jne vectors }
-    return;
-    // Calcolo dei vettori di tracciamento del texture mapping.
-vectors:
+    // Rototranslations of the vertices; the data still remains 3D.
+    doflag = 0;
+
+    for (i = 0; i < 4; i++) {
+        xx = x[i] - cam_x;
+        yy = y[i] - cam_y;
+        zz = z[i] - cam_z;
+
+        z2 = (zz * opt_tcosbeta) - (xx * opt_tsinbeta);
+
+        rxf[i] = (xx * opt_tcosbeta) + (zz * opt_tsinbeta);
+        rzf[i] = (yy * opt_tsinalfa) + (z2 * opt_tcosalfa);
+
+        if (gamma == 0) {
+            ryf[i] = (yy * opt_tcosalfa) - (z2 * opt_tsinalfa);
+        } else {
+            // TODO; Untested.
+            my = (yy * opt_tcosalfa) - (z2 * opt_tsinalfa);
+
+            ryf[i] = (my * opt_tcosngamma) - (rxf[i] * opt_tsinngamma);
+            rxf[i] =  (rxf[i] * opt_tcosngamma) + (my * opt_tsinngamma);
+        }
+
+        if (rzf[i] < uneg) {
+            rwf[i] = 0;
+        } else {
+            rwf[i] = 1;
+            doflag++;
+        }
+    }
+
+    if (!doflag) return;
+
+    // Calculation of texture mapping tracking vectors.
+    vectors:
 
     if (nv == 3) {
         midx = (rxf[0] + rxf[1] + rxf[2]) * 0.3333333;
@@ -1514,8 +1420,6 @@ vectors:
             tryf[vr] = (ryf[vr] - midy) * y_antialias + midy;
             trzf[vr] = (rzf[vr] - midz) * z_antialias + midz;
         }
-
-        _SI = 8;
     } else {
         midx = (rxf[0] + rxf[1] + rxf[2] + rxf[3]) * 0.25;
         midy = (ryf[0] + ryf[1] + ryf[2] + ryf[3]) * 0.25;
@@ -1526,476 +1430,156 @@ vectors:
             tryf[vr] = (ryf[vr] - midy) * y_antialias + midy;
             trzf[vr] = (rzf[vr] - midz) * z_antialias + midz;
         }
-
-        _SI = 12;
     }
 
-    asm {// rx = rxf[0];
-        fld dword ptr trxf[0]
-        fstp rx
-        // mx = rxf[1] - rx;
-        fld dword ptr trxf[4]
-        fsub rx
-        fstp mx
-        // nx = rx - rxf[3];
-        fld rx
-        fsub dword ptr trxf[si]
-        fstp nx
-        // ry = ryf[0];
-        fld dword ptr tryf[0]
-        fstp ry
-        // my = ryf[1] - ry;
-        fld dword ptr tryf[4]
-        fsub ry
-        fstp my
-        // ny = ry - ryf[3];
-        fld ry
-        fsub dword ptr tryf[si]
-        fstp ny
-        // rz = rzf[0];
-        fld dword ptr trzf[0]
-        fstp rz
-        // mz = rzf[1] - rz;
-        fld dword ptr trzf[4]
-        fsub rz
-        fstp mz
-        // nz = rz - rzf[3];
-        fld rz
-        fsub dword ptr trzf[si]
-        fstp nz }
-    asm {// hx = (rx * mz - rz * mx) * YCOEFF;
-        fld rx
-        fmul mz
-        fld rz
-        fmul mx
-        fsubp
-        fmul YCOEFF
-        fstp hx
-        // hy = (rx * nz - rz * nx) * YCOEFF;
-        fld rx
-        fmul nz
-        fld rz
-        fmul nx
-        fsubp
-        fmul YCOEFF
-        fstp hy
-        // hz = (nx * mz - nz * mx) / dpp;
-        fld nx
-        fmul mz
-        fld nz
-        fmul mx
-        fsubp
-        fmul inv_dpp
-        fstp hz
-        // vx = (rz * my - ry * mz) * XCOEFF;
-        fld rz
-        fmul my
-        fld ry
-        fmul mz
-        fsubp
-        fmul XCOEFF
-        fstp vx
-        // vy = (rz * ny - ry * nz) * XCOEFF;
-        fld rz
-        fmul ny
-        fld ry
-        fmul nz
-        fsubp
-        fmul XCOEFF
-        fstp vy
-        // vz = (nz * my - ny * mz) / dpp;
-        fld nz
-        fmul my
-        fld ny
-        fmul mz
-        fsubp
-        fmul inv_dpp
-        fstp vz
-        // ox = (ry * mx - rx * my) * EMU_K;
-        fld ry
-        fmul mx
-        fld rx
-        fmul my
-        fsubp
-        fmul EMU_K
-        fstp ox
-        // oy = (ry * nx - rx * ny) * EMU_K;
-        fld ry
-        fmul nx
-        fld rx
-        fmul ny
-        fsubp
-        fmul EMU_K
-        fstp oy
-        // oz =  ny * mx - nx * my;
-        fld ny
-        fmul mx
-        fld nx
-        fmul my
-        fsubp
-        fstp oz }
-    // Fast-load per poligoni completamente visibili.
-    asm {// if (doflag==4) {
-        cmp doflag, 4
-        jne z_clipping
-        xor si, si
-        mov cx, 4
-        mov vr2, 4
-        mov vr22, 8 }
-load:
-    asm {   db 0x66;
-            mov ax, word ptr rxf[si]
-            db 0x66;
-            mov bx, word ptr ryf[si]
-            db 0x66;
-            mov dx, word ptr rzf[si]
-            db 0x66;
-            mov word ptr ultima_x[si], ax
-            db 0x66;
-            mov word ptr ultima_y[si], bx
-            db 0x66;
-            mov word ptr ultima_z[si], dx
-            add si, 4
-            dec cx
-            jnz load
-            jmp to_2d }
-    /*  Conversione punti alle spalle dell'osservatore
-        rispetto al piano dello schermo. */
-    z_clipping:
-    asm {   mov vr, 0
-            xor di, di
-            mov dx, 4
-            dec dx }
-    the_for_1:
-    asm {   mov si, vr
-            cmp byte ptr rwf[si], 0
-            je CONT1
-            jmp bypass }
-    CONT1:
-    asm {   mov ax, vr
-            sub ax, 1
-            jnc pvert1ok
-            mov pvert, dx
-            jmp pvert1no }
-    pvert1ok:
-    asm     mov pvert, ax
-    pvert1no: asm {   mov ax, vr
-                      inc ax
-                      cmp ax, dx
-                      jbe nvert1ok
-                      mov nvert, 0
-                      jmp nvert1no }
-    nvert1ok:
-    asm     mov nvert, ax
-    nvert1no: asm {   mov si, pvert
-                      cmp byte ptr rwf[si], 0
-                      je ctrl1
-                      jmp JMPR11 }
-    ctrl1:
-    asm {   mov si, nvert
-            cmp byte ptr rwf[si], 0
-            jne JMPR11
-            jmp STOP1 }
-    JMPR11:
-    asm {   mov bx, vr
-            shl bx, 2
-            mov si, pvert
-            mov al, byte ptr rwf[si]
-            mov si, nvert
-            add al, byte ptr rwf[si]
-            cmp al, 2
-            je if11
-            jmp else11 }
-    if11:
-    asm {   shl pvert, 2
-            shl nvert, 2
-            mov si, bx
-            fld dword ptr rzf[si]
-            mov si, pvert
-            fcomp dword ptr rzf[si]
-            fstsw ax
-            sahf
-            jne if12
-            jmp else12 }
-    if12:
-    asm {   fld dword ptr uneg
-            fsub dword ptr rzf[si]
-            fld dword ptr rzf[si]
-            mov si, bx
-            fsubr dword ptr rzf[si]
-            fdivp
-            fst zk
-            fld dword ptr rxf[si]
-            mov si, pvert
-            fsub dword ptr rxf[si]
-            fmulp
-            fadd dword ptr rxf[si]
-            fstp dword ptr ultima_x[di]
-            fld zk
-            mov si, bx
-            fld dword ptr ryf[si]
-            mov si, pvert
-            fsub dword ptr ryf[si]
-            fmulp
-            fadd dword ptr ryf[si]
-            fstp dword ptr ultima_y[di]
-            jmp JMPR12 }
-    else12:
-    asm {   mov si, bx
-            db 0x66;
-            mov ax, word ptr rxf[si]
-            db 0x66;
-            mov word ptr ultima_x[di], ax
-            db 0x66;
-            mov ax, word ptr ryf[si]
-            db 0x66;
-            mov word ptr ultima_y[di], ax }
-    JMPR12:
-    asm {   db 0x66;
-            mov ax, word ptr uneg
-            db 0x66;
-            mov word ptr ultima_z[di], ax
-            mov si, bx
-            fld dword ptr rzf[si]
-            mov si, nvert
-            fcomp dword ptr rzf[si]
-            fstsw ax
-            sahf
-            jne neq1
-            jmp eq1 }
-    neq1:
-    asm {   fld dword ptr uneg
-            fsub dword ptr rzf[si]
-            fld dword ptr rzf[si]
-            mov si, bx
-            fsubr dword ptr rzf[si]
-            fdivp
-            fst zk
-            fld dword ptr rxf[si]
-            mov si, nvert
-            fsub dword ptr rxf[si]
-            fmulp
-            fadd dword ptr rxf[si]
-            fstp dword ptr ultima_x[di+4]
-            fld zk
-            mov si, bx
-            fld dword ptr ryf[si]
-            mov si, nvert
-            fsub dword ptr ryf[si]
-            fmulp
-            fadd dword ptr ryf[si]
-            fstp dword ptr ultima_y[di+4]
-            jmp JMPR13 }
-    eq1:
-    asm {   mov si, bx
-            db 0x66;
-            mov ax, word ptr rxf[si]
-            db 0x66;
-            mov word ptr ultima_x[di+4], ax
-            db 0x66;
-            mov ax, word ptr ryf[si]
-            db 0x66;
-            mov word ptr ultima_y[di+4], ax }
-    JMPR13:
-    asm {   db 0x66;
-            mov ax, word ptr uneg
-            db 0x66;
-            mov word ptr ultima_z[di+4], ax
-            add di, 8
-            jmp STOP1 }
-    else11:
-    asm {   mov si, pvert
-            cmp byte ptr rwf[si], 0
-            jne vpvert1
-            mov ax, nvert
-            mov vvert, ax
-            jmp vnvert1 }
-    vpvert1:
-    asm {   mov ax, pvert
-            mov vvert, ax }
-    vnvert1:
-    asm {   shl vvert, 2
-            mov si, bx
-            fld dword ptr rzf[si]
-            mov si, vvert
-            fcomp dword ptr rzf[si]
-            fstsw ax
-            sahf
-            jne neq2
-            jmp eq2 }
-    neq2:
-    asm {   fld dword ptr uneg
-            fsub dword ptr rzf[si]
-            fld dword ptr rzf[si]
-            mov si, bx
-            fsubr dword ptr rzf[si]
-            fdivp
-            fst zk
-            fld dword ptr rxf[si]
-            mov si, vvert
-            fsub dword ptr rxf[si]
-            fmulp
-            fadd dword ptr rxf[si]
-            fstp dword ptr ultima_x[di]
-            fld zk
-            mov si, bx
-            fld dword ptr ryf[si]
-            mov si, vvert
-            fsub dword ptr ryf[si]
-            fmulp
-            fadd dword ptr ryf[si]
-            fstp dword ptr ultima_y[di]
-            jmp JMPR14 }
-    eq2:
-    asm {   mov si, bx
-            db 0x66;
-            mov ax, word ptr rxf[si]
-            db 0x66;
-            mov word ptr ultima_x[di], ax
-            db 0x66;
-            mov ax, word ptr ryf[si]
-            db 0x66;
-            mov word ptr ultima_y[di], ax }
-    JMPR14:
-    asm {   db 0x66;
-            mov ax, word ptr uneg
-            db 0x66;
-            mov word ptr ultima_z[di], ax
-            add di, 4
-            jmp STOP1 }
-    bypass:
-    asm {   shl si, 2
-            db 0x66;
-            mov ax, word ptr rxf[si]
-            db 0x66;
-            mov word ptr ultima_x[di], ax
-            db 0x66;
-            mov ax, word ptr ryf[si]
-            db 0x66;
-            mov word ptr ultima_y[di], ax
-            db 0x66;
-            mov ax, word ptr rzf[si]
-            db 0x66;
-            mov word ptr ultima_z[di], ax
-            add di, 4 }
-    STOP1:
-    asm {   inc vr
-            mov ax, vr
-            cmp ax, 4
-            jnb cutting_end_1
-            jmp the_for_1 }
-    cutting_end_1:
-    asm {   mov ax, di
-            shr ax, 1
-            mov vr22, ax
-            shr ax, 1
-            mov vr2, ax }
+    rx = trxf[0];
+    mx = trxf[1] - rx;
+    nx = rx - trxf[3];
 
-    if (vr2 < 3) {
-        return;
+    ry = tryf[0];
+    my = tryf[1] - ry;
+    ny = ry - tryf[3];
+
+    rz = trzf[0];
+    mz = trzf[1] - rz;
+    nz = rz - trzf[3];
+
+    hx = (rx * mz - rz * mx) * YCOEFF;
+    hy = (rx * nz - rz * nx) * YCOEFF;
+    hz = (nx * mz - nz * mx) / dpp;
+
+    vx = (rz * my - ry * mz) * XCOEFF;
+    vy = (rz * ny - ry * nz) * XCOEFF;
+    vz = (nz * my - ny * mz) / dpp;
+
+    ox = (ry * mx - rx * my) * EMU_K;
+    oy = (ry * nx - rx * ny) * EMU_K;
+    oz =  ny * mx - nx * my;
+
+    // Fast-load for fully visible polygons.
+    if (doflag == 4) {
+        vr2 = 4;
+        vr22 = 8;
+        for (i = 0; i < 4; i++) {
+            ultima_x[i] = rxf[i];
+            ultima_y[i] = ryf[i];
+            ultima_z[i] = rzf[i];
+        }
+    } else {
+        // Clip points behind the observer compared to the screen plane.
+        uint16_t fakedi = 0;
+        for (vr = 0; vr < 4; vr++) {
+            if (rwf[vr] != 0) {
+                ultima_x[fakedi / 4] = rxf[vr];
+                ultima_y[fakedi / 4] = ryf[vr];
+                ultima_z[fakedi / 4] = rzf[vr];
+                fakedi += 4;
+                continue;
+            }
+
+            if (vr >= 1) {
+                pvert = vr - 1;
+            } else {
+                pvert = 3;
+            }
+
+            if ((vr + 1) <= 3) {
+                nvert = vr + 1;
+            } else {
+                nvert = 0;
+            }
+
+            if (rwf[pvert] == 0 && rwf[nvert] == 0) continue;
+
+            if (rwf[pvert] + rwf[nvert] == 2) {
+                if (rzf[vr] == rzf[pvert]) {
+                    ultima_x[fakedi / 4] = rxf[vr];
+                    ultima_y[fakedi / 4] = ryf[vr];
+                } else {
+                    zk = (uneg - rzf[pvert]) / (rzf[vr] - rzf[pvert]);
+
+                    ultima_x[fakedi / 4] = zk * (rxf[vr] - rxf[pvert]) + rxf[pvert];
+                    ultima_y[fakedi / 4] = zk * (ryf[vr] - ryf[pvert]) + ryf[pvert];
+                }
+                ultima_z[fakedi / 4] = uneg;
+
+                if (rzf[vr] == rzf[nvert]) {
+                    ultima_x[(fakedi / 4) + 1] = rxf[vr];
+                    ultima_y[(fakedi / 4) + 1] = ryf[vr];
+                } else {
+                    zk = (uneg - rzf[nvert]) / (rzf[vr] - rzf[nvert]);
+
+                    ultima_x[(fakedi / 4) + 1] = zk * (rxf[vr] - rxf[nvert]) + rxf[nvert];
+                    ultima_y[(fakedi / 4) + 1] = zk * (ryf[vr] - ryf[nvert]) + ryf[nvert];
+                }
+                ultima_z[(fakedi / 4) + 1] = uneg;
+                fakedi += 8;
+            } else {
+                if (rwf[pvert] == 0) {
+                    vvert = nvert;
+                } else {
+                    vvert = pvert;
+                }
+
+                if (rzf[vvert] == rzf[vr]) {
+                    ultima_x[fakedi / 4] = rxf[vr];
+                    ultima_y[fakedi / 4] = ryf[vr];
+                } else {
+                    zk = (uneg - rzf[vvert]) / (rzf[vr] - rzf[vvert]);
+
+                    ultima_x[fakedi / 4] = zk * (rxf[vr] - rxf[vvert]) + rxf[vvert];
+                    ultima_y[fakedi / 4] = zk * (ryf[vr] - ryf[vvert]) + ryf[vvert];
+                }
+
+                ultima_z[fakedi / 4] = uneg;
+                fakedi += 4;
+            }
+        }
+
+        vr2 = fakedi / 4;
+        vr22 = fakedi / 2;
+
+        if (vr2 < 3) {
+            return;
+        }
     }
 
-    // Queste sono le proiezioni prospettiche da 3d a 2d.
-    // Contemporaneamente, il ciclo ricerca il minimo ed il massimo
-    // verticale dell'estensione del poligono sullo schermo.
-to_2d:
-    asm {   db 0x66;
-            mov dx, word ptr ubyl
-            db 0x66;
-            mov bx, word ptr lbyl
-            mov si, vr2
-            dec si
-            shl si, 2
-            mov di, si
-            add di, si }
-    projector:
-    asm {   fld dpp
-            fdiv dword ptr ultima_z[si]
-            fld st(0)
-            fmul dword ptr ultima_x[si]
-            fadd dword ptr x_centro_f
-            fistp dword ptr mp[di]
-            fmul dword ptr ultima_y[si]
-            fadd dword ptr y_centro_f
-            fistp dword ptr mp[di + 4]
-            db 0x66;
-            cmp word ptr mp[di + 4], dx
-            jnl outr_3
-            db 0x66;
-            mov dx, word ptr mp[di + 4] }
-    outr_3:
-    asm {   db 0x66;
-            cmp word ptr mp[di+4], bx
-            jle outr_4
-            db 0x66;
-            mov bx, word ptr mp[di+4] }
-    outr_4:
-    asm {   sub di, 8
-            sub si, 4
-            jnc projector
-            db 0x66;
-            mov word ptr max_y, bx
-            db 0x66;
-            mov word ptr min_y, dx }
-    // Eventuale esclusione di poligoni non visibili.
-    asm {// if (min_y>uby) return;
-        db 0x66;
-        mov ax, word ptr min_y
-        db 0x66;
-        cmp ax, word ptr ubyl
-        jle ct1ok
-        // if (max_y<lby) return;
-        db 0x66;
-        mov ax, word ptr max_y
-        db 0x66;
-        cmp ax, word ptr lbyl
-        jnl ct1ok }
-    return;
-    // Normalizzazione dei limiti.
-ct1ok:
-    asm {// if (min_y<lby) min_y = lby;
-        db 0x66;
-        mov ax, word ptr min_y
-        db 0x66;
-        cmp ax, word ptr lbyl
-        jnl step_1
-        db 0x66;
-        mov ax, word ptr lbyl
-        db 0x66;
-        mov word ptr min_y, ax }
-step_1:
-    asm {// if (max_y>uby) max_y = uby;
-        db 0x66;
-        mov ax, word ptr max_y
-        db 0x66;
-        cmp ax, word ptr ubyl
-        jle step_2
-        db 0x66;
-        mov ax, word ptr ubyl
-        db 0x66;
-        mov word ptr max_y, ax }
-step_2:
-    asm {// if (min_y>max_y) return;
-        db 0x66;
-        mov ax, word ptr min_y
-        db 0x66;
-        cmp ax, word ptr max_y
-        jle ct2ok }
-    return;
-    // Inizializzazione costanti di ottimizzazione.
-ct2ok:
-    asm {// k1 = vx * 16;
-        fld  vx
-        fmul _16
-        fstp k1
-        // k2 = vy * 16;
-        fld  vy
-        fmul _16
-        fstp k2
-        // k3 = vz * 16;
-        fld  vz
-        fmul _16
-        fstp k3 }
+    // These are the perspective projections from 3D to 2D.
+    // The cycle simultaneously searches for the min and max vertical
+    // polygon extension on the screen.
+    int32_t temp_min_y = ubyl;
+    int32_t temp_max_y = lbyl;
+
+    for (i = (vr2 - 1); i >= 0 ; i--) {
+        float base = dpp / ultima_z[i];
+
+        float xtest = base * ultima_x[i] + x_centro_f;
+        float ytest = base * ultima_y[i] + y_centro_f;
+
+        mp[i * 2] = floor(xtest + 0.5);
+        mp[i * 2 + 1] = floor(ytest + 0.5);
+
+        temp_min_y = (mp[i * 2 + 1] < temp_min_y) ? mp[i * 2 + 1] : temp_min_y;
+        temp_max_y = (mp[i * 2 + 1] > temp_max_y) ? mp[i * 2 + 1] : temp_max_y;
+    }
+
+    min_y = temp_min_y;
+    max_y = temp_max_y;
+
+    // Possible exclusion of non-visible polygons.
+    if (min_y > uby || max_y < lby) return;
+
+    // Normalization of limits.
+    min_y = (min_y < lby) ? lby : min_y;
+    max_y = (max_y > uby) ? uby : max_y;
+
+    if (min_y > max_y) return;
+
+    // Initialization of optimization constants.
+    ct2ok:
+    k1 = vx * 16;
+    k2 = vy * 16;
+    k3 = vz * 16;
 
     if (culling) {
         k1 *= 2;
@@ -2003,512 +1587,360 @@ ct2ok:
         k3 *= 2;
     }
 
-    // Inizializzazione delle matrici dei confini orizzontali.
-    asm {// for (i=min_y; i<=max_y; i++)
-        mov di, word ptr min_y
-        mov cx, word ptr max_y
-        db 0x66;
-        mov ax, word ptr lbxl
-        db 0x66;
-        mov bx, word ptr ubxl
-        sub cx, di
-        shl di, 1
-        inc cx }
-ol_init:
-    asm {// fpart[i] = lbxl;
-        mov word ptr fpart[di], ax
-        // ipart[i] = ubxl;
-        mov word ptr ipart[di], bx
-        add di, 2
-        dec cx
-        jnz ol_init }
-    // Calcolo confini orizzontali.
-    asm {// mp[vr22]   = mp[0];
-        // mp[vr22+1] = mp[1];
-        mov di, vr22
-        shl di, 2
-        db 0x66;
-        mov ax, word ptr mp[0]
-        db 0x66;
-        mov bx, word ptr mp[4]
-        db 0x66;
-        mov word ptr mp[di], ax
-        db 0x66;
-        mov word ptr mp[di+4], bx
-        // for (i = 0; i < vr22; i += 2)
-        xor si, si
-        shr vr22, 1 }
-extfor:
-    asm {// y1 = mp[i+1];
-        // y2 = mp[i+3];
-        // x1 = mp[i];
-        // x2 = mp[i+2];
-        db 0x66;
-        mov bx, word ptr mp[si+4]
-        db 0x66;
-        mov dx, word ptr mp[si+12]
-        db 0x66;
-        mov ax, word ptr mp[si]
-        db 0x66;
-        mov cx, word ptr mp[si+8]
-        // if (y2<y1)
-        db 0x66;
-        cmp dx, bx
-        jnl noex
-        db 0x66;
-        mov word ptr x1, cx
-        db 0x66;
-        mov word ptr y1, dx
-        db 0x66;
-        mov word ptr x2, ax
-        db 0x66;
-        mov word ptr y2, bx
-        jmp exch }
-noex:
-    asm {// niente scambio
-        db 0x66;
-        mov word ptr x1, ax
-        db 0x66;
-        mov word ptr y1, bx
-        db 0x66;
-        mov word ptr x2, cx
-        db 0x66;
-        mov word ptr y2, dx }
-exch:
-    asm {// scambio effettuato
-        // if (y2!=y1) [nessuno ha alterato i flags]
-        jne ol
-        jmp nool } // niente calcolo del bordo: il segmento non si sviluppa in altezza
-ol:
-    asm {// kx = (float)(x2 - x1) / (float)(y2 - y1);
-        fild x2
-        fisub x1
-        fild y2
-        fisub y1
-        fdivp
-        fstp kx
-        // if (y1<lbyl)
-        db 0x66;
-        mov ax, word ptr y1
-        db 0x66;
-        cmp ax, word ptr lbyl
-        jnl nocr
-        // ity = lbyl;
-        db 0x66;
-        mov ax, word ptr lbyl
-        db 0x66;
-        mov word ptr ity, ax
-        // x1 += (float)(lbyl-y1) * kx;
-        fild x1
-        fild lbyl
-        fisub y1
-        fmul kx
-        faddp
-        fistp x1
-        jmp crct }
-nocr:
-    asm {// ity = y1;
-        db 0x66;
-        mov ax, word ptr y1
-        db 0x66;
-        mov word ptr ity, ax }
-crct:
-    asm {// if (y2>ubyl)
-        db 0x66;
-        mov ax, word ptr y2
-        db 0x66;
-        cmp ax, word ptr ubyl
-        jng _nocr
-        // jty = ubyl;
-        db 0x66;
-        mov ax, word ptr ubyl
-        db 0x66;
-        mov word ptr jty, ax
-        jmp _crct }
-_nocr:
-    asm {// jty = y2;
-        db 0x66;
-        mov ax, word ptr y2
-        db 0x66;
-        mov word ptr jty, ax }
-_crct:
-    asm {// bndx = x1;
-        fild x1
-        // for (h=ity; h<=jty; h++)
-        db 0x66;
-        mov di, word ptr ity
-        db 0x66;
-        mov cx, word ptr jty
-        db 0x66;
-        cmp di, cx
-        jnl noifor
-        db 0x66;
-        sub cx, di
-        shl di, 1
-        inc cx }
-intfor:
-    asm {// _EAX = bndx;
-        fist bndx
-        db 0x66;
-        mov ax, word ptr bndx
-        db 0x66;
-        cmp ax, word ptr i_low_lim
-        jnl ct01
-        db 0x66;
-        mov ax, word ptr i_low_lim }
-ct01:
-    asm {   db 0x66;
-            cmp ax, word ptr i_hig_lim
-            jng ct02
-            db 0x66;
-            mov ax, word ptr i_hig_lim }
-    ct02:
-    asm {// if (bndx > fpart[h])
-        cmp ax, word ptr fpart[di]
-        jng ct1n
-        // if (bndx < ubx)
-        cmp ax, word ptr ubxl
-        jnl ct2n
-        // fpart[h] = bndx;
-        mov word ptr fpart[di], ax
-        jmp ct1n }
-ct2n:
-    asm {// fpart[h] = ubx;
-        mov dx, word ptr ubxl
-        mov word ptr fpart[di], dx }
-ct1n:
-    asm {// if (bndx < ipart[h])
-        cmp ax, word ptr ipart[di]
-        jnl ct3n
-        // if (bndx > lbx)
-        cmp ax, word ptr lbxl
-        jng ct4n
-        // ipart[h] = bndx;
-        mov word ptr ipart[di], ax
-        jmp ct3n }
-ct4n:
-    asm {// ipart[h] = lbx;
-        mov dx, word ptr lbxl
-        mov word ptr ipart[di], dx }
-ct3n:
-    asm {// bndx += kx;
-        fadd kx
-        add di, 2
-        dec cx
-        jnz intfor }
-noifor:
-    asm fstp st
-    nool: asm {   add si, 8
-                  dec vr22
-                  jz  ol_end
-                  jmp extfor }
-    // Pre-assegnamenti di lavoro.
-    ol_end:
-    asm les dx, dword ptr txtr  // caricamento del segmento-texture
-    asm mov ax, es          // .
-    asm shr dx, 4           // .
-    asm add ax, dx          // .
-    asm db 0x8e, 0xe0       // mov fs, ax
-    asm les ax, dword ptr adapted   // caricamento indirizzo area video
-    asm mov al, tinta       // caricamento del primo colore
-    asm mov es:[0xFA00], al     // .
-    asm mov al, escrescenze     // caricamento primo colore bumps
-    asm mov es:[0xFA01], al     // .
-    // Ciclo di tracciamento.
-    // for (i=min_y; i<=max_y; i++)
-    asm     mov ax, word ptr min_y
-    asm mov i, ax
-    trace: asm {// _z = oz + (hz * (i - y_centro)) + (vz * (ipart[i] - x_centro + 1));
-        mov si, i
-        shl si, 1
-        fild word ptr ipart[si]
-        fsub x_centro_f
-        fadd uno
-        fld st(0) // duplica (ipart[i] - x_centro + 1)
-        fld st(0) // due volte, � lo stesso per tre calcoli
-        fmul vz
-        fild i
-        fsub y_centro_f
-        fmul hz
-        faddp
-        fadd oz
-        fst _z
-        // k4 = 1 / _z;
-        fdivr uno
-        fstp k4
-        // _x = ox + (hx * (i - y_centro)) + (vx * (ipart[i] - x_centro + 1));
-        fmul vx
-        fild i
-        fsub y_centro_f
-        fmul hx
-        faddp
-        fadd ox
-        fstp _x
-        // _y = oy + (hy * (i - y_centro)) + (vy * (ipart[i] - x_centro + 1));
-        fmul vy
-        fild i
-        fsub y_centro_f
-        fmul hy
-        faddp
-        fadd oy
-        fstp _y
-        // u  = (_x * tempXsize) * k4; // Seq. stabile
-        // v  = (_y * tempYsize) * k4; // Ma usare _control87
-        fld _y
-        fmul tempYsize
-        fmul k4
-        fld _x
-        fmul tempXsize
-        fmul k4
-        fxch
-        fistp v
-        fistp u
-        // sections = fpart[i] - ipart[i]; // Sequenza stabile.
-        // _DI = i * 320 + ipart[i];       // Moltiplicazione per 320 in tabella.
-        // SI � gi� caricato con I * 2.
-        mov dx, word ptr ipart[si]
-        mov ax, word ptr fpart[si]
-        mov di, word ptr riga[si]
-        sub ax, dx
-        add di, dx
-        mov sections, ax
-        push ds
-        push es
-        pop  ds
-        test culling, 1
-        jz row
-        jmp c_row }
-    // tracciamento di una scanline: versione ad alto dettaglio
-row:
-    asm {   cmp sections, 0
-            jg  again
-            jmp row_end }
-    again:
-    asm {   cmp sections, 16
-            jg  complete
-            mov ax, sections
-            mov cl, al
-            jmp unfinished }
-    complete:
-    asm     mov cl, 16
-    unfinished: asm {   sub sections, 16
-                        cmp cl, 0
-                        je  row
-                        // x += k1;               // Sequenza stabile.
-                        // y += k2;           // Traduzione ASM ok.
-                        // z += k3;               // Nessun ritardo grazie a FXCH.
-                        // if (z) {               // !! Sequenza instabile.
-                        // k4 = 1 / z;        // correzione da parte di "_control87"
-                        // u2 = (x * XSIZE) * k4; // Problema: le FISTP possono provocare
-                        // v2 = (y * YSIZE) * k4; // errori di dominio in virgola mobile.
-                        fld   _z           // 1 cycle   stack: z
-                        fadd  k3               // 1 cycle   stack: z+k3
-                        fld   _x           // 1 cycle   stack: x, z+k3
-                        fadd  k1               // 1 cycle   stack: x+k1, z+k3
-                        fxch                   // no time   stack: z+k3, x+k1
-                        fst   _z               // 2 cycles  stack: z+k3, x+k1
-                        fxch                   // no time   stack: x+k1, z+k3
-                        fst   _x               // 2 cycles  stack: x+k1, z+k3
-                        fxch                   // no time   stack: z+k3, x+k1
-                        fdivr _uno             // 39 cycles stack: k4, x+k1
-                        db 0x66;
-                        mov ax, word ptr u     // while FPU is working,
-                        db 0x66;
-                        mov dx, word ptr v     // this group takes 0 cycles.
-                        mov ch, _flares        //
-                        push bp                //
-                        fxch                   // no time   stack: x+k1, k4
-                        fmul  tempXsize        // 1 cycle   stack: x..., k4
-                        fld   _y               // 1 cycle   stack: y, x..., k4
-                        fadd  k2           // 1 cycle   stack: y+k2, x..., k4
-                        fst   _y               // 3 cycles  stack: y+k2, x..., k4
-                        fmul  tempYsize        // 1 cycle   stack: y..., x..., k4
-                        fxch                   // no time   stack: x..., y..., k4
-                        fmul  st, st(2)        // 1 cycle   stack: u, y..., k4
-                        fxch                   // no time   stack: y..., u, k4
-                        fmul  st, st(2)        // 1 cycle   stack: v, u, k4
-                        fxch                   // no time   stack: u, v, k4
-                        fistp u                // 6 cycles  stack: v, k4
-                        fistp v                // 6 cycles  stack: k4
-                        fstp st
-                        db 0x66;
-                        mov si, word ptr v
-                        db 0x66;
-                        mov bp, word ptr u
-                        db 0x66;
-                        sub si, dx
-                        db 0x66;
-                        sub bp, ax
-                        db 0x66;
-                        sar si, 4
-                        db 0x66;
-                        sar bp, 4
-                        test ch, 15     // NORMALE = 0
-                        jz internal
-                        test ch, 1      // LUCIDO = 1
-                        jnz transp
-                        test ch, 2      // BRILLANTE = 2
-                        jnz bright
-                        test ch, 4      // TRASLUCIDO = 4
-                        jnz merger
-                        jmp bumper }        // BUMP MAPPING = 8
-    internal:
-    asm {   mov bh, dh      // 1 (riempimento normale)
-            inc di          // *
-            mov bl, ah      // 1
-            mov ch, ds:[0xFA00] // *
-            db 0x64, 0x02, 0x2F     // 1+PFX+AGI (add ch, fs:[bx])
-            add ax, bp      // *
-            mov [di+3], ch      // 1
-            add dx, si      // *
-            dec cl          // 1
-            jnz internal        // 7 cicli.
-            jmp common }
-    transp:
-    asm {   mov bh, dh      // 1 (riempimento lucido)
-            inc di          // *
-            mov bl, ah      // 1
-            mov ch, [di+3]      // *
-            db 0x64, 0x02, 0x2F     // 1+PFX+AGI (add ch, fs:[bx])
-            add ax, bp      // *
-            mov [di+3], ch      // 1
-            add dx, si      // *
-            dec cl          // 1
-            jnz transp      // 7 cicli.
-            jmp common }
-    bright:
-    asm {   mov ch, [di+4]      // 1 (riempimento brillante)
-            mov bh, dh      // *
-            inc di          // 1
-            mov bl, ah      // *
-            and ch, 0x3F        // 1
-            add ax, bp      // *
-            db 0x64, 0x02, 0x2F     // 1+PFX (add ch, fs:[bx])
-            add dx, si      // *
-            cmp ch, 0x3E        // 1
-            jbe antibloom       // * (antiblooming)
-            mov ch, 0x3E }      // 1
-    antibloom:
-    asm {   and byte ptr [di+3], 0xC0 // 1
-            or  [di+3], ch      // 1
-            dec cl          // *
-            jnz bright      // 1/0 (9-10 cicli.)
-            jmp common }
-    merger:
-    asm {   mov ch, [di+4]      // 1 (traslucido)
-            mov bh, dh      // *
-            inc di          // 1
-            mov bl, ah      // *
-            and ch, 0x3F        // 1
-            add ax, bp      // *
-            db 0x64, 0x02, 0x2F     // 1+PFX (add ch, fs:[bx])
-            add ch, ds:[0xFA00]
-            add dx, si      // *
-            shr ch, 1       // 1
-            and byte ptr [di+3], 0xC0 // 1
-            or  [di+3], ch      // 1
-            dec cl          // *
-            jnz merger      // 1 (9 cicli.)
-            jmp common }
-    bumper:
-    asm {   mov bh, dh      // 1 (bump mapping)
-            inc di          // *
-            mov bl, ah      // 1
-            mov ch, ds:[0xFA00] // *
-            db 0x64, 0x02, 0x2F     // 1+PFX+AGI (add ch, fs:[bx])
-            add ax, bp      // *
-            mov [di+3], ch      // 1
-            push di
-            push cx
-            and ch, 0x7 }
-    bmpm320:
-    asm {   sub di, 320
-            dec ch
-            jns bmpm320
-            pop cx
-            sub ch, ds:[0xFA00]
-            add ch, ds:[0xFA01] // *
-            db 0x64, 0x02, 0x2F     // 1+PFX+AGI (add ch, fs:[bx])
-            mov byte ptr [di+640+3], ch
-            pop di
-            add dx, si      // *
-            dec cl          // 1
-            jnz bumper }        // ? cicli.
-    common:
-    asm {   pop bp
-            jmp row }
-    // tracciamento di una scanline: versione a basso dettaglio
-    c_row:
-    asm {   cmp sections, 0
+    // Initialization of the horizontal border matrices.
+    for (i = min_y; i <= max_y; i++) {
+        fpart[i] = lbxl;
+        ipart[i] = ubxl;
+    }
+
+    // Calculation of horizontal borders.
+    mp[vr22] = mp[0];
+    mp[vr22 + 1] = mp[1];
+
+    for (i = 0; i < vr22; i+= 2) {
+        if (mp[i + 3] < mp[i + 1]) {
+            x1 = mp[i + 2];
+            x2 = mp[i];
+
+            y1 = mp[i + 3];
+            y2 = mp[i + 1];
+        } else {
+            x1 = mp[i];
+            x2 = mp[i + 2];
+
+            y1 = mp[i + 1];
+            y2 = mp[i + 3];
+        }
+
+        if (y1 != y2) {
+            kx = ((float) (x2 - x1)) / ((float) (y2 - y1));
+
+            if (y1 < lbyl) {
+                ity = lbyl;
+
+                x1 += floor(((float) (lbyl - y1)) * kx + 0.5);
+            } else {
+                ity = y1;
+            }
+
+            if (y2 > ubyl) {
+                jty = ubyl;
+            } else {
+                jty = y2;
+            }
+
+            if (ity < jty) {
+                float tinkywinky = x1;
+                for (h = ity; h <= jty; h++) {
+                    bndx = tinkywinky;
+
+                    if (bndx < i_low_lim) bndx = i_low_lim;
+                    if (bndx > i_hig_lim) bndx = i_hig_lim;
+
+                    if (bndx > fpart[h] && bndx < ubxl) {
+                        fpart[h] = bndx;
+                    } else if (bndx >= ubxl) {
+                        fpart[h] = ubxl;
+                    }
+
+                    if (bndx < ipart[h] && bndx > lbxl) {
+                        ipart[h] = bndx;
+                    } else if (bndx <= lbxl) {
+                        ipart[h] = lbxl;
+                    }
+
+                    tinkywinky += kx;
+                }
+            }
+        }
+    }
+
+    // Pre-work assignments.
+    float fu, fv;
+    int32_t tempu, tempv;
+    uint16_t tax, tbx, tdx, tbp, tds, fakedi, fakesi, tempfakedi;
+    uint8_t tcl, tch, tbl, tbh, tah, tal, tdh, tdl, tempch;
+    adapted[0xFA00] = tinta;
+    adapted[0xFA01] = escrescenze;
+
+    //asm les dx, dword ptr txtr      // Loading the texture segment.
+    //asm mov ax, es                  // .
+    //asm shr dx, 4                   // .
+    //asm add ax, dx                  // .
+    //asm db 0x8e, 0xe0               // mov fs, ax
+    //asm les ax, dword ptr adapted   // Loading video area address.
+
+    // Tracking cycle. (NOTE: This makes no sense.)
+    for (i = min_y; i <= max_y;) {
+        _x = ox + (hx * (i - y_centro_f)) + (vx * (ipart[i] - x_centro_f + 1));
+        _y = oy + (hy * (i - y_centro_f)) + (vy * (ipart[i] - x_centro_f + 1));
+        _z = oz + (hz * (i - y_centro_f)) + (vz * (ipart[i] - x_centro_f + 1));
+
+        k4 = 1.0 / _z;
+
+        u = floor((_x * tempXsize) * k4 + 0.5);
+        v = floor((_y * tempYsize) * k4 + 0.5);
+
+        sections = fpart[i] - ipart[i];
+        fakedi = i * 320 + ipart[i] - 4; // NOTE: Fudge factor to account for loss of offset on adapted.
+
+        if (culling) {
+            goto c_row;
+        }
+
+        //  High detail scanline tracing.
+        row:
+        if (sections <= 0) {
+            goto row_end;
+        }
+
+        again:
+        if (sections > 16) {
+            tcl = 16;
+        } else {
+            tax = sections;
+            tah = (tax >> 8);
+            tal = (tax & 0xFF);
+            tcl = tal;
+        }
+
+        complete:
+        tcl = 16;
+
+        unfinished:
+        sections -= 16;
+        if (tcl == 0) {
+            goto row;
+        }
+        _x += k1;
+        _y += k2;
+        _z += k3;
+
+        k4 = 1 / _z;
+
+        tempu = u;
+        tempv = v;
+
+        fu = (_x * tempXsize) * k4;
+        fv = (_y * tempYsize) * k4;
+
+        u = (fu - floor(fu) > 0.5) ? ceil(fu) : floor(fu);
+        v = (fv - floor(fv) > 0.5) ? ceil(fv) : floor(fv);
+
+        tax = tempu;
+        tdx = tempv;
+        fakesi = (v - tempv) >> 4;
+        tbp = (u - tempu) >> 4;
+
+        tch = _flares;
+        if (tch & 1) {
+            goto transp;
+        } else if (tch & 2) {
+            goto bright;
+        } else if (tch & 4) {
+            goto merger;
+        } else if (tch & 8) {
+            goto bumper;
+        } else {
+            goto internal;
+        }
+
+        internal:
+        tdh = (tdx >> 8) & 0xFF;
+        tah = (tax >> 8) & 0xFF;
+
+        tbh = tdh;
+        fakedi++;
+        tbl = tah;
+        tch = adapted[0xFA00];
+        tbx = (((uint16_t) tbh) << 8) + tbl;
+        tch += txtr[tbx - 4]; // NOTE; Fudge factor to account for loss of offset on txtr.
+        tax += tbp;
+        adapted[fakedi + 3] = tch;
+        tdx += fakesi;
+        tcl--;
+        if (tcl != 0) goto internal;
+        goto common;
+
+        transp:
+        tdh = (tdx >> 8) & 0xFF;
+        tah = (tax >> 8) & 0xFF;
+
+        tbh = tdh;
+        fakedi++;
+        tbl = tah;
+        tch = adapted[fakedi + 3];
+        tbx = (((uint16_t) tbh) << 8) + tbl;
+        tch += txtr[tbx - 4];
+        tax += tbp;
+        adapted[fakedi + 3] = tch;
+        tdx += fakesi;
+        tcl--;
+        if (tcl != 0) goto transp;
+        goto common;
+
+        bright: // NOTE: This is for the text rendering.
+        tdh = (tdx >> 8) & 0xFF;
+        tah = (tax >> 8) & 0xFF;
+
+        tch = adapted[fakedi + 4];
+        tbh = tdh;
+        fakedi++;
+        tbl = tah;
+        tch &= 0x3F;
+        tax += tbp;
+        tbx = (((uint16_t) tbh) << 8) + tbl;
+        tch += txtr[tbx - 4];
+        tdx += fakesi;
+        if (tch <= 0x3E) goto antibloom;
+        tch = 0x3E;
+
+        antibloom:
+        adapted[fakedi + 3] &= 0xC0;
+        adapted[fakedi + 3] |= tch;
+        tcl--;
+        if (tcl != 0) goto bright;
+        goto common;
+
+        merger:
+        tdh = (tdx >> 8) & 0xFF;
+        tah = (tax >> 8) & 0xFF;
+
+        tch = adapted[fakedi + 4];
+        tbh = tdh;
+        fakedi++;
+        tbl = tah;
+        tch &= 0x3F;
+        tax += tbp;
+        tbx = (((uint16_t) tbh) << 8) + tbl;
+        tch += txtr[tbx - 4];
+        tch += adapted[0xFA00];
+        tdx += fakesi;
+        tch >>= 1;
+        adapted[fakedi + 3] &= 0xC0;
+        adapted[fakedi + 3] |= tch;
+        tcl--;
+        if (tcl != 0) goto merger;
+        goto common;
+
+        bumper:
+        tdh = (tdx >> 8) & 0xFF;
+        tah = (tax >> 8) & 0xFF;
+
+        tbh = tdh;
+        fakedi++;
+        tbl = tah;
+        tch = adapted[0xFA00];
+        tbx = (((uint16_t) tbh) << 8) + tbl;
+        tch += txtr[tbx - 4];
+        tax += tbp;
+        adapted[fakedi + 3] = tch;
+        tempfakedi = fakedi;
+        tempch = tch;
+        tch &= 0x07;
+
+        bmpm320:
+        fakedi -= 320;
+        tch--;
+        if (!((tch >> 7) & 1)) goto bmpm320;
+        tch = tempch;
+        tch -= adapted[0xFA00];
+        tch += adapted[0xFA01];
+        tch += txtr[tbx - 4];
+        adapted[fakedi + 640 + 3] = tch;
+        fakedi = tempfakedi;
+        tdx += fakesi;
+        tcl--;
+        if (tcl != 0) goto bumper;
+
+        common:
+        goto row;
+
+        // Low detail scanline tracing.
+        c_row:
+        #if 0
+        asm {
+            cmp sections, 0
             jg  c_again
-            jmp row_end }
-    c_again:
-    asm {   cmp sections, 32
+            jmp row_end
+        }
+
+        c_again:
+        asm {
+            cmp sections, 32
             jg  c_complete
             mov ax, sections
             add ax, 2
             mov cl, al
-            jmp c_unfinished }
-    c_complete:
-    asm     mov cl, 32
-    c_unfinished: asm {   sub sections, 32
-                          cmp cl, 2
-                          jl  c_row
-                          fld   _z           // 1 cycle   stack: z
-                          fadd  k3               // 1 cycle   stack: z+k3
-                          fld   _x           // 1 cycle   stack: x, z+k3
-                          fadd  k1               // 1 cycle   stack: x+k1, z+k3
-                          fxch                   // no time   stack: z+k3, x+k1
-                          fst   _z               // 2 cycles  stack: z+k3, x+k1
-                          fxch                   // no time   stack: x+k1, z+k3
-                          fst   _x               // 2 cycles  stack: x+k1, z+k3
-                          fxch                   // no time   stack: z+k3, x+k1
-                          fdivr _uno             // 39 cycles stack: k4, x+k1
-                          db 0x66;
-                          mov ax, word ptr u     // while FPU is working,
-                          db 0x66;
-                          mov dx, word ptr v     // this group takes 0 cycles.
-                          shr cl, 1          //
-                          push bp                //
-                          mov ch, _flares        //
-                          push di            //
-                          fxch                   // no time   stack: x+k1, k4
-                          fmul  tempXsize        // 1 cycle   stack: x..., k4
-                          fld   _y               // 1 cycle   stack: y, x..., k4
-                          fadd  k2           // 1 cycle   stack: y+k2, x..., k4
-                          fst   _y               // 3 cycles  stack: y+k2, x..., k4
-                          fmul  tempYsize        // 1 cycle   stack: y..., x..., k4
-                          fxch                   // no time   stack: x..., y..., k4
-                          fmul  st, st(2)        // 1 cycle   stack: u, y..., k4
-                          fxch                   // no time   stack: y..., u, k4
-                          fmul  st, st(2)        // 1 cycle   stack: v, u, k4
-                          fxch                   // no time   stack: u, v, k4
-                          fistp u                // 6 cycles  stack: v, k4
-                          fistp v                // 6 cycles  stack: k4
-                          fstp st
-                          db 0x66;
-                          mov si, word ptr v
-                          db 0x66;
-                          mov bp, word ptr u
-                          db 0x66;
-                          sub si, dx
-                          db 0x66;
-                          sub bp, ax
-                          db 0x66;
-                          sar si, 4
-                          db 0x66;
-                          sar bp, 4
-                          test ch, 15         // NORMALE = 0
-                          jz c_internal
-                          test ch, 1      // LUCIDO = 1
-                          jnz c_transp
-                          test ch, 2      // BRILLANTE = 2
-                          jnz c_bright
-                          test ch, 4      // TRASLUCIDO = 4
-                          jnz c_merger
-                          jmp c_bumper }      // BUMP MAPPING = 8
-    c_internal:
-    asm {   mov bh, dh      // 1 (riempimento normale)
+            jmp c_unfinished
+        }
+
+        c_complete:
+        asm     mov cl, 32
+
+        c_unfinished:
+        asm {
+            sub sections, 32
+            cmp cl, 2
+            jl  c_row
+            fld   _z           // 1 cycle   stack: z
+            fadd  k3               // 1 cycle   stack: z+k3
+            fld   _x           // 1 cycle   stack: x, z+k3
+            fadd  k1               // 1 cycle   stack: x+k1, z+k3
+            fxch                   // no time   stack: z+k3, x+k1
+            fst   _z               // 2 cycles  stack: z+k3, x+k1
+            fxch                   // no time   stack: x+k1, z+k3
+            fst   _x               // 2 cycles  stack: x+k1, z+k3
+            fxch                   // no time   stack: z+k3, x+k1
+            fdivr _uno             // 39 cycles stack: k4, x+k1
+            db 0x66;
+            mov ax, word ptr u     // while FPU is working,
+            db 0x66;
+            mov dx, word ptr v     // this group takes 0 cycles.
+            shr cl, 1          //
+            push bp                //
+            mov ch, _flares        //
+            push di            //
+            fxch                   // no time   stack: x+k1, k4
+            fmul  tempXsize        // 1 cycle   stack: x..., k4
+            fld   _y               // 1 cycle   stack: y, x..., k4
+            fadd  k2           // 1 cycle   stack: y+k2, x..., k4
+            fst   _y               // 3 cycles  stack: y+k2, x..., k4
+            fmul  tempYsize        // 1 cycle   stack: y..., x..., k4
+            fxch                   // no time   stack: x..., y..., k4
+            fmul  st, st(2)        // 1 cycle   stack: u, y..., k4
+            fxch                   // no time   stack: y..., u, k4
+            fmul  st, st(2)        // 1 cycle   stack: v, u, k4
+            fxch                   // no time   stack: u, v, k4
+            fistp u                // 6 cycles  stack: v, k4
+            fistp v                // 6 cycles  stack: k4
+            fstp st
+            db 0x66;
+            mov si, word ptr v
+            db 0x66;
+            mov bp, word ptr u
+            db 0x66;
+            sub si, dx
+            db 0x66;
+            sub bp, ax
+            db 0x66;
+            sar si, 4
+            db 0x66;
+            sar bp, 4
+            test ch, 15         // NORMALE = 0
+            jz c_internal
+            test ch, 1      // LUCIDO = 1
+            jnz c_transp
+            test ch, 2      // BRILLANTE = 2
+            jnz c_bright
+            test ch, 4      // TRASLUCIDO = 4
+            jnz c_merger
+            jmp c_bumper    // BUMP MAPPING = 8
+        }
+
+        c_internal:
+        asm {
+            mov bh, dh      // 1 (riempimento normale)
             add di, 2       // *
             mov bl, ah      // 1
             mov ch, ds:[0xFA00] // *
@@ -2519,9 +1951,12 @@ row:
             add dx, si      // 1
             dec cl          // *
             jnz c_internal      // 1 (8 cicli).
-            jmp c_common }
-    c_transp:
-    asm {   mov bh, dh      // 1 (riempimento lucido)
+            jmp c_common
+        }
+
+        c_transp:
+        asm {
+            mov bh, dh      // 1 (riempimento lucido)
             add di, 2       // *
             mov bl, ah      // 1
             mov ch, [di+3]      // *
@@ -2532,9 +1967,12 @@ row:
             add dx, si      // 1
             dec cl          // *
             jnz c_transp        // 1 (8 cicli).
-            jmp c_common }
-    c_bright:
-    asm {   mov ch, [di+4]      // 1 (riempimento brillante)
+            jmp c_common
+        }
+
+        c_bright:
+        asm {
+            mov ch, [di+4]      // 1 (riempimento brillante)
             mov bh, dh      // *
             add di, 2       // 1
             mov bl, ah      // *
@@ -2544,17 +1982,23 @@ row:
             add dx, si      // *
             cmp ch, 0x3E        // 1
             jbe c_antibloom     // * (antiblooming)
-            mov ch, 0x3E }      // 1
-    c_antibloom:
-    asm {   and byte ptr [di+2], 0xC0 // 1
+            mov ch, 0x3E        // 1
+        }
+
+        c_antibloom:
+        asm {
+            and byte ptr [di+2], 0xC0 // 1
             or  ch, [di+2]      // 1
             dec cl          // 1
             mov [di+2], ch      // *
             mov [di+3], ch      // 1
             jnz c_bright        // 0 (11 cicli.)
-            jmp c_common }
-    c_merger:
-    asm {   mov ch, [di+4]      // 1 (traslucido)
+            jmp c_common
+        }
+
+        c_merger:
+        asm {
+            mov ch, [di+4]      // 1 (traslucido)
             mov bh, dh      // *
             add di, 2       // 1
             mov bl, ah      // *
@@ -2570,9 +2014,12 @@ row:
             mov [di+2], ch      // 1
             mov [di+3], ch      // *
             jnz c_merger        // 1 (9 cicli.)
-            jmp c_common }
-    c_bumper:
-    asm {   mov bh, dh      // 1 (bump mapping)
+            jmp c_common
+        }
+
+        c_bumper:
+        asm {
+            mov bh, dh      // 1 (bump mapping)
             add di, 2       // *
             mov bl, ah      // 1
             mov ch, ds:[0xFA00] // *
@@ -2582,9 +2029,12 @@ row:
             mov [di+3], ch      // 1
             push di
             push cx
-            and ch, 0x7 }
-    c_bmpm320:
-    asm {   sub di, 320
+            and ch, 0x7
+        }
+
+        c_bmpm320:
+        asm {
+            sub di, 320
             dec ch
             jns c_bmpm320
             pop cx
@@ -2596,50 +2046,46 @@ row:
             pop di
             add dx, si      // *
             dec cl          // 1
-            jnz c_bumper }      // ? cicli.
-    c_common:
-    asm {   pop di
+            jnz c_bumper    // ? cicli.
+        }
+
+        c_common:
+        asm {
+            pop di
             pop bp
             add di, 32
-            jmp c_row }
-    // codice inter-scanline: fra una scanline e la successiva...
-    row_end:
-    asm {   test halfscan, 1
-            jz do_singlescan
-            inc i
-            mov ax, word ptr max_y
-            cmp ax, i
-            pop ds
-            jb trace_end
-            mov si, i
-            shl si, 1
-            mov dx, word ptr ipart[si-2]
-            mov ax, word ptr fpart[si-2]
-            mov di, word ptr riga[si]
-            push ds
-            push es
-            pop  ds
-            sub ax, dx
-            jc do_singlescan
-            jz do_singlescan
-            add di, dx }
-    duplicate:
-    asm {   mov dl, [di-316]
-            mov [di+4], dl
-            mov [di+324], dl
-            inc di
-            dec ax
-            jnz duplicate }
-    do_singlescan:
-    asm {   inc i
-            mov ax, word ptr max_y
-            cmp ax, i
-            pop ds
-            jb trace_end
-            jmp trace }
-    trace_end:      // Fine tracciamento.
-#endif
-    STUB
+            jmp c_row
+        }
+        #endif
+        STUB
+
+        // Inter-scanline code: between one scanline and the next.
+        row_end:
+        if (!(halfscan & 0x01)) goto do_singlescan;
+        i++;
+        if (i > max_y) return;
+        tdx = ipart[i - 2];
+        tax = fpart[i - 2];
+        fakedi = riga[i];
+        if (tax <= tdx) {
+            tax -= tdx;
+            goto do_singlescan;
+        }
+        tax -= tdx;
+        fakedi += tdx;
+
+        duplicate:
+        tdl = adapted[fakedi - 316];
+        adapted[fakedi + 4] = tdl;
+        adapted[fakedi + 324] = tdl;
+        fakedi++;
+        tax--;
+        if (tax != 0) goto duplicate;
+
+        do_singlescan:
+        i++;
+        tax = max_y;
+    }
 }
 
 void Forward(float delta) /* Provoca l'avanzamento dell'osservatore
