@@ -1821,9 +1821,9 @@ void devices() {
         lsecs %= 1000;
         other(alphavalue(lsecs));
         cline(2, "parsis universal coordinates: ");
-        parsis_x = floor(dzat_x + 0.5);
-        parsis_y = floor(dzat_y + 0.5);
-        parsis_z = floor(dzat_z + 0.5);
+        parsis_x = round(dzat_x);
+        parsis_y = round(dzat_y);
+        parsis_z = round(dzat_z);
         other(alphavalue(parsis_x));
         other(";");
         other(alphavalue(-parsis_y));

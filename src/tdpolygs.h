@@ -515,7 +515,7 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
 
         float xtest = base * ultima_x[i] + x_centro_f;
         video_x0[i] = xtest;
-        mp[i * 2]   = floor(xtest + 0.5);
+        mp[i * 2]   = round(xtest);
         if (mp[i * 2] > temp_max_x)
             temp_max_x = mp[i * 2];
         if (mp[i * 2] < temp_min_x)
@@ -523,7 +523,7 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
 
         float ytest   = base * ultima_y[i] + y_centro_f;
         video_y0[i]   = ytest;
-        mp[i * 2 + 1] = floor(ytest + 0.5);
+        mp[i * 2 + 1] = round(ytest);
         if (mp[i * 2 + 1] > temp_max_y)
             temp_max_y = mp[i * 2 + 1];
         if (mp[i * 2 + 1] < temp_min_y)
@@ -804,8 +804,8 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
     fakedi = 0;
     for (vr = 0; vr < vr5; vr++) {
         if (video_x3[vr] <= ubxf) {
-            mp[fakedi]     = floor(video_x3[vr] + 0.5);
-            mp[fakedi + 1] = floor(video_y3[vr] + 0.5);
+            mp[fakedi]     = round(video_x3[vr]);
+            mp[fakedi + 1] = round(video_y3[vr]);
 
             fakedi += 2;
 
@@ -836,12 +836,12 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
             }
 
             if (video_x3[vr] == video_x3[vvert]) {
-                mp[fakedi + 1] = floor(video_y3[vr] + 0.5);
+                mp[fakedi + 1] = round(video_y3[vr]);
             } else {
-                mp[fakedi + 1] = floor(
+                mp[fakedi + 1] = round(
                     ((ubxf - video_x3[vvert]) / (video_x3[vr] - video_x3[vvert])) *
                         (video_y3[vr] - video_y3[vvert]) +
-                    video_y3[vvert] + 0.5);
+                    video_y3[vvert]);
             }
 
             mp[fakedi] = ubx & 0x0000FFFF; // y tho
@@ -850,23 +850,23 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
             continue;
         } else {
             if (video_x3[vr] == video_x3[pvert]) {
-                mp[fakedi + 1] = floor(video_y3[vr] + 0.5);
+                mp[fakedi + 1] = round(video_y3[vr]);
             } else {
-                mp[fakedi + 1] = floor(
+                mp[fakedi + 1] = round(
                     ((ubxf - video_x3[pvert]) / (video_x3[vr] - video_x3[pvert])) *
                         (video_y3[vr] - video_y3[pvert]) +
-                    video_y3[pvert] + 0.5);
+                    video_y3[pvert]);
             }
 
             mp[fakedi] = ubx & 0x0000FFFF;
 
             if (video_x3[vr] == video_x3[nvert]) {
-                mp[fakedi + 3] = floor(video_y3[vr] + 0.5);
+                mp[fakedi + 3] = round(video_y3[vr]);
             } else {
-                mp[fakedi + 3] = floor(
+                mp[fakedi + 3] = round(
                     ((ubxf - video_x3[nvert]) / (video_x3[vr] - video_x3[nvert])) *
                         (video_y3[vr] - video_y3[nvert]) +
-                    video_y3[nvert] + 0.5);
+                    video_y3[nvert]);
             }
 
             mp[fakedi + 2] = ubx & 0x0000FFFF;
@@ -1556,8 +1556,8 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         float xtest = base * ultima_x[i] + x_centro_f;
         float ytest = base * ultima_y[i] + y_centro_f;
 
-        mp[i * 2] = floor(xtest + 0.5);
-        mp[i * 2 + 1] = floor(ytest + 0.5);
+        mp[i * 2] = round(xtest);
+        mp[i * 2 + 1] = round(ytest);
 
         temp_min_y = (mp[i * 2 + 1] < temp_min_y) ? mp[i * 2 + 1] : temp_min_y;
         temp_max_y = (mp[i * 2 + 1] > temp_max_y) ? mp[i * 2 + 1] : temp_max_y;
@@ -1618,7 +1618,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
             if (y1 < lbyl) {
                 ity = lbyl;
 
-                x1 += floor(((float) (lbyl - y1)) * kx + 0.5);
+                x1 += round(((float) (lbyl - y1)) * kx);
             } else {
                 ity = y1;
             }
@@ -1678,8 +1678,8 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
 
         k4 = 1.0 / _z;
 
-        u = floor((_x * tempXsize) * k4 + 0.5);
-        v = floor((_y * tempYsize) * k4 + 0.5);
+        u = round((_x * tempXsize) * k4);
+        v = round((_y * tempYsize) * k4);
 
         sections = fpart[i] - ipart[i];
         fakedi = i * 320 + ipart[i] - 4; // NOTE: Fudge factor to account for loss of offset on adapted.
@@ -1721,11 +1721,8 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         tempu = u;
         tempv = v;
 
-        fu = (_x * tempXsize) * k4;
-        fv = (_y * tempYsize) * k4;
-
-        u = (fu - floor(fu) > 0.5) ? ceil(fu) : floor(fu);
-        v = (fv - floor(fv) > 0.5) ? ceil(fv) : floor(fv);
+        u = round((_x * tempXsize) * k4);
+        v = round((_y * tempYsize) * k4);
 
         tax = tempu;
         tdx = tempv;

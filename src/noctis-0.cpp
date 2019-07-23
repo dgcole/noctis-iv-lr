@@ -2545,16 +2545,14 @@ void sky(uint16_t limits) {
                 }
 
                 inv_rz = uno / rz;
-                rx = floor(((xx * opt_pcosbeta) + (zz * opt_psinbeta)) * inv_rz +
-                           0.5);
+                rx = round(((xx * opt_pcosbeta) + (zz * opt_psinbeta)) * inv_rz);
 
                 index = rx + x_centro;
                 if (index <= 10 || index >= 310) {
                     continue;
                 }
 
-                ry = floor((yy * opt_pcosalfa - z2 * opt_psinalfa) * inv_rz + 0.5) -
-                     2;
+                ry = round((yy * opt_pcosalfa - z2 * opt_psinalfa) * inv_rz) - 2;
 
                 uint16_t nety = ry + y_centro;
                 if (nety <= 10 || nety >= 190) {
