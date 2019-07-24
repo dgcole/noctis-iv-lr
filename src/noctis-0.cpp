@@ -215,69 +215,80 @@ void handle_input(SDL_Window *window) {
             if (event.button.button == SDL_BUTTON_RIGHT)
                 rdown = false;
         } else if (event.type == SDL_KEYUP) {
-            if (event.key.keysym.sym == SDLK_ESCAPE) {
-                exit(0);
-            } else {
-                switch (event.key.keysym.scancode) {
-                case SDL_SCANCODE_1:
-                case SDL_SCANCODE_2:
-                case SDL_SCANCODE_3:
-                case SDL_SCANCODE_4:
-                case SDL_SCANCODE_5:
-                case SDL_SCANCODE_6:
-                case SDL_SCANCODE_7:
-                case SDL_SCANCODE_8:
-                case SDL_SCANCODE_9:
-                    keys.push(event.key.keysym.scancode + ('1' - SDL_SCANCODE_1));
-                    break;
-                case SDL_SCANCODE_0:
-                    keys.push('0');
-                    break;
-                case SDL_SCANCODE_A:
-                case SDL_SCANCODE_B:
-                case SDL_SCANCODE_C:
-                case SDL_SCANCODE_D:
-                case SDL_SCANCODE_E:
-                case SDL_SCANCODE_F:
-                case SDL_SCANCODE_G:
-                case SDL_SCANCODE_H:
-                case SDL_SCANCODE_I:
-                case SDL_SCANCODE_J:
-                case SDL_SCANCODE_K:
-                case SDL_SCANCODE_L:
-                case SDL_SCANCODE_M:
-                case SDL_SCANCODE_N:
-                case SDL_SCANCODE_O:
-                case SDL_SCANCODE_P:
-                case SDL_SCANCODE_Q:
-                case SDL_SCANCODE_R:
-                case SDL_SCANCODE_S:
-                case SDL_SCANCODE_T:
-                case SDL_SCANCODE_U:
-                case SDL_SCANCODE_V:
-                case SDL_SCANCODE_W:
-                case SDL_SCANCODE_X:
-                case SDL_SCANCODE_Y:
-                case SDL_SCANCODE_Z:
-                    keys.push(event.key.keysym.scancode + ('a' - SDL_SCANCODE_A));
-                    break;
-                case SDL_SCANCODE_UP:
-                    keys.push(72);
-                    keys.push(0);
-                    break;
-                case SDL_SCANCODE_DOWN:
-                    keys.push(80);
-                    keys.push(0);
-                    break;
-                case SDL_SCANCODE_LEFT:
-                    keys.push(75);
-                    keys.push(0);
-                    break;
-                case SDL_SCANCODE_RIGHT:
-                    keys.push(77);
-                    keys.push(0);
-                    break;
-                }
+            switch (event.key.keysym.scancode) {
+            case SDL_SCANCODE_1:
+            case SDL_SCANCODE_2:
+            case SDL_SCANCODE_3:
+            case SDL_SCANCODE_4:
+            case SDL_SCANCODE_5:
+            case SDL_SCANCODE_6:
+            case SDL_SCANCODE_7:
+            case SDL_SCANCODE_8:
+            case SDL_SCANCODE_9:
+                keys.push(event.key.keysym.scancode + ('1' - SDL_SCANCODE_1));
+                break;
+            case SDL_SCANCODE_0:
+                keys.push('0');
+                break;
+            case SDL_SCANCODE_A:
+            case SDL_SCANCODE_B:
+            case SDL_SCANCODE_C:
+            case SDL_SCANCODE_D:
+            case SDL_SCANCODE_E:
+            case SDL_SCANCODE_F:
+            case SDL_SCANCODE_G:
+            case SDL_SCANCODE_H:
+            case SDL_SCANCODE_I:
+            case SDL_SCANCODE_J:
+            case SDL_SCANCODE_K:
+            case SDL_SCANCODE_L:
+            case SDL_SCANCODE_M:
+            case SDL_SCANCODE_N:
+            case SDL_SCANCODE_O:
+            case SDL_SCANCODE_P:
+            case SDL_SCANCODE_Q:
+            case SDL_SCANCODE_R:
+            case SDL_SCANCODE_S:
+            case SDL_SCANCODE_T:
+            case SDL_SCANCODE_U:
+            case SDL_SCANCODE_V:
+            case SDL_SCANCODE_W:
+            case SDL_SCANCODE_X:
+            case SDL_SCANCODE_Y:
+            case SDL_SCANCODE_Z:
+                keys.push(event.key.keysym.scancode + ('a' - SDL_SCANCODE_A));
+                break;
+            case SDL_SCANCODE_UP:
+                keys.push(72);
+                keys.push(0);
+                break;
+            case SDL_SCANCODE_DOWN:
+                keys.push(80);
+                keys.push(0);
+                break;
+            case SDL_SCANCODE_LEFT:
+                keys.push(75);
+                keys.push(0);
+                break;
+            case SDL_SCANCODE_RIGHT:
+                keys.push(77);
+                keys.push(0);
+                break;
+            case SDL_SCANCODE_BACKSPACE:
+                keys.push(8);
+                break;
+            case SDL_SCANCODE_RETURN:
+                keys.push(13);
+                break;
+            case SDL_SCANCODE_ESCAPE:
+                keys.push(27);
+                break;
+            case SDL_SCANCODE_APOSTROPHE:
+                keys.push(39);
+                break;
+            case SDL_SCANCODE_SPACE:
+                keys.push(' ');
+                break;
             }
         }
     }
@@ -537,10 +548,10 @@ void mask_pixels(uint8_t *target, uint8_t mask) {
 
 // Support files
 
-const char *situation_file = "data\\Current.BIN";
-const char *starmap_file   = "data\\StarMap.BIN";
-const char *goesoutputfile = "data\\GOESfile.TXT";
-const char *surface_file   = "data\\Surface.BIN";
+const char *situation_file = "data/current.bin";
+const char *starmap_file   = "data/starmap.bin";
+const char *goesoutputfile = "data/GOESfile.txt";
+const char *surface_file   = "data/surface.bin";
 int16_t sfh; // Surface situation file handle.
 
 // Global variables that are saved.
