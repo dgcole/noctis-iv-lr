@@ -2988,7 +2988,6 @@ clipout:asm {   add dx, 1
 */
 void whiteglobe(uint8_t *target, double x, double y, double z, float mag_factor,
                 float fgm_factor) {
-#if 0
     double center_x, center_y, mag, fgm, shade_ext, ise;
     double xx, yy, zz, z2, rx, ry, rz, xa, ya, xb, yb;
     double magsq, fgmsq;
@@ -3045,13 +3044,7 @@ void whiteglobe(uint8_t *target, double x, double y, double z, float mag_factor,
     ise = 0x3F / shade_ext;
     magsq = mag * mag;
     fgmsq = fgm * fgm;
-    asm {
-        les     dx, dword ptr target
-        mov     ax, es
-        shr     dx, 4
-        add     ax, dx
-        db      0x8E, 0xe0 // mov fs, ax
-    }
+
     ya = - mag * 1.2;
     yb = center_y + mag;
     yy = center_y - mag;
@@ -3076,21 +3069,9 @@ void whiteglobe(uint8_t *target, double x, double y, double z, float mag_factor,
                     pix += target[pixptr];
 
                     if (pix > 0x3F) {
-                        asm {
-                            mov di, pixptr
-                            db 0x64, 0xC7, 0x45, 0x04, 0x3F, 0x3F
-                            db 0x64, 0xC7, 0x85, 0x44, 0x01, 0x3F, 0x3F
-                        }
-                        //target[pixptr] = 0x3F;
+                        target[pixptr] = 0x3F;
                     } else {
-                        asm {
-                            mov al, pix
-                            mov di, pixptr
-                            mov ah, al
-                            db 0x64, 0x89, 0x45, 0x04
-                            db 0x64, 0x89, 0x85, 0x44, 0x01
-                        }
-                        //target[pixptr] = pix;
+                        target[pixptr] = pix;
                     }
                 }
             }
@@ -3102,8 +3083,6 @@ void whiteglobe(uint8_t *target, double x, double y, double z, float mag_factor,
         ya += 2.4;
         yy += 2;
     }
-#endif
-    STUB
 }
 
 /*  Come sopra, ma mentre quella di sopra traccia in 4x4 pixels,

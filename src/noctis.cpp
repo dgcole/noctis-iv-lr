@@ -3362,11 +3362,9 @@ jpr:
         goto nohud_1;
     }
 
-    //
-    // Informazioni e schemi addizionali sull'H.U.D.
-    // Tracciamento label della stella selezionata.
-    // Tracciamento distanza dalla stella selezionata.
-    //
+    /* Additional information and diagrams on the H.U.D. , label tracking of
+     * selected star, and distance tracking from selected star.
+     */
     if (ap_targetting || ap_targetted) {
         alfa = 0;
         beta = 0;
