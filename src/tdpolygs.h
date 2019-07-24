@@ -1188,15 +1188,6 @@ drawb:
 uint8_t *txtr; /* Area della texture (FLS a livelli di intensit�,
                  64 livelli per pixel, senza header).*/
 
-int8_t init_texture_mapping() {
-    txtr = (uint8_t*) malloc(((int32_t) TEXTURE_YSIZE) * 256 + 16);
-    if (txtr) {
-        return (OK);
-    } else {
-        return (NOT_OK);
-    }
-}
-
 
 int8_t load_texture(int8_t *fname, int32_t offset)
 /*  Load a bitmap:
@@ -1657,9 +1648,9 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
 
     // Pre-work assignments.
     float fu, fv;
-    int32_t tempu, tempv;
-    uint16_t tax, tbx, tdx, tbp, tds, fakedi, fakesi, tempfakedi;
-    uint8_t tcl, tch, tbl, tbh, tah, tal, tdh, tdl, tempch;
+    int32_t tempu = 0, tempv = 0;
+    uint16_t tax = 0, tbx = 0, tdx = 0, tbp = 0, fakedi = 0, fakesi = 0, tempfakedi = 0;
+    uint8_t tcl = 0, tch = 0, tbl = 0, tbh = 0, tah = 0, tal = 0, tdh = 0, tdl = 0, tempch = 0;
     adapted[0xFA00] = tinta;
     adapted[0xFA01] = escrescenze;
 
@@ -1668,7 +1659,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
     //asm shr dx, 4                   // .
     //asm add ax, dx                  // .
     //asm db 0x8e, 0xe0               // mov fs, ax
-    //asm les ax, dword ptr adapted   // Loading video area address.
+    //asm les ax, dword ptr adapte-d   // Loading video area address.
 
     // Tracking cycle. (NOTE: This makes no sense.)
     for (i = min_y; i <= max_y;) {
@@ -1751,7 +1742,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         tbl = tah;
         tch = adapted[0xFA00];
         tbx = (((uint16_t) tbh) << 8) + tbl;
-        tch += txtr[tbx - 4]; // NOTE; Fudge factor to account for loss of offset on txtr.
+        tch += txtr[(uint16_t) (tbx - 4)]; // NOTE; Fudge factor to account for loss of offset on txtr.
         tax += tbp;
         adapted[fakedi + 3] = tch;
         tdx += fakesi;
@@ -1768,7 +1759,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         tbl = tah;
         tch = adapted[fakedi + 3];
         tbx = (((uint16_t) tbh) << 8) + tbl;
-        tch += txtr[tbx - 4];
+        tch += txtr[(uint16_t) (tbx - 4)];
         tax += tbp;
         adapted[fakedi + 3] = tch;
         tdx += fakesi;
@@ -1787,7 +1778,9 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         tch &= 0x3F;
         tax += tbp;
         tbx = (((uint16_t) tbh) << 8) + tbl;
-        tch += txtr[tbx - 4];
+        //TODO; When starting the game, something will randomly break causing this
+        // to run over, cannot reproduce yet.
+        tch += txtr[(uint16_t) (tbx - 4)];
         tdx += fakesi;
         if (tch <= 0x3E) goto antibloom;
         tch = 0x3E;
@@ -1810,7 +1803,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         tch &= 0x3F;
         tax += tbp;
         tbx = (((uint16_t) tbh) << 8) + tbl;
-        tch += txtr[tbx - 4];
+        tch += txtr[(uint16_t) (tbx - 4)];
         tch += adapted[0xFA00];
         tdx += fakesi;
         tch >>= 1;
@@ -1829,7 +1822,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         tbl = tah;
         tch = adapted[0xFA00];
         tbx = (((uint16_t) tbh) << 8) + tbl;
-        tch += txtr[tbx - 4];
+        tch += txtr[(uint16_t) (tbx - 4)];
         tax += tbp;
         adapted[fakedi + 3] = tch;
         tempfakedi = fakedi;
@@ -1843,7 +1836,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         tch = tempch;
         tch -= adapted[0xFA00];
         tch += adapted[0xFA01];
-        tch += txtr[tbx - 4];
+        tch += txtr[(uint16_t) (tbx - 4)];
         adapted[fakedi + 640 + 3] = tch;
         fakedi = tempfakedi;
         tdx += fakesi;
