@@ -3070,8 +3070,14 @@ void whiteglobe(uint8_t *target, double x, double y, double z, float mag_factor,
 
                     if (pix > 0x3F) {
                         target[pixptr] = 0x3F;
+                        target[pixptr + 1] = 0x3F;
+                        target[pixptr + 320] = 0x3F;
+                        target[pixptr + 321] = 0x3F;
                     } else {
                         target[pixptr] = pix;
+                        target[pixptr + 1] = pix;
+                        target[pixptr + 320] = pix;
+                        target[pixptr + 321] = pix;
                     }
                 }
             }
