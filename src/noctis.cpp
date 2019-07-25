@@ -392,100 +392,109 @@ void mswrite(int16_t screen_id, const char *text) {
     }
 }
 
-int8_t      gnc_pos                 = 0;                // Numero carattere in command line.
-int32_t     goesfile_pos            = 0;                // Posizione sul file output di GOES.
-char        goesnet_command[120]    = "_";              // Command line di GOES Net.
+int8_t      gnc_pos                 = 0;                // Character number in command line.
+int32_t     goesfile_pos            = 0;                // Position of the GOES output file
+char        goesnet_command[120]    = "_";              // GOES Net Command Line
 const char *comm                    = "data/comm.bin"; // File di comunicazione dei moduli.
 
-/* Congela la situazione (all'uscita dal programma o al run di un modulo). */
+/* Freezes the situation (when exiting the program or running a module). */
 
-void freeze() {
-    int16_t fh = creat(situation_file, (uint32_t) S_IRUSR | (uint32_t) S_IWUSR);
+void freeze()
+{
+    FILE* fh = fopen(situation_file, "w");
 
-    if (fh == -1) {
+    if (fh == nullptr) {
         return;
     }
 
-    write(fh, &nsync, 1);
-    write(fh, &anti_rad, 1);
-    write(fh, &pl_search, 1);
-    write(fh, &field_amplificator, 1);
-    write(fh, &ilight, 1);
-    write(fh, &ilightv, 1);
-    write(fh, &charge, 1);
-    write(fh, &revcontrols, 1);
-    write(fh, &ap_targetting, 1);
-    write(fh, &ap_targetted, 1);
-    write(fh, &ip_targetting, 1);
-    write(fh, &ip_targetted, 1);
-    write(fh, &ip_reaching, 1);
-    write(fh, &ip_reached, 1);
-    write(fh, &ap_target_spin, 1);
-    write(fh, &ap_target_r, 1);
-    write(fh, &ap_target_g, 1);
-    write(fh, &ap_target_b, 1);
-    write(fh, &nearstar_spin, 1);
-    write(fh, &nearstar_r, 1);
-    write(fh, &nearstar_g, 1);
-    write(fh, &nearstar_b, 1);
-    write(fh, &gburst, 1);
-    write(fh, &menusalwayson, 1);
-    write(fh, &depolarize, 1);
-    write(fh, &sys, 2);
-    write(fh, &pwr, 2);
-    write(fh, &dev_page, 2);
-    write(fh, &ap_target_class, 2);
-    write(fh, &f_ray_elapsed, 2);
-    write(fh, &nearstar_class, 2);
-    write(fh, &nearstar_nop, 2);
-    write(fh, &pos_x, 4);
-    write(fh, &pos_y, 4);
-    write(fh, &pos_z, 4);
-    write(fh, &user_alfa, 4);
-    write(fh, &user_beta, 4);
-    write(fh, &navigation_beta, 4);
-    write(fh, &ap_target_ray, 4);
-    write(fh, &nearstar_ray, 4);
-    write(fh, &dzat_x, 8);
-    write(fh, &dzat_y, 8);
-    write(fh, &dzat_z, 8);
-    write(fh, &ap_target_x, 8);
-    write(fh, &ap_target_y, 8);
-    write(fh, &ap_target_z, 8);
-    write(fh, &nearstar_x, 8);
-    write(fh, &nearstar_y, 8);
-    write(fh, &nearstar_z, 8);
-    write(fh, &helptime, 8);
-    write(fh, &ip_target_initial_d, 8);
-    write(fh, &requested_approach_coefficient, 8);
-    write(fh, &current_approach_coefficient, 8);
-    write(fh, &reaction_time, 8);
-    write(fh, &fcs_status, 11);
-    write(fh, &fcs_status_delay, 2);
-    write(fh, &psys, 2);
-    write(fh, &ap_target_initial_d, 8);
-    write(fh, &requested_vimana_coefficient, 8);
-    write(fh, &current_vimana_coefficient, 8);
-    write(fh, &vimana_reaction_time, 8);
-    write(fh, &lithium_collector, 1);
-    write(fh, &autoscreenoff, 1);
-    write(fh, &ap_reached, 1);
-    write(fh, &lifter, 2);
-    write(fh, &secs, 8);
-    write(fh, &data, 1);
-    write(fh, &surlight, 1);
-    write(fh, &gnc_pos, 1);
-    write(fh, &goesfile_pos, 4);
-    write(fh, goesnet_command, 120);
+    /* TODO: Should this be converted 
+     * to a struct to be written instead? */
+    fwrite(&nsync, 1, 1, fh);
+    fwrite(&anti_rad, 1, 1, fh);
+    fwrite(&pl_search, 1, 1, fh);
+    fwrite(&field_amplificator, 1, 1, fh);
+    fwrite(&ilight, 1, 1, fh);
+    fwrite(&ilightv, 1, 1, fh);
+    fwrite(&charge, 1, 1, fh);
+    fwrite(&revcontrols, 1, 1, fh);
+    fwrite(&ap_targetting, 1, 1, fh);
+    fwrite(&ap_targetted, 1, 1, fh);
+    fwrite(&ip_targetting, 1, 1, fh);
+    fwrite(&ip_targetted, 1, 1, fh);
+    fwrite(&ip_reaching, 1, 1, fh);
+    fwrite(&ip_reached, 1, 1, fh);
+    fwrite(&ap_target_spin, 1, 1, fh);
+    fwrite(&ap_target_r, 1, 1, fh);
+    fwrite(&ap_target_g, 1, 1, fh);
+    fwrite(&ap_target_b, 1, 1, fh);
+    fwrite(&nearstar_spin, 1, 1, fh);
+    fwrite(&nearstar_r, 1, 1, fh);
+    fwrite(&nearstar_g, 1, 1, fh);
+    fwrite(&nearstar_b, 1, 1, fh);
+    fwrite(&gburst, 1, 1, fh);
+    fwrite(&menusalwayson, 1, 1, fh);
+    fwrite(&depolarize, 1, 1, fh);
+    fwrite(&sys, 1, 2, fh);
+    fwrite(&pwr, 1, 2, fh);
+    fwrite(&dev_page, 1, 2, fh);
+    fwrite(&ap_target_class, 1, 2, fh);
+    fwrite(&f_ray_elapsed, 1, 2, fh);
+    fwrite(&nearstar_class, 1, 2, fh);
+    fwrite(&nearstar_nop, 1, 2, fh);
+    fwrite(&pos_x, 1, 4, fh);
+    fwrite(&pos_y, 1, 4, fh);
+    fwrite(&pos_z, 1, 4, fh);
+    fwrite(&user_alfa, 1, 4, fh);
+    fwrite(&user_beta, 1, 4, fh);
+    fwrite(&navigation_beta, 1, 4, fh);
+    fwrite(&ap_target_ray, 1, 4, fh);
+    fwrite(&nearstar_ray, 1, 4, fh);
+    fwrite(&dzat_x, 1, 8, fh);
+    fwrite(&dzat_y, 1, 8, fh);
+    fwrite(&dzat_z, 1, 8, fh);
+    fwrite(&ap_target_x, 1, 8, fh);
+    fwrite(&ap_target_y, 1, 8, fh);
+    fwrite(&ap_target_z, 1, 8, fh);
+    fwrite(&nearstar_x, 1, 8, fh);
+    fwrite(&nearstar_y, 1, 8, fh);
+    fwrite(&nearstar_z, 1, 8, fh);
+    fwrite(&helptime, 1, 8, fh);
+    fwrite(&ip_target_initial_d, 1, 8, fh);
+    fwrite(&requested_approach_coefficient, 1, 8, fh);
+    fwrite(&current_approach_coefficient, 1, 8, fh);
+    fwrite(&reaction_time, 1, 8, fh);
+    fwrite(&fcs_status, 1, 11, fh);
+    fwrite(&fcs_status_delay, 1, 2, fh);
+    fwrite(&psys, 1, 2, fh);
+    fwrite(&ap_target_initial_d, 1, 8, fh);
+    fwrite(&requested_vimana_coefficient, 1, 8, fh);
+    fwrite(&current_vimana_coefficient, 1, 8, fh);
+    fwrite(&vimana_reaction_time, 1, 8, fh);
+    fwrite(&lithium_collector, 1, 1, fh);
+    fwrite(&autoscreenoff, 1, 1, fh);
+    fwrite(&ap_reached, 1, 1, fh);
+    fwrite(&lifter, 1, 2, fh);
+    fwrite(&secs, 1, 8, fh);
+    fwrite(&data, 1, 1, fh);
+    fwrite(&surlight, 1, 1, fh);
+    fwrite(&gnc_pos, 1, 1, fh);
+    fwrite(&goesfile_pos, 1, 4, fh);
+    fwrite(goesnet_command, 1, 120, fh);
 
-    close(fh);
+    fclose(fh);
 }
 
 // Execution of an executable module of the GOES Net.
-void run_goesnet_module() {
+void run_goesnet_module()
+{
     FILE* ch;
 
-    char* command_jank = (char*) malloc(122);
+    /* Allows for prepending './' to the command, 
+     * 	so that a bash shell can run the proper module file.
+     * TODO: Find a better solution that doesn't involve 
+     * 	this wasteful malloc call. */
+    char* command_prepended = (char*) malloc(122);
+
     // Save the situation because some modules need it.
     freeze();
 
@@ -504,15 +513,15 @@ void run_goesnet_module() {
         goesnet_command[gnc_pos] = 0;
         strcat(goesnet_command, " >");
         strcat(goesnet_command, goesoutputfile);
-        strcpy(command_jank, (char*)"./");
-        strcat(command_jank, (char*)goesnet_command);
-        system(command_jank);
+        strcpy(command_prepended, (char*)"./");
+        strcat(command_prepended, goesnet_command);
+        system(command_prepended);
     } else {
         remove(goesoutputfile);
     }
 
     // Free space allocated for command.
-    free(command_jank);
+    free(command_prepended);
 
     if (!adapted) {
         _80_25_C();
@@ -909,7 +918,7 @@ void vehicle(float opencapcount) {
         mswrite(0, (char *)goesnet_command);
     }
 
-    // Intercettazione tasti (prioritaria) per lo schermo "STARMAP TREE".
+	/* Key interception (priority) for the "STARMAP TREE". */
 
     if (force_update || (active_screen == 1 && tasto_premuto())) {
         if (!force_update) {
@@ -1312,7 +1321,7 @@ void vehicle(float opencapcount) {
     }
 }
 
-/* Disegna un'astrozattera, vista dall'esterno. */
+/* Draw a starlight, seen from the outside */
 
 void other_vehicle_at(double ovhx, double ovhy, double ovhz) {
     cam_x = -ovhx;
@@ -1359,13 +1368,13 @@ void other_vehicle_at(double ovhx, double ovhy, double ovhz) {
 
 /* Fine roba importata da noctis-0.cpp */
 
-/* Variabili globali di uso generico. */
+/* Global variables for general use. */
 
-int8_t aso_countdown = 100; // contatore per la funzione "autoscreenoff"
-int32_t tgt_label_pos   = -1;  // posizione etichetta target selezionato
-int16_t tgts_in_show = 0;   // targets correntemente visualizzati
+int8_t aso_countdown = 100; // counter for the function "autoscreenoff"
+int32_t tgt_label_pos   = -1;  // selected target label position
+int16_t tgts_in_show = 0;   // targets currently displayed
 
-/* Dati gestione cartografia. */
+/* Cartography management data. */
 
 int8_t targets_in_range = 0;
 int32_t sm_consolidated    = 0;
@@ -1521,7 +1530,7 @@ void fcs() {
     }
 }
 
-/* Comandi dell'FCS. */
+/* FCS Commands. */
 
 void fcs_commands() {
     switch (s_command) {
@@ -1620,7 +1629,7 @@ void fcs_commands() {
     }
 }
 
-/* Dispositivi di bordo: men� principale e quattro sottomen�. */
+/* Onboard devices: main menu and four submenus */
 
 void devices() {
     double parsis_x, parsis_y, parsis_z;
@@ -1872,7 +1881,7 @@ void devices() {
     }
 }
 
-/* Comandi dei dispositivi di bordo. */
+/* On-board device controls. */
 
 int8_t dummy_identity[9] = "Removed:";
 int8_t comp_data[32];
@@ -2253,7 +2262,7 @@ void dev_commands() {
     }
 }
 
-/* Preferenze. */
+/* Preferences. */
 
 void prefs() {
     if (autoscreenoff) {
@@ -2281,7 +2290,7 @@ void prefs() {
     }
 }
 
-/* Comandi di impostazione delle opzioni preferenziali. */
+/* Controls for setting preferential options. */
 
 void toggle_option(int8_t *option_flag) {
     *option_flag = 1 - *option_flag;
@@ -2315,8 +2324,8 @@ void pfs_commands() {
     }
 }
 
-/*  Comandi impartiti al computer di bordo.
-    Tutti tranne "disattiva schermo". */
+/*  Commands given to the on-board computer.
+ *  All except "disable screen". */
 
 void commands() {
     switch (sys) {
@@ -2338,14 +2347,19 @@ void commands() {
 }
 
 /*  Undo the situation, reproducing it in all respects,
-     and making it evolve at the current time. */
+     and making it evolve at the current time. 
+ *  Note: Garbage translation above
+ *
+ *  This loads the situation saved by freeze() */
 
 void unfreeze() {
-    int16_t fh;
-    double elapsed, dpwr;
+    FILE * fh; //TBH, I hate fh. fp is better. 
+    double elapsed, dpwr; 
     // Reading the consolidated starmap.
     smh = open(starmap_file, 4);
 
+    /* TODO: Use fopen, fwrite, etc. for smh I/O
+	 * (Check if anywhere else uses this variable, too!) */
     if (smh > -1) {
         read(smh, &sm_consolidated, 4);
 
@@ -2360,89 +2374,90 @@ void unfreeze() {
         sm_consolidated = 0;
     }
 
-    /* Lettura della situazione precedente. */
-    fh = open(situation_file, 0);
+    /* Reading the previous situation */
+    fh = fopen(situation_file, "r");
 
-    if (fh > -1) {
-        read(fh, &nsync, 1);
-        read(fh, &anti_rad, 1);
-        read(fh, &pl_search, 1);
-        read(fh, &field_amplificator, 1);
-        read(fh, &ilight, 1);
-        read(fh, &ilightv, 1);
-        read(fh, &charge, 1);
-        read(fh, &revcontrols, 1);
-        read(fh, &ap_targetting, 1);
-        read(fh, &ap_targetted, 1);
-        read(fh, &ip_targetting, 1);
-        read(fh, &ip_targetted, 1);
-        read(fh, &ip_reaching, 1);
-        read(fh, &ip_reached, 1);
-        read(fh, &ap_target_spin, 1);
-        read(fh, &ap_target_r, 1);
-        read(fh, &ap_target_g, 1);
-        read(fh, &ap_target_b, 1);
-        read(fh, &nearstar_spin, 1);
-        read(fh, &nearstar_r, 1);
-        read(fh, &nearstar_g, 1);
-        read(fh, &nearstar_b, 1);
-        read(fh, &gburst, 1);
-        read(fh, &menusalwayson, 1);
-        read(fh, &depolarize, 1);
-        read(fh, &sys, 2);
-        read(fh, &pwr, 2);
-        read(fh, &dev_page, 2);
-        read(fh, &ap_target_class, 2);
-        read(fh, &f_ray_elapsed, 2);
-        read(fh, &nearstar_class, 2);
-        read(fh, &nearstar_nop, 2);
-        read(fh, &pos_x, 4);
-        read(fh, &pos_y, 4);
-        read(fh, &pos_z, 4);
-        read(fh, &user_alfa, 4);
-        read(fh, &user_beta, 4);
-        read(fh, &navigation_beta, 4);
-        read(fh, &ap_target_ray, 4);
-        read(fh, &nearstar_ray, 4);
-        read(fh, &dzat_x, 8);
-        read(fh, &dzat_y, 8);
-        read(fh, &dzat_z, 8);
-        read(fh, &ap_target_x, 8);
-        read(fh, &ap_target_y, 8);
-        read(fh, &ap_target_z, 8);
-        read(fh, &nearstar_x, 8);
-        read(fh, &nearstar_y, 8);
-        read(fh, &nearstar_z, 8);
-        read(fh, &helptime, 8);
-        read(fh, &ip_target_initial_d, 8);
-        read(fh, &requested_approach_coefficient, 8);
-        read(fh, &current_approach_coefficient, 8);
-        read(fh, &reaction_time, 8);
-        read(fh, &fcs_status, 11);
-        read(fh, &fcs_status_delay, 2);
-        read(fh, &psys, 2);
-        read(fh, &ap_target_initial_d, 8);
-        read(fh, &requested_vimana_coefficient, 8);
-        read(fh, &current_vimana_coefficient, 8);
-        read(fh, &vimana_reaction_time, 8);
-        read(fh, &lithium_collector, 1);
-        read(fh, &autoscreenoff, 1);
-        read(fh, &ap_reached, 1);
-        read(fh, &lifter, 2);
-        read(fh, &secs, 8);
-        read(fh, &data, 1);
-        read(fh, &surlight, 1);
-        read(fh, &gnc_pos, 1);
-        read(fh, &goesfile_pos, 4);
-        read(fh, goesnet_command, 120);
-
-        close(fh);
-    } else {
-        return;
+    if (fh == nullptr) {
+	    return;
     }
 
-    /*  Risincronizzazione della situazione in relazione ai
-        precedenti eventi (evoluzione nascosta della situazione). */
+    fread(&nsync, 1, 1, fh);
+    fread(&anti_rad, 1, 1, fh);
+    fread(&pl_search, 1, 1, fh);
+    fread(&field_amplificator, 1, 1, fh);
+    fread(&ilight, 1, 1, fh);
+    fread(&ilightv, 1, 1, fh);
+    fread(&charge, 1, 1, fh);
+    fread(&revcontrols, 1, 1, fh);
+    fread(&ap_targetting, 1, 1, fh);
+    fread(&ap_targetted, 1, 1, fh);
+    fread(&ip_targetting, 1, 1, fh);
+    fread(&ip_targetted, 1, 1, fh);
+    fread(&ip_reaching, 1, 1, fh);
+    fread(&ip_reached, 1, 1, fh);
+    fread(&ap_target_spin, 1, 1, fh);
+    fread(&ap_target_r, 1, 1, fh);
+    fread(&ap_target_g, 1, 1, fh);
+    fread(&ap_target_b, 1, 1, fh);
+    fread(&nearstar_spin, 1, 1, fh);
+    fread(&nearstar_r, 1, 1, fh);
+    fread(&nearstar_g, 1, 1, fh);
+    fread(&nearstar_b, 1, 1, fh);
+    fread(&gburst, 1, 1, fh);
+    fread(&menusalwayson, 1, 1, fh);
+    fread(&depolarize, 1, 1, fh);
+    fread(&sys, 1, 2, fh);
+    fread(&pwr, 1, 2, fh);
+    fread(&dev_page, 1, 2, fh);
+    fread(&ap_target_class, 1, 2, fh);
+    fread(&f_ray_elapsed, 1, 2, fh);
+    fread(&nearstar_class, 1, 2, fh);
+    fread(&nearstar_nop, 1, 2, fh);
+    fread(&pos_x, 1, 4, fh);
+    fread(&pos_y, 1, 4, fh);
+    fread(&pos_z, 1, 4, fh);
+    fread(&user_alfa, 1, 4, fh);
+    fread(&user_beta, 1, 4, fh);
+    fread(&navigation_beta, 1, 4, fh);
+    fread(&ap_target_ray, 1, 4, fh);
+    fread(&nearstar_ray, 1, 4, fh);
+    fread(&dzat_x, 1, 8, fh);
+    fread(&dzat_y, 1, 8, fh);
+    fread(&dzat_z, 1, 8, fh);
+    fread(&ap_target_x, 1, 8, fh);
+    fread(&ap_target_y, 1, 8, fh);
+    fread(&ap_target_z, 1, 8, fh);
+    fread(&nearstar_x, 1, 8, fh);
+    fread(&nearstar_y, 1, 8, fh);
+    fread(&nearstar_z, 1, 8, fh);
+    fread(&helptime, 1, 8, fh);
+    fread(&ip_target_initial_d, 1, 8, fh);
+    fread(&requested_approach_coefficient, 1, 8, fh);
+    fread(&current_approach_coefficient, 1, 8, fh);
+    fread(&reaction_time, 1, 8, fh);
+    fread(&fcs_status, 1, 11, fh);
+    fread(&fcs_status_delay, 1, 2, fh);
+    fread(&psys, 1, 2, fh);
+    fread(&ap_target_initial_d, 1, 8, fh);
+    fread(&requested_vimana_coefficient, 1, 8, fh);
+    fread(&current_vimana_coefficient, 1, 8, fh);
+    fread(&vimana_reaction_time, 1, 8, fh);
+    fread(&lithium_collector, 1, 1, fh);
+    fread(&autoscreenoff, 1, 1, fh);
+    fread(&ap_reached, 1, 1, fh);
+    fread(&lifter, 1, 2, fh);
+    fread(&secs, 1, 8, fh);
+    fread(&data, 1, 1, fh);
+    fread(&surlight, 1, 1, fh);
+	fread(&gnc_pos, 1, 1, fh);
+    fread(&goesfile_pos, 1, 4, fh);
+	fread(goesnet_command, 1, 120, fh);
+
+	fclose(fh);
+
+    /* Resynchronization of the situation 
+	 * 	in relation to previous events 
+	 * 	(hidden evolution of the situation). */
     elapsed = secs;
     getsecs();
     elapsed = secs - elapsed;
@@ -2453,7 +2468,7 @@ void unfreeze() {
         gburst   = 0;
     }
 
-    /* Ricostruzione del sistema stellare attuale. */
+    /* Reconstruction of the current star system. */
     npcs = -12345;
     prepare_nearstar();
 
@@ -2471,7 +2486,7 @@ void unfreeze() {
         }
     }
 
-    /* Aggiornamento consumi supplementari. */
+    /* Update on additional consumption. */
     dpwr = pwr;
 
     if (ilightv == 1) {
@@ -2520,7 +2535,7 @@ void unfreeze() {
     pwr = (int16_t) dpwr;
 }
 
-/* Programma principale. */
+/* Main program. */
 
 float starmass_correction[star_classes] = {
     1.886,   // Class 0
