@@ -404,8 +404,8 @@ void mswrite(int16_t screen_id, const char *text) {
 
 int8_t gnc_pos              = 0;   // Numero carattere in command line.
 long goesfile_pos           = 0;   // Posizione sul file output di GOES.
-int8_t goesnet_command[120] = "_"; // Command line di GOES Net.
-const char *comm            = "DATA\\COMM.BIN"; // File di comunicazione dei moduli.
+char goesnet_command[120] = "_"; // Command line di GOES Net.
+const char *comm            = "DATA/COMM.BIN"; // File di comunicazione dei moduli.
 
 /* Congela la situazione (all'uscita dal programma o al run di un modulo). */
 
@@ -425,11 +425,15 @@ void freeze() {
 
 void run_goesnet_module() {
     // Esecuzione di un modulo eseguibile della GOES Net.
-    int16_t ch;
+    FILE* ch;
+
+    char* command_jank = (char*) malloc(122);
     // Salva la situazione perch� alcuni moduli ne hanno bisogno.
     freeze();
     // Libera circa 60 kilobytes per il lancio del modulo eseguibile.
     free(adapted);
+
+
 
     // Verifica comandi residenti.
     if (!memcmp(goesnet_command, "CLR", 3)) {
@@ -437,19 +441,23 @@ void run_goesnet_module() {
         goto solong;
     }
 
-    ch = creat(goesoutputfile, 0);
+    ch = fopen(goesoutputfile, "w");
 
-    if (ch > -1) {
-        write(ch, "(UNKNOWN MODULE)", 16);
-        close(ch);
+    if (ch != NULL) {
+        fwrite("(UNKNOWN MODULE)", 1, 16, ch);
+        fclose(ch);
     }
 
     // Cancella l'ultimo carattere (che � il _ cursore) dalla command
     // line, poi aggiunge la redirezione sul file "goesfile.txt"
     goesnet_command[gnc_pos] = 0;
-    strcat((char *)goesnet_command, " >");
-    strcat((char *)goesnet_command, goesoutputfile);
-    system((char *)goesnet_command);
+    strcat(goesnet_command, " >");
+    strcat(goesnet_command, goesoutputfile);
+    strcpy(command_jank, (char*)"./");
+    strcat(command_jank, (char*)goesnet_command);
+    system(command_jank);
+
+    free(command_jank);
     // Ri-alloca l'area temporaneamente liberata.
 solong:
     adapted = (uint8_t *) calloc(1, sc_bytes);
@@ -462,15 +470,15 @@ solong:
         exit(0xFF);
     } else {
         // Reagisce alla presenza di dati nel file di comunicazione.
-        ch = open(comm, 0);
+        ch = fopen(comm, "w");
 
-        if (ch > -1) {
-            uint32_t len = lseek(ch, 0, SEEK_END);
-            lseek(ch, 0, SEEK_SET);
+        if (ch != NULL) {
+            uint32_t len = fseek(ch, 0, SEEK_END);
+            fseek(ch, 0, SEEK_SET);
             if (len == 2) {
                 if (ap_reached) {
                     if (pwr > 15000) {
-                        if (read(ch, &ip_targetted, 2) == 2) {
+                        if (fread(&ip_targetted, 1, 2, ch) == 2) {
                             ip_targetted--;
                             fix_local_target();
                             ip_targetting = 0;
@@ -484,10 +492,10 @@ solong:
             }
 
             if (len == 24) {
-                read(ch, &ap_target_x, 8);
-                read(ch, &ap_target_y, 8);
+                fread(&ap_target_x, 1, 8, ch);
+                fread(&ap_target_y, 1, 8, ch);
 
-                if (read(ch, &ap_target_z, 8) == 8) {
+                if (fread(&ap_target_z, 1, 8, ch) == 8) {
                     ap_targetting = 0;
                     extract_ap_target_infos();
                     fix_remote_target();
@@ -504,7 +512,7 @@ solong:
                     }
                 }
             }
-            close(ch);
+            fclose(ch);
             remove(comm);
         }
     }
@@ -2473,7 +2481,7 @@ int main(int argc, char **argv) {
     // Initialize SDL.
     sdl_surface =
         SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF000000, 0xFF0000, 0xFF00, 0xFF);
-#if NDEBUG
+#if 1
     window = SDL_CreateWindow("Noctis IV LR", SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED, 960, 600,
                               SDL_WINDOW_RESIZABLE | SDL_WINDOW_INPUT_GRABBED);
