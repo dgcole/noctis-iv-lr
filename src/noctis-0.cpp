@@ -3579,8 +3579,8 @@ int32_t search_id_code(double id_code, int8_t type) {
     if (smh > -1) {
         int8_t* buffer = (int8_t*) malloc(ps_bytes);
 
-        int8_t* buffer_ascii  = (int8_t *) buffer;
-        double* buffer_double = (double *) buffer;
+        auto buffer_ascii  = (int8_t *) buffer;
+        auto buffer_double = (double *) buffer;
         lseek(smh, 4, SEEK_SET);
 
         while ((n = read(smh, buffer_ascii, ps_bytes)) > 0) {
@@ -3602,8 +3602,9 @@ int32_t search_id_code(double id_code, int8_t type) {
             }
         }
 
-    stop:
+        stop:
         close(smh);
+        free(buffer);
     }
 
     if (found) {
