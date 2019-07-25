@@ -2592,19 +2592,19 @@ int main(int argc, char **argv) {
         m200[ir] = ir * 200;
     }
 
-    n_offsets_map = (uint8_t *)     malloc(1, om_bytes);
-    n_globes_map  = (int8_t *)      malloc(1, (uint16_t)gl_bytes + (uint16_t)gl_brest);
-    s_background  = (uint8_t *)     malloc(1, st_bytes);
-    p_background  = (uint8_t *)     malloc(1, pl_bytes);
+    n_offsets_map = (uint8_t *)     malloc(om_bytes);
+    n_globes_map  = (int8_t *)      malloc((uint16_t)gl_bytes + (uint16_t)gl_brest);
+    s_background  = (uint8_t *)     malloc(st_bytes);
+    p_background  = (uint8_t *)     malloc(pl_bytes);
     /* NOTE: This is set to at least 65k because polymap keeps running over the end.
      * It happens in the original source too, and somehow isn't a problem there, but
      * we can't have it running over into random memory.
      */
     p_surfacemap  = (uint8_t *)     malloc(ps_bytes | 65536);
-    objectschart  = (quadrant *)    malloc(1, oc_bytes);
+    objectschart  = (quadrant *)    malloc(oc_bytes);
     ruinschart    = (uint8_t *)     objectschart; // oc alias
-    pvfile        = (uint8_t *)     malloc(1, pv_bytes);
-    adapted       = (uint8_t *)     malloc(1, sc_bytes);
+    pvfile        = (uint8_t *)     malloc(pv_bytes);
+    adapted       = (uint8_t *)     malloc(sc_bytes);
     txtr          = (uint8_t *)     p_background;             // txtr alias
     digimap2      = (uint32_t *)    &n_globes_map[gl_bytes]; // font alias
     reach_your_dir(argv);
