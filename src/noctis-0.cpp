@@ -3572,13 +3572,15 @@ int32_t search_id_code(double id_code, int8_t type) {
     int32_t pos  = 4;
     int8_t found = 0;
     uint16_t n, ptr, index;
-    int8_t *buffer_ascii  = (int8_t *)p_surfacemap;
-    double *buffer_double = (double *)p_surfacemap;
     double id_low         = id_code - idscale;
     double id_high        = id_code + idscale;
     smh                   = open(starmap_file, 0);
 
     if (smh > -1) {
+        int8_t* buffer = (int8_t*) malloc(ps_bytes);
+
+        int8_t* buffer_ascii  = (int8_t *) buffer;
+        double* buffer_double = (double *) buffer;
         lseek(smh, 4, SEEK_SET);
 
         while ((n = read(smh, buffer_ascii, ps_bytes)) > 0) {

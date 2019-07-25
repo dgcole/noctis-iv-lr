@@ -2613,7 +2613,8 @@ int main(int argc, char **argv) {
     p_background  = (uint8_t *)     malloc(pl_bytes);
     /* NOTE: This is set to at least 65k because polymap keeps running over the end.
      * It happens in the original source too, and somehow isn't a problem there, but
-     * we can't have it running over into random memory.
+     * we can't have it running over into random memory. The bug is present in the
+     * original source.
      */
     p_surfacemap  = (uint8_t *)     malloc(ps_bytes | 65536);
     objectschart  = (quadrant *)    malloc(oc_bytes);
