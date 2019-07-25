@@ -2592,18 +2592,19 @@ int main(int argc, char **argv) {
         m200[ir] = ir * 200;
     }
 
-    n_offsets_map = (uint8_t *)     calloc(1, om_bytes);
-    n_globes_map  = (int8_t *)      calloc(1, (uint16_t)gl_bytes + (uint16_t)gl_brest);
-    s_background  = (uint8_t *)     calloc(1, st_bytes);
-    p_background  = (uint8_t *)     calloc(1, pl_bytes);
-    //TODO; This is ps_bytes * 2 as a stopgap fix to add some padding for polymap to
-    // run over into, b/c it kept running over into random memory and breaking things.
-    // I ought to find a better fix.
-    p_surfacemap  = (uint8_t *)     calloc(1, ps_bytes * 2);
-    objectschart  = (quadrant *)    calloc(1, oc_bytes);
+    n_offsets_map = (uint8_t *)     malloc(1, om_bytes);
+    n_globes_map  = (int8_t *)      malloc(1, (uint16_t)gl_bytes + (uint16_t)gl_brest);
+    s_background  = (uint8_t *)     malloc(1, st_bytes);
+    p_background  = (uint8_t *)     malloc(1, pl_bytes);
+    /* NOTE: This is set to at least 65k because polymap keeps running over the end.
+     * It happens in the original source too, and somehow isn't a problem there, but
+     * we can't have it running over into random memory.
+     */
+    p_surfacemap  = (uint8_t *)     malloc(ps_bytes | 65536);
+    objectschart  = (quadrant *)    malloc(1, oc_bytes);
     ruinschart    = (uint8_t *)     objectschart; // oc alias
-    pvfile        = (uint8_t *)     calloc(1, pv_bytes);
-    adapted       = (uint8_t *)     calloc(1, sc_bytes);
+    pvfile        = (uint8_t *)     malloc(1, pv_bytes);
+    adapted       = (uint8_t *)     malloc(1, sc_bytes);
     txtr          = (uint8_t *)     p_background;             // txtr alias
     digimap2      = (uint32_t *)    &n_globes_map[gl_bytes]; // font alias
     reach_your_dir(argv);

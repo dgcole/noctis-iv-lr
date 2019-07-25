@@ -1672,7 +1672,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         v = round((_y * tempYsize) * k4);
 
         sections = fpart[i] - ipart[i];
-        fakedi = i * 320 + ipart[i] - 4; // NOTE: Fudge factor to account for loss of offset on adapted.
+        fakedi = riga[i] + ipart[i] - 4;//i * 320 + ipart[i] - 4; // NOTE: Fudge factor to account for loss of offset on adapted.
 
         if (culling) {
             goto c_row;
@@ -1689,8 +1689,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
             goto complete;
         } else {
             tax = sections;
-            tah = (tax >> 8);
-            tal = (tax & 0xFF);
+            tal = (tax & 0xFFu);
             tcl = tal;
             goto unfinished;
         }
@@ -1778,8 +1777,10 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         tch &= 0x3F;
         tax += tbp;
         tbx = (((uint16_t) tbh) << 8) + tbl;
-        //TODO; When starting the game, something will randomly break causing this
-        // to run over, cannot reproduce yet.
+        /* NOTE: This frequently runs over the intended end of the txtr (40k), but
+         * we have allocated additional space to bring it up to 65k and prevent it
+         * from running over. It happens in the original source too.
+         */
         tch += txtr[(uint16_t) (tbx - 4)];
         tdx += fakesi;
         if (tch <= 0x3E) goto antibloom;
