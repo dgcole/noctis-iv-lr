@@ -410,16 +410,84 @@ const char *comm            = "DATA/COMM.BIN"; // File di comunicazione dei modu
 /* Congela la situazione (all'uscita dal programma o al run di un modulo). */
 
 void freeze() {
-    int16_t fh = creat(situation_file, 0);
+    int16_t fh = creat(situation_file, S_IRUSR | S_IWUSR);
 
     if (fh == -1) {
         return;
     }
 
-    write(fh, &nsync, 245);
+    write(fh, &nsync, 1);
+    write(fh, &anti_rad, 1);
+    write(fh, &pl_search, 1);
+    write(fh, &field_amplificator, 1);
+    write(fh, &ilight, 1);
+    write(fh, &ilightv, 1);
+    write(fh, &charge, 1);
+    write(fh, &revcontrols, 1);
+    write(fh, &ap_targetting, 1);
+    write(fh, &ap_targetted, 1);
+    write(fh, &ip_targetting, 1);
+    write(fh, &ip_targetted, 1);
+    write(fh, &ip_reaching, 1);
+    write(fh, &ip_reached, 1);
+    write(fh, &ap_target_spin, 1);
+    write(fh, &ap_target_r, 1);
+    write(fh, &ap_target_g, 1);
+    write(fh, &ap_target_b, 1);
+    write(fh, &nearstar_spin, 1);
+    write(fh, &nearstar_r, 1);
+    write(fh, &nearstar_g, 1);
+    write(fh, &nearstar_b, 1);
+    write(fh, &gburst, 1);
+    write(fh, &menusalwayson, 1);
+    write(fh, &depolarize, 1);
+    write(fh, &sys, 2);
+    write(fh, &pwr, 2);
+    write(fh, &dev_page, 2);
+    write(fh, &ap_target_class, 2);
+    write(fh, &f_ray_elapsed, 2);
+    write(fh, &nearstar_class, 2);
+    write(fh, &nearstar_nop, 2);
+    write(fh, &pos_x, 4);
+    write(fh, &pos_y, 4);
+    write(fh, &pos_z, 4);
+    write(fh, &user_alfa, 4);
+    write(fh, &user_beta, 4);
+    write(fh, &navigation_beta, 4);
+    write(fh, &ap_target_ray, 4);
+    write(fh, &nearstar_ray, 4);
+    write(fh, &dzat_x, 8);
+    write(fh, &dzat_y, 8);
+    write(fh, &dzat_z, 8);
+    write(fh, &ap_target_x, 8);
+    write(fh, &ap_target_y, 8);
+    write(fh, &ap_target_z, 8);
+    write(fh, &nearstar_x, 8);
+    write(fh, &nearstar_y, 8);
+    write(fh, &nearstar_z, 8);
+    write(fh, &helptime, 8);
+    write(fh, &ip_target_initial_d, 8);
+    write(fh, &requested_approach_coefficient, 8);
+    write(fh, &current_approach_coefficient, 8);
+    write(fh, &reaction_time, 8);
+    write(fh, &fcs_status, 11);
+    write(fh, &fcs_status_delay, 2);
+    write(fh, &psys, 2);
+    write(fh, &ap_target_initial_d, 8);
+    write(fh, &requested_vimana_coefficient, 8);
+    write(fh, &current_vimana_coefficient, 8);
+    write(fh, &vimana_reaction_time, 8);
+    write(fh, &lithium_collector, 1);
+    write(fh, &autoscreenoff, 1);
+    write(fh, &ap_reached, 1);
+    write(fh, &lifter, 2);
+    write(fh, &secs, 8);
+    write(fh, &data, 1);
+    write(fh, &surlight, 1);
     write(fh, &gnc_pos, 1);
     write(fh, &goesfile_pos, 4);
     write(fh, goesnet_command, 120);
+
     close(fh);
 }
 
@@ -2337,10 +2405,78 @@ void unfreeze() {
     fh = open(situation_file, 0);
 
     if (fh > -1) {
-        read(fh, &nsync, 245);
+        read(fh, &nsync, 1);
+        read(fh, &anti_rad, 1);
+        read(fh, &pl_search, 1);
+        read(fh, &field_amplificator, 1);
+        read(fh, &ilight, 1);
+        read(fh, &ilightv, 1);
+        read(fh, &charge, 1);
+        read(fh, &revcontrols, 1);
+        read(fh, &ap_targetting, 1);
+        read(fh, &ap_targetted, 1);
+        read(fh, &ip_targetting, 1);
+        read(fh, &ip_targetted, 1);
+        read(fh, &ip_reaching, 1);
+        read(fh, &ip_reached, 1);
+        read(fh, &ap_target_spin, 1);
+        read(fh, &ap_target_r, 1);
+        read(fh, &ap_target_g, 1);
+        read(fh, &ap_target_b, 1);
+        read(fh, &nearstar_spin, 1);
+        read(fh, &nearstar_r, 1);
+        read(fh, &nearstar_g, 1);
+        read(fh, &nearstar_b, 1);
+        read(fh, &gburst, 1);
+        read(fh, &menusalwayson, 1);
+        read(fh, &depolarize, 1);
+        read(fh, &sys, 2);
+        read(fh, &pwr, 2);
+        read(fh, &dev_page, 2);
+        read(fh, &ap_target_class, 2);
+        read(fh, &f_ray_elapsed, 2);
+        read(fh, &nearstar_class, 2);
+        read(fh, &nearstar_nop, 2);
+        read(fh, &pos_x, 4);
+        read(fh, &pos_y, 4);
+        read(fh, &pos_z, 4);
+        read(fh, &user_alfa, 4);
+        read(fh, &user_beta, 4);
+        read(fh, &navigation_beta, 4);
+        read(fh, &ap_target_ray, 4);
+        read(fh, &nearstar_ray, 4);
+        read(fh, &dzat_x, 8);
+        read(fh, &dzat_y, 8);
+        read(fh, &dzat_z, 8);
+        read(fh, &ap_target_x, 8);
+        read(fh, &ap_target_y, 8);
+        read(fh, &ap_target_z, 8);
+        read(fh, &nearstar_x, 8);
+        read(fh, &nearstar_y, 8);
+        read(fh, &nearstar_z, 8);
+        read(fh, &helptime, 8);
+        read(fh, &ip_target_initial_d, 8);
+        read(fh, &requested_approach_coefficient, 8);
+        read(fh, &current_approach_coefficient, 8);
+        read(fh, &reaction_time, 8);
+        read(fh, &fcs_status, 11);
+        read(fh, &fcs_status_delay, 2);
+        read(fh, &psys, 2);
+        read(fh, &ap_target_initial_d, 8);
+        read(fh, &requested_vimana_coefficient, 8);
+        read(fh, &current_vimana_coefficient, 8);
+        read(fh, &vimana_reaction_time, 8);
+        read(fh, &lithium_collector, 1);
+        read(fh, &autoscreenoff, 1);
+        read(fh, &ap_reached, 1);
+        read(fh, &lifter, 2);
+        read(fh, &secs, 8);
+        read(fh, &data, 1);
+        read(fh, &surlight, 1);
         read(fh, &gnc_pos, 1);
         read(fh, &goesfile_pos, 4);
         read(fh, goesnet_command, 120);
+
         close(fh);
     } else {
         return;
