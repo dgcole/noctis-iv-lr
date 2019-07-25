@@ -394,8 +394,8 @@ void mswrite(int16_t screen_id, const char *text) {
 
 int8_t      gnc_pos                 = 0;                // Numero carattere in command line.
 int32_t     goesfile_pos            = 0;                // Posizione sul file output di GOES.
-int8_t      goesnet_command[120]    = "_";              // Command line di GOES Net.
-const char *comm                    = "DATA/COMM.BIN"; // File di comunicazione dei moduli.
+char        goesnet_command[120]    = "_";              // Command line di GOES Net.
+const char *comm                    = "data/comm.bin"; // File di comunicazione dei moduli.
 
 /* Congela la situazione (all'uscita dal programma o al run di un modulo). */
 
@@ -481,44 +481,38 @@ void freeze() {
     close(fh);
 }
 
+// Execution of an executable module of the GOES Net.
 void run_goesnet_module() {
-    // Esecuzione di un modulo eseguibile della GOES Net.
     FILE* ch;
 
     char* command_jank = (char*) malloc(122);
-    // Salva la situazione perch� alcuni moduli ne hanno bisogno.
+    // Save the situation because some modules need it.
     freeze();
-    // Libera circa 60 kilobytes per il lancio del modulo eseguibile.
-    free(adapted);
 
+    // Check resident commands.
+    if (memcmp(goesnet_command, "CLR", 3)) {
+        ch = fopen(goesoutputfile, "w");
 
+        if (ch != nullptr) {
+            fwrite("(UNKNOWN MODULE)", 1, 16, ch);
+            fclose(ch);
+        }
 
-    // Verifica comandi residenti.
-    if (!memcmp(goesnet_command, "CLR", 3)) {
+        /* Delete the last character (which is the '_' cursor) from the command line,
+         * then add the redirection to the "goesfile.txt" file.
+         */
+        goesnet_command[gnc_pos] = 0;
+        strcat(goesnet_command, " >");
+        strcat(goesnet_command, goesoutputfile);
+        strcpy(command_jank, (char*)"./");
+        strcat(command_jank, (char*)goesnet_command);
+        system(command_jank);
+    } else {
         remove(goesoutputfile);
-        goto solong;
     }
 
-    ch = fopen(goesoutputfile, "w");
-
-    if (ch != NULL) {
-        fwrite("(UNKNOWN MODULE)", 1, 16, ch);
-        fclose(ch);
-    }
-
-    // Cancella l'ultimo carattere (che � il _ cursore) dalla command
-    // line, poi aggiunge la redirezione sul file "goesfile.txt"
-    goesnet_command[gnc_pos] = 0;
-    strcat(goesnet_command, " >");
-    strcat(goesnet_command, goesoutputfile);
-    strcpy(command_jank, (char*)"./");
-    strcat(command_jank, (char*)goesnet_command);
-    system(command_jank);
-
+    // Free space allocated for command.
     free(command_jank);
-    // Ri-alloca l'area temporaneamente liberata.
-solong:
-    adapted = (uint8_t *) calloc(1, sc_bytes);
 
     if (!adapted) {
         _80_25_C();
@@ -527,10 +521,10 @@ solong:
         attendi_pressione_tasto();
         exit(0xFF);
     } else {
-        // Reagisce alla presenza di dati nel file di comunicazione.
+        // It reacts to the presence of data in the communication file.
         ch = fopen(comm, "w");
 
-        if (ch != NULL) {
+        if (ch != nullptr) {
             uint32_t len = fseek(ch, 0, SEEK_END);
             fseek(ch, 0, SEEK_SET);
             if (len == 2) {
@@ -541,7 +535,7 @@ solong:
                             fix_local_target();
                             ip_targetting = 0;
                             ip_reached    = 0;
-                            ip_reaching   = 1; // partenza automatica
+                            ip_reaching   = 1; // Automatic start
                         }
                     }
                 } else {
@@ -562,7 +556,7 @@ solong:
                         status("CONFLICT", 50);
                     } else {
                         if (pwr > 15000) {
-                            stspeed      = 1; // partenza automatica
+                            stspeed      = 1; // Automatic start
                             nsnp         = 1;
                             ip_reached   = 0;
                             ip_targetted = -1;
@@ -1413,7 +1407,8 @@ void update_star_label() {
             if (star_label_pos != -1) {
                 smh = open(starmap_file, 0);
                 lseek(smh, star_label_pos, SEEK_SET);
-                read(smh, &star_id, 32);
+                read(smh, &star_id, 8);
+                read(smh, &star_label, 24);
                 close(smh);
             } else {
                 memcpy(star_label, star_no_label, 24);
@@ -4793,22 +4788,18 @@ resynctoplanet:
     //
     sync_stop();
 
-    //
-    // Hook per la gestione dei moti delle caratteristiche
-    // di superficie dei pianeti (come le macchie che si
-    // spostano e la turbolenza atmosferica): l'hook aggiorna
-    // l'aspetto della superficie una volta ogni 5 minuti.
-    //
+    /* Hook for managing the motion characteristics of planet surface features
+     *
+     */
     if (ip_targetted != -1 && ip_reached) {
         if ((int32_t)secs % 300 == 0) {
             npcs = -12345;
         }
     }
 
-    //
-    // Keyboard input: snapshot, end of session
-    // selection of targets, attribution of labels, etc...
-    //
+    /* Keyboard input: Taking snapshots, ending the game session, selecting targets,
+     * attributing labels, etc.
+     */
     if (ontheroof) {
         if (tasto_premuto()) {
             mc = attendi_pressione_tasto();

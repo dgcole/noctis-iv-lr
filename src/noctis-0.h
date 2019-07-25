@@ -414,8 +414,8 @@ extern int16_t smh;
 extern double idscale;
 extern double laststar_x, laststar_y, laststar_z;
 extern int8_t isthere(double star_id);
-extern long search_id_code(double id_code, int8_t type);
-extern long tgt_collect_lastpos;
+extern int32_t search_id_code(double id_code, int8_t type);
+extern int32_t tgt_collect_lastpos;
 extern int16_t targets;
 extern int16_t topmost_target;
 extern int16_t target_line;
@@ -435,7 +435,7 @@ extern clock_t gtime;
 extern void sync_start();
 extern void sync_stop();
 
-extern long global_surface_seed;
+extern int32_t global_surface_seed;
 extern float ppos_x, ppos_y, ppos_z;
 extern double dsd;
 

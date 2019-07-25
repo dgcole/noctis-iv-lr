@@ -1686,12 +1686,13 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
 
         again:
         if (sections > 16) {
-            tcl = 16;
+            goto complete;
         } else {
             tax = sections;
             tah = (tax >> 8);
             tal = (tax & 0xFF);
             tcl = tal;
+            goto unfinished;
         }
 
         complete:

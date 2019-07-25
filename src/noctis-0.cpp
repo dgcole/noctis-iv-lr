@@ -549,7 +549,7 @@ void mask_pixels(uint8_t *target, uint8_t mask) {
 // Support files
 
 const char *situation_file = "data/current.bin";
-const char *starmap_file   = "data/starmap.bin";
+const char *starmap_file   = "data/STARMAP.BIN";
 const char *goesoutputfile = "data/GOESfile.txt";
 const char *surface_file   = "data/surface.bin";
 int16_t sfh; // Surface situation file handle.
