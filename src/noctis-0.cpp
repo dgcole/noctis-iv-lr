@@ -6016,9 +6016,9 @@ void polycupola(float y_or, int8_t textured) {
         slon = sin(lon);
 
         for (lat = dlat; lat < 8 * dlat; lat += dlat) {
-            xx   = cupsize * sin(lat + dlat);
-            yy   = -cupheight * cos(lat) * y_or;
-            zz   = cupsize * sin(lat);
+            float xx   = cupsize * sin(lat + dlat);
+            float yy   = -cupheight * cos(lat) * y_or;
+            float zz   = cupsize * sin(lat);
             x[0] = zz * clon;
             y[0] = yy;
             z[0] = zz * slon;
@@ -6172,7 +6172,7 @@ float tp_temp = 22, pp_temp = 22;
 float tp_pressure = 1, pp_pressure = 1;
 float tp_pulse = 118, pp_pulse = 118;
 
-void wrouthud(uint16_t x, uint16_t y, uint16_t l, char *text) {
+void wrouthud(uint16_t x, uint16_t y, uint16_t l, const char *text) {
     int16_t j, i, n;
     uint16_t spot;
     n = 0;

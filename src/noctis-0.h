@@ -42,8 +42,6 @@ extern uint32_t xp, yp, xa, ya;
 extern uint32_t global_x, global_y;
 extern void Segmento();
 extern int8_t flares;
-extern float x2, y2, z2;
-extern float xx, yy, zz;
 extern int32_t lbxl;
 extern int32_t ubxl;
 extern int32_t lbyl;
@@ -384,7 +382,7 @@ extern int16_t starnop(double star_x, double star_y, double star_z);
 extern void prepare_nearstar();
 extern void ssmooth(uint8_t target);
 extern void lssmooth(uint8_t target);
-extern int16_t c, gr, r, g, b, cr, cx, cy;
+extern int16_t gr, r, g, b, cr, cx, cy;
 extern int8_t lave, crays;
 extern float kfract;
 extern uint16_t px, py;
@@ -446,7 +444,7 @@ extern void load_QVRmaps();
 extern void load_digimap2();
 
 extern int8_t outhudbuffer[81];
-extern void wrouthud(uint16_t x, uint16_t y, uint16_t l, char *text);
+extern void wrouthud(uint16_t x, uint16_t y, uint16_t l, const char *text);
 extern void surrounding(int8_t compass_on, int16_t openhudcount);
 
 extern float pp_gravity;

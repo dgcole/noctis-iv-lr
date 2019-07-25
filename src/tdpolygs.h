@@ -240,7 +240,6 @@ int16_t vr, vr2, vr3, vr4, vr5, vr6;
 
 float zk;
 float x2, y2, z2;
-float xx, yy, zz;
 
 /*
 
@@ -386,11 +385,11 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
 
     doflag = 0;
     for (uint16_t i = 0; i < nrv; i++) {
-        zz = z[i] - cam_z;
-        xx = x[i] - cam_x;
-        yy = y[i] - cam_y;
+        float zz = z[i] - cam_z;
+        float xx = x[i] - cam_x;
+        float yy = y[i] - cam_y;
 
-        z2 = (zz * opt_tcosbeta) - (xx * opt_tsinbeta);
+        float z2 = (zz * opt_tcosbeta) - (xx * opt_tsinbeta);
 
         rxf[i] = (zz * opt_psinbeta) + (xx * opt_pcosbeta);
         rzf[i] = (z2 * opt_tcosalfa) + (yy * opt_tsinalfa);
@@ -1352,7 +1351,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
     int32_t  x1, y1, x2, y2, ity, jty, h;
     float k1, k2, k3, k4;
     float hx, vx, ox, hy, vy, oy, hz, vz, oz, _x, _y, _z;
-    float kx, rx, ry, rz, mx, my, mz, nx, ny, nz, xx, yy, zz;
+    float kx, rx, ry, rz, mx, my, mz, nx, ny, nz, xx, yy, zz, z2;
     float midx, midy, midz;
     float trxf[4], tryf[4], trzf[4];
 
