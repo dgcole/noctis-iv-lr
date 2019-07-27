@@ -1439,7 +1439,8 @@ void update_planet_label() {
         if (planet_label_pos != -1) {
             smh = open(starmap_file, 0);
             lseek(smh, planet_label_pos, SEEK_SET);
-            read(smh, &planet_id, 32);
+            read(smh, &planet_id, 8);
+            read(smh, &planet_label, 24);
             close(smh);
         } else {
             if (nearstar_p_owner[ip_targetted] == -1) {

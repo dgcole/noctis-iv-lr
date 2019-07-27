@@ -971,7 +971,7 @@ drawb:
         break;
 
     case 1:
-        colore &= 0x3F;
+        colore &= 0x3Fu;
         for (fakedi = segmptr; fakedi <= lim_y; fakedi += 320) {
             tempBytes  = bytes;
             tempfakedi = fakedi;
@@ -1004,7 +1004,7 @@ drawb:
 
                 for (; tinkywinky > 0; tempfakedi++, tinkywinky--) {
                     dipsy = adapted[tempfakedi - 1];
-                    dipsy &= 0x3F;
+                    dipsy &= 0x3Fu;
                     dipsy += colore;
 
                     if (dipsy >= 62)
@@ -1018,11 +1018,11 @@ drawb:
                 tinkywinky = loc1 - loc0;
                 tempfakedi = loc0;
 
-                dipsy = colore >> 1;
+                dipsy = colore >> 1u;
 
                 for (; tinkywinky > 0; tempfakedi++, tinkywinky--) {
                     po = adapted[tempfakedi - 1];
-                    po &= 0x3F;
+                    po &= 0x3Fu;
                     po += dipsy;
 
                     if (po >= 62)
@@ -1068,13 +1068,13 @@ drawb:
                     tempfakedi = tempfakedi > 64000 ? 64000 : tempfakedi;
                     if (adapted[tempfakedi] == 0xFF) {
                         dipsy = adapted[tempfakedi - 321];
-                        dipsy &= 0x3F;
-                        dipsy |= 0x40;
+                        dipsy &= 0x3Fu;
+                        dipsy |= 0x40u;
                         adapted[tempfakedi] = dipsy;
                     } else {
                         laalaa = adapted[tempfakedi];
-                        laalaa &= 0x3F;
-                        laalaa |= 0x40;
+                        laalaa &= 0x3Fu;
+                        laalaa |= 0x40u;
                         laalaa += tinkywinky;
                         if (laalaa >= 128)
                             laalaa = 127;
@@ -1089,8 +1089,8 @@ drawb:
                         dipsy = adapted[tempfakedi - 642];
                     }
 
-                    dipsy &= 0x3F;
-                    dipsy |= 0x40;
+                    dipsy &= 0x3Fu;
+                    dipsy |= 0x40u;
                     adapted[tempfakedi] = dipsy;
                 }
             }
@@ -1126,12 +1126,12 @@ drawb:
                 memset(&adapted[loc0], colore, loc1 - loc0);
             }
 
-            dipsy = (colore & 0x3F) + ent;
-            po = colore & 0xC0;
+            dipsy = (colore & 0x3Fu) + ent;
+            po = colore & 0xC0u;
 
             if (dipsy > 0x3F) {
                 dipsy = 0x3F;
-                if (ent & 0x80) {
+                if (ent & 0x80u) {
                     dipsy = 0;
                 }
             }

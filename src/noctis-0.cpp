@@ -2846,10 +2846,10 @@ void globe(uint16_t start, uint8_t *target, uint8_t *tapestry, uint8_t *offsetsm
     STUB
 }
 
-/*  Come precedente, modificata per fare globi luminosi, senza dettagli
-    ma con un evidente demarcazione fra emisfero illuminato e buio.
-    Viene usata per i pianeti in media distanza. */
-
+/* Same as above, but modified to make luminous globes, without details but with a
+ * clear demarcation between the illuminated and dark hemisphere. Used for planets
+ * at a medium distance from the stardrifter.
+ */
 void glowinglobe(int16_t start, uint8_t *target, uint8_t *offsetsmap,
                  uint16_t total_map_bytes, double x, double y, double z,
                  float mag_factor, int16_t terminator_start, int16_t terminator_arc,
@@ -3555,22 +3555,21 @@ void extract_ap_target_infos() {
 
 float zrandom(int16_t range) { return (brtl_random(range) - brtl_random(range)); }
 
-/*  Parte della gestione della cartografia.
-    E' stata spostata qui perch� possa essere chiamata da "prepare_nearstar".
-    -------------------------------------------------------------------------
-    Cerca un codice d'identificazione (per un pianeta o per una stella)
-    nel file di cartografia stellare, e riporta la posizione del record.
-    Se il risultato � -1, il codice non esiste, ovvero non c'� un nome
-    per la stella o per il pianeta che corrisponde a quel codice.
-    Type pu� essere: P = Pianeta, S = Stella.
-     usa come buffer di lettura "p_surfacemap". */
+/*  Part of the cartography management.
+ *  It has been moved here to be called by "prepare_nearstar".
+ *  --------------------------------------------------------------------------------
+ *  Search for an identification code (for a planet or for a star) in the stellar
+ *  mapping file, and show the position of the record. If the result is -1, the code
+ *  does not exist, i.e. there is no name for the star or for the planet that
+ *  corresponds to that code. Type can be: 'P' = Planet, 'S' = Star.
+ */
 
 int16_t smh;
 double idscale = 0.00001;
 
 int32_t search_id_code(double id_code, int8_t type) {
     int32_t pos  = 4;
-    int8_t found = 0;
+    bool found = false;
     uint16_t n, ptr, index;
     double id_low         = id_code - idscale;
     double id_high        = id_code + idscale;
@@ -3591,7 +3590,7 @@ int32_t search_id_code(double id_code, int8_t type) {
                 if (buffer_ascii[ptr + 29] == type) {
                     if (buffer_double[index] > id_low &&
                         buffer_double[index] < id_high) {
-                        found = 1;
+                        found = true;
                         goto stop;
                     }
                 }
