@@ -115,10 +115,10 @@ int32_t YSIZE     = TEXTURE_YSIZE * V_MATRIXS; // Calibraz. dimensioni.
 float XCOEFF      = EMU_K / dpp;               // Coefficente di comodo.
 float YCOEFF      = EMU_K / dpp;               // Coefficente di comodo.
 
-// Initialize scanline addresses.
-
+// Riga is just a lookup table with 320 * i for each i.
 uint16_t riga[200];
 
+// Initialize scanline addresses.
 void initscanlines() {
     uint16_t c;
 

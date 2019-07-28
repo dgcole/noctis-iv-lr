@@ -2854,7 +2854,6 @@ void glowinglobe(int16_t start, uint8_t *target, uint8_t *offsetsmap,
                  uint16_t total_map_bytes, double x, double y, double z,
                  float mag_factor, int16_t terminator_start, int16_t terminator_arc,
                  uint8_t color) {
-#if 0
     uint16_t center_x, center_y, temp;
     double xx, yy, zz, z2, rx, ry, rz;
     xx = x - dzat_x;
@@ -2901,95 +2900,91 @@ void glowinglobe(int16_t start, uint8_t *target, uint8_t *offsetsmap,
         start += 360;
     }
 
-    asm {   pusha
-            push ds
-            push ds
-            db 0x0F, 0xA9 // pop gs
-            mov cx, total_map_bytes
-            shr cx, 1
-            mov bl, color
-            and bl, 0xC0
-            mov bh, color
-            and bh, 0x3F
-            shr bh, 2
-            or  bh, bl
-            mov bl, color
-            mov dx, start
-            les ax, dword ptr target
-            lds si, dword ptr offsetsmap }
+    uint8_t tbl = 0, tbh = 0, tal = 0;
+    uint16_t tdx = 0, tcx = 0, tsi = 0, tdi = 0;
+    int16_t tax = 0;
+
+    tcx = total_map_bytes >> 1;
+
+    tbl = color & 0xC0;
+    tbh = color & 0x3F;
+    tbh >>= 2;
+    tbh |= tbl;
+    tbl = color;
+    tdx = start;
+
+    //ES: target[AX];
+    //DS: offsetsmap[SI];
+
     rigiro:
-    asm {   cmp byte ptr [si], 100
-            jne pixel
-            jmp blanket }
+    if (offsetsmap[tsi] != 100) goto pixel;
+    goto blanket;
+
     pixel:
-    asm {   test dx, 3
-            jz doit
-            jmp clipout }
+    if ((tdx & 0x03) == 0) goto doit;
+    goto clipout;
+
     doit:
-    asm {   mov al, [si]
-            cbw
-            mov temp, ax
-            fild word ptr temp
-            fmul dword ptr mag_factor
-            fistp word ptr temp
-            mov di, temp
-            add di, center_y
-            cmp di, 10
-            jnb y_ok
-            cmp di, 190
-            jb y_ok
-            jmp clipout }
+    tal = offsetsmap[tsi];
+    if (tal >> 7) {
+        tax = 0xFF00 | tal;
+    } else {
+        tax = tal;
+    }
+    temp = tax;
+    temp = round(((int16_t) temp) * mag_factor);
+    tdi = temp + center_y;
+    if (tdi >= 10) goto y_ok;
+    if (tdi < 190) goto y_ok;
+    goto clipout;
+
     y_ok:
-    asm {   mov al, [si+1]
-            add di, di
-            cbw
-            db 0x65, 0x8B, 0xBD /* mov di, gs:riga[di] */
-            dw offset riga
-            mov temp, ax
-            fild word ptr temp
-            fmul dword ptr mag_factor
-            fistp word ptr temp
-            mov ax, temp
-            add ax, center_x
-            cmp ax, 9
-            jb  clipout
-            cmp ax, 310
-            jnb clipout
-            add di, ax
-            cmp dx, terminator_arc
-            jb darkdot
-            mov es:[di+4], bl
-            jmp clipout }
+    tal = offsetsmap[tsi + 1];
+    //tdi += tdi;
+    if (tal >> 7) {
+        tax = 0xFF00 | tal;
+    } else {
+        tax = tal;
+    }
+    tdi = riga[tdi];
+    temp = tax;
+    temp = round(((int16_t) temp) * mag_factor);
+    tax = temp + center_x;
+    if (tax < 9) goto clipout;
+    if (tax >= 310) goto clipout;
+    tdi += tax;
+    if (tdx < terminator_arc) goto darkdot;
+    target[tdi + 4] = tbl;
+    goto clipout;
+
     darkdot:
-    asm     mov es:[di+4], bh
-clipout:asm {   add dx, 1
-                    cmp dx, 360
-                    jb rtn_ok
-                    xor dx, dx }
+    target[tdi + 4] = tbh;
+
+    clipout:
+    tdx += 1;
+    if (tdx < 360) goto rtn_ok;
+    tdx = 0;
+
     rtn_ok:
-    asm {   add si, 2
-            dec cx
-            jz fine
-            jmp rigiro }
+    tsi += 2;
+    tcx--;
+    if (tcx == 0) return;
+    goto rigiro;
+
     blanket:
-    asm {   mov al, [si+1]
-            xor ah, ah
-            add dx, ax }
+    tal = offsetsmap[tsi + 1];
+    tdx += tal;
+
     rtj_lp:
-    asm {   cmp dx, 360
-            jb rtj_ok
-            sub dx, 360
-            jmp rtj_lp }
+    if (tdx < 360) goto rtj_ok;
+    tdx -= 360;
+    goto rtj_lp;
+
     rtj_ok:
-    asm {   add si, 2
-            dec cx
-            jz fine
-            jmp rigiro }
-    fine:
-    asm {   pop ds
-            popa }
-#endif
-    STUB
+    tsi += 2;
+    tcx--;
+    if (tcx == 0) return;
+    goto rigiro;
 }
 
 /*
@@ -4519,12 +4514,12 @@ void storm() { // tempesta (una grande macchia chiara sull'atmosfera).
     }
 }
 
-/*  Calcola la superficie estrapolandola dai dati sul pianeta e dalla
-    tabella pseudo-casuale assegnatagli.
-    Include il terminatore giorno-notte scurendo l'emisfero notturno
-    per un angolo di 130�, non di 180� per via della luce diffusa e del
-    campo ridotto ai bordi dei globi.
-    "colorbase" viene assegnato a 192 per i pianeti, a 128 per le lune. */
+/* Calculate the surface by extapolating it from the data on the planet and from the
+ * pseudo-random table assigned to it. Includes the day-night terminator by
+ * darkening the night hemisphere for an angle of 130 (not 180 due to the diffused
+ * light and the reduced field at the edges of the globes). "colorbase" is assigned
+ * to 192 for the planets, to 128 for the moons.
+ */
 
 void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase) {
 #if 0
