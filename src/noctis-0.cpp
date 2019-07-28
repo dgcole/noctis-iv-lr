@@ -2846,15 +2846,14 @@ void globe(uint16_t start, uint8_t *target, uint8_t *tapestry, uint8_t *offsetsm
     STUB
 }
 
-/*  Come precedente, modificata per fare globi luminosi, senza dettagli
-    ma con un evidente demarcazione fra emisfero illuminato e buio.
-    Viene usata per i pianeti in media distanza. */
-
+/* Same as above, but modified to make luminous globes, without details but with a
+ * clear demarcation between the illuminated and dark hemisphere. Used for planets
+ * at a medium distance from the stardrifter.
+ */
 void glowinglobe(int16_t start, uint8_t *target, uint8_t *offsetsmap,
                  uint16_t total_map_bytes, double x, double y, double z,
                  float mag_factor, int16_t terminator_start, int16_t terminator_arc,
                  uint8_t color) {
-#if 0
     uint16_t center_x, center_y, temp;
     double xx, yy, zz, z2, rx, ry, rz;
     xx = x - dzat_x;
@@ -2901,95 +2900,42 @@ void glowinglobe(int16_t start, uint8_t *target, uint8_t *offsetsmap,
         start += 360;
     }
 
-    asm {   pusha
-            push ds
-            push ds
-            db 0x0F, 0xA9 // pop gs
-            mov cx, total_map_bytes
-            shr cx, 1
-            mov bl, color
-            and bl, 0xC0
-            mov bh, color
-            and bh, 0x3F
-            shr bh, 2
-            or  bh, bl
-            mov bl, color
-            mov dx, start
-            les ax, dword ptr target
-            lds si, dword ptr offsetsmap }
-    rigiro:
-    asm {   cmp byte ptr [si], 100
-            jne pixel
-            jmp blanket }
-    pixel:
-    asm {   test dx, 3
-            jz doit
-            jmp clipout }
-    doit:
-    asm {   mov al, [si]
-            cbw
-            mov temp, ax
-            fild word ptr temp
-            fmul dword ptr mag_factor
-            fistp word ptr temp
-            mov di, temp
-            add di, center_y
-            cmp di, 10
-            jnb y_ok
-            cmp di, 190
-            jb y_ok
-            jmp clipout }
-    y_ok:
-    asm {   mov al, [si+1]
-            add di, di
-            cbw
-            db 0x65, 0x8B, 0xBD /* mov di, gs:riga[di] */
-            dw offset riga
-            mov temp, ax
-            fild word ptr temp
-            fmul dword ptr mag_factor
-            fistp word ptr temp
-            mov ax, temp
-            add ax, center_x
-            cmp ax, 9
-            jb  clipout
-            cmp ax, 310
-            jnb clipout
-            add di, ax
-            cmp dx, terminator_arc
-            jb darkdot
-            mov es:[di+4], bl
-            jmp clipout }
-    darkdot:
-    asm     mov es:[di+4], bh
-clipout:asm {   add dx, 1
-                    cmp dx, 360
-                    jb rtn_ok
-                    xor dx, dx }
-    rtn_ok:
-    asm {   add si, 2
-            dec cx
-            jz fine
-            jmp rigiro }
-    blanket:
-    asm {   mov al, [si+1]
-            xor ah, ah
-            add dx, ax }
-    rtj_lp:
-    asm {   cmp dx, 360
-            jb rtj_ok
-            sub dx, 360
-            jmp rtj_lp }
-    rtj_ok:
-    asm {   add si, 2
-            dec cx
-            jz fine
-            jmp rigiro }
-    fine:
-    asm {   pop ds
-            popa }
-#endif
-    STUB
+    uint8_t colorMask = ((color & 0x3Fu) >> 2u) | (color & 0xC0u);
+    uint16_t curr = start;
+    for (uint16_t i = (total_map_bytes / 2), j = 0; i > 0; i--, j += 2) {
+        if (offsetsmap[j] != 100) {
+            if ((curr & 0x03u) == 0) {
+                int16_t offset = (int8_t) offsetsmap[j];
+                temp = offset;
+                temp = (uint16_t) round(((int16_t)temp) * mag_factor);
+                uint16_t pos  = temp + center_y;
+                if (pos > 10 && pos < 190) { // Y bounds.
+                    offset = (int8_t) offsetsmap[j + 1];
+                    pos  = riga[pos];
+                    temp = offset;
+                    temp = (uint16_t) round(((int16_t)temp) * mag_factor);
+                    offset  = temp + center_x;
+                    // X bounds. Don't ask why it's 6. It just works.
+                    if (offset > 6 && offset < 310) {
+                        pos += offset;
+                        if (curr < terminator_arc) {
+                            target[pos] = colorMask;
+                        } else {
+                            target[pos] = color;
+                        }
+                    }
+                }
+            }
+
+            curr += 1;
+            if (curr >= 360) {
+                curr = 0;
+            }
+        } else {
+            curr += offsetsmap[j + 1];
+            curr %= 360;
+        }
+    }
 }
 
 /*
@@ -3499,9 +3445,9 @@ void getsecs() {
     uint8_t currSecond = timeinfo->tm_sec;
 
     secs = difftime(rawtime, mktime(&nepoch));
-    // This offsets the time by a day. I don't know why it's needed, but it makes
-    // this version match up with the clock in vanilla Noctis IV.
-    secs -= 86400;
+    // Offsetting the clock by -82800 seconds is done to fudge it to match the clock
+    // in the original. Don't really know where the discrepancy comes from.
+    secs -= 82800;
     isecs = currSecond;
 
     if (p_isecs != isecs) { // Frame timing.
@@ -3529,10 +3475,9 @@ void getsecs() {
 
 void extract_ap_target_infos() {
     brtl_srand(ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z / 100000);
-    ap_target_class = brtl_rand() % star_classes;
+    ap_target_class = brtl_random(star_classes);
     ap_target_ray   = ((float)class_ray[ap_target_class] +
-                     (float)(brtl_rand() % class_rayvar[ap_target_class])) *
-                    0.001;
+                     (float) brtl_random(class_rayvar[ap_target_class])) * 0.001;
     ap_target_r    = class_rgb[3 * ap_target_class + 0];
     ap_target_g    = class_rgb[3 * ap_target_class + 1];
     ap_target_b    = class_rgb[3 * ap_target_class + 2];
@@ -3555,30 +3500,31 @@ void extract_ap_target_infos() {
 
 float zrandom(int16_t range) { return (brtl_random(range) - brtl_random(range)); }
 
-/*  Parte della gestione della cartografia.
-    E' stata spostata qui perch� possa essere chiamata da "prepare_nearstar".
-    -------------------------------------------------------------------------
-    Cerca un codice d'identificazione (per un pianeta o per una stella)
-    nel file di cartografia stellare, e riporta la posizione del record.
-    Se il risultato � -1, il codice non esiste, ovvero non c'� un nome
-    per la stella o per il pianeta che corrisponde a quel codice.
-    Type pu� essere: P = Pianeta, S = Stella.
-     usa come buffer di lettura "p_surfacemap". */
+/*  Part of the cartography management.
+ *  It has been moved here to be called by "prepare_nearstar".
+ *  --------------------------------------------------------------------------------
+ *  Search for an identification code (for a planet or for a star) in the stellar
+ *  mapping file, and show the position of the record. If the result is -1, the code
+ *  does not exist, i.e. there is no name for the star or for the planet that
+ *  corresponds to that code. Type can be: 'P' = Planet, 'S' = Star.
+ */
 
 int16_t smh;
 double idscale = 0.00001;
 
 int32_t search_id_code(double id_code, int8_t type) {
     int32_t pos  = 4;
-    int8_t found = 0;
+    bool found = false;
     uint16_t n, ptr, index;
-    int8_t *buffer_ascii  = (int8_t *)p_surfacemap;
-    double *buffer_double = (double *)p_surfacemap;
     double id_low         = id_code - idscale;
     double id_high        = id_code + idscale;
     smh                   = open(starmap_file, 0);
 
     if (smh > -1) {
+        int8_t* buffer = (int8_t*) malloc(ps_bytes);
+
+        auto buffer_ascii  = (int8_t *) buffer;
+        auto buffer_double = (double *) buffer;
         lseek(smh, 4, SEEK_SET);
 
         while ((n = read(smh, buffer_ascii, ps_bytes)) > 0) {
@@ -3589,7 +3535,7 @@ int32_t search_id_code(double id_code, int8_t type) {
                 if (buffer_ascii[ptr + 29] == type) {
                     if (buffer_double[index] > id_low &&
                         buffer_double[index] < id_high) {
-                        found = 1;
+                        found = true;
                         goto stop;
                     }
                 }
@@ -3600,8 +3546,9 @@ int32_t search_id_code(double id_code, int8_t type) {
             }
         }
 
-    stop:
+        stop:
         close(smh);
+        free(buffer);
     }
 
     if (found) {
@@ -3611,13 +3558,13 @@ int32_t search_id_code(double id_code, int8_t type) {
     }
 }
 
-/*  Prepara le informazioni sulla stella vicina, quella attorno alla quale
-    ci si trover�: tra l'altro, prepara i pianeti estraendoli dalla
-    tabella pseudo. */
+/* Prepare information on the nearby star, the one which the player has just
+ * approached. Among other things, prepare the planets by extracting them from the
+ * pseudo table.
+ */
 
-int16_t starnop(double star_x, double star_y, double star_z)
-// stima il numero di pianeti maggiori associato alle coord. di una stella
-{
+// Estimate the number of major planets associated with the coord. of a star.
+int16_t starnop(double star_x, double star_y, double star_z) {
     int16_t r;
     brtl_srand((int32_t)star_x % 10000 * (int32_t)star_y % 10000 * (int32_t)star_z %
                10000);
@@ -3656,8 +3603,7 @@ void prepare_nearstar() {
                (int32_t)nearstar_z % 10000);
     nearstar_nop = brtl_random(class_planets[nearstar_class] + 1);
 
-    /* Prima estrazione (pressoch� casuale, non realistica). */
-
+    // First draw (almost random, unrealistic);
     for (n = 0; n < nearstar_nop; n++) {
         nearstar_p_owner[n]      = -1;
         nearstar_p_orb_orient[n] = (double)deg * (double)brtl_random(360);
@@ -4519,12 +4465,12 @@ void storm() { // tempesta (una grande macchia chiara sull'atmosfera).
     }
 }
 
-/*  Calcola la superficie estrapolandola dai dati sul pianeta e dalla
-    tabella pseudo-casuale assegnatagli.
-    Include il terminatore giorno-notte scurendo l'emisfero notturno
-    per un angolo di 130�, non di 180� per via della luce diffusa e del
-    campo ridotto ai bordi dei globi.
-    "colorbase" viene assegnato a 192 per i pianeti, a 128 per le lune. */
+/* Calculate the surface by extapolating it from the data on the planet and from the
+ * pseudo-random table assigned to it. Includes the day-night terminator by
+ * darkening the night hemisphere for an angle of 130 (not 180 due to the diffused
+ * light and the reduced field at the edges of the globes). "colorbase" is assigned
+ * to 192 for the planets, to 128 for the moons.
+ */
 
 void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase) {
 #if 0

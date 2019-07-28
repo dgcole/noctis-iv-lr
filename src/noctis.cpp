@@ -1439,7 +1439,8 @@ void update_planet_label() {
         if (planet_label_pos != -1) {
             smh = open(starmap_file, 0);
             lseek(smh, planet_label_pos, SEEK_SET);
-            read(smh, &planet_id, 32);
+            read(smh, &planet_id, 8);
+            read(smh, &planet_label, 24);
             close(smh);
         } else {
             if (nearstar_p_owner[ip_targetted] == -1) {
@@ -2449,9 +2450,9 @@ void unfreeze() {
     fread(&secs, 1, 8, fh);
     fread(&data, 1, 1, fh);
     fread(&surlight, 1, 1, fh);
-	fread(&gnc_pos, 1, 1, fh);
+    fread(&gnc_pos, 1, 1, fh);
     fread(&goesfile_pos, 1, 4, fh);
-	fread(goesnet_command, 1, 120, fh);
+    fread(goesnet_command, 1, 120, fh);
 
 	fclose(fh);
 
@@ -2597,7 +2598,7 @@ int main(int argc, char **argv) {
     SDL_SetRelativeMouseMode(SDL_TRUE);
 #else
     window = SDL_CreateWindow("Noctis IV LR", SDL_WINDOWPOS_CENTERED, // NOLINT(hicpp-signed-bitwise)
-                              SDL_WINDOWPOS_CENTERED, 960, 600, // NOLINT(hicpp-signed-bitwise)
+                              SDL_WINDOWPOS_CENTERED, 640, 400, // NOLINT(hicpp-signed-bitwise)
                               SDL_WINDOW_RESIZABLE);
 #endif
 
@@ -2613,7 +2614,8 @@ int main(int argc, char **argv) {
     p_background  = (uint8_t *)     malloc(pl_bytes);
     /* NOTE: This is set to at least 65k because polymap keeps running over the end.
      * It happens in the original source too, and somehow isn't a problem there, but
-     * we can't have it running over into random memory.
+     * we can't have it running over into random memory. The bug is present in the
+     * original source.
      */
     p_surfacemap  = (uint8_t *)     malloc(ps_bytes | 65536);
     objectschart  = (quadrant *)    malloc(oc_bytes);

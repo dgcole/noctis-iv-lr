@@ -115,10 +115,10 @@ int32_t YSIZE     = TEXTURE_YSIZE * V_MATRIXS; // Calibraz. dimensioni.
 float XCOEFF      = EMU_K / dpp;               // Coefficente di comodo.
 float YCOEFF      = EMU_K / dpp;               // Coefficente di comodo.
 
-// Initialize scanline addresses.
-
+// Riga is just a lookup table with 320 * i for each i.
 uint16_t riga[200];
 
+// Initialize scanline addresses.
 void initscanlines() {
     uint16_t c;
 
@@ -971,7 +971,7 @@ drawb:
         break;
 
     case 1:
-        colore &= 0x3F;
+        colore &= 0x3Fu;
         for (fakedi = segmptr; fakedi <= lim_y; fakedi += 320) {
             tempBytes  = bytes;
             tempfakedi = fakedi;
@@ -1004,7 +1004,7 @@ drawb:
 
                 for (; tinkywinky > 0; tempfakedi++, tinkywinky--) {
                     dipsy = adapted[tempfakedi - 1];
-                    dipsy &= 0x3F;
+                    dipsy &= 0x3Fu;
                     dipsy += colore;
 
                     if (dipsy >= 62)
@@ -1018,11 +1018,11 @@ drawb:
                 tinkywinky = loc1 - loc0;
                 tempfakedi = loc0;
 
-                dipsy = colore >> 1;
+                dipsy = colore >> 1u;
 
                 for (; tinkywinky > 0; tempfakedi++, tinkywinky--) {
                     po = adapted[tempfakedi - 1];
-                    po &= 0x3F;
+                    po &= 0x3Fu;
                     po += dipsy;
 
                     if (po >= 62)
@@ -1068,13 +1068,13 @@ drawb:
                     tempfakedi = tempfakedi > 64000 ? 64000 : tempfakedi;
                     if (adapted[tempfakedi] == 0xFF) {
                         dipsy = adapted[tempfakedi - 321];
-                        dipsy &= 0x3F;
-                        dipsy |= 0x40;
+                        dipsy &= 0x3Fu;
+                        dipsy |= 0x40u;
                         adapted[tempfakedi] = dipsy;
                     } else {
                         laalaa = adapted[tempfakedi];
-                        laalaa &= 0x3F;
-                        laalaa |= 0x40;
+                        laalaa &= 0x3Fu;
+                        laalaa |= 0x40u;
                         laalaa += tinkywinky;
                         if (laalaa >= 128)
                             laalaa = 127;
@@ -1089,8 +1089,8 @@ drawb:
                         dipsy = adapted[tempfakedi - 642];
                     }
 
-                    dipsy &= 0x3F;
-                    dipsy |= 0x40;
+                    dipsy &= 0x3Fu;
+                    dipsy |= 0x40u;
                     adapted[tempfakedi] = dipsy;
                 }
             }
@@ -1098,79 +1098,47 @@ drawb:
         break;
         // effetto flares = 3 spostato a "polymap"
     case 4:
-        #if 0
-        asm {   pusha
-                les di, dword ptr adapted
-                add lim_y, di
-                add di, segmptr }
-        fil4a:
-        asm {   mov al, colore
-                mov ah, colore
-                db 0x66 // macro: shl eax, 16
-                db 0xc1
-                db 0xe0
-                db 0x10
-                mov ah, colore
-                push di
-                mov cx, bytes
-                mov al, 255
-                repne scasb
-                jne fil4d
-                mov si, di
-                repe scasb
-                mov bx, di
-                repne scasb
-                jne fil4e
-                repe scasb
-                dec di
-                dec si
-                mov al, colore
-                mov dx, di
-                sub dx, si
-                mov di, si
-                mov cx, dx
-                shr cx, 2
-                jz fil4c }
-        fil4b:
-        asm {   db 0x26, 0x66, 0x89, 0x05 // mov es:[di], eax
-                add di, 4
-                dec cx
-                jnz fil4b }
-        fil4c:
-        asm {   mov cl, dl
-                and cl, 3
-                rep stosb
-                jmp fil4d }
-        fil4e:
-        asm {   dec si
-                dec bx
-                mov cx, bx
-                mov al, colore
-                sub cx, si
-                mov di, si
-                rep stosb }
-        fil4d:
-        asm {   mov al, colore
-                mov ah, colore
-                and al, 0x3F
-                and ah, 0xC0
-                add al, ent
-                cmp al, 0x3F
-                jbe fil4f
-                mov al, 0x3F
-                test ent, 0x80
-                jz  fil4f
-                xor al, al }
-        fil4f:
-        asm {   or  al, ah
-                mov colore, al
-                pop di
-                add di, 320
-                cmp di, lim_y
-                jbe fil4a
-                popa }*/
-        #endif
-        STUB
+        for (fakedi = segmptr; fakedi <= lim_y; fakedi += 320) {
+            tempBytes = bytes;
+            tempfakedi = fakedi;
+
+            if (adapted[tempfakedi] != 255) {
+                while (--tempBytes > 0 && adapted[++tempfakedi] != 255);
+            }
+
+            if (tempBytes == 0) continue;
+            loc0 = tempfakedi;
+
+            while (tempBytes-- > 0 && adapted[tempfakedi++] == 255);
+            loc1 = tempfakedi;
+
+            if (adapted[tempfakedi] != 255 && tempBytes > 0) {
+                while (--tempBytes > 0 && adapted[++tempfakedi] != 255);
+            }
+
+            if (tempBytes > 0) {
+                while (tempBytes-- > 0 && adapted[tempfakedi++] == 255);
+
+                tempfakedi--;
+                memset(&adapted[loc0], colore, tempfakedi - loc0);
+            } else {
+                loc1--;
+                memset(&adapted[loc0], colore, loc1 - loc0);
+            }
+
+            dipsy = (colore & 0x3Fu) + ent;
+            po = colore & 0xC0u;
+
+            if (dipsy > 0x3F) {
+                dipsy = 0x3F;
+                if (ent & 0x80u) {
+                    dipsy = 0;
+                }
+            }
+
+            dipsy |= po;
+            colore = dipsy;
+        }
         break;
     }
 }
