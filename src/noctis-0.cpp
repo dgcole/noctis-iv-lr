@@ -3529,10 +3529,9 @@ void getsecs() {
 
 void extract_ap_target_infos() {
     brtl_srand(ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z / 100000);
-    ap_target_class = brtl_rand() % star_classes;
+    ap_target_class = brtl_random(star_classes);
     ap_target_ray   = ((float)class_ray[ap_target_class] +
-                     (float)(brtl_rand() % class_rayvar[ap_target_class])) *
-                    0.001;
+                     (float) brtl_random(class_rayvar[ap_target_class])) * 0.001;
     ap_target_r    = class_rgb[3 * ap_target_class + 0];
     ap_target_g    = class_rgb[3 * ap_target_class + 1];
     ap_target_b    = class_rgb[3 * ap_target_class + 2];
@@ -3613,13 +3612,13 @@ int32_t search_id_code(double id_code, int8_t type) {
     }
 }
 
-/*  Prepara le informazioni sulla stella vicina, quella attorno alla quale
-    ci si trover�: tra l'altro, prepara i pianeti estraendoli dalla
-    tabella pseudo. */
+/* Prepare information on the nearby star, the one which the player has just
+ * approached. Among other things, prepare the planets by extracting them from the
+ * pseudo table.
+ */
 
-int16_t starnop(double star_x, double star_y, double star_z)
-// stima il numero di pianeti maggiori associato alle coord. di una stella
-{
+// Estimate the number of major planets associated with the coord. of a star.
+int16_t starnop(double star_x, double star_y, double star_z) {
     int16_t r;
     brtl_srand((int32_t)star_x % 10000 * (int32_t)star_y % 10000 * (int32_t)star_z %
                10000);
@@ -3658,8 +3657,7 @@ void prepare_nearstar() {
                (int32_t)nearstar_z % 10000);
     nearstar_nop = brtl_random(class_planets[nearstar_class] + 1);
 
-    /* Prima estrazione (pressoch� casuale, non realistica). */
-
+    // First draw (almost random, unrealistic);
     for (n = 0; n < nearstar_nop; n++) {
         nearstar_p_owner[n]      = -1;
         nearstar_p_orb_orient[n] = (double)deg * (double)brtl_random(360);
