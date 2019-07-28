@@ -2450,9 +2450,9 @@ void unfreeze() {
     fread(&secs, 1, 8, fh);
     fread(&data, 1, 1, fh);
     fread(&surlight, 1, 1, fh);
-	fread(&gnc_pos, 1, 1, fh);
+    fread(&gnc_pos, 1, 1, fh);
     fread(&goesfile_pos, 1, 4, fh);
-	fread(goesnet_command, 1, 120, fh);
+    fread(goesnet_command, 1, 120, fh);
 
 	fclose(fh);
 
@@ -2598,7 +2598,7 @@ int main(int argc, char **argv) {
     SDL_SetRelativeMouseMode(SDL_TRUE);
 #else
     window = SDL_CreateWindow("Noctis IV LR", SDL_WINDOWPOS_CENTERED, // NOLINT(hicpp-signed-bitwise)
-                              SDL_WINDOWPOS_CENTERED, 960, 600, // NOLINT(hicpp-signed-bitwise)
+                              SDL_WINDOWPOS_CENTERED, 640, 400, // NOLINT(hicpp-signed-bitwise)
                               SDL_WINDOW_RESIZABLE);
 #endif
 

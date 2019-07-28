@@ -2900,91 +2900,42 @@ void glowinglobe(int16_t start, uint8_t *target, uint8_t *offsetsmap,
         start += 360;
     }
 
-    uint8_t tbl = 0, tbh = 0, tal = 0;
-    uint16_t tdx = 0, tcx = 0, tsi = 0, tdi = 0;
-    int16_t tax = 0;
+    uint8_t colorMask = ((color & 0x3Fu) >> 2u) | (color & 0xC0u);
+    uint16_t curr = start;
+    for (uint16_t i = (total_map_bytes / 2), j = 0; i > 0; i--, j += 2) {
+        if (offsetsmap[j] != 100) {
+            if ((curr & 0x03u) == 0) {
+                int16_t offset = (int8_t) offsetsmap[j];
+                temp = offset;
+                temp = (uint16_t) round(((int16_t)temp) * mag_factor);
+                uint16_t pos  = temp + center_y;
+                if (pos > 10 && pos < 190) { // Y bounds.
+                    offset = (int8_t) offsetsmap[j + 1];
+                    pos  = riga[pos];
+                    temp = offset;
+                    temp = (uint16_t) round(((int16_t)temp) * mag_factor);
+                    offset  = temp + center_x;
+                    // X bounds. Don't ask why it's 6. It just works.
+                    if (offset > 6 && offset < 310) {
+                        pos += offset;
+                        if (curr < terminator_arc) {
+                            target[pos] = colorMask;
+                        } else {
+                            target[pos] = color;
+                        }
+                    }
+                }
+            }
 
-    tcx = total_map_bytes >> 1;
-
-    tbl = color & 0xC0;
-    tbh = color & 0x3F;
-    tbh >>= 2;
-    tbh |= tbl;
-    tbl = color;
-    tdx = start;
-
-    //ES: target[AX];
-    //DS: offsetsmap[SI];
-
-    rigiro:
-    if (offsetsmap[tsi] != 100) goto pixel;
-    goto blanket;
-
-    pixel:
-    if ((tdx & 0x03) == 0) goto doit;
-    goto clipout;
-
-    doit:
-    tal = offsetsmap[tsi];
-    if (tal >> 7) {
-        tax = 0xFF00 | tal;
-    } else {
-        tax = tal;
+            curr += 1;
+            if (curr >= 360) {
+                curr = 0;
+            }
+        } else {
+            curr += offsetsmap[j + 1];
+            curr %= 360;
+        }
     }
-    temp = tax;
-    temp = round(((int16_t) temp) * mag_factor);
-    tdi = temp + center_y;
-    if (tdi >= 10) goto y_ok;
-    if (tdi < 190) goto y_ok;
-    goto clipout;
-
-    y_ok:
-    tal = offsetsmap[tsi + 1];
-    //tdi += tdi;
-    if (tal >> 7) {
-        tax = 0xFF00 | tal;
-    } else {
-        tax = tal;
-    }
-    tdi = riga[tdi];
-    temp = tax;
-    temp = round(((int16_t) temp) * mag_factor);
-    tax = temp + center_x;
-    if (tax < 9) goto clipout;
-    if (tax >= 310) goto clipout;
-    tdi += tax;
-    if (tdx < terminator_arc) goto darkdot;
-    target[tdi + 4] = tbl;
-    goto clipout;
-
-    darkdot:
-    target[tdi + 4] = tbh;
-
-    clipout:
-    tdx += 1;
-    if (tdx < 360) goto rtn_ok;
-    tdx = 0;
-
-    rtn_ok:
-    tsi += 2;
-    tcx--;
-    if (tcx == 0) return;
-    goto rigiro;
-
-    blanket:
-    tal = offsetsmap[tsi + 1];
-    tdx += tal;
-
-    rtj_lp:
-    if (tdx < 360) goto rtj_ok;
-    tdx -= 360;
-    goto rtj_lp;
-
-    rtj_ok:
-    tsi += 2;
-    tcx--;
-    if (tcx == 0) return;
-    goto rigiro;
 }
 
 /*
@@ -3494,9 +3445,9 @@ void getsecs() {
     uint8_t currSecond = timeinfo->tm_sec;
 
     secs = difftime(rawtime, mktime(&nepoch));
-    // This offsets the time by a day. I don't know why it's needed, but it makes
-    // this version match up with the clock in vanilla Noctis IV.
-    secs -= 86400;
+    // Offsetting the clock by -82800 seconds is done to fudge it to match the clock
+    // in the original. Don't really know where the discrepancy comes from.
+    secs -= 82800;
     isecs = currSecond;
 
     if (p_isecs != isecs) { // Frame timing.
