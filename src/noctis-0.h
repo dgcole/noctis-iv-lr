@@ -1,12 +1,12 @@
 #include "noctis-d.h"
 
-extern int16_t QUADWORDS;
+extern uint16_t QUADWORDS;
 extern uint8_t *adapted;
 extern void reach_your_dir(char **argv);
 extern void _320_200_256();
 extern void _80_25_C();
 extern int16_t attendi_pressione_tasto();
-extern int16_t tasto_premuto();
+extern bool tasto_premuto();
 extern uint8_t range8088[64 * 3];
 extern uint8_t tmppal[768];
 extern int8_t return_palette[768];
@@ -17,7 +17,7 @@ extern void tavola_colori(const uint8_t *nuova_tavolozza,
                           int8_t filtro_blu);
 extern int16_t mdltx, mdlty, mx, my;
 extern uint16_t mpul;
-extern void handle_input(SDL_Window *window);
+extern void handle_input();
 extern void areaclear(uint8_t *dest, int16_t x, int16_t y, int16_t x2, int16_t y2,
                       int16_t l, int16_t h, uint8_t pattern);
 extern void psmooth_grays(uint8_t *target);
@@ -38,7 +38,6 @@ extern uint16_t riga[200];
 extern float alfa, beta, ngamma;
 extern void initscanlines();
 extern uint16_t ptr;
-extern uint32_t xp, yp, xa, ya;
 extern uint32_t global_x, global_y;
 extern void Segmento();
 extern int8_t flares;
@@ -163,7 +162,6 @@ extern uint8_t cyclon[384];
 extern char ctb[512];
 extern int8_t _delay;
 extern int8_t stspeed;
-extern int8_t bright;
 extern int8_t elight;
 extern uint16_t gl_start;
 extern uint16_t point;
@@ -197,7 +195,6 @@ extern int8_t *star_description[12];
 extern int8_t class_rgb[3 * star_classes];
 extern int16_t class_ray[star_classes];
 extern int16_t class_rayvar[star_classes];
-extern int16_t class_act[star_classes];
 extern int8_t class_planets[star_classes];
 extern int8_t nearstar_p_type[maxbodies];
 extern int16_t nearstar_p_owner[maxbodies];
@@ -238,7 +235,6 @@ extern float planet_grav;
 extern float rainy;
 extern int16_t albedo;
 extern uint8_t sky_brightness;
-extern uint8_t horiz_brt;
 extern uint16_t m200[200];
 extern uint16_t wtl;
 extern float rwp;
@@ -343,7 +339,7 @@ extern float lft_sin[361];
 extern float lft_cos[361];
 extern int8_t lens_flares_init(void);
 extern void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight,
-                            double ylight, double zlight, double step,
+                            double ylight, double zlight, double interval,
                             int16_t added, int8_t on_hud, int8_t condition,
                             int16_t xshift, int16_t yshift);
 extern void single_pixel_at_ptr(uint16_t offset, uint8_t pixel_color);

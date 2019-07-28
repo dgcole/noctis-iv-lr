@@ -2652,7 +2652,7 @@ int main(int argc, char **argv) {
     memset(adapted, 0, QUADWORDS * 4);
     QUADWORDS -= 1440;
     pqw = QUADWORDS;
-    handle_input(window);
+    handle_input();
     mpul = 0;
     dpp  = 210;
     change_camera_lens();
@@ -2897,7 +2897,7 @@ void loop() {
 
     // Mouse input for user movements.
     p_mpul = mpul;
-    handle_input(window);
+    handle_input();
 
     if (mpul & 2u) {
         shift += 3 * mdltx;

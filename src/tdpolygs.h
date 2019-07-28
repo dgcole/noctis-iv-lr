@@ -137,10 +137,9 @@ void initscanlines() {
 
 uint16_t ptr;
 
-uint32_t xp, yp, xa, ya;
 uint32_t global_x, global_y;
 
-void Segmento() {
+void Segmento(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
     int32_t a, b, L;
     uint32_t pi, pf;
     bool flip = false;
@@ -239,7 +238,6 @@ int16_t pvert, nvert, vvert;
 int16_t vr, vr2, vr3, vr4, vr5, vr6;
 
 float zk;
-float x2, y2, z2;
 
 /*
 
@@ -907,20 +905,10 @@ drawb:
     // Complete tracing.
     // Draw the edges of the polygon, with the segment function.
     for (fakedi = 0; fakedi < (_8n / 4); fakedi += 2) {
-        xp = mp[fakedi];
-        yp = mp[fakedi + 1];
-        xa = mp[fakedi + 2];
-        ya = mp[fakedi + 3];
-
-        Segmento();
+        Segmento(mp[fakedi], mp[fakedi + 1], mp[fakedi + 2], mp[fakedi + 3]);
     }
 
-    xp = mp[fakedi];
-    yp = mp[fakedi + 1];
-    xa = mp[0];
-    ya = mp[1];
-
-    Segmento();
+    Segmento(mp[fakedi], mp[fakedi + 1], mp[0], mp[1]);
     // Starting Pixels
     uint16_t segmptr = riga[min_y] + min_x;
     // Arrival pixels
