@@ -9,3 +9,6 @@ cmake-build-debug/
 
 # Save Data
 data/current.bin
+
+# Manual Build Dir
+build/
