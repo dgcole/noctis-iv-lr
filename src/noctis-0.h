@@ -64,7 +64,8 @@ extern void change_angle_of_view();
 extern void change_camera_lens();
 extern void change_txm_repeating_mode();
 extern uint8_t entity;
-extern void poly3d(const float *x, const float *y, const float *z, uint16_t nrv, uint8_t colore);
+extern void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
+                   uint8_t colore);
 extern void Forward(float delta);
 extern float pnx, pny, pnz;
 extern void pnorm(float *x, float *y, float *z);
@@ -322,9 +323,9 @@ extern void sky(uint16_t limits);
 extern double laststar_x, laststar_y, laststar_z;
 extern int8_t isthere(double star_id);
 extern int8_t glass_bubble;
-extern void globe(uint16_t start, uint8_t *target, uint8_t *tapestry,
-                  uint8_t *offsetsmap, uint16_t total_map_bytes, double x, double y,
-                  double z, float mag_factor, int8_t colormask,
+extern void globe(uint16_t start, uint8_t *target, const uint8_t *tapestry,
+                  const uint8_t *offsetsmap, uint16_t total_map_bytes, double x,
+                  double y, double z, float mag_factor, int8_t colormask,
                   int8_t globe_saturation);
 extern void glowinglobe(int16_t start, uint8_t *target, uint8_t *offsetsmap,
                         uint16_t total_map_bytes, double x, double y, double z,

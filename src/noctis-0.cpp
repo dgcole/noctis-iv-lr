@@ -2639,92 +2639,46 @@ void sky(uint16_t limits) {
    X.
 */
 
-uint8_t glass_bubble = 1;
 // If set, draw a kind of bubble transparent around the globes drawn with the
 // "globe" function. It is used to simulate the presence of the atmosphere, but
 // only for planets with considerable quantities of gas.
+uint8_t glass_bubble = 1;
 
-/*
-    Heck, real fill managers, and they work!
-    Unbelievable, in C++, and even after changing ES, FS, and GS.
-*/
-
-#if 0
-void gman1x1 () {
-    asm mov es:[di+4], dl
-}
-
-void gman2x2 () {
-    asm {
-        mov dh, dl
-        mov es:[di+4], dx
-        mov es:[di+324], dx
-    }
-}
-
-void gman3x3 () {
-    asm {
-        mov dh, dl
-        mov es:[di+4], dx
-        mov es:[di+6], dl
-        mov es:[di+324], dx
-        mov es:[di+326], dl
-        mov es:[di+644], dx
-        mov es:[di+646], dl
-    }
-}
-
-void gman4x4 () {
-    asm {
-        mov dh, dl
-        mov es:[di+4], dx
-        mov es:[di+6], dx
-        mov es:[di+324], dx
-        mov es:[di+326], dx
-        mov es:[di+644], dx
-        mov es:[di+646], dx
-        mov es:[di+964], dx
-        mov es:[di+966], dx
-    }
-}
-#endif
-
-void globe(uint16_t start, uint8_t *target, uint8_t *tapestry, uint8_t *offsetsmap,
-           uint16_t total_map_bytes, double x, double y, double z, float mag_factor,
-           int8_t colormask, int8_t globe_saturation) {
-#if 0
-    void*    gman;
+void globe(uint16_t start, uint8_t *target, const uint8_t *tapestry,
+           const uint8_t *offsetsmap, uint16_t total_map_bytes, double x, double y,
+           double z, float mag_factor, int8_t colormask, int8_t globe_saturation) {
+    uint8_t gman;
     int16_t center_x, center_y, temp;
-    double  xx, yy, zz, z2, rx, ry, rz;
+    double xx, yy, zz, z2, rx, ry, rz;
     xx = x - dzat_x;
     yy = y - dzat_y;
     zz = z - dzat_z;
-    rx = xx * (double)opt_pcosbeta + zz * (double)opt_psinbeta;
-    z2 = zz * (double)opt_tcosbeta - xx * (double)opt_tsinbeta;
-    rz = z2 * (double)opt_tcosalfa + yy * (double)opt_tsinalfa;
-    ry = yy * (double)opt_pcosalfa - z2 * (double)opt_psinalfa;
+    rx = xx * (double) opt_pcosbeta + zz * (double) opt_psinbeta;
+    z2 = zz * (double) opt_tcosbeta - xx * (double) opt_tsinbeta;
+    rz = z2 * (double) opt_tcosalfa + yy * (double) opt_tsinalfa;
+    ry = yy * (double) opt_pcosalfa - z2 * (double) opt_psinalfa;
 
     if (rz < 0.001) {
         return;
     }
 
     mag_factor /= rz;
-    gman = gman1x1;
+    gman = 1;
 
     if (mag_factor < 0.01) {
         mag_factor = 0.001;
     }
 
     if (mag_factor > 0.33) {
-        gman = gman2x2;
+        gman = 2;
     }
 
     if (mag_factor > 0.66) {
-        gman = gman3x3;
+        gman = 3;
     }
 
     if (mag_factor > 0.99) {
-        gman = gman4x4;
+        gman = 4;
     }
 
     if (mag_factor > 1.32) {
@@ -2738,95 +2692,88 @@ void globe(uint16_t start, uint8_t *target, uint8_t *tapestry, uint8_t *offsetsm
     // 1.32 = Maximum magnification factor with points of 4 pixels.
 
     if (rx < -292 || rx > 292) {
-        return;    // 292 = (320 / 2) + (100 * 1.32)
+        return; // 292 = (320 / 2) + (100 * 1.32)
     }
 
     if (ry < -232 || ry > 232) {
-        return;    // 232 = (200 / 2) + (100 * 1.32)
+        return; // 232 = (200 / 2) + (100 * 1.32)
     }
 
-    center_x = rx + x_centro_f;
-    center_y = ry + y_centro_f;
+    center_x = (int16_t) (rx + x_centro_f);
+    center_y = (int16_t) (ry + y_centro_f);
 
-    asm pusha
-    asm push ds
-    asm push ds
-    asm db 0x0F, 0xA9 // pop gs
-    _CX = total_map_bytes;
-    _CX >>= 1;
-    asm les ax, dword ptr tapestry
-    start += _AX;
-    _BX = start;
-    _AX = _ES;
-    asm db 0x8E, 0xE0 // mov fs, ax
-    asm les ax, dword ptr target
-    asm lds si, dword ptr offsetsmap
+    uint8_t color = 0;
+    uint16_t curr = start;
+    for (uint16_t i = (total_map_bytes / 2), j = 0; i > 0; i--, j += 2) {
+        if (offsetsmap[j] != 100) {
+            int16_t offset = (int8_t) offsetsmap[j];
+            temp           = offset;
+            temp           = (int16_t) round(((int16_t) temp) * mag_factor);
+            uint16_t pos   = temp + center_y;
 
-    rigiro:
-    asm cmp byte ptr [si], 100
-    asm jne pixel
-    asm jmp blanket
+            if (pos > 6 && pos < 191) {
+                offset = (int8_t) offsetsmap[j + 1];
+                pos    = riga[pos];
+                temp   = offset;
+                temp   = (int16_t)round(((int16_t)temp) * mag_factor);
+                offset = temp + center_x;
 
-    pixel:
-    asm mov al, [si]
-    asm cbw
-    temp = _AX;
-    temp *= mag_factor;
-    _DI = temp;
-    _DI += center_y;
-    asm cmp di, 6
-    asm jb clipout
-    asm cmp di, 191
-    asm jnb clipout
-    asm mov al, [si+1]      // istruzione di caricamento x #1
-    asm add di, di
-    asm cbw         // istruzione di caricamento x #2
-    asm db 0x65, 0x8B, 0xBD /* mov di, gs:riga[di] - prima parte */
-    asm dw offset riga      /* mov di, gs:riga[di] - 2nda parte */
-    asm mov temp, ax        // istruzione di caricamento x #3
-    asm fild word ptr temp
-    asm fmul dword ptr mag_factor
-    asm fistp word ptr temp
-    asm mov ax, temp
-    asm add ax, center_x
-    asm cmp ax, 6
-    asm jb clipout
-    asm cmp ax, 311
-    asm jnb clipout
-    asm add di, ax
-    asm db 0x64, 0x8A, 0x17 // mov dl, fs:[bx]
-    asm cmp dl, globe_saturation
-    asm jnb asis
-    asm mov dl, globe_saturation
+                if (offset > 6 && offset < 311) {
+                    pos += offset;
+                    color = tapestry[curr];
+                    if (color < globe_saturation) {
+                        color = globe_saturation;
+                    }
 
-    asis:
-    _DL |= colormask;
-    ((void(*)()) gman)();
+                    color |= colormask;
+                    if (gman == 1) {
+                        target[pos] = color;
+                    } else if (gman == 2) {
+                        target[pos]     = color;
+                        target[pos + 1] = color;
 
-    clipout:
-    _BX += 1;
-    _SI += 2;
-    _CX--;
-    if (_CX == 0) {
-        goto fine;
-    }
-    goto rigiro;
+                        target[pos + 320] = color;
+                        target[pos + 321] = color;
+                    } else if (gman == 3) {
+                        target[pos]     = color;
+                        target[pos + 1] = color;
+                        target[pos + 2] = color;
 
-    blanket:
-    asm mov al, [si+1];
-    _AH ^= _AH;
-    _BX += _AX;
-    _SI += 2;
-    _CX--;
-    if (_CX == 0) {
-        goto fine;
-    }
-    goto rigiro;
+                        target[pos + 320] = color;
+                        target[pos + 321] = color;
+                        target[pos + 322] = color;
 
-    fine:
-    asm {
-        pop ds
-        popa
+                        target[pos + 640] = color;
+                        target[pos + 641] = color;
+                        target[pos + 642] = color;
+                    } else if (gman == 4) {
+                        target[pos]     = color;
+                        target[pos + 1] = color;
+                        target[pos + 2] = color;
+                        target[pos + 3] = color;
+
+                        target[pos + 320] = color;
+                        target[pos + 321] = color;
+                        target[pos + 322] = color;
+                        target[pos + 323] = color;
+
+                        target[pos + 640] = color;
+                        target[pos + 641] = color;
+                        target[pos + 642] = color;
+                        target[pos + 643] = color;
+
+                        target[pos + 960] = color;
+                        target[pos + 961] = color;
+                        target[pos + 962] = color;
+                        target[pos + 963] = color;
+                    }
+                }
+            }
+
+            curr += 1;
+        } else {
+            curr += offsetsmap[j + 1];
+        }
     }
 
     if (!glass_bubble) {
@@ -2850,8 +2797,6 @@ void globe(uint16_t start, uint8_t *target, uint8_t *tapestry, uint8_t *offsetsm
                          center_y + z2 * sin(rz), temp, 1);
         rz += ry;
     }
-#endif
-    STUB
 }
 
 /* Same as above, but modified to make luminous globes, without details but with a
