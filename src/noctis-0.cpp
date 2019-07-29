@@ -4144,26 +4144,17 @@ void crater() { // un cratere.
     STUB
 }
 
-void band() /* banda scura orizzontale: pu� essere portata al chiaro
-       negando la superficie sulla base del fondo scala 0x3E */
-{
-#if 0
-    asm {   les di, dword ptr p_background
-            add di, py
-            mov cx, cr
-            mov ah, byte ptr g }
-    nvrain:
-    asm {   mov al, es:[di]
-            sub al, ah
-            jnc min
-            xor al, al }
-    min:
-    asm {   mov es:[di], al
-            inc di
-            dec cx
-            jnz nvrain }
-#endif
-    STUB
+// Horizontal dark band: Can be made light be negating the surface from 0x3E
+void band() {
+    for (uint16_t i = cr, j = py; i > 0; i--, j++) {
+        uint8_t color = p_background[j];
+        if (color >= g) {
+            color -= g;
+        } else {
+            color = 0;
+        }
+        p_background[j] = color;
+    }
 }
 
 void wave() { // Una banda come sopra, per� ondulata.
@@ -4193,17 +4184,17 @@ void wave() { // Una banda come sopra, per� ondulata.
 }
 
 void fracture(uint8_t *target, float max_latitude) {
-#if 0
-    // solco scuro: tipo le linee su Europa.
-    // ha dei parametri perch� viene usata anche per simulare i fulmini
-    // quando piove sulla superficie dei pianeti abitabili.
-    a = brtl_random (360) * deg;
-    gr ++;
+    /* Dark furrow: like the lines on Europe. Has parameters because it is also
+     * used to simulate lightning when it rains on the surface of habitable
+     * planets.
+     */
+    a = (float) (brtl_random(360) * deg);
+    gr++;
     float px = cx;
     float py = cy;
 
     do {
-        a += (brtl_random (g) - brtl_random (g)) * deg;
+        a += (float) ((brtl_random(g) - brtl_random(g)) * deg); // NOLINT(misc-redundant-expression)
         px += kfract * cos(a);
 
         if (px > 359) {
@@ -4224,12 +4215,10 @@ void fracture(uint8_t *target, float max_latitude) {
             py += max_latitude;
         }
 
-        vptr = px + 360 * (uint16_t)py;
+        vptr = px + (float) (360 * (uint16_t) py);
         target[vptr] >>= (uint8_t) b;
         gr--;
     } while (gr);
-#endif
-    STUB
 }
 
 void volcano() { // un krakatoa volcano con Gedeone il gigante coglione.
@@ -4303,18 +4292,9 @@ void randoface(int16_t range, int16_t upon) {
 }
 
 void negate() {
-#if 0
-    asm {   les di, p_background
-            mov cx, 64800 }
-    negat:
-    asm {   mov al, 0x3E
-            sub al, es:[di]
-            mov es:[di], al
-            inc di
-            dec cx
-            jnz negat }
-#endif
-    STUB
+    for (uint16_t i = 64800, j = 0; i > 0; i--, j++) {
+        p_background[j] = 0x3E - p_background[j];
+    }
 }
 
 void crater_juice() {
@@ -4341,43 +4321,31 @@ void crater_juice() {
     STUB
 }
 
-/*  Funzioni di mappatura dell'atmosfera.
-    Lavorano come le precedenti, ma lavorano su "objectschart"
-    piuttosto che su "p_background", e a risoluzione dimezzata.
-    Inoltre, MOLTO IMPORTANTE, il campo d'esistenza dell'albedo
-    delle nubi non va da 0 a 0x3E ovvero da 0 a 62, MA da 0 a 0x1F,
-    ovvero da 0 a 31. Questo perch�, al momento della discesa sulla
-    superficie, l'albedo media di p_background viene usata per
-    determinare, sui pianeti abitabili, qualora lo scenario �
-    oceanico o no (se si scende in mare, si deve sempre trovare
-    il mare). Dato che l'albedo di p_background � alterata da
-    quella delle nubi contenuta in objectschart, essa viene
-    ripristinata al momento della scelta del luogo di sbarco,
-    dalla funzione "planets", SOTTRAENDO l'albedo delle nubi
-    a quella della superficie di sbarco di p_background.
-    Se per�, si lascia l'alterazione dovuta alle nubi, alterare
-    l'albedo del territorio sottostante di oltre la met� del campo
-    d'esistenza 0..62, si rischia di sottrarre un valore troppo alto
-    e di ricondurre l'albedo che viene calcolata sotto al limite che
-    determina quando lo scenario � oceanico (i mari hanno l'albedo pi�
-    bassa in assoluto). Il risultato sarebbe che una zona normalmente
-    coperta di terra, al passaggio di una grossa nube diventerebbe mare. */
+/* Atmospheric mapping functions. They work like the previous ones, but operate
+ * on "objectschart" instead of on "p_background", and at halved resolution.
+ * Moreover, the existence of albedo is VERY IMPORTANT if the clouds do not go
+ * from 0x00 to 0x3E but rather from 0x00 to 0x1F. That is because at the time
+ * of descent on the surface, the average albedo of p_background is used to
+ * determine, on habitable planets, if the player is landing on the sea or not.
+ * Since the albedo of p_background is altered by that of the clouds contained
+ * in objectschart, it is restored when the landing position is chosen, from the
+ * "planets" function, by subtracting the clouds albedo from that of the landing
+ * position's p_background. If, however, the alteration due to the clouds is
+ * left, and the albedo is based on 0x00 to 0x3E, there is a risk of having an
+ * overflow, which could result in improper ocean landing calculations. The
+ * result would be that in an area normally covered with earth, a large cloud
+ * passing over would cause it to become sea.
+ */
 
-void cirrus() { // una piccola macchia chiara (nube brillante).
-#if 0
-    asm {   les di, dword ptr objectschart
-            mov bx, py
-            add bx, px
-            shr bx, 1
-            mov al, es:[bx+di]
-            add al, byte ptr gr
-            cmp al, 0x1F
-            jb min
-            mov al, 0x1F }
-    min:
-    asm     mov es:[bx+di], al
-#endif
-    STUB
+// A small light spot (bright cloud).
+void cirrus() {
+    uint16_t index = ((uint16_t) (py + px)) / 2;
+    uint8_t val = ((uint8_t*) objectschart)[index] + gr;
+    if (val > 0x1F) {
+        val = 0x1F;
+    }
+
+    ((uint8_t*) objectschart)[index] = val;
 }
 
 void atm_cyclon() { // ciclone atmosferico: un'ammasso di nubi a spirale.
