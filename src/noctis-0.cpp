@@ -4280,7 +4280,6 @@ void contrast(float kt, float kq, float thrshld) {
 }
 
 void randoface(int16_t range, int16_t upon) {
-#if 0
     uint16_t c;
 
     for (c = 0; c < 64800; c++) {
@@ -4301,8 +4300,6 @@ void randoface(int16_t range, int16_t upon) {
             p_background[c] = gr;
         }
     }
-#endif
-    STUB
 }
 
 void negate() {
@@ -4442,29 +4439,29 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
     uint8_t *overlay = (uint8_t *) objectschart;
 
     if (type == 10) {
-        return;    // stella compagna: ha superficie stellare...
+        return; // Companion star: has star surface...
     }
 
-    /*
-        Setting of the rotation period. "rotation" represents the current rotation
-        of the planet, in degrees, from 0 to 359. The rotation period is extracted
-        in a very wide range, with 1 second resolution.
-    */
-    fast_srand (seedval + 4112);
-    /*
-        "rtperiod" is the time, in seconds, that it takes the planet to rotate
-        one degree on its axis. The time taken for a complete rotation is
-        therefore 360 * rtperiod.
-    */
-    nearstar_p_rtperiod[logical_id] = 10 * (ranged_fast_random(50) + 1)
-                                      + 10 * ranged_fast_random(25)
-                                      + ranged_fast_random (250)
-                                      + 41;
+    /* Setting of the rotation period. "rotation" represents the current
+     * rotation of the planet, in degrees, from 0 to 359. The rotation period is
+     * extracted in a very wide range, with 1 second resolution.
+     */
+    fast_srand(seedval + 4112);
+
+    /* "rtperiod" is the time, in seconds, that it takes the planet to rotate
+     * one degree on its axis. The time taken for a complete rotation is
+     * therefore 360 * rtperiod.
+     */
+    nearstar_p_rtperiod[logical_id] = 10 * (ranged_fast_random(50) + 1) +
+                                      10 * ranged_fast_random(25) +
+                                      ranged_fast_random(250) + 41;
     nearstar_p_rotation[logical_id] = secs / nearstar_p_rtperiod[logical_id];
     nearstar_p_rotation[logical_id] %= 360;
-    /*  calcolo dell'orientamento del pianeta per il successivo
-        oscuramento del lato buio (rispetto alla posizione della stella) */
-    plwp = 89 - cplx_planet_viewpoint (logical_id);
+
+    /* Calculation of the planet's current orientation for the masking of the
+     * dark side (with respect to the position of the star).
+     */
+    plwp = 89 - cplx_planet_viewpoint(logical_id);
     plwp += nearstar_p_rotation[logical_id];
     plwp %= 360;
 
@@ -4472,140 +4469,131 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
         plwp += 360;
     }
 
-    /*  selezione della tabella pseudo relativa a questo pianeta
-        la tabella pseudo della funzione "random" propria al C++ ha
-        una discreta probabilit� di ricorrenza, ma essendo integrata
-        con la "ranged_fast_random", la ricorrenza viene annullata
-        ("ranged_fast_random" ha un'enormit� in pi� di tabelle). */
-    fast_srand (seedval * 10);
-    seed = fast_random (0xFFFF);
-    /*  preparazione di una superficie standard (random pattern 0..62):
-        viene elaborata in seguito a seconda del tipo di pianeta. */
-    srand (seed);
+    /* Selection of the pseudo-table relative to this planet. The pseudo-table
+     * of the "random" function in C++ has a fair probability of recurrence, but
+     * with "ranged_fast_random", the recurrence is cancelled
+     * ("ranged_fast_random" has a huge amount of tables).
+     *
+     * NOTE: The above comment is preserved for posterity, but its statements on
+     * the standard library random functions are not necessarily accurate.
+     */
+    fast_srand(seedval * 10);
+    seed = fast_random(0xFFFF);
 
-    uint8_t tdl = 0, tbl = 0;
-    uint16_t tcx = 64800, tdi = 0;
-    int16_t tax = seed;
+    /* Preparation of a standard surface (random pattern 0 .. 62): it is then
+     * processed according to the type of planet.
+     */
+    srand(seed);
+    int16_t currSeed = seed;
+    for (uint16_t i = 64800, j = 0; i > 0; i--, j++) {
+        currSeed += i;
+        int32_t result  = currSeed * currSeed;
+        auto resultHigh = static_cast<int16_t>(result >> 16u);
+        auto resultLow  = static_cast<int16_t>(result & 0xFFFFu);
+        currSeed        = resultHigh + resultLow;
+        uint8_t color   = currSeed & 0xFFu;
+        color &= 0x3Eu;
+        p_background[j] = color;
+    }
 
-    rndpat:
-    tax += tcx;
-    int32_t result    = tax * tax;
-    auto resultHigh   = static_cast<int16_t>(result >> 16u);
-    auto resultLow    = static_cast<int16_t>(result & 0xFFFFu);
-    tax = resultHigh + resultLow;
-    tbl = tax & 0xFF;
-    tbl &= 0x3E;
-    p_background[tdi] = tbl;
-    tdi++;
-    tcx--;
-    if (tcx != 0) goto rndpat;
+    /* Preparation of the overlay for mapping the changes in the atmosphere: it
+     * is initially reset, as it must be subsequently reworked according to the
+     * type of planet. Obviously the planet is not reworked if it has no
+     * atmosphere.
+     */
+    memset(overlay, 0, 32400);
 
-    /*
-        preparazione dell'overlay per la mappatura delle evoluzioni
-        dell'atmosfera: viene inizialmente azzerato, in quanto deve
-        essere successivamente rielaborato a seconda del tipo di
-        pianeta. ovviamente non viene rielaborato se il pianeta
-        non ha un atmosfera.
-    */
-    memset (overlay, 0, 32400);
-    /*
-        elaborazione della superficie specifica.
-        l'elaborazione dell'overlay per l'atmosfera,
-        nel caso ce ne sia bisogno, � contemporanea.
-    */
-    srand (seed);
+    /* Specific surface processing. Atmosphere overlay processing, if there is
+     * a need for it, is also done.
+     */
+    srand(seed);
     QUADWORDS = 16200;
 
     switch (type) {
     case 0:
-        r = ranged_fast_random (3) + 5;
+        r = ranged_fast_random(3) + 5;
 
         for (c = 0; c < r; c++) {
-            ssmooth (p_background);
+            ssmooth(p_background);
         }
 
-        tcx = 64800;
-        tdi = 0;
+        for (uint16_t i = 64800, j = 0; i > 0; i--, j++) {
+            if (p_background[j] >= 28) {
+                p_background[j] = 62;
+            }
+        }
 
-        sep:
-        if (p_background[tdi] < 28) goto low;
-        p_background[tdi] = 62;
-
-        low:
-        tdi++;
-        tcx--;
-        if (tcx != 0) goto sep;
-
-        r = ranged_fast_random (5) + 5;
+        r = ranged_fast_random(5) + 5;
 
         for (c = 0; c < r; c++) {
-            ssmooth (p_background);
+            ssmooth(p_background);
         }
 
-        r = 5 + ranged_fast_random (26);
+        r = 5 + ranged_fast_random(26);
 
         for (c = 0; c < r; c++) {
-            cr = 5 + ranged_fast_random (20);
-            cx = ranged_fast_random (360);
-            cy = ranged_fast_random (130) + 25;
-            gr = ranged_fast_random (cr / 2) + cr / 2 + 2;
-            volcano ();
+            cr = 5 + ranged_fast_random(20);
+            cx = ranged_fast_random(360);
+            cy = ranged_fast_random(130) + 25;
+            gr = ranged_fast_random(cr / 2) + cr / 2 + 2;
+            volcano();
         }
 
-        r = 100 + ranged_fast_random (100);
-        b = ranged_fast_random (3) + 1;
+        r = 100 + ranged_fast_random(100);
+        b = ranged_fast_random(3) + 1;
         g = 360;
 
         for (c = 0; c < r; c++) {
-            cx = ranged_fast_random (360);
-            cy = ranged_fast_random (180);
-            gr = ranged_fast_random (100);
-            fracture (p_background, 180);
+            cx = ranged_fast_random(360);
+            cy = ranged_fast_random(180);
+            gr = ranged_fast_random(100);
+            fracture(p_background, 180);
         }
 
-        lssmooth (p_background);
+        lssmooth(p_background);
         break;
 
     case 1:
         if (ranged_fast_random(2)) {
-            ssmooth (p_background);
+            ssmooth(p_background);
         }
 
-        r = 10 + ranged_fast_random (41);
-        crater_juice ();
-        lssmooth (p_background);
+        r = 10 + ranged_fast_random(41);
+        crater_juice();
+        lssmooth(p_background);
 
         if (!ranged_fast_random(5)) {
-            negate ();
+            negate();
         }
 
         break;
 
     case 2:
-        r = 5 + ranged_fast_random (25);
+        r = 5 + ranged_fast_random(25);
 
         for (c = 0; c < r; c++) {
-            cr = ranged_fast_random (20) + 1;
-            cy = ranged_fast_random (178 - 2 * cr) + cr;
+            cr = ranged_fast_random(20) + 1;
+            cy = ranged_fast_random(178 - 2 * cr) + cr;
 
             switch (brtl_random(2)) {
             case 0:
-                cx = ((int32_t)(10 * secs) / (ranged_fast_random (3600) + 180)) % 360;
-                gr = ranged_fast_random (12) + 2;
-                storm ();
+                cx = ((int32_t)(10 * secs) / (ranged_fast_random(3600) + 180)) %
+                     360;
+                gr = ranged_fast_random(12) + 2;
+                storm();
                 break;
 
             case 1:
-                gr = ranged_fast_random (15) + 3;
+                gr = ranged_fast_random(15) + 3;
                 py = cy * 360;
                 cr *= 360;
-                g = 1 + ranged_fast_random (gr);
-                band ();
+                g = 1 + ranged_fast_random(gr);
+                band();
             }
         }
 
         if (!ranged_fast_random(3)) {
-            negate ();
+            negate();
         }
 
         break;
@@ -4618,35 +4606,24 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
             ssmooth(p_background);
         }
 
-        tcx         = 64000;
-        tax         = seed;
-        tdl = 0;
-        tdi         = 0;
-
-    sda:
-        tdl = g;
-        if (p_background[tdi] >= tdl)
-            goto terra;
-        p_background[tdi] = 16;
-        goto mare;
-
-    terra:
-        tax += tcx;
-        result     = tax * tax;
-        resultHigh = static_cast<int16_t>(result >> 16u);
-        resultLow  = static_cast<int16_t>(result & 0xFFFFu);
-        tax        = resultHigh + resultLow;
-        tbl        = tax & 0xFF;
-        tbl &= 0x3E;
-        p_background[tdi] = tbl;
-        if (p_background[tdi] < 0x3E)
-            goto mare;
-        p_background[tdi] = 0x3E;
-
-    mare:
-        tdi++;
-        tcx--;
-        if (tcx != 0) goto sda;
+        currSeed = seed;
+        for (uint16_t i = 64000, j = 0; i > 0; i--, j++) {
+            if (p_background[j] >= g) {
+                currSeed += i;
+                int32_t result  = currSeed * currSeed;
+                auto resultHigh = static_cast<int16_t>(result >> 16u);
+                auto resultLow  = static_cast<int16_t>(result & 0xFFFFu);
+                currSeed        = resultHigh + resultLow;
+                uint8_t color   = currSeed & 0xFFu;
+                color &= 0x3Eu;
+                p_background[j] = color;
+                if (p_background[j] > 0x3E) {
+                    p_background[j] = 0x3E;
+                }
+            } else {
+                p_background[j] = 16;
+            }
+        }
 
         r = 20 + ranged_fast_random(40);
 
@@ -4669,136 +4646,132 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
         break;
 
     case 4:
-        ssmooth (p_background);
+        ssmooth(p_background);
 
         if (ranged_fast_random(2)) {
-            ssmooth (p_background);
+            ssmooth(p_background);
         }
 
-        tcx = 64000;
-        tdi = 0;
+        for (int i = 64000, j = 0; i > 0; i--, j++) {
+            if (p_background[j] == 32) {
+                p_background[j]       = 0x01;
+                p_background[j + 1]   = 0x3E;
+                p_background[j + 360] = 0x01;
+            }
+        }
 
-        lmrip:
-        if (p_background[tdi] != 32) goto proxy;
-        p_background[tdi] = 0x01;
-        p_background[tdi + 1] = 0x3E;
-        p_background[tdi + 360] = 0x01;
-
-        proxy:
-        tdi++;
-        tcx--;
-        if (tcx != 0) goto lmrip;
-
-        r = ranged_fast_random (30);
+        r = ranged_fast_random(30);
 
         if (r > 20) {
             r *= 10;
         }
 
-        b = ranged_fast_random (3) + 1;
-        g = 200 + ranged_fast_random (300);
+        b = ranged_fast_random(3) + 1;
+        g = 200 + ranged_fast_random(300);
 
         for (c = 0; c < r; c++) {
-            cx = ranged_fast_random (360);
-            cy = ranged_fast_random (180);
-            gr = 50 + ranged_fast_random (100);
-            fracture (p_background, 180);
+            cx = ranged_fast_random(360);
+            cy = ranged_fast_random(180);
+            gr = 50 + ranged_fast_random(100);
+            fracture(p_background, 180);
         }
 
-        r = ranged_fast_random (25) + 1;
-        crater_juice ();
-        lssmooth (p_background);
+        r = ranged_fast_random(25) + 1;
+        crater_juice();
+        lssmooth(p_background);
 
         if (ranged_fast_random(2)) {
-            lssmooth (p_background);
+            lssmooth(p_background);
         }
 
         break;
 
     case 5:
-        r = ranged_fast_random (3) + 4;
+        r = ranged_fast_random(3) + 4;
 
         for (c = 0; c < r; c++) {
-            ssmooth (p_background);
+            ssmooth(p_background);
         }
 
-        contrast ((float)ranged_fast_random(200) / 900 + 0.6,
-                  (float)ranged_fast_random(350) / 100 + 4.0,
-                  25 + ranged_fast_random(3));
-        randoface (5 + ranged_fast_random(3), -20 * (ranged_fast_random(3) + 1));
-        r = 5 + ranged_fast_random (5);
+        contrast((float) ((float) ranged_fast_random(200) / 900 + 0.6),
+                 (float) ((float) ranged_fast_random(350) / 100 + 4.0),
+                 (float) (25 + ranged_fast_random(3)));
+        randoface(5 + ranged_fast_random(3), -20 * (ranged_fast_random(3) + 1));
+        r = 5 + ranged_fast_random(5);
 
         for (c = 0; c < r; c++) {
-            cr = 5 + ranged_fast_random (10);
-            cx = ranged_fast_random (360);
-            cy = ranged_fast_random (145) + 15;
-            gr = ranged_fast_random (cr / 2) + 2;
-            volcano ();
+            cr = 5 + ranged_fast_random(10);
+            cx = ranged_fast_random(360);
+            cy = ranged_fast_random(145) + 15;
+            gr = ranged_fast_random(cr / 2) + 2;
+            volcano();
         }
 
-        r = 5 + ranged_fast_random (5);
+        r = 5 + ranged_fast_random(5);
 
         for (c = 0; c < r; c++) {
-            cr = ranged_fast_random (30) + 1;
-            cy = ranged_fast_random (178 - 2 * cr) + cr;
-            cx = ((int32_t)(60 * secs) / (ranged_fast_random (3600) + 360)) % 360;
-            gr = ranged_fast_random (2) + 1;
-            permanent_storm ();
+            cr = ranged_fast_random(30) + 1;
+            cy = ranged_fast_random(178 - 2 * cr) + cr;
+            cx =
+                ((int32_t)(60 * secs) / (ranged_fast_random(3600) + 360)) % 360;
+            gr = ranged_fast_random(2) + 1;
+            permanent_storm();
         }
 
         for (c = 0; c < 10000; c++) {
-            gr = ranged_fast_random (10) + 10;
-            px = ranged_fast_random (360);
-            py = ranged_fast_random (10);
+            gr = ranged_fast_random(10) + 10;
+            px = ranged_fast_random(360);
+            py = ranged_fast_random(10);
             py *= 360;
-            spot ();
-            px = ranged_fast_random (360);
-            py = 125 - ranged_fast_random (10);
+            spot();
+            px = ranged_fast_random(360);
+            py = 125 - ranged_fast_random(10);
             py *= 360;
-            spot ();
+            spot();
         }
 
         if (ranged_fast_random(2)) {
-            ssmooth (p_background);
+            ssmooth(p_background);
         } else {
-            lssmooth (p_background);
+            lssmooth(p_background);
         }
 
         break;
 
     case 6:
-        r = 3 + ranged_fast_random (5);
+        r = 3 + ranged_fast_random(5);
 
         for (c = 0; c < r; c++) {
-            ssmooth (p_background);
+            ssmooth(p_background);
         }
 
-        r = 50 + ranged_fast_random (100);
+        r = 50 + ranged_fast_random(100);
 
         for (c = 0; c < r; c++) {
-            cr = ranged_fast_random (10) + 1;
-            cy = ranged_fast_random (178 - 2 * cr) + cr;
+            cr = ranged_fast_random(10) + 1;
+            cy = ranged_fast_random(178 - 2 * cr) + cr;
 
             if (ranged_fast_random(8)) {
-                gr = ranged_fast_random (5) + 2;
-                g = 1 + ranged_fast_random (gr);
+                gr = ranged_fast_random(5) + 2;
+                g  = 1 + ranged_fast_random(gr);
                 py = cy * 360;
                 cr *= 360;
-                band ();
+                band();
             } else {
-                a = (float) (5 + ranged_fast_random(10)) / 30;
+                a  = (float) (5 + ranged_fast_random(10)) / 30;
                 cr = cr / 4 + 1;
-                wave ();
+                wave();
             }
         }
 
-        r = 50 + ranged_fast_random (100);
+        r = 50 + ranged_fast_random(100);
 
         for (c = 0; c < r; c++) {
-            cr = ranged_fast_random (15) + 1;
-            cy = ranged_fast_random (178 - 2 * cr) + cr;
-            cx = ((int32_t)(60 * secs) / (ranged_fast_random (8000) + 360)) % 360;
-            gr = ranged_fast_random (2) + 1;
+            cr = ranged_fast_random(15) + 1;
+            cy = ranged_fast_random(178 - 2 * cr) + cr;
+            cx =
+                ((int32_t)(60 * secs) / (ranged_fast_random(8000) + 360)) % 360;
+            gr = ranged_fast_random(2) + 1;
 
             if (ranged_fast_random(10)) {
                 cr = cr / 2 + 1;
@@ -4806,66 +4779,66 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
                 gr *= 3;
             }
 
-            storm ();
+            storm();
         }
 
-        lssmooth (p_background);
+        lssmooth(p_background);
 
         if (!ranged_fast_random(3)) {
-            negate ();
+            negate();
         }
 
         break;
 
     case 7:
-        r = 5 + ranged_fast_random (5);
+        r = 5 + ranged_fast_random(5);
 
         for (c = 0; c < r; c++) {
-            ssmooth (p_background);
+            ssmooth(p_background);
         }
 
-        r = 10 + ranged_fast_random (50);
-        g = 5 + ranged_fast_random (20);
-        b = ranged_fast_random (2) + 1;
+        r = 10 + ranged_fast_random(50);
+        g = 5 + ranged_fast_random(20);
+        b = ranged_fast_random(2) + 1;
 
         for (c = 0; c < r; c++) {
-            cx = ranged_fast_random (360);
-            cy = ranged_fast_random (180);
-            gr = ranged_fast_random (300);
-            fracture (p_background, 180);
+            cx = ranged_fast_random(360);
+            cy = ranged_fast_random(180);
+            gr = ranged_fast_random(300);
+            fracture(p_background, 180);
         }
 
         if (ranged_fast_random(2)) {
-            lssmooth (p_background);
+            lssmooth(p_background);
         }
 
-        randoface (1 + ranged_fast_random(10), 1);
+        randoface(1 + ranged_fast_random(10), 1);
 
         if (ranged_fast_random(2)) {
-            negate ();
+            negate();
         }
 
         break;
 
     case 8:
-        r = ranged_fast_random (10) + 1;
+        r = ranged_fast_random(10) + 1;
 
         for (c = 0; c < r; c++) {
-            lssmooth (p_background);
+            lssmooth(p_background);
         }
 
-        r = 100 + ranged_fast_random (50);
+        r = 100 + ranged_fast_random(50);
 
         for (c = 0; c < r; c++) {
-            cr = ranged_fast_random (5) + 1;
-            gr = ranged_fast_random (5) + 1;
-            cx = ranged_fast_random (360);
-            cy = ranged_fast_random (178 - 2 * cr) + cr;
-            permanent_storm ();
+            cr = ranged_fast_random(5) + 1;
+            gr = ranged_fast_random(5) + 1;
+            cx = ranged_fast_random(360);
+            cy = ranged_fast_random(178 - 2 * cr) + cr;
+            permanent_storm();
         }
 
         if (ranged_fast_random(2)) {
-            negate ();
+            negate();
         }
 
         break;
@@ -4876,33 +4849,34 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
         for (px = 0; px < 32400; px++) {
             overlay[px] = 0x1F;
         }
+
+        break;
+    default:
+        break;
     }
 
-    /*  rinormalizzazione superficie a intervallo 00-1F:
-        solo se l'atmosfera del pianeta non deve influire
-        sull'aspetto della superficie sottostante, quindi
-        per pianeti felisiani e per quelli simili a marte. */
-
+    /* Surface renormalization at interval 0x00..0x1F: Only if the planet's
+     * atmosphere doesn't have an effect on the appearance of the underlying
+     * surface, then for Felisian / Mars-like planets.
+     */
     if (type == 3 || type == 5) {
         for (px = 0; px < 64800; px++) {
-            p_background[px] >>= 1;
+            p_background[px] >>= 1u;
         }
     }
 
-    /* ritocchi specifici finali alla superficie - pianeti felisiani */
-
+    // Specific final touches to the surface for Felisian planets.
     if (type == 3) {
         if (ranged_fast_random(2)) {
-            lssmooth (p_background);
+            lssmooth(p_background);
         } else {
-            ssmooth (p_background);
+            ssmooth(p_background);
         }
     }
 
-    /*  fusione mappa terreno + overlay atmosfera,
-        e rinormalizzazione della mappa del terreno
-        in modo che si adatti al range da 0 a 1Fh. */
-
+    /* Terrain map + atmosphere overlay fusion and renormalization of the
+     * terrain map so that it adapts to the range 0x00..0x1F.
+     */
     for (px = 0, py = 0; px < 32400; py += 2, px++) {
         p_background[py] += overlay[px];
 
@@ -4917,8 +4891,7 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
         }
     }
 
-    /* ritocchi specifici finali alla superficie - pianeti venusiani */
-
+    // Specific final touches to the surface for Venusian planets.
     if (type == 2) {
         if (!brtl_random(3)) {
             psmooth_grays(p_background);
@@ -4926,7 +4899,7 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
         }
     }
 
-    /* applicazione terminatore giorno-notte */
+    // Day-night terminator application.
     nearstar_p_term_start[logical_id] = plwp + 35;
 
     if (nearstar_p_term_start[logical_id] >= 360) {
@@ -4939,33 +4912,22 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
         nearstar_p_term_end[logical_id] -= 360;
     }
 
-    tdi = plwp + 35;
-    tcx = 179;
+    for (uint16_t i = 179, j = (plwp + 35); i > 0; i--, j += 230) {
+        for (uint16_t k = 130; k > 0; k--) {
+            p_background[j] >>= 2u;
+            j++;
+        }
+    }
 
-    darkside:
-    uint16_t tempcx = tcx;
-    tcx = 130;
-
-    darkline:
-    p_background[tdi] >>= 2;
-    tdi++;
-    tcx--;
-    if (tcx != 0) goto darkline;
-    tcx = tempcx;
-    tdi += 230;
-    tcx--;
-    if (tcx != 0) goto darkside;
-
-    /* ritocchi specifici finali alla superficie - altri pianeti */
-
+    // Specific final touches to the surface for other planets.
     if (type == 2) {
         if (knot1) {
-            ssmooth (p_background);
+            ssmooth(p_background);
         } else {
-            r = 3 + ranged_fast_random (5);
+            r = 3 + ranged_fast_random(5);
 
             for (c = 0; c < r; c++) {
-                ssmooth (p_background);
+                ssmooth(p_background);
             }
         }
     }
@@ -4973,17 +4935,16 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
     if (type == 6) {
         for (c = 0; c < 3; c++)
             if (ranged_fast_random(2)) {
-                ssmooth (p_background);
+                ssmooth(p_background);
             }
     }
 
     if (type == 9)
         for (c = 0; c < 6; c++) {
-            ssmooth (p_background);
+            ssmooth(p_background);
         }
 
-    /* Elaborazione tabella dei colori (ridefinisce da 192 a 255). */
-
+    // Color table processing (redefines from 192 to 255).
     if (colorbase == 255) {
         QUADWORDS = QW;
         return;
@@ -5022,10 +4983,10 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
     g3 *= 1.25;
     b3 *= 1.25;
     type >>= 2;
-    shade (tmppal, colorbase + 00, 16, 00, 00, 00, r1, g1, b1);
-    shade (tmppal, colorbase + 16, 16, r1, g1, b1, r2, g2, b2);
-    shade (tmppal, colorbase + 32, 16, r2, g2, b2, r3, g3, b3);
-    shade (tmppal, colorbase + 48, 16, r3, g3, b3, 64, 64, 64);
+    shade(tmppal, colorbase + 00, 16, 00, 00, 00, r1, g1, b1);
+    shade(tmppal, colorbase + 16, 16, r1, g1, b1, r2, g2, b2);
+    shade(tmppal, colorbase + 32, 16, r2, g2, b2, r3, g3, b3);
+    shade(tmppal, colorbase + 48, 16, r3, g3, b3, 64, 64, 64);
     brt = nearstar_p_owner[logical_id];
 
     if (brt == -1) {
@@ -5038,7 +4999,7 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
         brt = 64 - (4 * (brt - 4));
     }
 
-    tavola_colori (tmppal + 3 * colorbase, colorbase, 64, brt, brt, brt);
+    tavola_colori(tmppal + 3 * colorbase, colorbase, 64, brt, brt, brt);
     QUADWORDS = QW;
 }
 
