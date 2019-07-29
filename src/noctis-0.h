@@ -9,6 +9,7 @@ extern int16_t attendi_pressione_tasto();
 extern bool tasto_premuto();
 extern uint8_t range8088[64 * 3];
 extern uint8_t tmppal[768];
+extern uint8_t currpal[768];
 extern int8_t return_palette[768];
 extern int8_t surface_palette[768];
 extern void tavola_colori(const uint8_t *nuova_tavolozza,

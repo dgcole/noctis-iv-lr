@@ -48,6 +48,7 @@ uint16_t QUADWORDS = 16000;
 uint8_t *adapted;
 
 uint8_t tmppal[768];
+uint8_t currpal[768];
 int8_t return_palette[768];
 int8_t surface_palette[768];
 
@@ -178,6 +179,10 @@ void tavola_colori(const uint8_t *new_palette, uint16_t starting_color,
 
         tmppal[c] = temp;
         c++;
+    }
+
+    for (uint16_t i = 0; i < (starting_color + num_colors); i++) {
+        currpal[i] = tmppal[i];
     }
 }
 
@@ -4620,7 +4625,7 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
             ssmooth(p_background);
         }
 
-        for (int i = 64000, j = 0; i > 0; i--, j++) {
+        for (uint16_t i = 64000, j = 0; i > 0; i--, j++) {
             if (p_background[j] == 32) {
                 p_background[j]       = 0x01;
                 p_background[j + 1]   = 0x3E;
