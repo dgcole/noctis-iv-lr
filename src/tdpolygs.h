@@ -4,27 +4,34 @@
     ----------------
     Full-3D Graphic Engine.
 
-    Funzioni a 32-bit per disegnare poligoni 3d riempiti di colore
-    in grafica 320x200x256. Sul Pentium � una cannonata: una media
-    di 12000 poligoni al secondo, da workstation, con 75 MhZ.
+    32-bit functions to draw 3D polygons filled with color 
+    in 320x200x256 graphics. On the Pentium is a cannon shot: 
+    an average of 12,000 polygons per second, from workstations, with 75MHz
 
-    - Non si deve mai usare il colore nr. 255 per
-      tracciare qualcosa nell'area di lavoro, quando si usa questa
-      routine, perch� lo utilizza solo lei per delimitare i poligoni.
-      Se si vuole usare un altro colore per delimitarli, bisogna
-      cambiare tutti i valori 255 nelle funzioni "Segmento" e "poly3d".
+    - You should never use the color 255 to trace something 
+	in the work area, when using this routine, because only 
+	you use it to delimit the polygons. If you want to use another 
+	color to delimit them, you need to change all the 255 values in 
+	the "Segmento" and "poly3d" functions.
 
+
+TODO: Translate this chunk
     Chiamare initscanlines prima di tracciare alcunch�,
     senn� non traccia una bella sega.
 
-    Nato (incredibile a dirsi) per Alpha Dream.
-    Ultima revisione 21 Dicembre 1997.
+    Born (incredible to say) for Alpha Dream
+    Last revised December 21st 1997.
 
-    Aggiunte: ottimizzazione conversioni 3d-2d, 23.6.1997;
-          ciclo di fast-load dei vertici quando sono tutti di fronte
-          alla videocamera (cio� quasi sempre), 23.6.1997;
-          clipping intelligente, ottobre '97;
-          texture mapping, febbraio '98.
+    Additions:
+    	3d-2d conversion optimization, 23.6.1997;
+
+	fast-load cycle of the vertices when they 
+	are all in front of the camera 
+	(that is almost always), 23.6.1997;
+
+	intelligent clipping, October '97;
+
+	texture mapping, February '98.
 
 */
 
@@ -34,88 +41,92 @@
 
 #include "noctis-d.h"
 
-/* Dati sui poligoni (quanti vertici al massimo si pensa di fare). */
+/* Data on polygons (How many vertices to do at most). */
 
 #ifndef VERTICI_PER_POLIGONO
 #define VERTICI_PER_POLIGONO 4
 #endif
 
-/* Area di visualizzazione. */
+/* Display area */
 
+//Width = larghezza
 #ifndef larghezza
 #define larghezza 300
 #endif
 
+//Height = altezza
 #ifndef altezza
 #define altezza 180
 #endif
 
+//X center
 #ifndef x_centro
 #define x_centro 160
 #endif
 
+//Y center
 #ifndef y_centro
 #define y_centro 100
 #endif
 
 /*
 
-    Controllo visualizzazione.
+    Display control.
 
 */
 
-float uneg = 100; /* Un fatto particolarmente curioso: uneg rappresenta
-           la distanza minima alla quale un certo punto non viene
-           considerato alle spalle dell'osservatore. Il bello �
-           che l'ideazione di questa sigla (ricordo che si
-           pronuncia u-neg) risale a cos� tanto tempo fa
-           (si parla della prima versione di Smallest, ovvero
-           dell'aprile '92, attualmente pi� di 5 anni fa)
-           che non ricordo assolutamente che cosa significhi
-           quest'acronimo (era un acronimo, ma chiss� come mi
-           venne in mente, forse da user-neg, negativo all'utente,
-           in riferimento all'effetto di inversione del segno
-           dato dalle funzioni prospettiche quando, per l'appunto,
-           una tripletta di coordinate ha la distanza normale
-           dallo schermo in negativo, ma non sono affatto sicuro. */
+float uneg = 100; 
+	/* A particularly curious fact: uneg represents the minimum distance 
+	 * at which a certain point is not considered behind the observer.
+	 *
+	 * The nice thing is that the conception of this acronym (recalling u-neg) 
+	 * goes back to so long ago (we talk about the first version of Smallest, 
+	 * that is April '92, currently more than 5 years ago) that I don't remember 
+	 * at all what this acronym means (it was an acronym, but who knows 
+	 * how it came to find, perhaps from user-neg, negative to the user, 
+	 * with reference to the reversal effect of the sign given by the 
+	 * perspective functions when, precisely, a triplet of coordinates 
+	 * has the normal distance from the screen in negative, 
+	 * but I'm not sure at all. */
 
 float alfa = 0, beta = 0, ngamma = 0;
 float cam_x = 0, cam_y = 0, cam_z = 0;
 
 const double deg = M_PI / 180;
 
-// Distanza dal piano di proiezione.
+// Distance from the projection plane.
 
 float dpp     = 200;
 float inv_dpp = 1 / 200;
 
-/*  Costanti e variabili di controllo del texture mapping.
-    H_MATRIXS e V_MATRIXS specificano le ripetizioni della stessa
-    texture sui poligoni, ma per avere la possibilit� di dimezzare
-    la texture o di disegnarne solo un quarto, sono state assunte
-    come rappresentanti di "quarti di texture". Significa che
-    per avere un texturing normale, senza ripetizioni n�
-    dimezzamenti, bisogna assegnare le due variabili a 4,
-    non a 1 (che rappresenterebbe un solo quarto).
-    E cos� via... se si mette 8, si ottiene la ripetizione
-    della texture per due volte sul corrispondente asse,
-    se si mette a 12 si ottengono tre ripetizioni, eccetera...
-    (ps ho cambiato la base a 16, sedicesimi di texture). */
+/* Texture mapping constants and control variables.
+ * H_MATRIXS and V_MATRIXS specify the repetitions of the same 
+ * texture on the polygons, but in order to have the possibility 
+ * of halving the texture or drawing only a quarter, they have 
+ * been assumed as representing "quarters of texture". It means 
+ * that to have a normal texturing, without repeitions halved, 
+ * it is necessary to assign the two variables to 4, not to 1 
+ * (which would represent a single quarter). And so on... 
+ * if you put 8, you get the repetition of the texture twice 
+ * on the corresponding axis, if you set to 12, you get three 
+ * repetitions, etc.
+ * (ps, I changed the base to 16, texture sixteenths). */
 
-const uint16_t MPIX          = 319; // Massimo PIXEL su X.
-const uint16_t MPIY          = 199; // Massimo PIXEL su Y.
-const uint16_t TEXTURE_XSIZE = 256; // Larghezza delle BMP.
-const uint16_t TEXTURE_YSIZE = 256; // Altezza delle BMP.
+const uint16_t MPIX          = 319; // Maximum PIXEL on X.
+const uint16_t MPIY          = 199; // Maximum PIXEL on Y.
+const uint16_t TEXTURE_XSIZE = 256; // Width of the BMPs.
+const uint16_t TEXTURE_YSIZE = 256; // BMP height.
 
-float EMU_K       = 16;                        // Cost. di emulaz. FPU
-int32_t H_MATRIXS = 16;                        // Nr. ripetizioni. 16-128
-int32_t V_MATRIXS = 16;                        // Nr. ripetizioni. 16-128
-int32_t XSIZE     = TEXTURE_XSIZE * H_MATRIXS; // Calibraz. dimensioni.
-int32_t YSIZE     = TEXTURE_YSIZE * V_MATRIXS; // Calibraz. dimensioni.
-float XCOEFF      = EMU_K / dpp;               // Coefficente di comodo.
-float YCOEFF      = EMU_K / dpp;               // Coefficente di comodo.
+float EMU_K       = 16;                        // Cost of FPU emulation
+int32_t H_MATRIXS = 16;                        // Number of repetitions. 16-128
+int32_t V_MATRIXS = 16;                        // Number of repetitions. 16-128
+int32_t XSIZE     = TEXTURE_XSIZE * H_MATRIXS; // Calibrate dimensions.
+int32_t YSIZE     = TEXTURE_YSIZE * V_MATRIXS; // Calibrate dimensions.
+float XCOEFF      = EMU_K / dpp;               // Coefficient of convenience.
+float YCOEFF      = EMU_K / dpp;               // Coefficient of convenience.
 
 // Riga is just a lookup table with 320 * i for each i.
+// Riga is italian for line.
 uint16_t riga[200];
 
 // Initialize scanline addresses.
@@ -283,7 +294,7 @@ float rxf[VERTICI_PER_POLIGONO];
 float ryf[VERTICI_PER_POLIGONO];
 float rzf[VERTICI_PER_POLIGONO];
 
-// Limiti dell'area video rielaborati.
+// Video area limits reworked.
 
 #define lbx -larghezza / 2 + x_centro
 #define ubx larghezza / 2 + x_centro
@@ -303,8 +314,8 @@ float ubyf = uby;
 float x_centro_f = x_centro;
 float y_centro_f = y_centro;
 
-// Chiamare dopo aver cambiato l'angolo visuale.
-// Aggiorna le seguenti variabili di ottimizzazione, usate da poly3d.
+// Call after changing the visual angle.
+// Update the following optimization variables, used by poly3d.
 
 float opt_pcosbeta = dpp;
 float opt_psinbeta = 0;
@@ -331,8 +342,8 @@ void change_angle_of_view() {
     opt_tsinngamma = sin(ngamma * deg);
 }
 
-// Chiamare dopo aver cambiato dpp.
-// Cambia l'obiettivo della videocamera.
+// Call after changing dpp.
+// Change the camera lens.
 
 void change_camera_lens() {
     inv_dpp = 1 / dpp;
@@ -341,8 +352,8 @@ void change_camera_lens() {
     change_angle_of_view();
 }
 
-// Chiamare dopo aver cambiato V_MATRIXS o H_MATRIXS.
-// Aggiorna le variabili di lavoro per il texture mapping.
+// Call after changing V_MATRIXS or H_MATRIXS.
+// Update the job variables for texture mapping.
 
 void change_txm_repeating_mode() {
     XSIZE = TEXTURE_XSIZE * H_MATRIXS;
@@ -360,10 +371,9 @@ void change_txm_repeating_mode() {
     Lungo e complesso, ma provate ad eseguirlo ed a monitorarne il flusso:
     vi accorgerete della sua enorme agilit�. */
 
-float uno = 1; // sempre uno: � una costante di comodo.
+float uno = 1; // Always one: it is a constant of convenience. (Very cool, italy man)
 
-uint8_t entity = 1; /* controlla quantit� generiche nel riempimento
-                 dei poligoni con alcuni effetti speciali. */
+uint8_t entity = 1; /* check generic quantities in polygon filling with some special effects */
 
 void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
             uint8_t colore) {
@@ -2035,9 +2045,9 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
     }
 }
 
-void Forward(float delta) /* Provoca l'avanzamento dell'osservatore
-                 nella direzione di volo di <delta>
-                 unit� virtuali. */
+void Forward(float delta) 
+/* Causes the observer to advance 
+ * in the direction of flight of <delta> virtual units */
 {
     cam_x -= delta * opt_tsinbeta * opt_tcosalfa;
     cam_z += delta * opt_tcosbeta * opt_tcosalfa;
@@ -2046,195 +2056,77 @@ void Forward(float delta) /* Provoca l'avanzamento dell'osservatore
 
 int32_t _x_, _y_;
 
-int8_t getcoords(float x, float y, float z) {
-#if 0
-    // calcola le coordinate sullo schermo di un punto nello spazio,
-    // usando lo stesso nucleo di calcolo di poly3d e di polymap,
-    // se il punto rientra nello schermo ritorna 1, altrimenti ritorna 0.
-    // le coordinate sono poi trasferite nelle variabili _x_ e _y_.
-    // il punto non andrebbe tracciato se non � visibile, perch�
-    // le coordinate risulterebbero, in tal caso, indeterminabili.
-    float rx, ry, rz, my;
-    asm {// if (ngamma != 0) goto t_axis;
-        db 0x66;
-        mov ax, word ptr _0
-        db 0x66;
-        cmp ax, word ptr ngamma
-        jne t_axis
-        jmp no_t_axis }
-t_axis:
-    asm {   fld z
-            fsub cam_z
-            fst zz
-            fmul opt_tsinbeta
-            fld x
-            fsub cam_x
-            fst xx
-            fmul opt_tcosbeta
-            faddp
-            fstp rx
-            fld zz
-            fmul opt_tcosbeta
-            fld xx
-            fmul opt_tsinbeta
-            fsubp
-            fst z2
-            fmul opt_tcosalfa
-            fld y
-            fsub cam_y
-            fst yy
-            fmul opt_tsinalfa
-            faddp
-            fst rz
-            fcomp uneg
-            fstsw ax
-            fld yy
-            fmul opt_tcosalfa
-            fld z2
-            fmul opt_tsinalfa
-            fsubp
-            fst my
-            fmul opt_tcosngamma
-            fld rx
-            fmul opt_tsinngamma
-            fsubp
-            fstp ry
-            fld my
-            fmul opt_tsinngamma
-            fld rx
-            fmul opt_tcosngamma
-            faddp
-            fstp rx
-            sahf
-            jb _rzf_min_uneg
-            jmp convert }
-    _rzf_min_uneg:
-    return (0);
-no_t_axis:
-    asm {   fld z
-            fsub cam_z
-            fst zz
-            fmul opt_tsinbeta
-            fld x
-            fsub cam_x
-            fst xx
-            fmul opt_tcosbeta
-            faddp
-            fstp rx
-            fld zz
-            fmul opt_tcosbeta
-            fld xx
-            fmul opt_tsinbeta
-            fsubp
-            fst z2
-            fmul opt_tcosalfa
-            fld y
-            fsub cam_y
-            fst yy
-            fmul opt_tsinalfa
-            faddp
-            fst rz
-            fcomp uneg
-            fstsw ax
-            fld yy
-            fmul opt_tcosalfa
-            fld z2
-            fmul opt_tsinalfa
-            fsubp
-            fstp ry
-            sahf
-            jb rzf_min_uneg
-            jmp convert }
-    rzf_min_uneg:
-    return (0);
-convert: //my  = dpp / rz;
-    //_x_ = my * rx + x_centro_f;
-    //_y_ = my * ry + y_centro_f;
-    asm {
-        fld dpp
-        fdiv rz
-        fld st(0)
-        fmul rx
-        fadd x_centro_f
-        fistp _x_
-        fmul ry
-        fadd y_centro_f
-        fistp _y_
+int8_t getcoords(float x, float y, float z)
+{
+	/* Calculate the coordinates on the screen of a point in space, 
+	 * using the same calculation nucleus(unit? group?) of poly3d and polymap, 
+	 * if the point re-enters the screen it returns 1, otherwise it returns 0. 
+	 * The coordinates are then transferred in the variables _x_ and _y_. 
+	 * The point should not be traced(drawn?) so it is not visible, 
+	 * because the coordinates would be, in this(that?) case, indeterminable. */
+
+    float rx, ry, rz, my, xx, yy, zz, z2;
+
+    zz = z - cam_x;
+    xx = x - cam_x;
+    
+    rx = (zz * opt_tsinbeta) + (xx * opt_tcosbeta);
+    z2 = (zz * opt_tcosbeta) - (xx * opt_tsinbeta);
+
+    yy = y - cam_y;
+
+    rz = (z2 * opt_tcosalfa) + (yy * opt_tsinalfa);
+
+    if (ngamma != _0) {
+	//t_axis:
+	my = (yy * opt_tcosalfa) - (z2 * opt_tsinalfa);
+    	ry = (my * opt_tcosngamma) - (rx * opt_tsinngamma);
+    	rx = (my * opt_tsinngamma) + (rx * opt_tcosngamma);
+    } else {
+	//no_t_axis:
+	ry = (yy * opt_tcosalfa) - (z2 * opt_tsinalfa);
     }
+
+    if (rz < uneg) {
+	    return 0;
+    }
+
+convert: 
+//my  = dpp / rz; (Explain this, italy man!)
+    
+    _x_ = ((dpp / rz) * rx) + x_centro_f;
+    _y_ = ((dpp / rz) * ry) + y_centro_f;
 
     if (_x_ > lbxl && _x_ < ubxl && _y_ > lbyl && _y_ < ubyl) {
-        return (1);
+        return 1;
     } else {
-        return (0);
+        return 0;
     }
-#endif
-    STUB
 }
 
-int8_t facing(float *x, float *y, float *z) {
-#if 0
-    /*  Controlla se un poligono a una sola faccia � visibile o meno.
-        Certo che come procedimento non � poi tanto semplice: va calcolata,
-        anche approssimativamente, la normale alla superficie; comunque,
-        sempre meglio che calcolare tutto il poligono... */
+int8_t facing(float *x, float *y, float *z)
+{
+/* Controls whether a single-sided polygon is visible or not.
+ * Of course, as a procedure it is not so simple: 
+ * the surface normal must be calculated, even approximately; 
+ * however, always better than calculating the entire polygon. */
+
     float x1, y1, z1, x2, y2, z2, xr, yr, zr;
-    asm {   les   bx, dword ptr x
-            mov   si, word ptr  y
-            mov   di, word ptr  z
-            fld   dword ptr es:[bx]
-            fsub  dword ptr es:[bx+8]
-            fstp  x1
-            fld   dword ptr es:[si]
-            fsub  dword ptr es:[si+8]
-            fstp  y1
-            fld   dword ptr es:[di]
-            fsub  dword ptr es:[di+8]
-            fstp  z1
-            fld   dword ptr es:[bx+4]
-            fsub  dword ptr es:[bx+8]
-            fstp  x2
-            fld   dword ptr es:[si+4]
-            fsub  dword ptr es:[si+8]
-            fstp  y2
-            fld   dword ptr es:[di+4]
-            fsub  dword ptr es:[di+8]
-            fst   z2
-            fmul  y1
-            fld   y2
-            fmul  z1
-            fsubp
-            fstp  xr
-            fld   z1
-            fmul  x2
-            fld   z2
-            fmul  x1
-            fsubp
-            fstp  yr
-            fld   x1
-            fmul  y2
-            fld   x2
-            fmul  y1
-            fsubp
-            fstp  zr
-            fld   cam_x
-            fsub  dword ptr es:[bx+8]
-            fmul  xr
-            fld   cam_y
-            fsub  dword ptr es:[si+8]
-            fmul  yr
-            faddp
-            fld   cam_z
-            fsub  dword ptr es:[di+8]
-            fmul  zr
-            faddp
-            ftst
-            ffree st(0)
-            fstsw ax
-            xor dl, dl
-            sahf
-            jb _zero
-            not dl }
-    _zero:
-    return (_DL);
-#endif
+
+    x1 = *x - x[8];
+    y1 = *y - y[8];
+    z1 = *z - z[8];
+    x2 = x[4] - x[8];
+    y2 = y[4] - y[8];
+    z2 = z[4] - z[8];
+
+    xr = (z2 * y1) - (y2 *z1);
+    yr = (z1 * x2) - (z2 * x1);
+    zr = (x1 * y2) - (x2 * y1);
+
+    if (((cam_x - x[8]) * xr) + ((cam_y - y[8]) * yr) + ((cam_z - z[8]) * zr) < 0) {
+	    return 0;
+    }
+
+    return 1;
 }
