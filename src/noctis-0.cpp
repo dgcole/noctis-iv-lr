@@ -4434,13 +4434,12 @@ void storm() { // tempesta (una grande macchia chiara sull'atmosfera).
  */
 
 void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase) {
-#if 0
-    int16_t         plwp;
-    uint16_t        seed;
-    int8_t            knot1 = 0, brt;
-    int16_t             QW = QUADWORDS;
-    float           r1, r2, r3, g1, g2, g3, b1, b2, b3;
-    uint8_t*   overlay = (uint8_t*)objectschart;
+    int16_t plwp, c;
+    uint16_t seed;
+    int8_t knot1 = 0, brt;
+    int16_t QW   = QUADWORDS;
+    float r1, r2, r3, g1, g2, g3, b1, b2, b3;
+    uint8_t *overlay = (uint8_t *) objectschart;
 
     if (type == 10) {
         return;    // stella compagna: ha superficie stellare...
@@ -4483,20 +4482,24 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
     /*  preparazione di una superficie standard (random pattern 0..62):
         viene elaborata in seguito a seconda del tipo di pianeta. */
     srand (seed);
-    asm {   les di, dword ptr p_background
-            mov cx, 64800
-            mov ax, seed }
+
+    uint8_t tdl = 0, tbl = 0;
+    uint16_t tcx = 64800, tdi = 0;
+    int16_t tax = seed;
+
     rndpat:
-    asm {   add ax, cx
-            xor dx, dx
-            imul ax
-            add ax, dx
-            mov bl, al
-            and bl, 0x3E
-            mov es:[di], bl
-            inc di
-            dec cx
-            jnz rndpat }
+    tax += tcx;
+    int32_t result    = tax * tax;
+    auto resultHigh   = static_cast<int16_t>(result >> 16u);
+    auto resultLow    = static_cast<int16_t>(result & 0xFFFFu);
+    tax = resultHigh + resultLow;
+    tbl = tax & 0xFF;
+    tbl &= 0x3E;
+    p_background[tdi] = tbl;
+    tdi++;
+    tcx--;
+    if (tcx != 0) goto rndpat;
+
     /*
         preparazione dell'overlay per la mappatura delle evoluzioni
         dell'atmosfera: viene inizialmente azzerato, in quanto deve
@@ -4504,7 +4507,7 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
         pianeta. ovviamente non viene rielaborato se il pianeta
         non ha un atmosfera.
     */
-    _fmemset (overlay, 0, 32400);
+    memset (overlay, 0, 32400);
     /*
         elaborazione della superficie specifica.
         l'elaborazione dell'overlay per l'atmosfera,
@@ -4521,16 +4524,18 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
             ssmooth (p_background);
         }
 
-        asm {   les di, dword ptr p_background
-                mov cx, 64800 }
+        tcx = 64800;
+        tdi = 0;
+
         sep:
-        asm {   cmp byte ptr es:[di], 28
-                jb low
-                mov byte ptr es:[di], 62 }
+        if (p_background[tdi] < 28) goto low;
+        p_background[tdi] = 62;
+
         low:
-        asm {   inc di
-                dec cx
-                jnz sep }
+        tdi++;
+        tcx--;
+        if (tcx != 0) goto sep;
+
         r = ranged_fast_random (5) + 5;
 
         for (c = 0; c < r; c++) {
@@ -4610,48 +4615,55 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
         g = 26 + ranged_fast_random(3) - ranged_fast_random(5);
 
         for (c = 0; c < r; c++) {
-            ssmooth (p_background);
+            ssmooth(p_background);
         }
 
-        asm {   les di, dword ptr p_background
-                mov cx, 64000
-                mov ax, seed }
-        sda:
-        asm {   mov dl, byte ptr g
-                cmp es:[di], dl
-                jnb terra
-                mov byte ptr es:[di], 16
-                jmp mare }
-        terra:
-        asm {   add ax, cx
-                imul ax
-                add ax, dx
-                mov bl, al
-                and bl, 0x3E
-                add es:[di], bl
-                cmp byte ptr es:[di], 0x3E
-                jb mare
-                mov word ptr es:[di], 0x3E }
-        mare:
-        asm {   inc di
-                dec cx
-                jnz sda }
-        r = 20 + ranged_fast_random (40);
+        tcx         = 64000;
+        tax         = seed;
+        tdl = 0;
+        tdi         = 0;
+
+    sda:
+        tdl = g;
+        if (p_background[tdi] >= tdl)
+            goto terra;
+        p_background[tdi] = 16;
+        goto mare;
+
+    terra:
+        tax += tcx;
+        result     = tax * tax;
+        resultHigh = static_cast<int16_t>(result >> 16u);
+        resultLow  = static_cast<int16_t>(result & 0xFFFFu);
+        tax        = resultHigh + resultLow;
+        tbl        = tax & 0xFF;
+        tbl &= 0x3E;
+        p_background[tdi] = tbl;
+        if (p_background[tdi] < 0x3E)
+            goto mare;
+        p_background[tdi] = 0x3E;
+
+    mare:
+        tdi++;
+        tcx--;
+        if (tcx != 0) goto sda;
+
+        r = 20 + ranged_fast_random(40);
 
         for (c = 0; c < r; c++) {
-            gr = ranged_fast_random (5) + 1;
-            cr = ranged_fast_random (10) + 10;
+            gr = ranged_fast_random(5) + 1;
+            cr = ranged_fast_random(10) + 10;
 
             if (ranged_fast_random(3)) {
-                cy = ranged_fast_random (172 - 2 * cr) + cr + 2;
+                cy = ranged_fast_random(172 - 2 * cr) + cr + 2;
             } else {
-                cy = 60 + ranged_fast_random (10) - ranged_fast_random (10);
+                cy = 60 + ranged_fast_random(10) - ranged_fast_random(10);
             }
 
-            cx = ((int32_t)(secs) / (ranged_fast_random (360) + 180)) % 360;
-            g  = ranged_fast_random (5) + 7;
-            a  = ranged_fast_random (360) * deg;
-            atm_cyclon ();
+            cx = ((int32_t)(secs) / (ranged_fast_random(360) + 180)) % 360;
+            g  = ranged_fast_random(5) + 7;
+            a  = ranged_fast_random(360) * deg;
+            atm_cyclon();
         }
 
         break;
@@ -4663,17 +4675,20 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
             ssmooth (p_background);
         }
 
-        asm {   les di, dword ptr p_background
-                mov cx, 64000 }
+        tcx = 64000;
+        tdi = 0;
+
         lmrip:
-        asm {   cmp byte ptr es:[di], 32
-                jne proxy
-                mov word ptr es:[di], 0x3E01
-                mov byte ptr es:[di+360], 0x01 }
+        if (p_background[tdi] != 32) goto proxy;
+        p_background[tdi] = 0x01;
+        p_background[tdi + 1] = 0x3E;
+        p_background[tdi + 360] = 0x01;
+
         proxy:
-        asm {   inc di
-                dec cx
-                jnz lmrip }
+        tdi++;
+        tcx--;
+        if (tcx != 0) goto lmrip;
+
         r = ranged_fast_random (30);
 
         if (r > 20) {
@@ -4856,7 +4871,7 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
         break;
 
     case 9:
-        pclear (p_background, 0x1F);
+        memset(adapted, 0x1F, QUADWORDS * 4);
 
         for (px = 0; px < 32400; px++) {
             overlay[px] = 0x1F;
@@ -4924,22 +4939,22 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
         nearstar_p_term_end[logical_id] -= 360;
     }
 
-    asm {   les di, dword ptr p_background
-            add di, plwp
-            add di, 35
-            mov cx, 179 }
+    tdi = plwp + 35;
+    tcx = 179;
+
     darkside:
-    asm {   push cx
-            mov cx, 130 }
+    uint16_t tempcx = tcx;
+    tcx = 130;
+
     darkline:
-    asm {   shr byte ptr es:[di], 2
-            inc di
-            dec cx
-            jnz darkline
-            pop cx
-            add di, 230
-            dec cx
-            jnz darkside }
+    p_background[tdi] >>= 2;
+    tdi++;
+    tcx--;
+    if (tcx != 0) goto darkline;
+    tcx = tempcx;
+    tdi += 230;
+    tcx--;
+    if (tcx != 0) goto darkside;
 
     /* ritocchi specifici finali alla superficie - altri pianeti */
 
@@ -5025,8 +5040,6 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
 
     tavola_colori (tmppal + 3 * colorbase, colorbase, 64, brt, brt, brt);
     QUADWORDS = QW;
-#endif
-    STUB
 }
 
 /* Tracciamento degli anelli (eventuali). */
@@ -6018,7 +6031,7 @@ void load_starface() {
         int32_t result    = ax * ax;
         auto resultHigh   = static_cast<int16_t>(result >> 16u);
         auto resultLow    = static_cast<int16_t>(result & 0xFFFFu);
-        int16_t netResult = resultHigh = resultLow;
+        int16_t netResult = resultHigh + resultLow;
         auto blarg                     = static_cast<uint8_t>(netResult & 0xFFu);
         blarg &= 0x3Eu;
         s_background[i] = blarg;
