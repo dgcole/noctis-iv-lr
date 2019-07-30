@@ -834,19 +834,27 @@ int32_t flat_rnd_seed;
 
 // Pseudo table selection.
 // There are 4,294,967,295 possible tables, and about 20000 elements per table.
-void fast_srand(int32_t seed) { flat_rnd_seed = ((uint32_t) seed) | 0x03u; }
+void fast_srand(int32_t seed) {
+    flat_rnd_seed = ((uint32_t) seed) | 0x03u;
+}
 
 // Extraction of a number: "mask" activates the bits.
 // This is very sketchy!
 int32_t fast_random(int32_t mask) {
-    int32_t eax = flat_rnd_seed;
-    int32_t edx = flat_rnd_seed;
+    uint32_t eax = flat_rnd_seed;
+    uint32_t edx = flat_rnd_seed;
 
-    uint64_t res = (uint64_t)eax * (uint64_t)edx;
-    eax          = (res & 0xFFFFFFFF) + ((res >> 32u) & 0x0000FFFFu);
+    uint64_t result = (uint64_t) eax * (uint64_t) edx;
+    eax = (result & 0xFFFFFFFFu);
+    edx = ((result >> 32u) & 0xFFFFFFFFu);
+    uint8_t al = (eax & 0xFFu);
+    uint8_t dl = (edx & 0xFFu);
+    al += dl;
+    eax = (eax & 0xFFFFFF00u) | al;
     flat_rnd_seed += eax;
 
-    return ((uint32_t) eax) & ((uint32_t) mask);
+    int32_t num = eax & ((uint32_t) (mask));
+    return num;
 }
 
 int16_t ranged_fast_random(int16_t range) {
