@@ -844,7 +844,7 @@ int32_t fast_random(int32_t mask) {
     uint32_t eax = flat_rnd_seed;
     uint32_t edx = flat_rnd_seed;
 
-    uint64_t result = (uint64_t) eax * (uint64_t) edx;
+    uint64_t result = ((uint64_t) eax) * ((uint64_t) edx);
     eax = (result & 0xFFFFFFFFu);
     edx = ((result >> 32u) & 0xFFFFFFFFu);
     uint8_t al = (eax & 0xFFu);
@@ -3980,7 +3980,7 @@ no_moons:
 // Smooth the surface of a planet: fast 4x4 average.
 
 void ssmooth(uint8_t *target) {
-    uint32_t limit = ((uint32_t)QUADWORDS << 2u) - (360u << 2u);
+    uint32_t limit = ((uint32_t) QUADWORDS << 2u) - (360u << 2u);
 
     for (uint32_t i = 0; i < limit; i++) {
         // 4 columns of 4 pixels each.
@@ -4005,36 +4005,24 @@ void ssmooth(uint8_t *target) {
     }
 }
 
-/* Smussa leggermente la superficie di un pianeta: media 2x2. */
-
+/* Smooth the surface of a planet slightly: 2x2 average. */
 void lssmooth(uint8_t *target) {
-#if 0
-    asm {   pusha
-            push es
-            mov cx, QUADWORDS
-            sub cx, 80
-            shl cx, 2
-            les di, dword ptr target }
-    smooth:
-    asm {   mov dx, es:[di]
-            mov al, dl
-            and dx, 0011111100111111b
-            mov bx, es:[di+360]
-            add dl, dh
-            and bx, 0011111100111111b
-            add dl, bl
-            and al, 11000000b
-            add dl, bh
-            shr dl, 2
-            or al, dl
-            mov es:[di], al
-            inc di
-            dec cx
-            jnz smooth
-            pop es
-            popa }
-#endif
-    STUB
+    uint32_t limit = (((uint32_t) QUADWORDS) - 80) << 2u;
+
+    for (uint32_t i = 0; i < limit; i++) {
+        uint8_t sample = target[i] & 0xC0u;
+
+        uint8_t dl = target[i] & 0x3Fu;
+        uint8_t dh = target[i + 1] & 0x3Fu;
+
+        uint8_t bl = target[i + 360] & 0x3Fu;
+        uint8_t bh = target[i + 361] & 0x3Fu;
+
+        uint8_t average = (dl + dh + bl + bh) / 4;
+
+        sample |= average;
+        target[i] = sample;
+    }
 }
 
 int16_t gr, r, g, b, cr, cx, cy;
@@ -4201,7 +4189,8 @@ void fracture(uint8_t *target, float max_latitude) {
      * used to simulate lightning when it rains on the surface of habitable
      * planets.
      */
-    a = (float) (brtl_random(360) * deg);
+    int16_t rand0 = brtl_random(360);
+    a = (float) (rand0 * deg);
     gr++;
     float px = cx;
     float py = cy;
@@ -4413,7 +4402,7 @@ void storm() { // tempesta (una grande macchia chiara sull'atmosfera).
 
 void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase) {
     int16_t plwp, c;
-    uint16_t seed;
+    uint16_t seed = 0;
     int8_t knot1 = 0, brt;
     int16_t QW   = QUADWORDS;
     float r1, r2, r3, g1, g2, g3, b1, b2, b3;
@@ -4464,7 +4453,7 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
     /* Preparation of a standard surface (random pattern 0 .. 62): it is then
      * processed according to the type of planet.
      */
-    srand(seed);
+    brtl_srand(seed);
     int16_t currSeed = seed;
     for (uint16_t i = 64800, j = 0; i > 0; i--, j++) {
         currSeed += i;
@@ -4487,7 +4476,7 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
     /* Specific surface processing. Atmosphere overlay processing, if there is
      * a need for it, is also done.
      */
-    srand(seed);
+    brtl_srand(seed);
     QUADWORDS = 16200;
 
     switch (type) {
@@ -5204,19 +5193,18 @@ void planets() {
                     if (is_moon) {
                         if (nearstar_p_type[n]) {
                             surface(n, nearstar_p_type[n],
-                                    1000000 * nearstar_ray * nearstar_p_type[n] *
-                                        nearstar_p_orb_orient[n],
+                                    1000000.0 * nearstar_ray * nearstar_p_type[n] * nearstar_p_orb_orient[n],
                                     128);
                         } else {
                             surface(n, nearstar_p_type[n],
-                                    2000000 * n * nearstar_ray *
+                                    2000000.0 * n * nearstar_ray *
                                         nearstar_p_orb_orient[n],
                                     128);
                         }
                     } else {
                         if (nearstar_p_type[n]) {
                             surface(n, nearstar_p_type[n],
-                                    1000000 * nearstar_p_type[n] *
+                                    1000000.0 * nearstar_p_type[n] *
                                         nearstar_p_orb_seed[n] *
                                         nearstar_p_orb_tilt[n] *
                                         nearstar_p_orb_ecc[n] *
@@ -5224,7 +5212,7 @@ void planets() {
                                     192);
                         } else {
                             surface(n, nearstar_p_type[n],
-                                    2000000 * n * nearstar_p_orb_seed[n] *
+                                    2000000.0 * n * nearstar_p_orb_seed[n] *
                                         nearstar_p_orb_tilt[n] *
                                         nearstar_p_orb_ecc[n] *
                                         nearstar_p_orb_orient[n],
