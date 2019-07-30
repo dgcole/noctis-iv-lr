@@ -4468,10 +4468,10 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
     int16_t currSeed = seed;
     for (uint16_t i = 64800, j = 0; i > 0; i--, j++) {
         currSeed += i;
-        int32_t result  = currSeed * currSeed;
+        int32_t result  = ((int32_t) currSeed) * ((int32_t) currSeed);
         auto resultHigh = static_cast<int16_t>(result >> 16u);
         auto resultLow  = static_cast<int16_t>(result & 0xFFFFu);
-        currSeed        = resultHigh + resultLow;
+        currSeed        = resultLow + resultHigh;
         uint8_t color   = currSeed & 0xFFu;
         color &= 0x3Eu;
         p_background[j] = color;
@@ -4591,10 +4591,10 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
         for (uint16_t i = 64000, j = 0; i > 0; i--, j++) {
             if (p_background[j] >= g) {
                 currSeed += i;
-                int32_t result  = currSeed * currSeed;
+                int32_t result  = ((int32_t) currSeed) * ((int32_t) currSeed);
                 auto resultHigh = static_cast<int16_t>(result >> 16u);
                 auto resultLow  = static_cast<int16_t>(result & 0xFFFFu);
-                currSeed        = resultHigh + resultLow;
+                currSeed        = resultLow + resultHigh;
                 uint8_t color   = currSeed & 0xFFu;
                 color &= 0x3Eu;
                 p_background[j] = color;
@@ -6155,7 +6155,7 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
 
             if (sys == 4) {
                 strcat((char *)outhudbuffer,
-                       R"(5\FLIGHTCTR R\DEVICES    D\PREFS      X\SCREEN OFF)");
+                       "(5\\FLIGHTCTR R\\DEVICES    D\\PREFS      X\\SCREEN OFF)");
             } else {
                 cpos                    = strlen((char *)outhudbuffer);
                 outhudbuffer[cpos + 00] = '6';
