@@ -3,8 +3,6 @@
 extern uint16_t QUADWORDS;
 extern uint8_t *adapted;
 extern void reach_your_dir(char **argv);
-extern void _320_200_256();
-extern void _80_25_C();
 extern int16_t attendi_pressione_tasto();
 extern bool tasto_premuto();
 extern uint8_t range8088[64 * 3];

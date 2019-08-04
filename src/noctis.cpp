@@ -485,8 +485,7 @@ void freeze()
 }
 
 // Execution of an executable module of the GOES Net.
-void run_goesnet_module()
-{
+void run_goesnet_module() {
     FILE* ch;
 
     /* Allows for prepending './' to the command, 
@@ -524,7 +523,6 @@ void run_goesnet_module()
     free(command_prepended);
 
     if (!adapted) {
-        _80_25_C();
         printf("Sorry, GOES Net crashed.\n");
         printf("System integrity compromised: any key to quit.\n\n");
         attendi_pressione_tasto();
@@ -2646,7 +2644,6 @@ int main(int argc, char **argv) {
     }
 
     // tweakedVGA (X320Y200C4YPAL); // INIZIALIZZAZIONE GRAFICA.
-    _320_200_256(); // INIZIALIZZAZIONE GRAFICA.
     initscanlines();
     unfreeze();
     memset(adapted, 0, QUADWORDS * 4);
@@ -2720,7 +2717,6 @@ int main(int argc, char **argv) {
 #endif
     remove(surface_file);
 allstop:
-    _80_25_C();
     freeze();
 }
 

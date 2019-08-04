@@ -12,3 +12,6 @@ data/current.bin
 
 # Manual Build Dir
 build/
+
+# Screenshot Directory
+gallery/

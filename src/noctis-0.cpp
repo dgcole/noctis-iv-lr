@@ -97,12 +97,6 @@ void reach_your_dir(char **argv) {
     }
 }
 
-// Initialize the 320x200x256 graphics mode.
-void _320_200_256() STUB
-
-// Initialize the 80x25 text mode.
-void _80_25_C() STUB
-
 std::stack<int16_t> keys;
 
 // Wait for a key?
@@ -293,6 +287,9 @@ void handle_input() {
                 break;
             case SDL_SCANCODE_SPACE:
                 keys.push(' ');
+                break;
+            case SDL_SCANCODE_DELETE:
+                keys.push('*');
                 break;
             default:
                 break;
@@ -4031,60 +4028,44 @@ float a, kfract = 2;
 int8_t lave, crays;
 uint16_t px, py;
 
-/*
+/* Modular functions to detail surfaces. Called only from surface. The
+ * parameters are passed in used variables: c, gr, r, g, b, cr, cx, cy, lave,
+ * crays, px, py, and a.
+ *
+ * kfract is the density of fractures on the planets. It is placed at 1 to make
+ * lightning in the sky.
+ *
+ * They all operate on p_background even though, at the time of definition of
+ * the surface of a moon, p_background will be exchanged with s_background,
+ * which initially is the map of the star surface. The fact that a moon is
+ * likely to see the planet around which it orbits means we must separate the
+ * planetary and lunar map. We are not worried however, about having more than
+ * two visible bodies, because:
+ *
+ *      - The first and second planet of any non-star cannot, by convention,
+ *      have any moons. On the other hand, since the star surface is not visible
+ *      in detail from the third planet on, it can be approximated by a white
+ *      globe.
+ *
+ *      - The moons visible from another moon always appear rather small, so it
+ *      is not possible to see the details of the surface of one moon from the
+ *      point of view of another.
+ *
+ * Finally, the same considerations on surface maps apply to color maps: The
+ * color map of the star is swapped out for that of the moon.
+ */
 
-    Funzioni modulari per particolareggiare le superfici.
-    Chiamate solo da surface. I parametri vengono passati nelle
-    variabili all'uopo adibite: c, gr, r, g, b, cr, cx, cy, lave,
-    crays, px, py, ed a.
-
-    kfract � la densit� delle fratture sui pianeti.
-    viene posta a 1 per fare i fulmini nel cielo.
-
-    Alcune ne chiamano altre, dello stesso gruppo, per risparmiare sui
-    ritornelli di codice ripetuto. I pianeti particolarissimi non le
-    usano, o comunque non usano solo queste.
-
-    Lavorano tutte su p_background anche se, al momento della definizione
-    della superficie di una luna, p_background verr� scambiato con
-    s_background, che inizialmente � la mappa della superficie stellare.
-    Il fatto � che da una luna � probabile vedere il pianeta attorno al
-    quale quella data luna sta girando, quindi bisogna mantenere separate
-    la mappa planetaria e quella lunare. Non ci si preoccupa, invece, di
-    avere pi� di due corpi visibili, perch�:
-
-        - il primo e il secondo pianeta di qualsiasi stella non
-          possono, per convenzione, avere lune; d'altra parte, dal
-          terzo pianeta in poi la superficie stellare non � visibile
-          nei dettagli, e pu� essere approssimata da un "whiteglobe",
-          un globo bianco in tinta unita.
-        - le lune visibili da un'altra luna appaiono sempre piuttosto
-          piccole, per cui non � possibile scorgere i dettagli della
-          superficie di una luna dal punto di vista di un'altra.
-
-    Infine, le stesse considerazioni sulle mappe delle superfici,
-    valgono per le mappe dei colori: la mappa dei colori della stella
-    viene usata per conservare quella delle lune.
-
-*/
-
-void spot() { // una piccola macchia chiara sulla superficie.
-#if 0
-    asm {   les di, dword ptr p_background
-            add di, py
-            add di, px
-            mov al, es:[di]
-            add al, byte ptr gr
-            cmp al, 0x3E
-            jb min
-            mov al, 0x3E }
-    min:
-    asm     mov es:[di], al
-#endif
-    STUB
+// A small light spot on the surface.
+void spot() {
+    uint8_t color = p_background[(uint16_t) (py + px)] + gr;
+    if (color > 0x3E) {
+        color = 0x3E;
+    }
+    p_background[(uint16_t) (py + px)] = color;
 }
 
-void permanent_storm() { // tempesta permanente (una macchia colossale).
+// Permanent storm (a colossal stain).
+void permanent_storm() {
     for (g = 1; g < cr; g++) {
         for (a = 0; a < 2 * M_PI; a += 4 * deg) {
             px = (uint16_t) (cx + g * cos(a));
@@ -4095,7 +4076,8 @@ void permanent_storm() { // tempesta permanente (una macchia colossale).
     }
 }
 
-void crater() { // un cratere.
+// A crater.
+void crater() {
 #if 0
     for (a = 0; a < 2 * M_PI; a += 4 * deg) {
         for (gr = 0; gr < cr; gr++) {
@@ -4480,6 +4462,7 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
     brtl_srand(seed);
     QUADWORDS = 16200;
 
+    int16_t rVal0 = 0, rVal1 = 0, rVal2 = 0;
     switch (type) {
     case 0:
         r = ranged_fast_random(3) + 5;
@@ -4663,10 +4646,18 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
             ssmooth(p_background);
         }
 
-        contrast((float) ((float) ranged_fast_random(200) / 900 + 0.6),
-                 (float) ((float) ranged_fast_random(350) / 100 + 4.0),
-                 (float) (25 + ranged_fast_random(3)));
-        randoface(5 + ranged_fast_random(3), -20 * (ranged_fast_random(3) + 1));
+        /* These have been pulled out of the function call b/c the borland
+         * compiler evaluated them the other way around.
+         */
+        rVal0 = ranged_fast_random(3);
+        rVal1 = ranged_fast_random(350);
+        rVal2 = ranged_fast_random(200);
+        contrast((float) ((float) rVal2 / 900 + 0.6),
+                 (float) ((float) rVal1 / 100 + 4.0),
+                 (float) (25 + rVal0));
+        rVal0 = ranged_fast_random(3);
+        rVal1 = ranged_fast_random(3);
+        randoface(5 + rVal1, -20 * (rVal0 + 1));
         r = 5 + ranged_fast_random(5);
 
         for (c = 0; c < r; c++) {
@@ -6187,34 +6178,29 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
     wrouthud(2, 192, 0, (char *)outhudbuffer);
 }
 
-/*  Salva una fotografia dello schermo sul file "SNAPXXXX.BMP":
-    XXXX � un numero progressivo di disambiguazione. */
-
 extern int32_t star_label_pos;
 extern int8_t star_label[25];
 extern int32_t planet_label_pos;
 extern int8_t planet_label[25];
 
 int8_t snapfilename[24];
+/* Save a photo of the screen into the file "SNAP[XXXX].BMP", where [XXXX] is a
+ * progressive disambiguation number.
+ */
 void snapshot(int16_t forcenumber, int8_t showdata) {
-#if 0
     int16_t prog;
     uint16_t pqw;
     double parsis_x, parsis_y, parsis_z;
     uint16_t ptr, c;
     int8_t a, b, t[54];
-    int16_t ih = sa_open (header_bmp);
+    int16_t ih = sa_open(header_bmp);
 
     if (ih == -1) {
         return;
     }
 
-    _rtl_read (ih, t, 54);
-    _rtl_close (ih);
-    pqw = QUADWORDS;
-    QUADWORDS = 16000;
-    pclear (adaptor, 0);
-    QUADWORDS = pqw;
+    read(ih, t, 54);
+    close(ih);
 
     if (!forcenumber) {
         prog = -1;
@@ -6226,84 +6212,78 @@ void snapshot(int16_t forcenumber, int8_t showdata) {
                 return;
             }
 
-            sprintf (snapfilename, "..\\GALLERY\\SNAP%04d.BMP", prog);
-            ih = _rtl_open (snapfilename, 0);
+            sprintf((char *) snapfilename, "gallery/SNAP%04d.BMP", prog);
+            ih = open((char *) snapfilename, 0);
 
             if (ih != -1) {
-                _rtl_close (ih);
+                close(ih);
             }
         } while (ih != -1);
     } else {
-        sprintf (snapfilename, "..\\GALLERY\\SNAP%04d.BMP", forcenumber);
+        sprintf((char *) snapfilename, "gallery/SNAP%04d.BMP", forcenumber);
     }
 
     if (showdata) {
-        areaclear (adapted, 2, 191, 0, 0, 316, 7, 64 + 63);
-        asm {   fld dzat_x
-                frndint
-                fstp parsis_x
-                fld dzat_y
-                frndint
-                fstp parsis_y
-                fld dzat_z
-                frndint
-                fstp parsis_z }
-        strcpy (outhudbuffer, "LOCATION PARSIS: ");
-        strcat (outhudbuffer, alphavalue(parsis_x));
-        strcat (outhudbuffer, ";");
-        strcat (outhudbuffer, alphavalue(-parsis_y));
-        strcat (outhudbuffer, ";");
-        strcat (outhudbuffer, alphavalue(parsis_z));
+        areaclear(adapted, 2, 191, 0, 0, 316, 7, 64 + 63);
+
+        parsis_x = round(dzat_x);
+        parsis_y = round(dzat_y);
+        parsis_z = round(dzat_z);
+
+        strcpy((char *) outhudbuffer, "LOCATION PARSIS: ");
+        strcat((char *) outhudbuffer, alphavalue(parsis_x));
+        strcat((char *) outhudbuffer, ";");
+        strcat((char *) outhudbuffer, alphavalue(-parsis_y));
+        strcat((char *) outhudbuffer, ";");
+        strcat((char *) outhudbuffer, alphavalue(parsis_z));
 
         if (ip_targetted > -1) {
             if (nearstar_p_owner[ip_targetted] > -1) {
-                strcat (outhudbuffer, " & TGT: MOON N@");
-                strcat (outhudbuffer, alphavalue(nearstar_p_moonid[ip_targetted] + 1));
-                strcat (outhudbuffer, " OF PLANET N@");
-                strcat (outhudbuffer, alphavalue(nearstar_p_owner[ip_targetted] + 1));
+                strcat((char *) outhudbuffer, " & TGT: MOON N@");
+                strcat((char *) outhudbuffer, alphavalue(nearstar_p_moonid[ip_targetted] + 1));
+                strcat((char *) outhudbuffer, " OF PLANET N@");
+                strcat((char *) outhudbuffer, alphavalue(nearstar_p_owner[ip_targetted] + 1));
             } else {
-                strcat (outhudbuffer, " & TGT: PLANET N@");
-                strcat (outhudbuffer, alphavalue(ip_targetted + 1));
+                strcat((char *) outhudbuffer, " & TGT: PLANET N@");
+                strcat((char *) outhudbuffer, alphavalue(ip_targetted + 1));
             }
         }
 
-        wrouthud (3, 192, NULL, outhudbuffer);
+        wrouthud(3, 192, 0, (char *) outhudbuffer);
 
         if (ap_targetted == 1 && star_label_pos != -1) {
-            areaclear (adapted, 14, 14, 0, 0, 102, 7, 64 + 63);
-            wrouthud (15, 15, 20, star_label);
+            areaclear(adapted, 14, 14, 0, 0, 102, 7, 64 + 63);
+            wrouthud(15, 15, 20, (char *) star_label);
         }
 
         if (ip_targetted != -1 && planet_label_pos != -1) {
-            areaclear (adapted, 14, 23, 0, 0, 102, 7, 64 + 63);
-            wrouthud (15, 24, 20, planet_label);
+            areaclear(adapted, 14, 23, 0, 0, 102, 7, 64 + 63);
+            wrouthud(15, 24, 20, (char *) planet_label);
         }
     }
 
-    ih = _rtl_creat (snapfilename, 0);
+    ih = creat((char *) snapfilename, S_IRUSR | S_IWUSR);
 
     if (ih > -1) {
         a = 0;
-        _rtl_write (ih, t, 54);
+        write(ih, t, 54);
 
         for (c = 0; c < 768; c += 3) {
             b = tmppal[c + 2] * 4;
-            _rtl_write (ih, &b, 1);
+            write(ih, &b, 1);
             b = tmppal[c + 1] * 4;
-            _rtl_write (ih, &b, 1);
+            write(ih, &b, 1);
             b = tmppal[c + 0] * 4;
-            _rtl_write (ih, &b, 1);
-            _rtl_write (ih, &a, 1);
+            write(ih, &b, 1);
+            write(ih, &a, 1);
         }
 
         for (ptr = 63680; ptr < 64000; ptr -= 320) {
-            _rtl_write (ih, adapted + ptr, 320);
+            write(ih, adapted + ptr, 320);
         }
 
-        _rtl_close (ih);
+        close(ih);
     }
-#endif
-    STUB
 }
 
 /*
