@@ -4386,8 +4386,8 @@ void atm_cyclon() { // ciclone atmosferico: un'ammasso di nubi a spirale.
 void storm() { // tempesta (una grande macchia chiara sull'atmosfera).
     for (g = 1; g < cr; g++) {
         for (a = 0; a < 2 * M_PI; a += 4 * deg) {
-            px = (uint16_t) (cx + g * cos(a));
-            py = (uint16_t) (cy + g * sin(a));
+            px = (uint16_t) (cx + (int16_t) (g * cos(a)));
+            py = (uint16_t) (cy + (int16_t) (g * sin(a)));
             py *= 360;
             cirrus();
         }
@@ -4548,8 +4548,7 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
 
             switch (brtl_random(2)) {
             case 0:
-                cx = ((int32_t)(10 * secs) / (ranged_fast_random(3600) + 180)) %
-                     360;
+                cx = (((int32_t) (uint32_t) (10 * secs)) / (ranged_fast_random(3600) + 180)) % 360;
                 gr = ranged_fast_random(12) + 2;
                 storm();
                 break;
