@@ -4068,8 +4068,8 @@ void spot() {
 void permanent_storm() {
     for (g = 1; g < cr; g++) {
         for (a = 0; a < 2 * M_PI; a += 4 * deg) {
-            px = (uint16_t) (cx + g * cos(a));
-            py = (uint16_t) (cy + g * sin(a));
+            px = (uint16_t) (cx + g * cos((double) a));
+            py = (uint16_t) (cy + g * sin((double) a));
             py *= 360;
             spot();
         }
@@ -4078,54 +4078,42 @@ void permanent_storm() {
 
 // A crater.
 void crater() {
-#if 0
     for (a = 0; a < 2 * M_PI; a += 4 * deg) {
         for (gr = 0; gr < cr; gr++) {
-            px = cx + cos (a) * gr;
-            py = cy + sin (a) * gr;
+            px = cx + cos((double) a) * gr;
+            py = cy + sin((double) a) * gr;
             vptr = px + 360 * py;
-            asm {   les di, dword ptr p_background
-                    add di, vptr
-                    mov al, es:[di]
-                    mov ah, byte ptr gr
-                    mov cl, lave
-                    shr ah, cl
-                    sub al, ah
-                    jnc entro
-                    xor al, al }
-            entro:
-            asm     mov es:[di], al
+
+            uint8_t color = p_background[vptr];
+            uint8_t colorOffset = gr >> lave;
+            if (color >= colorOffset) {
+                p_background[vptr] = color - colorOffset;
+            } else {
+                p_background[vptr] = 0;
+            }
         }
 
-        asm {   les di, dword ptr p_background
-                add di, vptr
-                mov ax, 0x013E
-                mov es:[di], ax }
+        p_background[vptr] = 0x3E;
+        p_background[vptr + 1] = 0x01;
 
         if (crays && !brtl_random(crays)) {
             b = (2 + brtl_random(2)) * cr;
 
             if (cy - b > 0 && cy + b < 179) {
                 for (gr = cr + 1; gr < b; gr++) {
-                    px = cx + cos (a) * gr;
-                    py = cy + sin (a) * gr;
+                    px = cx + cos((double) a) * gr;
+                    py = cy + sin((double) a) * gr;
                     vptr = px + 360 * py;
-                    asm {   les di, dword ptr p_background
-                            add di, vptr
-                            mov al, es:[di]
-                            mov ah, byte ptr cr
-                            add al, ah
-                            cmp al, 0x3E
-                            jb entro2
-                            mov al, 0x3E }
-                    entro2:
-                    asm     mov es:[di], al
+
+                    uint8_t color = p_background[vptr] + ((uint8_t) cr);
+                    if (color > 0x3E) {
+                        color = 0x3E;
+                    }
+                    p_background[vptr] = color;
                 }
             }
         }
     }
-#endif
-    STUB
 }
 
 // Horizontal dark band: Can be made light be negating the surface from 0x3E
@@ -4190,7 +4178,7 @@ void fracture(uint8_t *target, float max_latitude) {
             px += 360;
         }
 
-        py += kfract * sin(a);
+        py += kfract * sin((double) a);
 
         if (py > max_latitude - 1) {
             py -= max_latitude;
@@ -4211,8 +4199,8 @@ void volcano() { // un krakatoa volcano con Gedeone il gigante coglione.
         b = gr;
 
         for (g = cr / 2; g < cr; g++) {
-            px = (uint16_t) (cx + cos(a) * g);
-            py = (uint16_t) (cy + sin(a) * g);
+            px = (uint16_t) (cx + cos((double) a) * g);
+            py = (uint16_t) (cy + sin((double) a) * g);
             py *= 360;
             spot();
             gr--;
@@ -4283,11 +4271,10 @@ void negate() {
 }
 
 void crater_juice() {
-#if 0
     lave = brtl_random (3);
     crays = brtl_random (3) * 2;
 
-    for (c = 0; c < r; c++) {
+    for (int16_t c = 0; c < r; c++) {
         cx = brtl_random (360);
         cr = 2 + brtl_random (1 + r - c);
 
@@ -4296,14 +4283,12 @@ void crater_juice() {
         }
 
         cy = brtl_random (178 - 2 * cr) + cr;
-        crater ();
+        crater();
 
         if (cr > 15) {
             lssmooth (p_background);
         }
     }
-#endif
-    STUB
 }
 
 /* Atmospheric mapping functions. They work like the previous ones, but operate
@@ -4333,8 +4318,8 @@ void cirrus() {
     ((uint8_t*) objectschart)[index] = val;
 }
 
-void atm_cyclon() { // ciclone atmosferico: un'ammasso di nubi a spirale.
-#if 0
+// Atmospheric cyclone: a cluster of spiral clouds.
+void atm_cyclon() {
     b = 0;
 
     while (cr > 0) {
@@ -4361,15 +4346,13 @@ void atm_cyclon() { // ciclone atmosferico: un'ammasso di nubi a spirale.
 
         a += 6 * deg;
     }
-#endif
-    STUB
 }
 
 void storm() { // tempesta (una grande macchia chiara sull'atmosfera).
     for (g = 1; g < cr; g++) {
         for (a = 0; a < 2 * M_PI; a += 4 * deg) {
-            px = (uint16_t) (cx + (int16_t) (g * cos(a)));
-            py = (uint16_t) (cy + (int16_t) (g * sin(a)));
+            px = (uint16_t) (cx + (int16_t) (g * cos((double) a)));
+            py = (uint16_t) (cy + (int16_t) (g * sin((double) a)));
             py *= 360;
             cirrus();
         }
