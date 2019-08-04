@@ -4448,7 +4448,7 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
      * NOTE: The above comment is preserved for posterity, but its statements on
      * the standard library random functions are not necessarily accurate.
      */
-    fast_srand(seedval * 10);
+    fast_srand((int32_t) (uint32_t) (seedval * 10));
     seed = fast_random(0xFFFF);
 
     /* Preparation of a standard surface (random pattern 0 .. 62): it is then
