@@ -3578,10 +3578,10 @@ void prepare_nearstar() {
     for (n = 0; n < nearstar_nop; n++) {
         nearstar_p_owner[n]      = -1;
         nearstar_p_orb_orient[n] = (double)deg * (double)brtl_random(360);
-        nearstar_p_orb_seed[n]   = 3 * (n * n + 1) * nearstar_ray +
-                                 (float)brtl_random((int16_t) (300 * nearstar_ray)) / 100;
-        nearstar_p_tilt[n]     = zrandom((int16_t) (10 * nearstar_p_orb_seed[n])) / 500;
-        nearstar_p_orb_tilt[n] = zrandom((int16_t) (10 * nearstar_p_orb_seed[n])) / 5000;
+        nearstar_p_orb_seed[n]   = 3.0 * (n * n + 1) * nearstar_ray +
+                                 (float) brtl_random((int16_t) (300 * nearstar_ray)) / 100.0;
+        nearstar_p_tilt[n]     = zrandom((int16_t) (10 * nearstar_p_orb_seed[n])) / 500.0;
+        nearstar_p_orb_tilt[n] = zrandom((int16_t) (10 * nearstar_p_orb_seed[n])) / 5000.0;
         nearstar_p_orb_ecc[n] =
             1 - (double) brtl_random((int16_t) (nearstar_p_orb_seed[n] +
                                     10 * fabs(nearstar_p_orb_tilt[n]))) /
@@ -3589,7 +3589,7 @@ void prepare_nearstar() {
         nearstar_p_ray[n] =
             (double)brtl_random((int16_t) (nearstar_p_orb_seed[n])) * 0.001 + 0.01;
         nearstar_p_ring[n] =
-            zrandom((int16_t) nearstar_p_ray[n]) * (1 + (double)brtl_random(1000) / 100);
+            zrandom((int16_t) nearstar_p_ray[n]) * (1 + (double)brtl_random(1000) / 100.0);
 
         if (nearstar_class != 8) {
             nearstar_p_type[n] = brtl_random(planet_types);
@@ -4007,7 +4007,8 @@ void ssmooth(uint8_t *target) {
 
 /* Smooth the surface of a planet slightly: 2x2 average. */
 void lssmooth(uint8_t *target) {
-    uint32_t limit = (((uint32_t) QUADWORDS) - 80) << 2u;
+    // Offset limit by additional -1 because valgrind told me this ran over.
+    uint32_t limit = ((((uint32_t) QUADWORDS) - 80) << 2u) - 1;
 
     for (uint32_t i = 0; i < limit; i++) {
         uint8_t sample = target[i] & 0xC0u;

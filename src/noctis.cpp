@@ -2598,7 +2598,7 @@ int main(int argc, char **argv) {
     SDL_SetRelativeMouseMode(SDL_TRUE);
 #else
     window = SDL_CreateWindow("Noctis IV LR", SDL_WINDOWPOS_CENTERED, // NOLINT(hicpp-signed-bitwise)
-                              SDL_WINDOWPOS_CENTERED, 960, 600, // NOLINT(hicpp-signed-bitwise)
+                              SDL_WINDOWPOS_CENTERED, 640, 400, // NOLINT(hicpp-signed-bitwise)
                               SDL_WINDOW_RESIZABLE);
 #endif
 
@@ -4564,6 +4564,24 @@ resynctoplanet:
                 (color_r << 24u) + (color_g << 16u) + (color_b << 8u) + 255;
             dest[i] = color;
         }
+        // Palette display.
+        /*for (int i = 0; i < 256; i++) {
+            uint32_t color_r    = currpal[i * 3] * 4;
+            uint32_t color_g    = currpal[i * 3 + 1] * 4;
+            uint32_t color_b    = currpal[i * 3 + 2] * 4;
+
+            uint32_t color = (color_r << 24u) + (color_g << 16u) + (color_b << 8u) + 255;
+
+            uint32_t line = 10 * (i / 32);
+            uint32_t col = (i * 10) % 320;
+
+            uint32_t base = line * 320 + col;
+            for (int j = 0; j < 10; j++) {
+                for (int k = 0; k < 10; k++) {
+                    dest[base + j * 320 + k] = color;
+                }
+            }
+        }*/
         SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, sdl_surface);
         SDL_RenderCopy(renderer, texture, nullptr, nullptr);
         SDL_RenderPresent(renderer);
