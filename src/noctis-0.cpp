@@ -4382,14 +4382,14 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
      * rotation of the planet, in degrees, from 0 to 359. The rotation period is
      * extracted in a very wide range, with 1 second resolution.
      */
-    fast_srand(seedval + 4112);
+    fast_srand(((int32_t) (uint32_t) seedval) + 4112);
 
     /* "rtperiod" is the time, in seconds, that it takes the planet to rotate
      * one degree on its axis. The time taken for a complete rotation is
      * therefore 360 * rtperiod.
      */
-    nearstar_p_rtperiod[logical_id] = 10 * (ranged_fast_random(50) + 1) +
-                                      10 * ranged_fast_random(25) +
+    nearstar_p_rtperiod[logical_id] = 10.0 * (ranged_fast_random(50) + 1) +
+                                      10.0 * ranged_fast_random(25) +
                                       ranged_fast_random(250) + 41;
     nearstar_p_rotation[logical_id] = secs / nearstar_p_rtperiod[logical_id];
     nearstar_p_rotation[logical_id] %= 360;
@@ -5395,6 +5395,7 @@ void planets() {
                 } else {
                     glass_bubble = 0;
                 }
+
 
                 globe(plwp + nearstar_p_rotation[n], adapted, p_background,
                       (uint8_t *)n_globes_map, gl_bytes, plx, ply, plz,
