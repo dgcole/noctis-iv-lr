@@ -291,6 +291,14 @@ void handle_input() {
             case SDL_SCANCODE_DELETE:
                 keys.push('*');
                 break;
+            case SDL_SCANCODE_MINUS:
+                keys.push('-');
+                break;
+            case SDL_SCANCODE_COMMA:
+                keys.push(',');
+                break;
+            case SDL_SCANCODE_SLASH:
+                keys.push('/');
             default:
                 break;
             }
@@ -4129,30 +4137,13 @@ void band() {
     }
 }
 
-void wave() { // Una banda come sopra, per� ondulata.
-#if 0
-    asm {   les di, dword ptr p_background
-            mov px, 360
-            mov bx, cy }
-    nvrain:
-    asm {   fild px
-            fmul a
-            db 0xd9, 0xfe // fsin
-            fild cr
-            fmulp
-            fistp py
-            add py, bx
-            mov ax, py
-            mov dx, 360
-            mul dx
-            add ax, 4
-            mov di, ax
-            add di, px
-            mov byte ptr es:[di], 0
-            dec px
-            jnz nvrain }
-#endif
-    STUB
+// A band, like the above but wavy.
+void wave() {
+    for (uint16_t i = 360; i > 0; i--) {
+        py = ((uint16_t) round(cr * sin(a * i))) + cy;
+        uint16_t index = ((uint16_t) (py * 360)) + i;
+        p_background[index] = 0;
+    }
 }
 
 void fracture(uint8_t *target, float max_latitude) {
