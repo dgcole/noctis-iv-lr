@@ -5444,35 +5444,28 @@ void planets() {
     p_background = surface_backup;
 }
 
-/*
-
-    Gestione cartografia galattica.
-
-    Ad ogni stella � assegnato un codice d'identificazione univoco,
-    derivante dalle sue coordinate. A tale codice si fa riferimento
-    per l'associazione dei nomi delle stelle. I codici identificativi
-    dei pianeti vengono calcolati a partire da quello della loro stella,
-    pi� il numero (progressivo) del pianeta in ordine di distanza.
-
-*/
+/* Galactic Mapping
+ *
+ * Each star is assigned a unique identification code, resulting from its
+ * coordinates. This code is referred to for the association of the names of the
+ * stars. The identification codes of planets are calculated starting from their
+ * star, plus the (progressive) number of the planet in order of distance.
+ */
 
 double laststar_x, laststar_y, laststar_z;
 
-/*  Determina se una certa stella, di cui si specifica il codice
-    d'identificazione univoco, � attualmente nel range dei sensori.
-    Ritorna 1 quando � visibile, 0 se non lo �.
-    Quando � visibile, le coordinate della stella sono riportate
-    nelle variabili "laststar_x", "laststar_y" e "laststar_z". */
-
+/* Determines whether a certain star, of which the id is specified, is currently
+ * in sensor range. Return 1 when visible, 0 if not. When visible, the
+ * coordinates of the star are reported in the variables laststar_x/y/z.
+ */
 int8_t isthere(double star_id) {
-#if 0
-    int8_t        visible_sectors = 9;
-    int32_t        sect_x, sect_y, sect_z;
-    int32_t        k, advance = 100000;
-    double      sidlow = star_id - idscale;
-    double      sidhigh = star_id + idscale;
-    uint8_t   sx, sy, sz;
-    double      laststar_id;
+    int8_t visible_sectors = 9;
+    int32_t sect_x, sect_y, sect_z;
+    int32_t k, advance = 100000;
+    double sidlow  = star_id - idscale;
+    double sidhigh = star_id + idscale;
+    uint8_t sx, sy, sz;
+    double laststar_id;
     sect_x = (dzat_x - visible_sectors * 50000) / 100000;
     sect_x *= 100000;
     sect_y = (dzat_y - visible_sectors * 50000) / 100000;
@@ -5485,113 +5478,63 @@ int8_t isthere(double star_id) {
     }
 
     k = 100000 * visible_sectors;
-    asm {   les ax, dword ptr adapted
-            mov al, visible_sectors
-            mov sx, al }
-    e_while:
-    asm {   mov al, visible_sectors
-            mov sy, al }
-    m_while:
-    asm {   mov al, visible_sectors
-            mov sz, al }
-    i_while:
-    asm {   db 0x66, 0xBB, 0x50, 0xC3, 0x00, 0x00 // mov ebx, 50000
-            db 0x66;
-            mov ax, word ptr sect_x
-            db 0x66;
-            mov dx, word ptr sect_z
-            db 0x66;
-            add ax, dx
-            db 0x66;
-            mov cx, ax
-            db 0x66;
-            mov dx, ax
-            db 0x66, 0x81, 0xE2, 0xFF, 0xFF, 0x01, 0x00 // and edx, 0x0001FFFF
-            db 0x66;
-            add dx, word ptr sect_x
-            db 0x66;
-            sub dx, bx
-            db 0x66;
-            mov word ptr laststar_x, dx
-            db 0x66;
-            imul dx
-            db 0x66;
-            add dx, ax
-            db 0x66;
-            add cx, dx
-            db 0x66, 0x81, 0xE2, 0xFF, 0xFF, 0x01, 0x00 // and edx, 0x0001FFFF
-            db 0x66;
-            add dx, word ptr sect_y
-            db 0x66;
-            sub dx, bx
-            db 0x66;
-            mov word ptr laststar_y, dx
-            db 0x66;
-            mov ax, cx
-            db 0x66;
-            imul dx
-            db 0x66;
-            add dx, ax
-            db 0x66, 0x81, 0xE2, 0xFF, 0xFF, 0x01, 0x00 // and edx, 0x0001FFFF
-            db 0x66;
-            add dx, word ptr sect_z
-            db 0x66;
-            sub dx, bx
-            db 0x66;
-            mov word ptr laststar_z, dx
-            fild dword ptr laststar_x
-            fst  laststar_x
-            fmul idscale
-            fild dword ptr laststar_y
-            fst  laststar_y
-            fmul idscale
-            fild dword ptr laststar_z
-            fst  laststar_z
-            fmul idscale
-            fmulp
-            fmulp
-            fst laststar_id
-            fcomp sidlow
-            fstsw ax
-            sahf
-            jb i_next
-            fld laststar_id
-            fcomp sidhigh
-            fstsw ax
-            sahf
-            jb y_end }
-    i_next:
-    asm {   db 0x66;
-            mov ax, word ptr advance
-            db 0x66;
-            add word ptr sect_z, ax
-            dec sz
-            jz i_end
-            jmp i_while }
-    i_end:
-    asm { db 0x66;
-          mov dx, word ptr k
-          db 0x66;
-          sub word ptr sect_z, dx
-          db 0x66;
-          add word ptr sect_y, ax
-          dec sy
-          jz m_end
-          jmp m_while }
-    m_end:
-    asm { db 0x66;
-          sub word ptr sect_y, dx
-          db 0x66;
-          add word ptr sect_x, ax
-          dec sx
-          jz e_end
-          jmp e_while }
-    e_end:
-    return (0);
-y_end:
-    return (1);
-#endif
-    STUB return 0;
+
+    for (sx = visible_sectors; sx > 0; sx--, sect_y -= k, sect_x += advance) {
+        for (sy = visible_sectors; sy > 0;
+             sy--, sect_z -= k, sect_y += advance) {
+            for (sz = visible_sectors; sz > 0; sz--, sect_z += advance) {
+                // TODO; Cleanup, rename properly. No teletubby names.
+                int32_t eax = sect_x;
+                int32_t edx = sect_z;
+
+                eax += edx;
+                int32_t ecx = eax;
+                edx         = eax;
+                edx &= 0x0001FFFF;
+
+                edx += sect_x;
+                edx -= 0xC350;
+                laststar_x = edx;
+
+                int64_t result = (int64_t) edx * (int64_t) eax;
+                eax            = result & 0xFFFFFFFF;
+                edx            = result >> 32;
+
+                edx += eax;
+                ecx += edx;
+                edx &= 0x0001FFFF;
+
+                edx += sect_y;
+                edx -= 0xC350;
+                laststar_y = edx;
+                eax        = ecx;
+
+                result = (int64_t) edx * (int64_t) eax;
+                eax    = result & 0xFFFFFFFF;
+                edx    = result >> 32;
+
+                edx += eax;
+                edx &= 0x0001FFFF;
+
+                edx += sect_z;
+                edx -= 0xC350;
+                laststar_z = edx;
+
+                laststar_x = round(laststar_x);
+                laststar_y = round(laststar_y);
+                laststar_z = round(laststar_z);
+
+                laststar_id = (laststar_x * idscale) * (laststar_y * idscale) *
+                              (laststar_z * idscale);
+
+                if (laststar_id > sidlow && laststar_id < sidhigh) {
+                    return 1;
+                }
+            }
+        }
+    }
+
+    return 0;
 }
 
 /*  Ricerca tutte le stelle note visibili, fino a 50 contemporaneamente.
@@ -5613,19 +5556,18 @@ double targets_table_py[50];
 double targets_table_pz[50];
 
 void collect_targets() {
-#if 0
     int16_t     local_smh;
     uint16_t    n, ptr, index, toread;
     int8_t*    buffer_ascii = (int8_t*)p_surfacemap;
     double*  buffer_double = (double*)p_surfacemap;
-    local_smh = _rtl_open (starmap_file, 0);
+    local_smh = open(starmap_file, 0);
 
     if (local_smh > -1) {
         toread = tgt_bytes_per_scan;
 
         while (toread) {
-            lseek (local_smh, tgt_collect_lastpos, SEEK_SET);
-            n = _rtl_read (local_smh, buffer_ascii, toread);
+            lseek(local_smh, tgt_collect_lastpos, SEEK_SET);
+            n = read(local_smh, buffer_ascii, toread);
 
             if (!n) {
                 collecting_targets = 0;
@@ -5673,10 +5615,8 @@ void collect_targets() {
         }
 
 stop:
-        _rtl_close (local_smh);
+        close(local_smh);
     }
-#endif
-    STUB
 }
 
 /* Cambia lo stato visualizzato dall'FCS sull'Head-Up-Display. */
