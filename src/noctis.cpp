@@ -2569,7 +2569,7 @@ int8_t mselect, lrv, right_dblclick = 0;
 float right_dblclick_dir;
 double dpz, ras, rap, dasp, eclipse;
 double dxx, dyy, dzz, l_dsd, p_dsd, stz, ang;
-int16_t opencapcount = 0;
+static int16_t opencapcount = 0;
 int16_t opencapdelta = 0;
 int16_t holdtomiddle = 0;
 int8_t leftturn, rightturn, arrowcolor, farstar = 0;

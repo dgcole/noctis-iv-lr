@@ -315,8 +315,8 @@ extern void modpv(int16_t handle, int16_t polygon_id, int16_t vertex_id,
                   float y_angle, float z_angle, struct pvlist *vertexs_to_affect);
 //--------------------------------------------------------------------------//
 extern char *alphavalue(double value);
-extern void background(uint16_t start, uint8_t target, uint8_t background,
-                       uint8_t offsetsmap, uint16_t total_map_bytes,
+extern void background(uint16_t start, uint8_t* target, uint8_t* background,
+                       uint8_t* offsetsmap, uint16_t total_map_bytes,
                        uint16_t screenshift);
 extern void sky(uint16_t limits);
 extern double laststar_x, laststar_y, laststar_z;
