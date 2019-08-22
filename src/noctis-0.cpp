@@ -299,6 +299,10 @@ void handle_input() {
                 break;
             case SDL_SCANCODE_SLASH:
                 keys.push('/');
+            case SDL_SCANCODE_KP_COLON:
+                keys.push(':');
+            case SDL_SCANCODE_SEMICOLON:
+                keys.push(':');
             default:
                 break;
             }
