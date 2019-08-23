@@ -1,3 +1,4 @@
+#include "noctis.h"
 #include "noctis-0.h"
 #include "noctis-d.h"
 #include "brtl.h"
@@ -1138,7 +1139,6 @@ int16_t ipfx,
 int8_t nearest_fragment_already_traced; // flag di lavoro.
 
 void fragment(int32_t x, int32_t z) {
-#if 0
     // traccia un quadrante della superficie.
     int8_t  poly1, poly2;
     int16_t   c1, count, id, cl;
@@ -1365,7 +1365,7 @@ void fragment(int32_t x, int32_t z) {
             H_MATRIXS = 0;
             V_MATRIXS = 0;
             change_txm_repeating_mode();
-            txtr = n_globes_map;
+            txtr = (uint8_t*) n_globes_map;
             cam_y += 515;
             polycupola (-1, 1);
             flares = 0;
@@ -1475,34 +1475,15 @@ void fragment(int32_t x, int32_t z) {
         return;
     }
 
-    /*  for (id = 0; id < animals; id++)
-          if (ani_sqc[id] == h1)
-              live_animal (id);*/
     ani_sqc_temp = ani_sqc;
-    asm {   mov cx, animals
-    cmp cx, 0
-    jle nat
-    mov si, word ptr ani_sqc_temp
-    mov ax, word ptr h1 }
-    lfa:
-    asm {   cmp word ptr [si], ax
-    jne nah
-    push ax
-    push cx
-    push si
-    mov dx, animals
-    sub dx, cx }
-    live_animal (_DX);
-    asm {   pop si
-    pop cx
-    pop ax }
-    nah:
-    asm {   add si, 2
-    dec cx
-    jnz lfa }
+    for (id = 0; id < animals; id++) {
+        if (ani_sqc_temp[id] == h1) {
+            live_animal(id);
+        }
+    }
+
     /* -3- Traccia gli oggetti presenti sulla superficie. */
     // se non sono previsti oggetti su questa superficie, lascia...
-    nat:
 
     if ((count = objectschart[h1].nr_of_objects) == 0) {
         return;
@@ -1586,8 +1567,6 @@ void fragment(int32_t x, int32_t z) {
 
         count--;
     }
-#endif
-    STUB
 }
 
 void iperficie(int16_t additional_quadrants) {
@@ -5453,7 +5432,7 @@ void planetary_main() {
         QUADWORDS = 16000;
 
         if (!widesnapping) {
-            //pcopy (adaptor, adapted);
+            swapBuffers();
         }
 
         QUADWORDS = pqw;

@@ -2720,6 +2720,43 @@ allstop:
     freeze();
 }
 
+void swapBuffers() {
+    SDL_RenderClear(renderer);
+    auto dest = static_cast<uint32_t *>(sdl_surface->pixels);
+    for (int i = 0; i < 64000; i++) {
+        uint8_t color_index = adapted[i];
+        uint32_t color_r    = currpal[color_index * 3] * 4;
+        uint32_t color_g    = currpal[color_index * 3 + 1] * 4;
+        uint32_t color_b    = currpal[color_index * 3 + 2] * 4;
+
+        uint32_t color =
+            (color_r << 24u) + (color_g << 16u) + (color_b << 8u) + 255;
+        dest[i] = color;
+    }
+    // Palette display.
+    /*for (int i = 0; i < 256; i++) {
+        uint32_t color_r    = currpal[i * 3] * 4;
+        uint32_t color_g    = currpal[i * 3 + 1] * 4;
+        uint32_t color_b    = currpal[i * 3 + 2] * 4;
+
+        uint32_t color = (color_r << 24u) + (color_g << 16u) + (color_b << 8u) + 255;
+
+        uint32_t line = 10 * (i / 32);
+        uint32_t col = (i * 10) % 320;
+
+        uint32_t base = line * 320 + col;
+        for (int j = 0; j < 10; j++) {
+            for (int k = 0; k < 10; k++) {
+                dest[base + j * 320 + k] = color;
+            }
+        }
+    }*/
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, sdl_surface);
+    SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+    SDL_RenderPresent(renderer);
+    SDL_DestroyTexture(texture);
+}
+
 void loop() {
     sync_start();
     //
@@ -4548,40 +4585,7 @@ resynctoplanet:
     }
 
     if (!_delay) {
-        SDL_RenderClear(renderer);
-        auto dest = static_cast<uint32_t *>(sdl_surface->pixels);
-        for (int i = 0; i < 64000; i++) {
-            uint8_t color_index = adapted[i];
-            uint32_t color_r    = currpal[color_index * 3] * 4;
-            uint32_t color_g    = currpal[color_index * 3 + 1] * 4;
-            uint32_t color_b    = currpal[color_index * 3 + 2] * 4;
-
-            uint32_t color =
-                (color_r << 24u) + (color_g << 16u) + (color_b << 8u) + 255;
-            dest[i] = color;
-        }
-        // Palette display.
-        /*for (int i = 0; i < 256; i++) {
-            uint32_t color_r    = currpal[i * 3] * 4;
-            uint32_t color_g    = currpal[i * 3 + 1] * 4;
-            uint32_t color_b    = currpal[i * 3 + 2] * 4;
-
-            uint32_t color = (color_r << 24u) + (color_g << 16u) + (color_b << 8u) + 255;
-
-            uint32_t line = 10 * (i / 32);
-            uint32_t col = (i * 10) % 320;
-
-            uint32_t base = line * 320 + col;
-            for (int j = 0; j < 10; j++) {
-                for (int k = 0; k < 10; k++) {
-                    dest[base + j * 320 + k] = color;
-                }
-            }
-        }*/
-        SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, sdl_surface);
-        SDL_RenderCopy(renderer, texture, nullptr, nullptr);
-        SDL_RenderPresent(renderer);
-        SDL_DestroyTexture(texture);
+        swapBuffers();
     } else if (_delay > 0 && _delay < 10) {
         _delay--;
     }

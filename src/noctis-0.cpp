@@ -2452,7 +2452,7 @@ void background(uint16_t start, uint8_t *target, uint8_t *background,
     asm {   pop ds
             popa }
 #endif
-    FIXME
+    STUB
 }
 
 /*
