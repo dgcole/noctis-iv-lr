@@ -1815,206 +1815,181 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
 
         // Low detail scanline tracing.
         c_row:
-        #if 0
-        asm {
-            cmp sections, 0
-            jg  c_again
-            jmp row_end
+        if (sections <= 0) {
+            goto row_end;
         }
 
         c_again:
-        asm {
-            cmp sections, 32
-            jg  c_complete
-            mov ax, sections
-            add ax, 2
-            mov cl, al
-            jmp c_unfinished
+        if (sections > 32) {
+            goto c_complete;
+        } else {
+            tax = sections;
+            tax += 2;
+            tal = (tax & 0xFFu);
+            tcl = tal;
+            goto c_unfinished;
         }
 
         c_complete:
-        asm     mov cl, 32
+        tcl = 32;
 
         c_unfinished:
-        asm {
-            sub sections, 32
-            cmp cl, 2
-            jl  c_row
-            fld   _z           // 1 cycle   stack: z
-            fadd  k3               // 1 cycle   stack: z+k3
-            fld   _x           // 1 cycle   stack: x, z+k3
-            fadd  k1               // 1 cycle   stack: x+k1, z+k3
-            fxch                   // no time   stack: z+k3, x+k1
-            fst   _z               // 2 cycles  stack: z+k3, x+k1
-            fxch                   // no time   stack: x+k1, z+k3
-            fst   _x               // 2 cycles  stack: x+k1, z+k3
-            fxch                   // no time   stack: z+k3, x+k1
-            fdivr _uno             // 39 cycles stack: k4, x+k1
-            db 0x66;
-            mov ax, word ptr u     // while FPU is working,
-            db 0x66;
-            mov dx, word ptr v     // this group takes 0 cycles.
-            shr cl, 1          //
-            push bp                //
-            mov ch, _flares        //
-            push di            //
-            fxch                   // no time   stack: x+k1, k4
-            fmul  tempXsize        // 1 cycle   stack: x..., k4
-            fld   _y               // 1 cycle   stack: y, x..., k4
-            fadd  k2           // 1 cycle   stack: y+k2, x..., k4
-            fst   _y               // 3 cycles  stack: y+k2, x..., k4
-            fmul  tempYsize        // 1 cycle   stack: y..., x..., k4
-            fxch                   // no time   stack: x..., y..., k4
-            fmul  st, st(2)        // 1 cycle   stack: u, y..., k4
-            fxch                   // no time   stack: y..., u, k4
-            fmul  st, st(2)        // 1 cycle   stack: v, u, k4
-            fxch                   // no time   stack: u, v, k4
-            fistp u                // 6 cycles  stack: v, k4
-            fistp v                // 6 cycles  stack: k4
-            fstp st
-            db 0x66;
-            mov si, word ptr v
-            db 0x66;
-            mov bp, word ptr u
-            db 0x66;
-            sub si, dx
-            db 0x66;
-            sub bp, ax
-            db 0x66;
-            sar si, 4
-            db 0x66;
-            sar bp, 4
-            test ch, 15         // NORMALE = 0
-            jz c_internal
-            test ch, 1      // LUCIDO = 1
-            jnz c_transp
-            test ch, 2      // BRILLANTE = 2
-            jnz c_bright
-            test ch, 4      // TRASLUCIDO = 4
-            jnz c_merger
-            jmp c_bumper    // BUMP MAPPING = 8
+        sections -= 32;
+        if (tcl < 2) {
+            goto c_row;
+        }
+
+        _x += k1;
+        _y += k2;
+        _z += k3;
+
+        k4 = 1 / _z;
+
+        tempu = u;
+        tempv = v;
+
+        u = round((_x * tempXsize) * k4);
+        v = round((_y * tempYsize) * k4);
+
+        tax = tempu;
+        tdx = tempv;
+        fakesi = (v - tempv) >> 4;
+        tbp = (u - tempu) >> 4;
+
+        tcl >>= 1;
+        tch = _flares;
+        tch = _flares;
+        if (tch & 1) {
+            goto c_transp;
+        } else if (tch & 2) {
+            goto c_bright;
+        } else if (tch & 4) {
+            goto c_merger;
+        } else if (tch & 8) {
+            goto c_bumper;
+        } else {
+            goto c_internal;
         }
 
         c_internal:
-        asm {
-            mov bh, dh      // 1 (riempimento normale)
-            add di, 2       // *
-            mov bl, ah      // 1
-            mov ch, ds:[0xFA00] // *
-            db 0x64, 0x02, 0x2F     // 1+PFX+AGI (add ch, fs:[bx])
-            add ax, bp      // *
-            mov [di+2], ch      // 1
-            mov [di+3], ch      // *
-            add dx, si      // 1
-            dec cl          // *
-            jnz c_internal      // 1 (8 cicli).
-            jmp c_common
-        }
+        tdh = (tdx >> 8) & 0xFF;
+        tah = (tax >> 8) & 0xFF;
+
+        tbh = tdh;
+        fakedi += 2;
+        tbl = tah;
+        tch = adapted[0xFA00];
+        tbx = (((uint16_t) tbh) << 8) + tbl;
+        tch += txtr[(uint16_t) (tbx - 4)]; // NOTE; Fudge factor to account for loss of offset on txtr.
+        tax += tbp;
+        adapted[fakedi + 2] = tch;
+        adapted[fakedi + 3] = tch;
+        tdx += fakesi;
+        tcl--;
+        if (tcl != 0) goto c_internal;
+        goto c_common;
 
         c_transp:
-        asm {
-            mov bh, dh      // 1 (riempimento lucido)
-            add di, 2       // *
-            mov bl, ah      // 1
-            mov ch, [di+3]      // *
-            db 0x64, 0x02, 0x2F     // 1+PFX+AGI (add ch, fs:[bx])
-            add ax, bp      // *
-            mov [di+2], ch      // 1
-            mov [di+3], ch      // *
-            add dx, si      // 1
-            dec cl          // *
-            jnz c_transp        // 1 (8 cicli).
-            jmp c_common
-        }
+        tdh = (tdx >> 8) & 0xFF;
+        tah = (tax >> 8) & 0xFF;
+
+        tbh = tdh;
+        fakedi += 2;
+        tbl = tah;
+        tch = adapted[fakedi + 3];
+        tbx = (((uint16_t) tbh) << 8) + tbl;
+        tch += txtr[(uint16_t) (tbx - 4)];
+        tax += tbp;
+        adapted[fakedi + 2] = tch;
+        adapted[fakedi + 3] = tch;
+        tdx += fakesi;
+        tcl--;
+        if (tcl != 0) goto c_transp;
+        goto c_common;
 
         c_bright:
-        asm {
-            mov ch, [di+4]      // 1 (riempimento brillante)
-            mov bh, dh      // *
-            add di, 2       // 1
-            mov bl, ah      // *
-            and ch, 0x3F        // 1
-            add ax, bp      // *
-            db 0x64, 0x02, 0x2F     // 1+PFX (add ch, fs:[bx])
-            add dx, si      // *
-            cmp ch, 0x3E        // 1
-            jbe c_antibloom     // * (antiblooming)
-            mov ch, 0x3E        // 1
-        }
+        tdh = (tdx >> 8) & 0xFF;
+        tah = (tax >> 8) & 0xFF;
+
+        tch = adapted[fakedi + 4];
+        tbh = tdh;
+        fakedi += 2;
+        tbl = tah;
+        tch &= 0x3F;
+        tax += tbp;
+        tbx = (((uint16_t) tbh) << 8) + tbl;
+        tch += txtr[(uint16_t) (tbx - 4)];
+        tdx += fakesi;
+        if (tch <= 0x3E) goto c_antibloom;
+        tch = 0x3E;
 
         c_antibloom:
-        asm {
-            and byte ptr [di+2], 0xC0 // 1
-            or  ch, [di+2]      // 1
-            dec cl          // 1
-            mov [di+2], ch      // *
-            mov [di+3], ch      // 1
-            jnz c_bright        // 0 (11 cicli.)
-            jmp c_common
-        }
+        adapted[fakedi + 2] &= 0xC0;
+        tch |= adapted[fakedi + 2];
+        adapted[fakedi + 2] = tch;
+        adapted[fakedi + 3] = tch;
+        tcl--;
+        if (tcl != 0) goto c_bright;
+        goto c_common;
 
         c_merger:
-        asm {
-            mov ch, [di+4]      // 1 (traslucido)
-            mov bh, dh      // *
-            add di, 2       // 1
-            mov bl, ah      // *
-            and ch, 0x3F        // 1
-            add ax, bp      // *
-            db 0x64, 0x02, 0x2F     // 1+PFX (add ch, fs:[bx])
-            add ch, ds:[0xFA00]
-            add dx, si      // *
-            shr ch, 1       // 1
-            and byte ptr [di+2], 0xC0 // *
-            or  ch, [di+2]      // 1
-            dec cl          // *
-            mov [di+2], ch      // 1
-            mov [di+3], ch      // *
-            jnz c_merger        // 1 (9 cicli.)
-            jmp c_common
-        }
+        tdh = (tdx >> 8) & 0xFF;
+        tah = (tax >> 8) & 0xFF;
+
+        tch = adapted[fakedi + 4];
+        tbh = tdh;
+        fakedi += 2;
+        tbl = tah;
+        tch &= 0x3F;
+        tax += tbp;
+        tbx = (((uint16_t) tbh) << 8) + tbl;
+        tch += txtr[(uint16_t) (tbx - 4)];
+        tch += adapted[0xFA00];
+        tdx += fakesi;
+        tch >>= 1;
+        adapted[fakedi + 2] &= 0xC0;
+        tch |= adapted[fakedi + 2];
+        adapted[fakedi + 2] = tch;
+        adapted[fakedi + 3] = tch;
+        tcl--;
+        if (tcl != 0) goto c_merger;
+        goto c_common;
 
         c_bumper:
-        asm {
-            mov bh, dh      // 1 (bump mapping)
-            add di, 2       // *
-            mov bl, ah      // 1
-            mov ch, ds:[0xFA00] // *
-            db 0x64, 0x02, 0x2F     // 1+PFX+AGI (add ch, fs:[bx])
-            add ax, bp      // *
-            mov [di+2], ch      // 1
-            mov [di+3], ch      // 1
-            push di
-            push cx
-            and ch, 0x7
-        }
+        tdh = (tdx >> 8) & 0xFF;
+        tah = (tax >> 8) & 0xFF;
+
+        tbh = tdh;
+        fakedi += 2;
+        tbl = tah;
+        tch = adapted[0xFA00];
+        tbx = (((uint16_t) tbh) << 8) + tbl;
+        tch += txtr[(uint16_t) (tbx - 4)];
+        tax += tbp;
+        adapted[fakedi + 2] = tch;
+        adapted[fakedi + 3] = tch;
+        tempfakedi = fakedi;
+        tempch = tch;
+        tch &= 0x07;
 
         c_bmpm320:
-        asm {
-            sub di, 320
-            dec ch
-            jns c_bmpm320
-            pop cx
-            sub ch, ds:[0xFA00]
-            add ch, ds:[0xFA01] // *
-            db 0x64, 0x02, 0x2F     // 1+PFX+AGI (add ch, fs:[bx])
-            mov byte ptr [di+640+2], ch
-            mov byte ptr [di+640+3], ch
-            pop di
-            add dx, si      // *
-            dec cl          // 1
-            jnz c_bumper    // ? cicli.
-        }
+        fakedi -= 320;
+        tch--;
+        if (!((tch >> 7) & 1)) goto c_bmpm320;
+        tch = tempch;
+        tch -= adapted[0xFA00];
+        tch += adapted[0xFA01];
+        tch += txtr[(uint16_t) (tbx - 4)];
+        adapted[fakedi + 640 + 2] = tch;
+        adapted[fakedi + 640 + 3] = tch;
+        fakedi = tempfakedi;
+        tdx += fakesi;
+        tcl--;
+        if (tcl != 0) goto c_bumper;
 
         c_common:
-        asm {
-            pop di
-            pop bp
-            add di, 32
-            jmp c_row
-        }
-        #endif
-        STUB
+        fakedi += 32;
+        goto c_row;
 
         // Inter-scanline code: between one scanline and the next.
         row_end:
