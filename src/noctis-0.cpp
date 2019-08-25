@@ -2392,8 +2392,16 @@ char *alphavalue(double value) {
 void background(uint16_t start, uint8_t *target, uint8_t *background,
                 uint8_t *offsetsmap, uint16_t total_map_bytes,
                 uint16_t screenshift) {
-#if 0
-    asm {   pusha
+    //es: target[ax]
+    //fs: background[bx]
+    //ds: offsetsmap[si]
+    //make sure to add screenshift to target index.
+    uint16_t tdx = screenshift;
+    uint16_t tcx = total_map_bytes >> 1;
+    uint16_t tbp = start + 4; // might not need +4
+    uint16_t tsi = 0, tdi = 0, tbx = 0;
+    uint8_t tal = 0;
+    /*asm {   pusha
             push ds
             les ax, dword ptr target
             add screenshift, ax
@@ -2407,8 +2415,30 @@ void background(uint16_t start, uint8_t *target, uint8_t *background,
             mov bp, start
             add bp, 4
             db 0x8E, 0xE3 // mov fs, bx
-            mov es, ax }
+            mov es, ax }*/
     rigiro:
+    uint16_t comp = (((uint16_t) offsetsmap[tsi + 1]) << 8) | ((uint16_t) offsetsmap[tsi]);
+    if (comp >= 64000) {
+        goto blanket;
+    }
+    tdi = offsetsmap[tsi];
+    tdi += tdx;
+    tal = background[tbp];
+
+    memset(&target[tdi], tal, 8);
+    memset(&target[tdi + 320], tal, 8);
+    memset(&target[tdi + 640], tal, 8);
+    memset(&target[tdi + 960], tal, 8);
+    memset(&target[tdi + 1280], tal, 8);
+    tbp += 1;
+    tsi += 2;
+    tcx--;
+    if (tcx != 0) {
+        goto rigiro;
+    }
+    goto fine;
+
+    /*
     asm {   cmp word ptr [si], 64000
             jnb blanket
             mov di, [si]
@@ -2440,19 +2470,26 @@ void background(uint16_t start, uint8_t *target, uint8_t *background,
             add si, 2
             dec cx
             jnz rigiro
-            jmp fine }
+            jmp fine }*/
     blanket:
-    asm {   mov bx, [si]
+    tbx = (((uint16_t) offsetsmap[tsi + 1]) << 8) | ((uint16_t) offsetsmap[tsi]);
+    tbx -= 64000;
+    tbp += tbx;
+    tsi += 2;
+    tcx--;
+    if (tcx != 0) {
+        goto rigiro;
+    }
+    /*asm {   mov bx, [si]
             sub bx, 64000
             add bp, bx
             add si, 2
             dec cx
-            jnz rigiro }
+            jnz rigiro }*/
     fine:
-    asm {   pop ds
-            popa }
-#endif
-    STUB
+    /*asm {   pop ds
+            popa }*/
+    return;
 }
 
 /*
@@ -3033,7 +3070,6 @@ double xsun_onscreen;
 
 void whitesun(uint8_t *target, double x, double y, double z, float mag_factor,
               float fgm_factor) {
-#if 0
     double center_x, center_y, mag, fgm, shade_ext, ise;
     double xx, yy, zz, z2, rx, ry, rz, xa, ya, xb, yb;
     double magsq, fgmsq;
@@ -3127,8 +3163,6 @@ void whitesun(uint8_t *target, double x, double y, double z, float mag_factor,
         ya += 1.2;
         yy ++;
     }
-#endif
-    STUB
 }
 
 // Glow around the most intense lights.

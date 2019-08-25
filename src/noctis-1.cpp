@@ -52,12 +52,11 @@ float base_pp_temp;
 float base_pp_pressure;
 
 float hpoint(int32_t px, int32_t pz) {
-#if 0
-    // Trova l'altezza di un punto sulla superficie.
-    // Per migliorare la risoluzione, usa un procedimento d'interpolazione
-    // bi-lineare, con 16384 gradazioni intermedie, tante quante le unit�
-    // logiche che compongono il lato di un quadrante; considera anche
-    // la divisione dei quadranti in due triangoli isosceli.
+    /* Find the height of a point on the surface. To improve the resolution,
+     * use a bilinear interpolation procedure with 16384 intermediate steps,
+     * as many as the units that make up the side of a quadrant. Consider
+     * also the division of the quadrants into two isosceles triangles.
+     */
     int32_t cpos;
     float h1, h2, h3, h4, icx, icz, py;
     cpos   = m200[pz >> 14] + (px >> 14);
@@ -77,8 +76,6 @@ float hpoint(int32_t px, int32_t pz) {
     }
 
     return (py);
-#endif
-    STUB return 0.0;
 }
 
 /*
@@ -111,7 +108,6 @@ int16_t detail_seed = 12345;
 void greenmush(float x, float y, float z, uint8_t mask_1, uint8_t mask_2,
                int32_t scaling, uint8_t colorgrade, uint8_t colormask,
                int8_t noseed) {
-#if 0
     // produce una serie di gruppi di minuscole sagome verdi, studiate per
     // fornire l'impressione delle fronde degli alberi pi� distanti.
     int32_t    correction;
@@ -134,19 +130,16 @@ void greenmush(float x, float y, float z, uint8_t mask_1, uint8_t mask_2,
             m2 = 1 + fast_random (mask_2);
 
             for (n2 = 0; n2 < m2; n2++) {
-                _DI = riga[_y_ + fast_random(7)] + _x_ + fast_random(7);
-                _CL = colorgrade + fast_random (colormask);
-                asm {   les ax, adapted
-                mov es:[di+4], cl
-                mov es:[di+5], cl
-                mov es:[di+3], cl
-                mov es:[di+324], cl
-                mov es:[di-316], cl
-                mov es:[di-636], cl }
+                uint16_t tdi = riga[_y_ + fast_random(7)] + _x_ + fast_random(7);
+                uint8_t tcl = colorgrade + fast_random (colormask);
+                adapted[tdi + 3] = tcl;
+                adapted[tdi + 4] = tcl;
+                adapted[tdi + 5] = tcl;
+                adapted[tdi - 636] = tcl;
+                adapted[tdi - 316] = tcl;
+                adapted[tdi + 324] = tcl;
             }
         }
-#endif
-    STUB
 }
 
 void build_fractal_tree(float x, float y, float z, float scaling, float reduction,
@@ -154,7 +147,6 @@ void build_fractal_tree(float x, float y, float z, float scaling, float reductio
                         float distance_from_perfection, uint8_t rootcolormask,
                         uint8_t leafcolormask, float branchdetail,
                         int8_t isrootnode, int8_t occurrence) {
-#if 0
     // funzione ricorsiva: eventualmente traccia l'intero albero pseudo-casuale,
     // con una struttura multilivello, ma va usata con parsimonia perch� �
     // ovviamente una cosa piuttosto laboriosa in termini di tempo.
@@ -336,8 +328,6 @@ void build_fractal_tree(float x, float y, float z, float scaling, float reductio
     }
 
     flares = pf;
-#endif
-    STUB
 }
 
 #define FORCE_LAT 11
@@ -1807,28 +1797,25 @@ map[align * (int32_t)z + x] = y;
     STUB
 }
 
-void srf_darkline(uint8_t *map, int16_t length, int16_t x_trend, int16_t z_trend,
-                  int32_t align) {
-#if 0
-// Una crepa scura (versione principalmente per textures).
-int16_t fx = brtl_random(align), fz = brtl_random(align);
-int32_t mapsize = align * align;
-uint16_t location;
+void srf_darkline(uint8_t *map, int16_t length, int16_t x_trend,
+                  int16_t z_trend, int32_t align) {
+    // Una crepa scura (versione principalmente per textures).
+    int16_t fx = brtl_random(align), fz = brtl_random(align);
+    int32_t mapsize = align * align;
+    uint16_t location;
 
-//
-while (length) {
-fx += brtl_random(3) + x_trend;
-fz += brtl_random(3) + z_trend;
-location = align * (int32_t)fz + fx;
+    //
+    while (length) {
+        fx += brtl_random(3) + x_trend;
+        fz += brtl_random(3) + z_trend;
+        location = align * (int32_t) fz + fx;
 
-if (location > 0 && location < mapsize) {
-map[location] >>= 1;
-}
+        if (location > 0 && location < mapsize) {
+            map[location] >>= 1;
+        }
 
-length--;
-}
-#endif
-    STUB
+        length--;
+    }
 }
 
 void felisian_srf_darkline(uint8_t *map, int16_t length, int16_t x_trend,
@@ -2290,11 +2277,10 @@ void make_ruins(int8_t style1, int8_t style2, int8_t style3, int8_t style4,
     STUB
 }
 
-/*  Funzione che costruisce la superficie del pianeta.
-    Regolata dal seme global_surface_seed, per ottenere risultati coerenti. */
-
+/* Function that builds the surface of the planet. Adjusted by the
+ * global_surface_seed seed, to get consistent results.
+ */
 void build_surface() {
-#if 0
     int16_t cx, cz, cr, n, incl;
     float hf, hr, ht;
     uint16_t ptr1;
@@ -2310,9 +2296,9 @@ void build_surface() {
     T_SCALE   = 32;
     quartz    = 0;
     gtx   = 1; // suolo con texture, per default
-    _fmemset (txtr, 16, 65535);
-    _fmemset (p_surfacemap, 0, ps_bytes);
-    _fmemset (objectschart, 0, oc_bytes);
+    memset(txtr, 16, 65535);
+    memset(p_surfacemap, 0, ps_bytes);
+    memset(objectschart, 0, oc_bytes);
     // regolazione dei parametri generali: coerente con il layout
     // del pianeta, e indipendente dalla superficie.
     fast_srand (global_surface_seed);
@@ -3286,15 +3272,12 @@ void build_surface() {
             sh_delta -= 200;
         }
     }
-#endif
-    STUB
 }
 
 /*  Funzione che definisce il cielo visto da un pianeta.
     Oltretutto, definisce anche: tavola colori, temperatura e pressione. */
 
 void create_sky(int8_t atmosphere) {
-#if 0
     // filtri colorati di base.
     float br = (float)sky_red_filter / 64,
             bg = (float)sky_grn_filter / 64,
@@ -3646,15 +3629,15 @@ void create_sky(int8_t atmosphere) {
     // se non c'� atmosfera, stelle sempre ben visibili.
     // alternativamente, si rendono visibili di notte.
     if (!atmosphere) {
-        shade (surface_palette, 64, 64, 0, 0, 0, 100, 110, 120);
+        shade((uint8_t*) surface_palette, 64, 64, 0, 0, 0, 100, 110, 120);
     } else {
         if (nightzone) {
-            shade (surface_palette, 64, 64, 0, 0, 0, 60, 62, 64);
+            shade((uint8_t*) surface_palette, 64, 64, 0, 0, 0, 60, 62, 64);
 
             if (nearstar_p_type[ip_targetted] == 3) {
-                shade (surface_palette, 0, 64, 0, 0, 0, 64, 62, 60);
-                shade (surface_palette, 128, 64, 0, 0, 0, 64, 64, 64);
-                shade (surface_palette, 192, 64, 8, 12, 16, 56, 60, 64);
+                shade((uint8_t*) surface_palette, 0, 64, 0, 0, 0, 64, 62, 60);
+                shade((uint8_t*) surface_palette, 128, 64, 0, 0, 0, 64, 64, 64);
+                shade((uint8_t*) surface_palette, 192, 64, 8, 12, 16, 56, 60, 64);
                 goto nightcolors;
             }
 
@@ -3668,21 +3651,21 @@ void create_sky(int8_t atmosphere) {
             fg[3] *= 0.44;
             fb[3] *= 0.55;
         } else {
-            shade (surface_palette, 64, 64, 0, 0, 0, fr[1], fg[1], fb[1]);
+            shade((uint8_t*) surface_palette, 64, 64, 0, 0, 0, fr[1], fg[1], fb[1]);
         }
     }
 
     // sfumatura per il suolo.
-    shade (surface_palette,   0, 44,     0,     0,     0, fr[0], fg[0], fb[0]);
-    shade (surface_palette,  44, 20, fr[0], fg[0], fb[0], fr[1], fg[1], fb[1]);
+    shade((uint8_t*) surface_palette,   0, 44,     0,     0,     0, fr[0], fg[0], fb[0]);
+    shade((uint8_t*) surface_palette,  44, 20, fr[0], fg[0], fb[0], fr[1], fg[1], fb[1]);
     // sfumatura per l'orizzonte.
-    shade (surface_palette, 128, 10,     0,     0,     0, fr[0], fg[0], fb[0]);
-    shade (surface_palette, 138, 44, fr[0], fg[0], fb[0], fr[2], fg[2], fb[2]);
-    shade (surface_palette, 182, 10, fr[2], fg[2], fb[2], fr[1], fg[1], fb[1]);
+    shade((uint8_t*) surface_palette, 128, 10,     0,     0,     0, fr[0], fg[0], fb[0]);
+    shade((uint8_t*) surface_palette, 138, 44, fr[0], fg[0], fb[0], fr[2], fg[2], fb[2]);
+    shade((uint8_t*) surface_palette, 182, 10, fr[2], fg[2], fb[2], fr[1], fg[1], fb[1]);
     // sfumatura per la vegetazione.
-    shade (surface_palette, 192, 10,     0,     0,     0, fr[0], fg[0], fb[0]);
-    shade (surface_palette, 202, 44, fr[0], fg[0], fb[0], fr[3], fg[3], fb[3]);
-    shade (surface_palette, 246, 10, fr[3], fg[3], fb[3], fr[1], fg[1], fb[1]);
+    shade((uint8_t*) surface_palette, 192, 10,     0,     0,     0, fr[0], fg[0], fb[0]);
+    shade((uint8_t*) surface_palette, 202, 44, fr[0], fg[0], fb[0], fr[3], fg[3], fb[3]);
+    shade((uint8_t*) surface_palette, 246, 10, fr[3], fg[3], fb[3], fr[1], fg[1], fb[1]);
     nightcolors:
     // calcolo della temperatura.
     pp_temp = 90 - dsd1 * 0.33;
@@ -3762,8 +3745,6 @@ void create_sky(int8_t atmosphere) {
 
     base_pp_temp = pp_temp;
     base_pp_pressure = pp_pressure;
-#endif
-    STUB
 }
 
 /* Funzione che definisce le forme di vita proprie ai pianeti abitabili. */
@@ -3911,12 +3892,11 @@ void setup_animals() {
     STUB
 }
 
-/*  Questa funzione aggiorna sp_x;y;z in modo da tener conto della distanza
-    dalla superficie (il parametro height) e dell'orientamento della normale
-    alla superficie in quel punto. sp_x;y;z stanno per "stepping pos x;y;z" */
-
+/* This function updates sp_x/y/z to take into account the height and the
+ * orientation of the normal vector to the surface at that point. sp_x/y/z
+ * stands for stepping pos x/y/z.
+ */
 void add_height(int32_t px, int32_t pz, float height) {
-#if 0
     int32_t cpos;
     float x[3], y[3], z[3];
     float h1, h2, h3, h4, icx, icz;
@@ -3954,8 +3934,6 @@ void add_height(int32_t px, int32_t pz, float height) {
     sp_x += (pnx * height - sp_x) * 0.25;
     sp_y += (pny * height - sp_y) * 0.25;
     sp_z += (pnz * height - sp_z) * 0.25;
-#endif
-    STUB
 }
 
 /* Ciclo principale nell'esplorazione delle superfici planetarie. */
@@ -4070,7 +4048,7 @@ void planetary_main() {
     // backup colori di ritorno.
     memcpy (return_palette, tmppal, 768);
 
-    // Dissolvenza al nero (blank frame).
+    // Fade to black (blank frame.)
     for (w = 64; w >= 0; w -= 4) {
         tavola_colori((const uint8_t*) return_palette, 0, 256, w, w, w);
         ll = clock();
@@ -4475,14 +4453,14 @@ void planetary_main() {
     directional_beta = user_beta;
 
     do {
-        // inizio sincronizzazione e risolvenza dal "blank frame".
+        // Start of synchronization and resolution from the blank frame.
         sync_start ();
         getsecs ();
         fast_srand (secs / 2);
 
         if (resolve <= 63) {
-            tavola_colori ((const uint8_t*) surface_palette, 0, 256,
-                           resolve, resolve, resolve);
+            tavola_colori((const uint8_t *) surface_palette, 0, 256, resolve,
+                          resolve, resolve);
             resolve += 4;
         }
 
@@ -4702,7 +4680,7 @@ void planetary_main() {
             pos_z   = drop_z + 1.6384E6;
         }
 
-        // visualizzazione fulmini (ove presenti).
+        // Lightning display (where present).
         if (flashed) {
             tavola_colori ((const uint8_t*) surface_palette, 0, 256, 63, 63, 63);
             flashed = 0;
@@ -4722,7 +4700,7 @@ void planetary_main() {
                 ptr--;
             }
 
-            // (p.s. i fulmini illuminano anche il suolo, un po')
+            // Lightning also illuminates the ground a little.
             w = brtl_random (64) + 64;
             tavola_colori (tmppal, 0, 256, w, w, w);
             flashed = 1;
@@ -5782,7 +5760,7 @@ void planetary_main() {
 
     /* operazioni di recupero per ritornare al ciclo principale. */
 
-    // Dissolvenza al nero (blank frame di ritorno).
+    // Fade to black (return blank frame).
     for (w = 64; w >= 0; w -= 4) {
         tavola_colori((const uint8_t*) surface_palette, 0, 256, w, w, w);
         ll = clock();
