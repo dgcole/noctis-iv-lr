@@ -484,6 +484,33 @@ void freeze()
     fclose(fh);
 }
 
+/* Get the Noctis executable's full path 
+ * 	and strip the name to leave only the directory.
+ */
+char* get_exe_dir()
+{
+	const size_t buffer_size = 500;
+	char buffer[buffer_size];
+	char* directory = NULL;
+	/*ssize_t total_read = 0;*/
+	ssize_t read = 0;
+
+	memset(buffer, 0, buffer_size);
+
+	read = readlink("/proc/self/exe", buffer, buffer_size);
+
+
+	if (read < buffer_size) {
+		directory = (char*) malloc(read + 1);
+		strncpy(directory, buffer, read);
+		directory[read] = '\0';
+
+		*(strrchr(directory, '/') + 1) = '\0';
+	}
+
+	return directory;
+}
+
 // Execution of an executable module of the GOES Net.
 void run_goesnet_module() {
     FILE* ch;
@@ -493,6 +520,10 @@ void run_goesnet_module() {
      * TODO: Find a better solution that doesn't involve 
      * 	this wasteful malloc call. */
     char* command_prepended = (char*) malloc(122);
+
+	/* Reading the path to the Noctis binary */
+	char* dir = get_exe_dir();
+
 
     // Save the situation because some modules need it.
     freeze();
@@ -512,7 +543,8 @@ void run_goesnet_module() {
         goesnet_command[gnc_pos] = 0;
         strcat(goesnet_command, " >");
         strcat(goesnet_command, goesoutputfile);
-        strcpy(command_prepended, (char*)"./");
+        //strcpy(command_prepended, (char*)".");
+		strcpy(command_prepended, dir);
         strcat(command_prepended, goesnet_command);
         system(command_prepended);
     } else {
@@ -521,6 +553,9 @@ void run_goesnet_module() {
 
     // Free space allocated for command.
     free(command_prepended);
+
+	/* Free space allocated for exe path */
+	free(dir);
 
     if (!adapted) {
         printf("Sorry, GOES Net crashed.\n");
