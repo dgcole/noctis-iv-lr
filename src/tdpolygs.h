@@ -1614,7 +1614,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
     // Pre-work assignments.
     float fu, fv;
     int32_t tempu = 0, tempv = 0;
-    uint16_t tax = 0, tbx = 0, tdx = 0, tbp = 0, fakedi = 0, fakesi = 0, tempfakedi = 0;
+    uint16_t tax = 0, tbx = 0, tdx = 0, tbp = 0, fakedi = 0, fakesi = 0, tempfakedi = 0, reallytempfakedi = 0;
     uint8_t tcl = 0, tch = 0, tbl = 0, tbh = 0, tah = 0, tal = 0, tdh = 0, tdl = 0, tempch = 0;
     adapted[0xFA00] = tinta;
     adapted[0xFA01] = escrescenze;
@@ -1848,6 +1848,8 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         tempu = u;
         tempv = v;
 
+        reallytempfakedi = tempfakedi;
+
         u = round((_x * tempXsize) * k4);
         v = round((_y * tempYsize) * k4);
 
@@ -1857,7 +1859,6 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         tbp = (u - tempu) >> 4;
 
         tcl >>= 1;
-        tch = _flares;
         tch = _flares;
         if (tch & 1) {
             goto c_transp;
@@ -1988,6 +1989,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         if (tcl != 0) goto c_bumper;
 
         c_common:
+        fakedi = reallytempfakedi;
         fakedi += 32;
         goto c_row;
 
