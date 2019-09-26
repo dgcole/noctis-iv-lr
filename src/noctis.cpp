@@ -484,6 +484,24 @@ void freeze()
     fclose(fh);
 }
 
+/* Get the Noctis executable's relative path
+ * 	and strip the name to leave only the directory.
+ */
+char* argv0;
+char* get_exe_dir()
+{
+	char* directory;
+	
+	directory = (char*) malloc(strlen(argv0)+1);
+	strcpy(directory, argv0);
+
+	/* Effectively cuts off the "nivlr" 
+	 * 	part of the path */
+	*(strrchr(directory, '/') + 1) = '\0';
+
+	return directory;
+}
+
 // Execution of an executable module of the GOES Net.
 void run_goesnet_module() {
     FILE* ch;
@@ -492,7 +510,11 @@ void run_goesnet_module() {
      * 	so that a bash shell can run the proper module file.
      * TODO: Find a better solution that doesn't involve 
      * 	this wasteful malloc call. */
-    char* command_prepended = (char*) malloc(122);
+    char* command_prepended = (char*) malloc(200);
+
+	/* Reading the path to the Noctis binary */
+	char* dir = get_exe_dir();
+
 
     // Save the situation because some modules need it.
     freeze();
@@ -512,7 +534,8 @@ void run_goesnet_module() {
         goesnet_command[gnc_pos] = 0;
         strcat(goesnet_command, " >");
         strcat(goesnet_command, goesoutputfile);
-        strcpy(command_prepended, (char*)"./");
+        //strcpy(command_prepended, (char*)".");
+		strcpy(command_prepended, dir);
         strcat(command_prepended, goesnet_command);
         system(command_prepended);
     } else {
@@ -521,6 +544,9 @@ void run_goesnet_module() {
 
     // Free space allocated for command.
     free(command_prepended);
+
+	/* Free space allocated for exe path */
+	free(dir);
 
     if (!adapted) {
         printf("Sorry, GOES Net crashed.\n");
@@ -2624,6 +2650,8 @@ int main(int argc, char **argv) {
     digimap2      = (uint32_t *)    &n_globes_map[gl_bytes]; // font alias
     reach_your_dir(argv);
 
+	argv0 = argv[0];
+
     if (pvfile && adapted && n_offsets_map && n_globes_map && p_background &&
         s_background && p_surfacemap && objectschart && lens_flares_init()) {
         lrv = loadpv(vehicle_handle, vehicle_ncc, 15, 15, 15, 0, 0, 0, 0, 1);
@@ -2637,6 +2665,7 @@ int main(int argc, char **argv) {
         load_starface();
         load_digimap2();
     } else {
+		/* NOTE: The 2nd line is not helpful on modern systems */
         printf("\nNot enough free conventional memory to run.");
         printf("\nType MEM and hit ENTER to check it out.");
         printf("\n550 KB are needed to run Noctis!\n");
@@ -2704,7 +2733,7 @@ int main(int argc, char **argv) {
         QUADWORDS = pqw;
 
         if (exitflag) {
-            goto allstop;
+            freeze();
         }
     }
 
@@ -2716,7 +2745,7 @@ int main(int argc, char **argv) {
     } while ((mc != 27) || stspeed || ip_reaching || lifter);
 #endif
     remove(surface_file);
-allstop:
+
     freeze();
 }
 
