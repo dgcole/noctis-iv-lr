@@ -1674,7 +1674,6 @@ backoff:
 
 void round_hill(int16_t cx, int16_t cz, uint16_t r, float h, float hmax,
                 int8_t allowcanyons) {
-#if 0
     // Una collina rotonda, o una montagna molto erosa (se la si fa grossa).
     // hmax entra in gioco se il flag "allowcanyons" � a zero:
     //      quando l'altezza puntuale supera "hmax", per allowcanyons=0
@@ -1684,18 +1683,18 @@ void round_hill(int16_t cx, int16_t cz, uint16_t r, float h, float hmax,
     //      al centro della collina.
     int16_t x, z;
     float dx, dz, d;
-    float y, v = (float)r / M_PI_2;
+    float y, v = (float) r / M_PI_2;
 
-    for (x = cx - r; x < cx + r; x++)
+    for (x = cx - r; x < cx + r; x++) {
         for (z = cz - r; z < cz + r; z++) {
             if (x > -1 && z > -1 && x < 200 && z < 200) {
                 dx = x - cx;
                 dz = z - cz;
-                d  = sqrt (dx * dx + dz * dz);
-                y  = cos (d / v) * h;
+                d  = sqrt(dx * dx + dz * dz);
+                y  = cos(d / v) * h;
 
                 if (y >= 0) {
-                    y += p_surfacemap[200 * (int32_t)z + x];
+                    y += p_surfacemap[200 * (int32_t) z + x];
 
                     if (allowcanyons) {
                         if (y > 127) {
@@ -1707,12 +1706,11 @@ void round_hill(int16_t cx, int16_t cz, uint16_t r, float h, float hmax,
                         }
                     }
 
-                    p_surfacemap[200 * (int32_t)z + x] = y;
+                    p_surfacemap[200 * (int32_t) z + x] = y;
                 }
             }
         }
-#endif
-    STUB
+    }
 }
 
 void smoothterrain(int16_t rounding) {
@@ -1905,41 +1903,43 @@ ang += ad;
     STUB
 }
 
-/* Funzioni per la mappatura dei cieli planetari. */
+/* Functions for mapping planetary skies. */
 
 void nebular_sky() {
-#if 0
     // Cielo nebuloso, piuttosto alieno, con piccoli ammassi sparsi o striati.
-    uint16_t pqw = QUADWORDS;
-    uint16_t seed = brtl_random (10000);
-    QUADWORDS = st_bytes / 4;
-    asm {   les di, dword ptr s_background
-    mov cx, st_bytes
-    mov ax, seed }
-    rndpat:
-    asm {   add ax, cx
-    xor dx, dx
-    imul ax
-    add ax, dx
-    mov bl, al
-    and bl, 0x3F
-    mov es:[di], bl
-    inc di
-    dec cx
-    jnz rndpat }
-    lssmooth (s_background);
+    uint16_t pqw  = QUADWORDS;
+    uint16_t seed = brtl_random(10000);
+    QUADWORDS     = st_bytes / 4;
+    // es: s_background[di]
+    uint8_t tbl  = 0;
+    uint16_t tdi = 0, tcx = st_bytes, tdx = 0;
+    int16_t tax = seed;
+
+rndpat:
+    tax += tcx;
+    int32_t result  = tax * tax;
+    auto resultHigh = static_cast<int16_t>(result >> 16u);
+    auto resultLow  = static_cast<int16_t>(result & 0xFFFFu);
+    tax             = resultHigh + resultLow;
+    tbl             = tax & 0xFF;
+    tbl &= 0x3F;
+    s_background[tdi] = tbl;
+    tdi++;
+    tcx--;
+    if (tcx != 0)
+        goto rndpat;
+
+    lssmooth(s_background);
 
     if (brtl_random(2)) {
-        ssmooth (s_background);
+        ssmooth(s_background);
     }
 
     if (brtl_random(3)) {
-        psmooth_grays (s_background);
+        psmooth_grays(s_background);
     }
 
     QUADWORDS = pqw;
-#endif
-    STUB
 }
 
 void cloudy_sky(int16_t density, int16_t smooths) {
