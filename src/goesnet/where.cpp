@@ -8,18 +8,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <conio.h>
-#include <dos.h>
-#include <io.h>
+
 
 char msgbuffer[77];
-char* divider = "&&&&&&&&&&&&&&&&&&&&&";
+char* divider = (char*)"&&&&&&&&&&&&&&&&&&&&&";
 
 void msg (char* string) {
     int x;
     strcpy (msgbuffer, string);
     msgbuffer[21] = 0;
-    printf (msgbuffer);
+    printf("%s", msgbuffer);
     x = strlen(msgbuffer);
 
     while (x < 21) {
@@ -36,8 +34,9 @@ char    s_object_label[25];
 double  subject_id = 12345;
 double  idscale = 0.00001;
 
-int     i, fh;
-char*   file = "..\\DATA\\STARMAP.BIN";
+int     i;
+FILE* 	fh;
+char*   file = (char*)"data/STARMAP.BIN";
 
 char    outbuffer[40];
 char    textbuffer[40];
@@ -49,24 +48,24 @@ char    parentname[21];
 
 char find (char* starname) {
     int p, n, ctc, found;
-    ctc = strlen (starname);
+    ctc = strlen(starname);
 
     if (ctc > 20 || ctc <= 0) {
-        msg ("INVALID OBJECT NAME.");
+        msg ((char*)"INVALID OBJECT NAME.");
         return (0);
     }
 
     n = 0;
     found = 0;
-    lseek (fh, 4, SEEK_SET);
+    fseek(fh, 4, SEEK_SET);
 
-    while (_read (fh, &s_object_id, 8) && _read (fh, &s_object_label, 24) == 24) {
-        if (memcmp (&s_object_id, "Removed:", 8)) {
-            if (!memcmp (s_object_label, starname, ctc)) {
+    while (fread(&s_object_id, 1, 8, fh) && fread(&s_object_label, 1, 24, fh) == 24) {
+        if (memcmp(&s_object_id, "Removed:", 8)) {
+            if (!memcmp(s_object_label, starname, ctc)) {
                 n++;
-                memcpy (object_label, s_object_label, 24);
+                memcpy(object_label, s_object_label, 24);
                 object_id = s_object_id;
-                memcpy (subjectname, object_label, 20);
+                memcpy(subjectname, object_label, 20);
                 subject_id = object_id;
 
                 //
@@ -102,18 +101,18 @@ char find (char* starname) {
     }
 
     if (!n) {
-        msg ("OBJECT NOT FOUND.");
+        msg ((char*)"OBJECT NOT FOUND.");
     }
 
     if (n > 1) {
-        msg ("AMBIGUOUS SEARCH KEY:");
-        msg ("PLEASE EXPAND NAME...");
+        msg ((char*)"AMBIGUOUS SEARCH KEY:");
+        msg ((char*)"PLEASE EXPAND NAME...");
         msg (divider);
-        msg ("POSSIBLE RESULTS ARE:");
+        msg ((char*)"POSSIBLE RESULTS ARE:");
         msg (divider);
-        lseek (fh, 4, SEEK_SET);
+        fseek (fh, 4, SEEK_SET);
 
-        while (_read (fh, &s_object_id, 8) && _read (fh, &s_object_label, 24) == 24) {
+        while (fread(&s_object_id, 1, 8, fh) && fread(&s_object_label, 1, 24, fh) == 24) {
             if (memcmp (&s_object_id, "Removed:", 8)
                     && !memcmp (s_object_label, starname, ctc)) {
                 s_object_label[21] = 0;
@@ -125,84 +124,84 @@ char find (char* starname) {
         found = 0;
     }
 
-    return (found);
+    return found;
 }
 
-void main () {
+int main (int argc, char** argv) {
     char query;
-    asm {   xor ax, ax
-            mov es, ax
-            cmp byte ptr es:[0x449], 0x13
-            je  startup }
+
+    /* Printed if not run from Noctis
     printf ("\nGalactic Organization of Explorers and Stardrifters (G.O.E.S)\n");
     printf ("-------------------------------------------------------------\n");
     printf ("This is a GOES NET module and must be run from a stardrifter.\n");
     printf ("Please use the onboard computer console to run this module.\n");
     printf ("\n\t- GOES NET onboard microsystem, EPOC 6011 REVISION 2\n");
-    return;
-startup:
+    return; */
 
-    if (_argc < 2) {
-        msg ("________USAGE________");
-        msg ("WHERE PLANETNAME");
-        msg ("^^^^^^^^^^^^^^^^^^^^^");
-        msg ("PLEASE RUN AGAIN,");
-        msg ("SPECIFYING PARAMETERS");
-        return;
+    if (argc < 2) {
+        msg ((char*)"________USAGE________");
+        msg ((char*)"WHERE PLANETNAME");
+        msg ((char*)"^^^^^^^^^^^^^^^^^^^^^");
+        msg ((char*)"PLEASE RUN AGAIN,");
+        msg ((char*)"SPECIFYING PARAMETERS");
+        return 0;
     } else {
-        msg ("  GOES GALACTIC MAP  ");
+        msg ((char*)"  GOES GALACTIC MAP  ");
         msg (divider);
     }
 
-    fh = _open (file, 4);
+    fh = fopen(file, "r");
 
-    if (fh == -1) {
-        msg ("STARMAP NOT AVAILABLE");
-        return;
+    if (fh == nullptr) {
+        msg ((char*)"STARMAP NOT AVAILABLE");
+        return 2;
     }
 
     i = 2;
-    strcpy (parbuffer, _argv[1]);
+    strcpy(parbuffer, argv[1]);
 
-    while (i < _argc) {
-        strcat (parbuffer, " ");
-        strcat (parbuffer, _argv[i]);
+    while (i < argc) {
+        strcat(parbuffer, " ");
+        strcat(parbuffer, argv[i]);
         i++;
     }
 
-    strcpy (objectname, parbuffer);
+    strcpy(objectname, parbuffer);
     query = find (objectname);
 
     if (query) {
         if (query == 1) {
-            msg ("THIS OBJECT IS A STAR");
-            msg ("AND ITS POSITION CAN");
-            msg ("BE DETERMINED USING");
-            msg ("THE 'PAR' MODULE.");
+            msg ((char*)"THIS OBJECT IS A STAR");
+            msg ((char*)"AND ITS POSITION CAN");
+            msg ((char*)"BE DETERMINED USING");
+            msg ((char*)"THE 'PAR' MODULE.");
         } else {
-            lseek (fh, 4, SEEK_SET);
+            fseek(fh, 4, SEEK_SET);
 
-            while (_read (fh, &s_object_id, 8) && _read (fh, &s_object_label, 24) == 24) {
+            while (fread(&s_object_id, 1, 8, fh) && fread(&s_object_label, 1, 24, fh) == 24) {
                 if (memcmp (&s_object_id, "Removed:", 8)) {
                     if (s_object_id >= subject_id - idscale
                             && s_object_id <= subject_id + idscale) {
                         s_object_label[20] = 0;
                         msg (subjectname);
-                        msg ("IS PART OF THE");
+                        msg ((char*)"IS PART OF THE");
                         msg (s_object_label);
-                        msg ("SYSTEM.");
-                        goto gotit;
+                        msg ((char*)"SYSTEM.");
+                        
+			fclose(fh);
+			return 0;
                     }
                 }
             }
 
-            msg ("UNABLE  TO  DETERMINE");
-            msg ("THIS PLANET'S  PARENT");
-            msg ("STAR;  PROBABLY, THAT");
-            msg ("STAR ISN'T CATALOGUED");
-gotit:
+            msg ((char*)"UNABLE  TO  DETERMINE");
+            msg ((char*)"THIS PLANET'S  PARENT");
+            msg ((char*)"STAR;  PROBABLY, THAT");
+            msg ((char*)"STAR ISN'T CATALOGUED");
         }
     }
 
-    _close (fh);
+    fclose(fh);
+
+    return 0;
 }

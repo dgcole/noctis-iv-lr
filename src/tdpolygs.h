@@ -4,27 +4,34 @@
     ----------------
     Full-3D Graphic Engine.
 
-    Funzioni a 32-bit per disegnare poligoni 3d riempiti di colore
-    in grafica 320x200x256. Sul Pentium � una cannonata: una media
-    di 12000 poligoni al secondo, da workstation, con 75 MhZ.
+    32-bit functions to draw 3D polygons filled with color 
+    in 320x200x256 graphics. On the Pentium is a cannon shot: 
+    an average of 12,000 polygons per second, from workstations, with 75MHz
 
-    - Non si deve mai usare il colore nr. 255 per
-      tracciare qualcosa nell'area di lavoro, quando si usa questa
-      routine, perch� lo utilizza solo lei per delimitare i poligoni.
-      Se si vuole usare un altro colore per delimitarli, bisogna
-      cambiare tutti i valori 255 nelle funzioni "Segmento" e "poly3d".
+    - You should never use the color 255 to trace something 
+	in the work area, when using this routine, because only 
+	you use it to delimit the polygons. If you want to use another 
+	color to delimit them, you need to change all the 255 values in 
+	the "Segmento" and "poly3d" functions.
 
+
+TODO: Translate this chunk
     Chiamare initscanlines prima di tracciare alcunch�,
     senn� non traccia una bella sega.
 
-    Nato (incredibile a dirsi) per Alpha Dream.
-    Ultima revisione 21 Dicembre 1997.
+    Born (incredible to say) for Alpha Dream
+    Last revised December 21st 1997.
 
-    Aggiunte: ottimizzazione conversioni 3d-2d, 23.6.1997;
-          ciclo di fast-load dei vertici quando sono tutti di fronte
-          alla videocamera (cio� quasi sempre), 23.6.1997;
-          clipping intelligente, ottobre '97;
-          texture mapping, febbraio '98.
+    Additions:
+    	3d-2d conversion optimization, 23.6.1997;
+
+	fast-load cycle of the vertices when they 
+	are all in front of the camera 
+	(that is almost always), 23.6.1997;
+
+	intelligent clipping, October '97;
+
+	texture mapping, February '98.
 
 */
 
@@ -34,91 +41,95 @@
 
 #include "noctis-d.h"
 
-/* Dati sui poligoni (quanti vertici al massimo si pensa di fare). */
+/* Data on polygons (How many vertices to do at most). */
 
 #ifndef VERTICI_PER_POLIGONO
 #define VERTICI_PER_POLIGONO 4
 #endif
 
-/* Area di visualizzazione. */
+/* Display area */
 
+//Width = larghezza
 #ifndef larghezza
 #define larghezza 300
 #endif
 
+//Height = altezza
 #ifndef altezza
 #define altezza 180
 #endif
 
+//X center
 #ifndef x_centro
 #define x_centro 160
 #endif
 
+//Y center
 #ifndef y_centro
 #define y_centro 100
 #endif
 
 /*
 
-    Controllo visualizzazione.
+    Display control.
 
 */
 
-float uneg = 100; /* Un fatto particolarmente curioso: uneg rappresenta
-           la distanza minima alla quale un certo punto non viene
-           considerato alle spalle dell'osservatore. Il bello �
-           che l'ideazione di questa sigla (ricordo che si
-           pronuncia u-neg) risale a cos� tanto tempo fa
-           (si parla della prima versione di Smallest, ovvero
-           dell'aprile '92, attualmente pi� di 5 anni fa)
-           che non ricordo assolutamente che cosa significhi
-           quest'acronimo (era un acronimo, ma chiss� come mi
-           venne in mente, forse da user-neg, negativo all'utente,
-           in riferimento all'effetto di inversione del segno
-           dato dalle funzioni prospettiche quando, per l'appunto,
-           una tripletta di coordinate ha la distanza normale
-           dallo schermo in negativo, ma non sono affatto sicuro. */
+float uneg = 100; 
+	/* A particularly curious fact: uneg represents the minimum distance 
+	 * at which a certain point is not considered behind the observer.
+	 *
+	 * The nice thing is that the conception of this acronym (recalling u-neg) 
+	 * goes back to so long ago (we talk about the first version of Smallest, 
+	 * that is April '92, currently more than 5 years ago) that I don't remember 
+	 * at all what this acronym means (it was an acronym, but who knows 
+	 * how it came to find, perhaps from user-neg, negative to the user, 
+	 * with reference to the reversal effect of the sign given by the 
+	 * perspective functions when, precisely, a triplet of coordinates 
+	 * has the normal distance from the screen in negative, 
+	 * but I'm not sure at all. */
 
 float alfa = 0, beta = 0, ngamma = 0;
 float cam_x = 0, cam_y = 0, cam_z = 0;
 
 const double deg = M_PI / 180;
 
-// Distanza dal piano di proiezione.
+// Distance from the projection plane.
 
 float dpp     = 200;
 float inv_dpp = 1 / 200;
 
-/*  Costanti e variabili di controllo del texture mapping.
-    H_MATRIXS e V_MATRIXS specificano le ripetizioni della stessa
-    texture sui poligoni, ma per avere la possibilit� di dimezzare
-    la texture o di disegnarne solo un quarto, sono state assunte
-    come rappresentanti di "quarti di texture". Significa che
-    per avere un texturing normale, senza ripetizioni n�
-    dimezzamenti, bisogna assegnare le due variabili a 4,
-    non a 1 (che rappresenterebbe un solo quarto).
-    E cos� via... se si mette 8, si ottiene la ripetizione
-    della texture per due volte sul corrispondente asse,
-    se si mette a 12 si ottengono tre ripetizioni, eccetera...
-    (ps ho cambiato la base a 16, sedicesimi di texture). */
+/* Texture mapping constants and control variables.
+ * H_MATRIXS and V_MATRIXS specify the repetitions of the same 
+ * texture on the polygons, but in order to have the possibility 
+ * of halving the texture or drawing only a quarter, they have 
+ * been assumed as representing "quarters of texture". It means 
+ * that to have a normal texturing, without repeitions halved, 
+ * it is necessary to assign the two variables to 4, not to 1 
+ * (which would represent a single quarter). And so on... 
+ * if you put 8, you get the repetition of the texture twice 
+ * on the corresponding axis, if you set to 12, you get three 
+ * repetitions, etc.
+ * (ps, I changed the base to 16, texture sixteenths). */
 
-const uint16_t MPIX          = 319; // Massimo PIXEL su X.
-const uint16_t MPIY          = 199; // Massimo PIXEL su Y.
-const uint16_t TEXTURE_XSIZE = 256; // Larghezza delle BMP.
-const uint16_t TEXTURE_YSIZE = 256; // Altezza delle BMP.
+const uint16_t MPIX          = 319; // Maximum PIXEL on X.
+const uint16_t MPIY          = 199; // Maximum PIXEL on Y.
+const uint16_t TEXTURE_XSIZE = 256; // Width of the BMPs.
+const uint16_t TEXTURE_YSIZE = 256; // BMP height.
 
-float EMU_K       = 16;                        // Cost. di emulaz. FPU
-int32_t H_MATRIXS = 16;                        // Nr. ripetizioni. 16-128
-int32_t V_MATRIXS = 16;                        // Nr. ripetizioni. 16-128
-int32_t XSIZE     = TEXTURE_XSIZE * H_MATRIXS; // Calibraz. dimensioni.
-int32_t YSIZE     = TEXTURE_YSIZE * V_MATRIXS; // Calibraz. dimensioni.
-float XCOEFF      = EMU_K / dpp;               // Coefficente di comodo.
-float YCOEFF      = EMU_K / dpp;               // Coefficente di comodo.
+float EMU_K       = 16;                        // Cost of FPU emulation
+int32_t H_MATRIXS = 16;                        // Number of repetitions. 16-128
+int32_t V_MATRIXS = 16;                        // Number of repetitions. 16-128
+int32_t XSIZE     = TEXTURE_XSIZE * H_MATRIXS; // Calibrate dimensions.
+int32_t YSIZE     = TEXTURE_YSIZE * V_MATRIXS; // Calibrate dimensions.
+float XCOEFF      = EMU_K / dpp;               // Coefficient of convenience.
+float YCOEFF      = EMU_K / dpp;               // Coefficient of convenience.
 
-// Initialize scanline addresses.
-
+// Riga is just a lookup table with 320 * i for each i.
+// Riga is italian for line.
 uint16_t riga[200];
 
+// Initialize scanline addresses.
 void initscanlines() {
     uint16_t c;
 
@@ -137,10 +148,9 @@ void initscanlines() {
 
 uint16_t ptr;
 
-uint32_t xp, yp, xa, ya;
 uint32_t global_x, global_y;
 
-void Segmento() {
+void Segmento(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
     int32_t a, b, L;
     uint32_t pi, pf;
     bool flip = false;
@@ -239,8 +249,6 @@ int16_t pvert, nvert, vvert;
 int16_t vr, vr2, vr3, vr4, vr5, vr6;
 
 float zk;
-float x2, y2, z2;
-float xx, yy, zz;
 
 /*
 
@@ -286,7 +294,7 @@ float rxf[VERTICI_PER_POLIGONO];
 float ryf[VERTICI_PER_POLIGONO];
 float rzf[VERTICI_PER_POLIGONO];
 
-// Limiti dell'area video rielaborati.
+// Video area limits reworked.
 
 #define lbx -larghezza / 2 + x_centro
 #define ubx larghezza / 2 + x_centro
@@ -306,8 +314,8 @@ float ubyf = uby;
 float x_centro_f = x_centro;
 float y_centro_f = y_centro;
 
-// Chiamare dopo aver cambiato l'angolo visuale.
-// Aggiorna le seguenti variabili di ottimizzazione, usate da poly3d.
+// Call after changing the visual angle.
+// Update the following optimization variables, used by poly3d.
 
 float opt_pcosbeta = dpp;
 float opt_psinbeta = 0;
@@ -334,8 +342,8 @@ void change_angle_of_view() {
     opt_tsinngamma = sin(ngamma * deg);
 }
 
-// Chiamare dopo aver cambiato dpp.
-// Cambia l'obiettivo della videocamera.
+// Call after changing dpp.
+// Change the camera lens.
 
 void change_camera_lens() {
     inv_dpp = 1 / dpp;
@@ -344,8 +352,8 @@ void change_camera_lens() {
     change_angle_of_view();
 }
 
-// Chiamare dopo aver cambiato V_MATRIXS o H_MATRIXS.
-// Aggiorna le variabili di lavoro per il texture mapping.
+// Call after changing V_MATRIXS or H_MATRIXS.
+// Update the job variables for texture mapping.
 
 void change_txm_repeating_mode() {
     XSIZE = TEXTURE_XSIZE * H_MATRIXS;
@@ -363,10 +371,9 @@ void change_txm_repeating_mode() {
     Lungo e complesso, ma provate ad eseguirlo ed a monitorarne il flusso:
     vi accorgerete della sua enorme agilit�. */
 
-float uno = 1; // sempre uno: � una costante di comodo.
+float uno = 1; // Always one: it is a constant of convenience. (Very cool, italy man)
 
-uint8_t entity = 1; /* controlla quantit� generiche nel riempimento
-                 dei poligoni con alcuni effetti speciali. */
+uint8_t entity = 1; /* check generic quantities in polygon filling with some special effects */
 
 void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
             uint8_t colore) {
@@ -386,11 +393,11 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
 
     doflag = 0;
     for (uint16_t i = 0; i < nrv; i++) {
-        zz = z[i] - cam_z;
-        xx = x[i] - cam_x;
-        yy = y[i] - cam_y;
+        float zz = z[i] - cam_z;
+        float xx = x[i] - cam_x;
+        float yy = y[i] - cam_y;
 
-        z2 = (zz * opt_tcosbeta) - (xx * opt_tsinbeta);
+        float z2 = (zz * opt_tcosbeta) - (xx * opt_tsinbeta);
 
         rxf[i] = (zz * opt_psinbeta) + (xx * opt_pcosbeta);
         rzf[i] = (z2 * opt_tcosalfa) + (yy * opt_tsinalfa);
@@ -908,20 +915,10 @@ drawb:
     // Complete tracing.
     // Draw the edges of the polygon, with the segment function.
     for (fakedi = 0; fakedi < (_8n / 4); fakedi += 2) {
-        xp = mp[fakedi];
-        yp = mp[fakedi + 1];
-        xa = mp[fakedi + 2];
-        ya = mp[fakedi + 3];
-
-        Segmento();
+        Segmento(mp[fakedi], mp[fakedi + 1], mp[fakedi + 2], mp[fakedi + 3]);
     }
 
-    xp = mp[fakedi];
-    yp = mp[fakedi + 1];
-    xa = mp[0];
-    ya = mp[1];
-
-    Segmento();
+    Segmento(mp[fakedi], mp[fakedi + 1], mp[0], mp[1]);
     // Starting Pixels
     uint16_t segmptr = riga[min_y] + min_x;
     // Arrival pixels
@@ -972,7 +969,7 @@ drawb:
         break;
 
     case 1:
-        colore &= 0x3F;
+        colore &= 0x3Fu;
         for (fakedi = segmptr; fakedi <= lim_y; fakedi += 320) {
             tempBytes  = bytes;
             tempfakedi = fakedi;
@@ -1005,7 +1002,7 @@ drawb:
 
                 for (; tinkywinky > 0; tempfakedi++, tinkywinky--) {
                     dipsy = adapted[tempfakedi - 1];
-                    dipsy &= 0x3F;
+                    dipsy &= 0x3Fu;
                     dipsy += colore;
 
                     if (dipsy >= 62)
@@ -1019,11 +1016,11 @@ drawb:
                 tinkywinky = loc1 - loc0;
                 tempfakedi = loc0;
 
-                dipsy = colore >> 1;
+                dipsy = colore >> 1u;
 
                 for (; tinkywinky > 0; tempfakedi++, tinkywinky--) {
                     po = adapted[tempfakedi - 1];
-                    po &= 0x3F;
+                    po &= 0x3Fu;
                     po += dipsy;
 
                     if (po >= 62)
@@ -1069,13 +1066,13 @@ drawb:
                     tempfakedi = tempfakedi > 64000 ? 64000 : tempfakedi;
                     if (adapted[tempfakedi] == 0xFF) {
                         dipsy = adapted[tempfakedi - 321];
-                        dipsy &= 0x3F;
-                        dipsy |= 0x40;
+                        dipsy &= 0x3Fu;
+                        dipsy |= 0x40u;
                         adapted[tempfakedi] = dipsy;
                     } else {
                         laalaa = adapted[tempfakedi];
-                        laalaa &= 0x3F;
-                        laalaa |= 0x40;
+                        laalaa &= 0x3Fu;
+                        laalaa |= 0x40u;
                         laalaa += tinkywinky;
                         if (laalaa >= 128)
                             laalaa = 127;
@@ -1090,8 +1087,8 @@ drawb:
                         dipsy = adapted[tempfakedi - 642];
                     }
 
-                    dipsy &= 0x3F;
-                    dipsy |= 0x40;
+                    dipsy &= 0x3Fu;
+                    dipsy |= 0x40u;
                     adapted[tempfakedi] = dipsy;
                 }
             }
@@ -1099,79 +1096,47 @@ drawb:
         break;
         // effetto flares = 3 spostato a "polymap"
     case 4:
-        #if 0
-        asm {   pusha
-                les di, dword ptr adapted
-                add lim_y, di
-                add di, segmptr }
-        fil4a:
-        asm {   mov al, colore
-                mov ah, colore
-                db 0x66 // macro: shl eax, 16
-                db 0xc1
-                db 0xe0
-                db 0x10
-                mov ah, colore
-                push di
-                mov cx, bytes
-                mov al, 255
-                repne scasb
-                jne fil4d
-                mov si, di
-                repe scasb
-                mov bx, di
-                repne scasb
-                jne fil4e
-                repe scasb
-                dec di
-                dec si
-                mov al, colore
-                mov dx, di
-                sub dx, si
-                mov di, si
-                mov cx, dx
-                shr cx, 2
-                jz fil4c }
-        fil4b:
-        asm {   db 0x26, 0x66, 0x89, 0x05 // mov es:[di], eax
-                add di, 4
-                dec cx
-                jnz fil4b }
-        fil4c:
-        asm {   mov cl, dl
-                and cl, 3
-                rep stosb
-                jmp fil4d }
-        fil4e:
-        asm {   dec si
-                dec bx
-                mov cx, bx
-                mov al, colore
-                sub cx, si
-                mov di, si
-                rep stosb }
-        fil4d:
-        asm {   mov al, colore
-                mov ah, colore
-                and al, 0x3F
-                and ah, 0xC0
-                add al, ent
-                cmp al, 0x3F
-                jbe fil4f
-                mov al, 0x3F
-                test ent, 0x80
-                jz  fil4f
-                xor al, al }
-        fil4f:
-        asm {   or  al, ah
-                mov colore, al
-                pop di
-                add di, 320
-                cmp di, lim_y
-                jbe fil4a
-                popa }*/
-        #endif
-        STUB
+        for (fakedi = segmptr; fakedi <= lim_y; fakedi += 320) {
+            tempBytes = bytes;
+            tempfakedi = fakedi;
+
+            if (adapted[tempfakedi] != 255) {
+                while (--tempBytes > 0 && adapted[++tempfakedi] != 255);
+            }
+
+            if (tempBytes == 0) continue;
+            loc0 = tempfakedi;
+
+            while (tempBytes-- > 0 && adapted[tempfakedi++] == 255);
+            loc1 = tempfakedi;
+
+            if (adapted[tempfakedi] != 255 && tempBytes > 0) {
+                while (--tempBytes > 0 && adapted[++tempfakedi] != 255);
+            }
+
+            if (tempBytes > 0) {
+                while (tempBytes-- > 0 && adapted[tempfakedi++] == 255);
+
+                tempfakedi--;
+                memset(&adapted[loc0], colore, tempfakedi - loc0);
+            } else {
+                loc1--;
+                memset(&adapted[loc0], colore, loc1 - loc0);
+            }
+
+            dipsy = (colore & 0x3Fu) + ent;
+            po = colore & 0xC0u;
+
+            if (dipsy > 0x3F) {
+                dipsy = 0x3F;
+                if (ent & 0x80u) {
+                    dipsy = 0;
+                }
+            }
+
+            dipsy |= po;
+            colore = dipsy;
+        }
         break;
     }
 }
@@ -1187,15 +1152,6 @@ drawb:
 
 uint8_t *txtr; /* Area della texture (FLS a livelli di intensit�,
                  64 livelli per pixel, senza header).*/
-
-int8_t init_texture_mapping() {
-    txtr = (uint8_t*) malloc(((int32_t) TEXTURE_YSIZE) * 256 + 16);
-    if (txtr) {
-        return (OK);
-    } else {
-        return (NOT_OK);
-    }
-}
 
 
 int8_t load_texture(int8_t *fname, int32_t offset)
@@ -1361,7 +1317,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
     int32_t  x1, y1, x2, y2, ity, jty, h;
     float k1, k2, k3, k4;
     float hx, vx, ox, hy, vy, oy, hz, vz, oz, _x, _y, _z;
-    float kx, rx, ry, rz, mx, my, mz, nx, ny, nz, xx, yy, zz;
+    float kx, rx, ry, rz, mx, my, mz, nx, ny, nz, xx, yy, zz, z2;
     float midx, midy, midz;
     float trxf[4], tryf[4], trzf[4];
 
@@ -1387,7 +1343,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         rxf[i] = (xx * opt_tcosbeta) + (zz * opt_tsinbeta);
         rzf[i] = (yy * opt_tsinalfa) + (z2 * opt_tcosalfa);
 
-        if (gamma == 0) {
+        if (ngamma == 0) {
             ryf[i] = (yy * opt_tcosalfa) - (z2 * opt_tsinalfa);
         } else {
             // TODO; Untested.
@@ -1657,9 +1613,9 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
 
     // Pre-work assignments.
     float fu, fv;
-    int32_t tempu, tempv;
-    uint16_t tax, tbx, tdx, tbp, tds, fakedi, fakesi, tempfakedi;
-    uint8_t tcl, tch, tbl, tbh, tah, tal, tdh, tdl, tempch;
+    int32_t tempu = 0, tempv = 0;
+    uint16_t tax = 0, tbx = 0, tdx = 0, tbp = 0, fakedi = 0, fakesi = 0, tempfakedi = 0, reallytempfakedi = 0;
+    uint8_t tcl = 0, tch = 0, tbl = 0, tbh = 0, tah = 0, tal = 0, tdh = 0, tdl = 0, tempch = 0;
     adapted[0xFA00] = tinta;
     adapted[0xFA01] = escrescenze;
 
@@ -1668,7 +1624,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
     //asm shr dx, 4                   // .
     //asm add ax, dx                  // .
     //asm db 0x8e, 0xe0               // mov fs, ax
-    //asm les ax, dword ptr adapted   // Loading video area address.
+    //asm les ax, dword ptr adapte-d   // Loading video area address.
 
     // Tracking cycle. (NOTE: This makes no sense.)
     for (i = min_y; i <= max_y;) {
@@ -1682,7 +1638,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         v = round((_y * tempYsize) * k4);
 
         sections = fpart[i] - ipart[i];
-        fakedi = i * 320 + ipart[i] - 4; // NOTE: Fudge factor to account for loss of offset on adapted.
+        fakedi = riga[i] + ipart[i] - 4;//i * 320 + ipart[i] - 4; // NOTE: Fudge factor to account for loss of offset on adapted.
 
         if (culling) {
             goto c_row;
@@ -1696,12 +1652,12 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
 
         again:
         if (sections > 16) {
-            tcl = 16;
+            goto complete;
         } else {
             tax = sections;
-            tah = (tax >> 8);
-            tal = (tax & 0xFF);
+            tal = (tax & 0xFFu);
             tcl = tal;
+            goto unfinished;
         }
 
         complete:
@@ -1751,7 +1707,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         tbl = tah;
         tch = adapted[0xFA00];
         tbx = (((uint16_t) tbh) << 8) + tbl;
-        tch += txtr[tbx - 4]; // NOTE; Fudge factor to account for loss of offset on txtr.
+        tch += txtr[(uint16_t) (tbx - 4)]; // NOTE; Fudge factor to account for loss of offset on txtr.
         tax += tbp;
         adapted[fakedi + 3] = tch;
         tdx += fakesi;
@@ -1768,7 +1724,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         tbl = tah;
         tch = adapted[fakedi + 3];
         tbx = (((uint16_t) tbh) << 8) + tbl;
-        tch += txtr[tbx - 4];
+        tch += txtr[(uint16_t) (tbx - 4)];
         tax += tbp;
         adapted[fakedi + 3] = tch;
         tdx += fakesi;
@@ -1787,7 +1743,11 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         tch &= 0x3F;
         tax += tbp;
         tbx = (((uint16_t) tbh) << 8) + tbl;
-        tch += txtr[tbx - 4];
+        /* NOTE: This frequently runs over the intended end of the txtr (40k), but
+         * we have allocated additional space to bring it up to 65k and prevent it
+         * from running over. It happens in the original source too.
+         */
+        tch += txtr[(uint16_t) (tbx - 4)];
         tdx += fakesi;
         if (tch <= 0x3E) goto antibloom;
         tch = 0x3E;
@@ -1810,7 +1770,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         tch &= 0x3F;
         tax += tbp;
         tbx = (((uint16_t) tbh) << 8) + tbl;
-        tch += txtr[tbx - 4];
+        tch += txtr[(uint16_t) (tbx - 4)];
         tch += adapted[0xFA00];
         tdx += fakesi;
         tch >>= 1;
@@ -1829,7 +1789,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         tbl = tah;
         tch = adapted[0xFA00];
         tbx = (((uint16_t) tbh) << 8) + tbl;
-        tch += txtr[tbx - 4];
+        tch += txtr[(uint16_t) (tbx - 4)];
         tax += tbp;
         adapted[fakedi + 3] = tch;
         tempfakedi = fakedi;
@@ -1843,7 +1803,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         tch = tempch;
         tch -= adapted[0xFA00];
         tch += adapted[0xFA01];
-        tch += txtr[tbx - 4];
+        tch += txtr[(uint16_t) (tbx - 4)];
         adapted[fakedi + 640 + 3] = tch;
         fakedi = tempfakedi;
         tdx += fakesi;
@@ -1855,206 +1815,183 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
 
         // Low detail scanline tracing.
         c_row:
-        #if 0
-        asm {
-            cmp sections, 0
-            jg  c_again
-            jmp row_end
+        if (sections <= 0) {
+            goto row_end;
         }
 
         c_again:
-        asm {
-            cmp sections, 32
-            jg  c_complete
-            mov ax, sections
-            add ax, 2
-            mov cl, al
-            jmp c_unfinished
+        if (sections > 32) {
+            goto c_complete;
+        } else {
+            tax = sections;
+            tax += 2;
+            tal = (tax & 0xFFu);
+            tcl = tal;
+            goto c_unfinished;
         }
 
         c_complete:
-        asm     mov cl, 32
+        tcl = 32;
 
         c_unfinished:
-        asm {
-            sub sections, 32
-            cmp cl, 2
-            jl  c_row
-            fld   _z           // 1 cycle   stack: z
-            fadd  k3               // 1 cycle   stack: z+k3
-            fld   _x           // 1 cycle   stack: x, z+k3
-            fadd  k1               // 1 cycle   stack: x+k1, z+k3
-            fxch                   // no time   stack: z+k3, x+k1
-            fst   _z               // 2 cycles  stack: z+k3, x+k1
-            fxch                   // no time   stack: x+k1, z+k3
-            fst   _x               // 2 cycles  stack: x+k1, z+k3
-            fxch                   // no time   stack: z+k3, x+k1
-            fdivr _uno             // 39 cycles stack: k4, x+k1
-            db 0x66;
-            mov ax, word ptr u     // while FPU is working,
-            db 0x66;
-            mov dx, word ptr v     // this group takes 0 cycles.
-            shr cl, 1          //
-            push bp                //
-            mov ch, _flares        //
-            push di            //
-            fxch                   // no time   stack: x+k1, k4
-            fmul  tempXsize        // 1 cycle   stack: x..., k4
-            fld   _y               // 1 cycle   stack: y, x..., k4
-            fadd  k2           // 1 cycle   stack: y+k2, x..., k4
-            fst   _y               // 3 cycles  stack: y+k2, x..., k4
-            fmul  tempYsize        // 1 cycle   stack: y..., x..., k4
-            fxch                   // no time   stack: x..., y..., k4
-            fmul  st, st(2)        // 1 cycle   stack: u, y..., k4
-            fxch                   // no time   stack: y..., u, k4
-            fmul  st, st(2)        // 1 cycle   stack: v, u, k4
-            fxch                   // no time   stack: u, v, k4
-            fistp u                // 6 cycles  stack: v, k4
-            fistp v                // 6 cycles  stack: k4
-            fstp st
-            db 0x66;
-            mov si, word ptr v
-            db 0x66;
-            mov bp, word ptr u
-            db 0x66;
-            sub si, dx
-            db 0x66;
-            sub bp, ax
-            db 0x66;
-            sar si, 4
-            db 0x66;
-            sar bp, 4
-            test ch, 15         // NORMALE = 0
-            jz c_internal
-            test ch, 1      // LUCIDO = 1
-            jnz c_transp
-            test ch, 2      // BRILLANTE = 2
-            jnz c_bright
-            test ch, 4      // TRASLUCIDO = 4
-            jnz c_merger
-            jmp c_bumper    // BUMP MAPPING = 8
+        sections -= 32;
+        if (tcl < 2) {
+            goto c_row;
+        }
+
+        _x += k1;
+        _y += k2;
+        _z += k3;
+
+        k4 = 1 / _z;
+
+        tempu = u;
+        tempv = v;
+
+        reallytempfakedi = tempfakedi;
+
+        u = round((_x * tempXsize) * k4);
+        v = round((_y * tempYsize) * k4);
+
+        tax = tempu;
+        tdx = tempv;
+        fakesi = (v - tempv) >> 4;
+        tbp = (u - tempu) >> 4;
+
+        tcl >>= 1;
+        tch = _flares;
+        if (tch & 1) {
+            goto c_transp;
+        } else if (tch & 2) {
+            goto c_bright;
+        } else if (tch & 4) {
+            goto c_merger;
+        } else if (tch & 8) {
+            goto c_bumper;
+        } else {
+            goto c_internal;
         }
 
         c_internal:
-        asm {
-            mov bh, dh      // 1 (riempimento normale)
-            add di, 2       // *
-            mov bl, ah      // 1
-            mov ch, ds:[0xFA00] // *
-            db 0x64, 0x02, 0x2F     // 1+PFX+AGI (add ch, fs:[bx])
-            add ax, bp      // *
-            mov [di+2], ch      // 1
-            mov [di+3], ch      // *
-            add dx, si      // 1
-            dec cl          // *
-            jnz c_internal      // 1 (8 cicli).
-            jmp c_common
-        }
+        tdh = (tdx >> 8) & 0xFF;
+        tah = (tax >> 8) & 0xFF;
+
+        tbh = tdh;
+        fakedi += 2;
+        tbl = tah;
+        tch = adapted[0xFA00];
+        tbx = (((uint16_t) tbh) << 8) + tbl;
+        tch += txtr[(uint16_t) (tbx - 4)]; // NOTE; Fudge factor to account for loss of offset on txtr.
+        tax += tbp;
+        adapted[fakedi + 2] = tch;
+        adapted[fakedi + 3] = tch;
+        tdx += fakesi;
+        tcl--;
+        if (tcl != 0) goto c_internal;
+        goto c_common;
 
         c_transp:
-        asm {
-            mov bh, dh      // 1 (riempimento lucido)
-            add di, 2       // *
-            mov bl, ah      // 1
-            mov ch, [di+3]      // *
-            db 0x64, 0x02, 0x2F     // 1+PFX+AGI (add ch, fs:[bx])
-            add ax, bp      // *
-            mov [di+2], ch      // 1
-            mov [di+3], ch      // *
-            add dx, si      // 1
-            dec cl          // *
-            jnz c_transp        // 1 (8 cicli).
-            jmp c_common
-        }
+        tdh = (tdx >> 8) & 0xFF;
+        tah = (tax >> 8) & 0xFF;
+
+        tbh = tdh;
+        fakedi += 2;
+        tbl = tah;
+        tch = adapted[fakedi + 3];
+        tbx = (((uint16_t) tbh) << 8) + tbl;
+        tch += txtr[(uint16_t) (tbx - 4)];
+        tax += tbp;
+        adapted[fakedi + 2] = tch;
+        adapted[fakedi + 3] = tch;
+        tdx += fakesi;
+        tcl--;
+        if (tcl != 0) goto c_transp;
+        goto c_common;
 
         c_bright:
-        asm {
-            mov ch, [di+4]      // 1 (riempimento brillante)
-            mov bh, dh      // *
-            add di, 2       // 1
-            mov bl, ah      // *
-            and ch, 0x3F        // 1
-            add ax, bp      // *
-            db 0x64, 0x02, 0x2F     // 1+PFX (add ch, fs:[bx])
-            add dx, si      // *
-            cmp ch, 0x3E        // 1
-            jbe c_antibloom     // * (antiblooming)
-            mov ch, 0x3E        // 1
-        }
+        tdh = (tdx >> 8) & 0xFF;
+        tah = (tax >> 8) & 0xFF;
+
+        tch = adapted[fakedi + 4];
+        tbh = tdh;
+        fakedi += 2;
+        tbl = tah;
+        tch &= 0x3F;
+        tax += tbp;
+        tbx = (((uint16_t) tbh) << 8) + tbl;
+        tch += txtr[(uint16_t) (tbx - 4)];
+        tdx += fakesi;
+        if (tch <= 0x3E) goto c_antibloom;
+        tch = 0x3E;
 
         c_antibloom:
-        asm {
-            and byte ptr [di+2], 0xC0 // 1
-            or  ch, [di+2]      // 1
-            dec cl          // 1
-            mov [di+2], ch      // *
-            mov [di+3], ch      // 1
-            jnz c_bright        // 0 (11 cicli.)
-            jmp c_common
-        }
+        adapted[fakedi + 2] &= 0xC0;
+        tch |= adapted[fakedi + 2];
+        adapted[fakedi + 2] = tch;
+        adapted[fakedi + 3] = tch;
+        tcl--;
+        if (tcl != 0) goto c_bright;
+        goto c_common;
 
         c_merger:
-        asm {
-            mov ch, [di+4]      // 1 (traslucido)
-            mov bh, dh      // *
-            add di, 2       // 1
-            mov bl, ah      // *
-            and ch, 0x3F        // 1
-            add ax, bp      // *
-            db 0x64, 0x02, 0x2F     // 1+PFX (add ch, fs:[bx])
-            add ch, ds:[0xFA00]
-            add dx, si      // *
-            shr ch, 1       // 1
-            and byte ptr [di+2], 0xC0 // *
-            or  ch, [di+2]      // 1
-            dec cl          // *
-            mov [di+2], ch      // 1
-            mov [di+3], ch      // *
-            jnz c_merger        // 1 (9 cicli.)
-            jmp c_common
-        }
+        tdh = (tdx >> 8) & 0xFF;
+        tah = (tax >> 8) & 0xFF;
+
+        tch = adapted[fakedi + 4];
+        tbh = tdh;
+        fakedi += 2;
+        tbl = tah;
+        tch &= 0x3F;
+        tax += tbp;
+        tbx = (((uint16_t) tbh) << 8) + tbl;
+        tch += txtr[(uint16_t) (tbx - 4)];
+        tch += adapted[0xFA00];
+        tdx += fakesi;
+        tch >>= 1;
+        adapted[fakedi + 2] &= 0xC0;
+        tch |= adapted[fakedi + 2];
+        adapted[fakedi + 2] = tch;
+        adapted[fakedi + 3] = tch;
+        tcl--;
+        if (tcl != 0) goto c_merger;
+        goto c_common;
 
         c_bumper:
-        asm {
-            mov bh, dh      // 1 (bump mapping)
-            add di, 2       // *
-            mov bl, ah      // 1
-            mov ch, ds:[0xFA00] // *
-            db 0x64, 0x02, 0x2F     // 1+PFX+AGI (add ch, fs:[bx])
-            add ax, bp      // *
-            mov [di+2], ch      // 1
-            mov [di+3], ch      // 1
-            push di
-            push cx
-            and ch, 0x7
-        }
+        tdh = (tdx >> 8) & 0xFF;
+        tah = (tax >> 8) & 0xFF;
+
+        tbh = tdh;
+        fakedi += 2;
+        tbl = tah;
+        tch = adapted[0xFA00];
+        tbx = (((uint16_t) tbh) << 8) + tbl;
+        tch += txtr[(uint16_t) (tbx - 4)];
+        tax += tbp;
+        adapted[fakedi + 2] = tch;
+        adapted[fakedi + 3] = tch;
+        tempfakedi = fakedi;
+        tempch = tch;
+        tch &= 0x07;
 
         c_bmpm320:
-        asm {
-            sub di, 320
-            dec ch
-            jns c_bmpm320
-            pop cx
-            sub ch, ds:[0xFA00]
-            add ch, ds:[0xFA01] // *
-            db 0x64, 0x02, 0x2F     // 1+PFX+AGI (add ch, fs:[bx])
-            mov byte ptr [di+640+2], ch
-            mov byte ptr [di+640+3], ch
-            pop di
-            add dx, si      // *
-            dec cl          // 1
-            jnz c_bumper    // ? cicli.
-        }
+        fakedi -= 320;
+        tch--;
+        if (!((tch >> 7) & 1)) goto c_bmpm320;
+        tch = tempch;
+        tch -= adapted[0xFA00];
+        tch += adapted[0xFA01];
+        tch += txtr[(uint16_t) (tbx - 4)];
+        adapted[fakedi + 640 + 2] = tch;
+        adapted[fakedi + 640 + 3] = tch;
+        fakedi = tempfakedi;
+        tdx += fakesi;
+        tcl--;
+        if (tcl != 0) goto c_bumper;
 
         c_common:
-        asm {
-            pop di
-            pop bp
-            add di, 32
-            jmp c_row
-        }
-        #endif
-        STUB
+        fakedi = reallytempfakedi;
+        fakedi += 32;
+        goto c_row;
 
         // Inter-scanline code: between one scanline and the next.
         row_end:
@@ -2085,9 +2022,9 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
     }
 }
 
-void Forward(float delta) /* Provoca l'avanzamento dell'osservatore
-                 nella direzione di volo di <delta>
-                 unit� virtuali. */
+void Forward(float delta) 
+/* Causes the observer to advance 
+ * in the direction of flight of <delta> virtual units */
 {
     cam_x -= delta * opt_tsinbeta * opt_tcosalfa;
     cam_z += delta * opt_tcosbeta * opt_tcosalfa;
@@ -2096,195 +2033,77 @@ void Forward(float delta) /* Provoca l'avanzamento dell'osservatore
 
 int32_t _x_, _y_;
 
-int8_t getcoords(float x, float y, float z) {
-#if 0
-    // calcola le coordinate sullo schermo di un punto nello spazio,
-    // usando lo stesso nucleo di calcolo di poly3d e di polymap,
-    // se il punto rientra nello schermo ritorna 1, altrimenti ritorna 0.
-    // le coordinate sono poi trasferite nelle variabili _x_ e _y_.
-    // il punto non andrebbe tracciato se non � visibile, perch�
-    // le coordinate risulterebbero, in tal caso, indeterminabili.
-    float rx, ry, rz, my;
-    asm {// if (ngamma != 0) goto t_axis;
-        db 0x66;
-        mov ax, word ptr _0
-        db 0x66;
-        cmp ax, word ptr ngamma
-        jne t_axis
-        jmp no_t_axis }
-t_axis:
-    asm {   fld z
-            fsub cam_z
-            fst zz
-            fmul opt_tsinbeta
-            fld x
-            fsub cam_x
-            fst xx
-            fmul opt_tcosbeta
-            faddp
-            fstp rx
-            fld zz
-            fmul opt_tcosbeta
-            fld xx
-            fmul opt_tsinbeta
-            fsubp
-            fst z2
-            fmul opt_tcosalfa
-            fld y
-            fsub cam_y
-            fst yy
-            fmul opt_tsinalfa
-            faddp
-            fst rz
-            fcomp uneg
-            fstsw ax
-            fld yy
-            fmul opt_tcosalfa
-            fld z2
-            fmul opt_tsinalfa
-            fsubp
-            fst my
-            fmul opt_tcosngamma
-            fld rx
-            fmul opt_tsinngamma
-            fsubp
-            fstp ry
-            fld my
-            fmul opt_tsinngamma
-            fld rx
-            fmul opt_tcosngamma
-            faddp
-            fstp rx
-            sahf
-            jb _rzf_min_uneg
-            jmp convert }
-    _rzf_min_uneg:
-    return (0);
-no_t_axis:
-    asm {   fld z
-            fsub cam_z
-            fst zz
-            fmul opt_tsinbeta
-            fld x
-            fsub cam_x
-            fst xx
-            fmul opt_tcosbeta
-            faddp
-            fstp rx
-            fld zz
-            fmul opt_tcosbeta
-            fld xx
-            fmul opt_tsinbeta
-            fsubp
-            fst z2
-            fmul opt_tcosalfa
-            fld y
-            fsub cam_y
-            fst yy
-            fmul opt_tsinalfa
-            faddp
-            fst rz
-            fcomp uneg
-            fstsw ax
-            fld yy
-            fmul opt_tcosalfa
-            fld z2
-            fmul opt_tsinalfa
-            fsubp
-            fstp ry
-            sahf
-            jb rzf_min_uneg
-            jmp convert }
-    rzf_min_uneg:
-    return (0);
-convert: //my  = dpp / rz;
-    //_x_ = my * rx + x_centro_f;
-    //_y_ = my * ry + y_centro_f;
-    asm {
-        fld dpp
-        fdiv rz
-        fld st(0)
-        fmul rx
-        fadd x_centro_f
-        fistp _x_
-        fmul ry
-        fadd y_centro_f
-        fistp _y_
+int8_t getcoords(float x, float y, float z)
+{
+	/* Calculate the coordinates on the screen of a point in space, 
+	 * using the same calculation nucleus(unit? group?) of poly3d and polymap, 
+	 * if the point re-enters the screen it returns 1, otherwise it returns 0. 
+	 * The coordinates are then transferred in the variables _x_ and _y_. 
+	 * The point should not be traced(drawn?) so it is not visible, 
+	 * because the coordinates would be, in this(that?) case, indeterminable. */
+
+    float rx, ry, rz, my, xx, yy, zz, z2;
+
+    zz = z - cam_x;
+    xx = x - cam_x;
+    
+    rx = (zz * opt_tsinbeta) + (xx * opt_tcosbeta);
+    z2 = (zz * opt_tcosbeta) - (xx * opt_tsinbeta);
+
+    yy = y - cam_y;
+
+    rz = (z2 * opt_tcosalfa) + (yy * opt_tsinalfa);
+
+    if (ngamma != _0) {
+	//t_axis:
+	my = (yy * opt_tcosalfa) - (z2 * opt_tsinalfa);
+    	ry = (my * opt_tcosngamma) - (rx * opt_tsinngamma);
+    	rx = (my * opt_tsinngamma) + (rx * opt_tcosngamma);
+    } else {
+	//no_t_axis:
+	ry = (yy * opt_tcosalfa) - (z2 * opt_tsinalfa);
     }
+
+    if (rz < uneg) {
+	    return 0;
+    }
+
+convert: 
+//my  = dpp / rz; (Explain this, italy man!)
+    
+    _x_ = ((dpp / rz) * rx) + x_centro_f;
+    _y_ = ((dpp / rz) * ry) + y_centro_f;
 
     if (_x_ > lbxl && _x_ < ubxl && _y_ > lbyl && _y_ < ubyl) {
-        return (1);
+        return 1;
     } else {
-        return (0);
+        return 0;
     }
-#endif
-    STUB
 }
 
-int8_t facing(float *x, float *y, float *z) {
-#if 0
-    /*  Controlla se un poligono a una sola faccia � visibile o meno.
-        Certo che come procedimento non � poi tanto semplice: va calcolata,
-        anche approssimativamente, la normale alla superficie; comunque,
-        sempre meglio che calcolare tutto il poligono... */
+int8_t facing(float *x, float *y, float *z)
+{
+/* Controls whether a single-sided polygon is visible or not.
+ * Of course, as a procedure it is not so simple: 
+ * the surface normal must be calculated, even approximately; 
+ * however, always better than calculating the entire polygon. */
+
     float x1, y1, z1, x2, y2, z2, xr, yr, zr;
-    asm {   les   bx, dword ptr x
-            mov   si, word ptr  y
-            mov   di, word ptr  z
-            fld   dword ptr es:[bx]
-            fsub  dword ptr es:[bx+8]
-            fstp  x1
-            fld   dword ptr es:[si]
-            fsub  dword ptr es:[si+8]
-            fstp  y1
-            fld   dword ptr es:[di]
-            fsub  dword ptr es:[di+8]
-            fstp  z1
-            fld   dword ptr es:[bx+4]
-            fsub  dword ptr es:[bx+8]
-            fstp  x2
-            fld   dword ptr es:[si+4]
-            fsub  dword ptr es:[si+8]
-            fstp  y2
-            fld   dword ptr es:[di+4]
-            fsub  dword ptr es:[di+8]
-            fst   z2
-            fmul  y1
-            fld   y2
-            fmul  z1
-            fsubp
-            fstp  xr
-            fld   z1
-            fmul  x2
-            fld   z2
-            fmul  x1
-            fsubp
-            fstp  yr
-            fld   x1
-            fmul  y2
-            fld   x2
-            fmul  y1
-            fsubp
-            fstp  zr
-            fld   cam_x
-            fsub  dword ptr es:[bx+8]
-            fmul  xr
-            fld   cam_y
-            fsub  dword ptr es:[si+8]
-            fmul  yr
-            faddp
-            fld   cam_z
-            fsub  dword ptr es:[di+8]
-            fmul  zr
-            faddp
-            ftst
-            ffree st(0)
-            fstsw ax
-            xor dl, dl
-            sahf
-            jb _zero
-            not dl }
-    _zero:
-    return (_DL);
-#endif
+
+    x1 = *x - x[8];
+    y1 = *y - y[8];
+    z1 = *z - z[8];
+    x2 = x[4] - x[8];
+    y2 = y[4] - y[8];
+    z2 = z[4] - z[8];
+
+    xr = (z2 * y1) - (y2 *z1);
+    yr = (z1 * x2) - (z2 * x1);
+    zr = (x1 * y2) - (x2 * y1);
+
+    if (((cam_x - x[8]) * xr) + ((cam_y - y[8]) * yr) + ((cam_z - z[8]) * zr) < 0) {
+	    return 0;
+    }
+
+    return 1;
 }

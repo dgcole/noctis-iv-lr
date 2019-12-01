@@ -8,18 +8,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <conio.h>
-#include <dos.h>
-#include <io.h>
 
 char msgbuffer[77];
-char* divider = "&&&&&&&&&&&&&&&&&&&&&";
+char* divider = (char*)"&&&&&&&&&&&&&&&&&&&&&";
 
-void msg (char* string) {
+void msg (char* string)
+{
     int x;
     strcpy (msgbuffer, string);
     msgbuffer[21] = 0;
-    printf (msgbuffer);
+    printf ("%s", msgbuffer);
     x = strlen(msgbuffer);
 
     while (x < 21) {
@@ -37,9 +35,11 @@ double  subject_id = 12345;
 double  idscale = 0.00001;
 
 long    round;
-int     i, fh, gh;
-char*   file = "..\\DATA\\STARMAP.BIN";
-char*   guide = "..\\DATA\\GUIDE.BIN";
+int     i;
+FILE* 	fh;
+FILE* 	gh;
+const char*   file = "data/STARMAP.BIN";
+const char*   guide = "data/GUIDE.BIN";
 
 char    outbuffer[40];
 char    textbuffer[40];
@@ -51,20 +51,21 @@ char    subjectname[21];
 double  mblock_subject;
 char    mblock_message[77];
 
-char find (char* starname) {
+char find (char* starname)
+{
     int p, n, ctc, found;
     ctc = strlen (starname);
 
     if (ctc > 20 || ctc <= 0) {
-        msg ("INVALID OBJECT NAME.");
+        msg ((char*)"INVALID OBJECT NAME.");
         return (0);
     }
 
     n = 0;
     found = 0;
-    lseek (fh, 4, SEEK_SET);
+    fseek (fh, 4, SEEK_SET);
 
-    while (_read (fh, &s_object_id, 8) && _read (fh, &s_object_label, 24) == 24) {
+    while (fread(&s_object_id, 1, 8, fh) && fread(&s_object_label, 1, 24, fh) == 24) {
         if (memcmp (&s_object_id, "Removed:", 8)) {
             if (!memcmp (s_object_label, starname, ctc)) {
                 n++;
@@ -99,18 +100,18 @@ char find (char* starname) {
     }
 
     if (!n) {
-        msg ("OBJECT NOT FOUND.");
+        msg ((char*)"OBJECT NOT FOUND.");
     }
 
     if (n > 1) {
-        msg ("AMBIGUOUS SEARCH KEY:");
-        msg ("PLEASE EXPAND NAME...");
+        msg ((char*)"AMBIGUOUS SEARCH KEY:");
+        msg ((char*)"PLEASE EXPAND NAME...");
         msg (divider);
-        msg ("POSSIBLE RESULTS ARE:");
+        msg ((char*)"POSSIBLE RESULTS ARE:");
         msg (divider);
-        lseek (fh, 4, SEEK_SET);
+        fseek (fh, 4, SEEK_SET);
 
-        while (_read (fh, &s_object_id, 8) && _read (fh, &s_object_label, 24) == 24) {
+        while (fread (&s_object_id, 1, 8, fh) && fread(&s_object_label, 1, 24, fh) == 24) {
             if (memcmp (&s_object_id, "Removed:", 8)
                     && !memcmp (s_object_label, starname, ctc)) {
                 s_object_label[21] = 0;
@@ -125,48 +126,51 @@ char find (char* starname) {
     return (found);
 }
 
-void main () {
+int main (int argc, char** argv)
+{
     char query;
     int j, col, pre;
     int is, rec, rec_start, rec_end;
-    asm {   xor ax, ax
-            mov es, ax
-            cmp byte ptr es:[0x449], 0x13
-            je  startup }
-    printf ("\nGalactic Organization of Explorers and Stardrifters (G.O.E.S)\n");
-    printf ("-------------------------------------------------------------\n");
-    printf ("This is a GOES NET module and must be run from a stardrifter.\n");
-    printf ("Please use the onboard computer console to run this module.\n");
-    printf ("\n\t- GOES NET onboard microsystem, EPOC 6011 REVISION 2\n");
-    return;
+
+    /* This is printed if this is not run by Noctis,
+     * 	but the check for this still needs to be implemented */
+    goto startup;
+
+    /*
+	printf ("\nGalactic Organization of Explorers and Stardrifters (G.O.E.S)\n");
+    	printf ("-------------------------------------------------------------\n");
+    	printf ("This is a GOES NET module and must be run from a stardrifter.\n");
+    	printf ("Please use the onboard computer console to run this module.\n");
+    	printf ("\n\t- GOES NET onboard microsystem, EPOC 6011 REVISION 2\n");
+    	return; */
 startup:
 
-    if (_argc < 2) {
-        msg ("________USAGE________");
-        msg ("CAT OBJECTNAME");
-        msg ("CAT OBJECTNAME:X..Y");
-        msg ("^^^^^^^^^^^^^^^^^^^^^");
-        msg ("PLEASE RUN AGAIN,");
-        msg ("SPECIFYING PARAMETERS");
-        return;
+    if (argc < 2) {
+        msg ((char*)"________USAGE________");
+        msg ((char*)"CAT OBJECTNAME");
+        msg ((char*)"CAT OBJECTNAME:X..Y");
+        msg ((char*)"^^^^^^^^^^^^^^^^^^^^^");
+        msg ((char*)"PLEASE RUN AGAIN,");
+        msg ((char*)"SPECIFYING PARAMETERS");
+        return 0; //Not sure if should return 0
     } else {
-        msg (" GOES GALACTIC GUIDE ");
+        msg ((char*)" GOES GALACTIC GUIDE ");
         msg (divider);
     }
 
-    fh = _open (file, 4);
+    fh = fopen(file, "r"); //Not sure if it should be binary mode or normal
 
-    if (fh == -1) {
-        msg ("STARMAP NOT AVAILABLE");
-        return;
+    if (fh == NULL) {
+        msg ((char*)"STARMAP NOT AVAILABLE");
+        return 0; //Not sure if should return 0
     }
 
     i = 2;
-    strcpy (parbuffer, _argv[1]);
+    strcpy (parbuffer, argv[1]);
 
-    while (i < _argc) {
+    while (i < argc) {
         strcat (parbuffer, " ");
-        strcat (parbuffer, _argv[i]);
+        strcat (parbuffer, argv[i]);
         i++;
     }
 
@@ -188,8 +192,8 @@ startup:
     }
 
     if (i == 21) {
-        msg ("INVALID SUBJECT NAME.");
-        _close (fh);
+        msg ((char*)"INVALID SUBJECT NAME.");
+        fclose(fh);
     }
 
     if (parbuffer[i] == ':') {
@@ -218,27 +222,27 @@ startup:
 
     if (query) {
         if (query == 1) {
-            msg ("SUBJECT: STAR;");
+            msg ((char*)"SUBJECT: STAR;");
         }
 
         if (query == 2) {
-            msg ("SUBJECT: PLANET;");
+            msg ((char*)"SUBJECT: PLANET;");
         }
 
         msg (subjectname);
         msg (divider);
-        gh = _open (guide, 4);
+        gh = fopen(guide, "r");
 
-        if (gh == -1) {
-            msg ("DATABASE ERROR.");
-            msg ("(ERROR CODE 1003)");
+        if (gh == NULL) {
+            msg ((char*)"DATABASE ERROR.");
+            msg ((char*)"(ERROR CODE 1003)");
         } else {
             rec = 0;
             col = 0;
             query = 0;
-            lseek (gh, 4, SEEK_SET);
+            fseek (gh, 4, SEEK_SET);
 
-            while (_read (gh, &mblock_subject, 84) == 84) {
+            while (fread(&mblock_subject, 1, 84, gh) == 84) { //Should size be 1 byte?
                 if (mblock_subject > subject_id - idscale
                         && mblock_subject < subject_id + idscale) {
                     rec++;
@@ -305,16 +309,16 @@ removeleadingspace:
             }
 
             if (!query) {
-                msg ("THERE WERE NO RECORDS");
-                msg ("IN THE GUIDE RELATING");
-                msg ("SPECIFIED SUBJECT.");
+                msg ((char*)"THERE WERE NO RECORDS");
+                msg ((char*)"IN THE GUIDE RELATING");
+                msg ((char*)"SPECIFIED SUBJECT.");
             } else {
-                msg ("");
+                msg ((char*)"");
             }
 
-            _close (gh);
+            fclose(gh);
         }
     }
 
-    _close (fh);
+    fclose(fh);
 }
