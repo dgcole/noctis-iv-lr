@@ -15,7 +15,7 @@ jobs:
     - name: Build for Linux x64
       run: mkdir build && cd build && cmake -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ .. && make
     - name: Compress Linux x64 artifact
-      run: tar -czvf nivlr.tar.gz nivlr ../res
+      run: tar -czvf nivlr.tar.gz build/nivlr res
     - name: Upload Linux x64 artifact
       uses: actions/upload-artifact@v1.0.0
       with:
