@@ -1,8 +1,11 @@
+#include "noctis.h"
 #include "noctis-0.h"
 #include "noctis-d.h"
+#include "brtl.h"
 
 const double deg = M_PI / 180;
 
+static int16_t opencapcount = 0;
 float refx, refy, refz;
 float sp_x, sp_y, sp_z;
 
@@ -49,12 +52,11 @@ float base_pp_temp;
 float base_pp_pressure;
 
 float hpoint(int32_t px, int32_t pz) {
-#if 0
-    // Trova l'altezza di un punto sulla superficie.
-    // Per migliorare la risoluzione, usa un procedimento d'interpolazione
-    // bi-lineare, con 16384 gradazioni intermedie, tante quante le unit�
-    // logiche che compongono il lato di un quadrante; considera anche
-    // la divisione dei quadranti in due triangoli isosceli.
+    /* Find the height of a point on the surface. To improve the resolution,
+     * use a bilinear interpolation procedure with 16384 intermediate steps,
+     * as many as the units that make up the side of a quadrant. Consider
+     * also the division of the quadrants into two isosceles triangles.
+     */
     int32_t cpos;
     float h1, h2, h3, h4, icx, icz, py;
     cpos   = m200[pz >> 14] + (px >> 14);
@@ -74,8 +76,6 @@ float hpoint(int32_t px, int32_t pz) {
     }
 
     return (py);
-#endif
-    STUB return 0;
 }
 
 /*
@@ -108,7 +108,6 @@ int16_t detail_seed = 12345;
 void greenmush(float x, float y, float z, uint8_t mask_1, uint8_t mask_2,
                int32_t scaling, uint8_t colorgrade, uint8_t colormask,
                int8_t noseed) {
-#if 0
     // produce una serie di gruppi di minuscole sagome verdi, studiate per
     // fornire l'impressione delle fronde degli alberi pi� distanti.
     int32_t    correction;
@@ -131,19 +130,16 @@ void greenmush(float x, float y, float z, uint8_t mask_1, uint8_t mask_2,
             m2 = 1 + fast_random (mask_2);
 
             for (n2 = 0; n2 < m2; n2++) {
-                _DI = riga[_y_ + fast_random(7)] + _x_ + fast_random(7);
-                _CL = colorgrade + fast_random (colormask);
-                asm {   les ax, adapted
-                mov es:[di+4], cl
-                mov es:[di+5], cl
-                mov es:[di+3], cl
-                mov es:[di+324], cl
-                mov es:[di-316], cl
-                mov es:[di-636], cl }
+                uint16_t tdi = riga[_y_ + fast_random(7)] + _x_ + fast_random(7);
+                uint8_t tcl = colorgrade + fast_random (colormask);
+                adapted[tdi + 3] = tcl;
+                adapted[tdi + 4] = tcl;
+                adapted[tdi + 5] = tcl;
+                adapted[tdi - 636] = tcl;
+                adapted[tdi - 316] = tcl;
+                adapted[tdi + 324] = tcl;
             }
         }
-#endif
-    STUB
 }
 
 void build_fractal_tree(float x, float y, float z, float scaling, float reduction,
@@ -151,7 +147,6 @@ void build_fractal_tree(float x, float y, float z, float scaling, float reductio
                         float distance_from_perfection, uint8_t rootcolormask,
                         uint8_t leafcolormask, float branchdetail,
                         int8_t isrootnode, int8_t occurrence) {
-#if 0
     // funzione ricorsiva: eventualmente traccia l'intero albero pseudo-casuale,
     // con una struttura multilivello, ma va usata con parsimonia perch� �
     // ovviamente una cosa piuttosto laboriosa in termini di tempo.
@@ -333,8 +328,6 @@ void build_fractal_tree(float x, float y, float z, float scaling, float reductio
     }
 
     flares = pf;
-#endif
-    STUB
 }
 
 #define FORCE_LAT 11
@@ -1136,7 +1129,6 @@ int16_t ipfx,
 int8_t nearest_fragment_already_traced; // flag di lavoro.
 
 void fragment(int32_t x, int32_t z) {
-#if 0
     // traccia un quadrante della superficie.
     int8_t  poly1, poly2;
     int16_t   c1, count, id, cl;
@@ -1363,7 +1355,7 @@ void fragment(int32_t x, int32_t z) {
             H_MATRIXS = 0;
             V_MATRIXS = 0;
             change_txm_repeating_mode();
-            txtr = n_globes_map;
+            txtr = (uint8_t*) n_globes_map;
             cam_y += 515;
             polycupola (-1, 1);
             flares = 0;
@@ -1473,34 +1465,15 @@ void fragment(int32_t x, int32_t z) {
         return;
     }
 
-    /*  for (id = 0; id < animals; id++)
-          if (ani_sqc[id] == h1)
-              live_animal (id);*/
     ani_sqc_temp = ani_sqc;
-    asm {   mov cx, animals
-    cmp cx, 0
-    jle nat
-    mov si, word ptr ani_sqc_temp
-    mov ax, word ptr h1 }
-    lfa:
-    asm {   cmp word ptr [si], ax
-    jne nah
-    push ax
-    push cx
-    push si
-    mov dx, animals
-    sub dx, cx }
-    live_animal (_DX);
-    asm {   pop si
-    pop cx
-    pop ax }
-    nah:
-    asm {   add si, 2
-    dec cx
-    jnz lfa }
+    for (id = 0; id < animals; id++) {
+        if (ani_sqc_temp[id] == h1) {
+            live_animal(id);
+        }
+    }
+
     /* -3- Traccia gli oggetti presenti sulla superficie. */
     // se non sono previsti oggetti su questa superficie, lascia...
-    nat:
 
     if ((count = objectschart[h1].nr_of_objects) == 0) {
         return;
@@ -1584,8 +1557,6 @@ void fragment(int32_t x, int32_t z) {
 
         count--;
     }
-#endif
-    STUB
 }
 
 void iperficie(int16_t additional_quadrants) {
@@ -1703,7 +1674,6 @@ backoff:
 
 void round_hill(int16_t cx, int16_t cz, uint16_t r, float h, float hmax,
                 int8_t allowcanyons) {
-#if 0
     // Una collina rotonda, o una montagna molto erosa (se la si fa grossa).
     // hmax entra in gioco se il flag "allowcanyons" � a zero:
     //      quando l'altezza puntuale supera "hmax", per allowcanyons=0
@@ -1713,18 +1683,18 @@ void round_hill(int16_t cx, int16_t cz, uint16_t r, float h, float hmax,
     //      al centro della collina.
     int16_t x, z;
     float dx, dz, d;
-    float y, v = (float)r / M_PI_2;
+    float y, v = (float) r / M_PI_2;
 
-    for (x = cx - r; x < cx + r; x++)
+    for (x = cx - r; x < cx + r; x++) {
         for (z = cz - r; z < cz + r; z++) {
             if (x > -1 && z > -1 && x < 200 && z < 200) {
                 dx = x - cx;
                 dz = z - cz;
-                d  = sqrt (dx * dx + dz * dz);
-                y  = cos (d / v) * h;
+                d  = sqrt(dx * dx + dz * dz);
+                y  = cos(d / v) * h;
 
                 if (y >= 0) {
-                    y += p_surfacemap[200 * (int32_t)z + x];
+                    y += p_surfacemap[200 * (int32_t) z + x];
 
                     if (allowcanyons) {
                         if (y > 127) {
@@ -1736,12 +1706,11 @@ void round_hill(int16_t cx, int16_t cz, uint16_t r, float h, float hmax,
                         }
                     }
 
-                    p_surfacemap[200 * (int32_t)z + x] = y;
+                    p_surfacemap[200 * (int32_t) z + x] = y;
                 }
             }
         }
-#endif
-    STUB
+    }
 }
 
 void smoothterrain(int16_t rounding) {
@@ -1768,7 +1737,7 @@ void rockyground(int16_t roughness, int16_t rounding, int8_t level) {
 #if 0
     // Produce una superficie pi� o meno accidentata.
     for (ptr = 0; ptr < 40000; ptr++) {
-        p_surfacemap[ptr] = random (roughness);
+        p_surfacemap[ptr] = brtl_random (roughness);
     }
 
     smoothterrain (rounding);
@@ -1826,46 +1795,43 @@ map[align * (int32_t)z + x] = y;
     STUB
 }
 
-void srf_darkline(uint8_t *map, int16_t length, int16_t x_trend, int16_t z_trend,
-                  int32_t align) {
-#if 0
-// Una crepa scura (versione principalmente per textures).
-int16_t fx = random(align), fz = random(align);
-int32_t mapsize = align * align;
-uint16_t location;
+void srf_darkline(uint8_t *map, int16_t length, int16_t x_trend,
+                  int16_t z_trend, int32_t align) {
+    // Una crepa scura (versione principalmente per textures).
+    int16_t fx = brtl_random(align), fz = brtl_random(align);
+    int32_t mapsize = align * align;
+    uint16_t location;
 
-//
-while (length) {
-fx += random(3) + x_trend;
-fz += random(3) + z_trend;
-location = align * (int32_t)fz + fx;
+    //
+    while (length) {
+        fx += brtl_random(3) + x_trend;
+        fz += brtl_random(3) + z_trend;
+        location = align * (int32_t) fz + fx;
 
-if (location > 0 && location < mapsize) {
-map[location] >>= 1;
-}
+        if (location > 0 && location < mapsize) {
+            map[location] >>= 1;
+        }
 
-length--;
-}
-#endif
-    STUB
+        length--;
+    }
 }
 
 void felisian_srf_darkline(uint8_t *map, int16_t length, int16_t x_trend,
                            int16_t z_trend, int32_t align) {
 #if 0
 // Un crepaccio (versione principalmente per superfici).
-int16_t fx = random(align), fz = random(align);
+int16_t fx = brtl_random(align), fz = brtl_random(align);
 int16_t peak, deviation, variability;
 int32_t mapsize = align * align;
 uint16_t location;
 //
-deviation = random(25) - 50;
-variability = 2 + random(10);
+deviation = brtl_random(25) - 50;
+variability = 2 + brtl_random(10);
 
 while (length) {
-fx += random(3) + x_trend;
-fz += random(3) + z_trend;
-deviation += random(variability) - (variability >> 1);
+fx += brtl_random(3) + x_trend;
+fz += brtl_random(3) + z_trend;
+deviation += brtl_random(variability) - (variability >> 1);
 location = align * (int32_t)fz + fx;
 
 if (location > 0 && location < mapsize) {
@@ -1910,7 +1876,7 @@ int32_t  shift_p;
 float color, var;
 
 while (ang < M_PI * 2) {
-shift_d  = (float)random(1000) / 1000;
+shift_d  = (float)brtl_random(1000) / 1000;
 shift_d *= size;
 
 if (shift_d >= 1) {
@@ -1937,55 +1903,57 @@ ang += ad;
     STUB
 }
 
-/* Funzioni per la mappatura dei cieli planetari. */
+/* Functions for mapping planetary skies. */
 
 void nebular_sky() {
-#if 0
     // Cielo nebuloso, piuttosto alieno, con piccoli ammassi sparsi o striati.
-    uint16_t pqw = QUADWORDS;
-    uint16_t seed = random (10000);
-    QUADWORDS = st_bytes / 4;
-    asm {   les di, dword ptr s_background
-    mov cx, st_bytes
-    mov ax, seed }
-    rndpat:
-    asm {   add ax, cx
-    xor dx, dx
-    imul ax
-    add ax, dx
-    mov bl, al
-    and bl, 0x3F
-    mov es:[di], bl
-    inc di
-    dec cx
-    jnz rndpat }
-    lssmooth (s_background);
+    uint16_t pqw  = QUADWORDS;
+    uint16_t seed = brtl_random(10000);
+    QUADWORDS     = st_bytes / 4;
+    // es: s_background[di]
+    uint8_t tbl  = 0;
+    uint16_t tdi = 0, tcx = st_bytes, tdx = 0;
+    int16_t tax = seed;
 
-    if (random(2)) {
-        ssmooth (s_background);
+rndpat:
+    tax += tcx;
+    int32_t result  = tax * tax;
+    auto resultHigh = static_cast<int16_t>(result >> 16u);
+    auto resultLow  = static_cast<int16_t>(result & 0xFFFFu);
+    tax             = resultHigh + resultLow;
+    tbl             = tax & 0xFF;
+    tbl &= 0x3F;
+    s_background[tdi] = tbl;
+    tdi++;
+    tcx--;
+    if (tcx != 0)
+        goto rndpat;
+
+    lssmooth(s_background);
+
+    if (brtl_random(2)) {
+        ssmooth(s_background);
     }
 
-    if (random(3)) {
-        psmooth_grays (s_background);
+    if (brtl_random(3)) {
+        psmooth_grays(s_background);
     }
 
     QUADWORDS = pqw;
-#endif
-    STUB
 }
 
 void cloudy_sky(int16_t density, int16_t smooths) {
 #if 0
     // Cielo con nuvole sparse, di tipo terrestre.
-    int16_t      n = random (density + albedo);
+    int16_t      n = brtl_random (density + albedo);
     float    x, y, cx, cy, r, b;
     uint16_t p, pqw = QUADWORDS;
     QUADWORDS = st_bytes / 4;
 
     while (n > 0) {
-        cx = random (360);
-        r = random (25) + 5;
-        cy = random (50) + 25 + r;
+        cx = brtl_random (360);
+        r = brtl_random (25) + 5;
+        cy = brtl_random (50) + 25 + r;
 
         for (y = - r; y < r; y++)
             for (x = - 2 * r; x < 2 * r; x++) {
@@ -2057,29 +2025,29 @@ void make_ruins(int8_t style1, int8_t style2, int8_t style3, int8_t style4,
 
     switch (sctype) {
         case OCEAN:
-            buildings = random(4);
+            buildings = brtl_random(4);
 
-            if (!random(10)) {
-                buildings *= 2 + random(2);
+            if (!brtl_random(10)) {
+                buildings *= 2 + brtl_random(2);
             }
 
             break;
 
         case PLAINS:
-            buildings = random(8);
+            buildings = brtl_random(8);
 
-            if (!random(5)) {
-                buildings *= 3 + random(2);
+            if (!brtl_random(5)) {
+                buildings *= 3 + brtl_random(2);
             }
 
             break;
 
         case DESERT:
-            buildings = random(3);
+            buildings = brtl_random(3);
             break;
 
         case ICY:
-            buildings = random(2);
+            buildings = brtl_random(2);
     }
 
     int16_t peak;
@@ -2088,7 +2056,7 @@ void make_ruins(int8_t style1, int8_t style2, int8_t style3, int8_t style4,
     buildings *= density;
 
     while (buildings) {
-        ai = random(5);
+        ai = brtl_random(5);
 
         switch (ai) {
             case 0:
@@ -2115,10 +2083,10 @@ void make_ruins(int8_t style1, int8_t style2, int8_t style3, int8_t style4,
             // Stili Felisiani antichi.
             case 0:
                 // grossi grattacieli
-                hr = 10 + random(25);
-                ic = 20 + random(160);
-                jc = 20 + random(160);
-                ra =  1 + random(3);
+                hr = 10 + brtl_random(25);
+                ic = 20 + brtl_random(160);
+                jc = 20 + brtl_random(160);
+                ra =  1 + brtl_random(3);
             like0:
                 av = average_of_y (ic, jc, ra);
 
@@ -2127,7 +2095,7 @@ void make_ruins(int8_t style1, int8_t style2, int8_t style3, int8_t style4,
                         pt = m200[jp] + ip;
                         p_surfacemap[pt] = av + hr;
 
-                        if (!random(5)) {
+                        if (!brtl_random(5)) {
                             p_surfacemap[pt]--;
                         }
 
@@ -2139,14 +2107,14 @@ void make_ruins(int8_t style1, int8_t style2, int8_t style3, int8_t style4,
 
             case 1:
                 // edifici crollati (senza tetto)
-                hr = random(8);
-                ic = 20 + random(160);
-                jc = 20 + random(160);
-                ra =  3 + random(5);
+                hr = brtl_random(8);
+                ic = 20 + brtl_random(160);
+                jc = 20 + brtl_random(160);
+                ra =  3 + brtl_random(5);
 
                 for (ip = ic - ra; ip < ic + ra; ip++) {
                     pt = m200[jc - ra] + ip;
-                    av = hr + random(2);
+                    av = hr + brtl_random(2);
                     p_surfacemap[pt] += av;
 
                     if (av) {
@@ -2154,7 +2122,7 @@ void make_ruins(int8_t style1, int8_t style2, int8_t style3, int8_t style4,
                     }
 
                     pt = m200[jc + ra] + ip;
-                    av = hr + random(3);
+                    av = hr + brtl_random(3);
                     p_surfacemap[pt] += av;
 
                     if (av) {
@@ -2164,7 +2132,7 @@ void make_ruins(int8_t style1, int8_t style2, int8_t style3, int8_t style4,
 
                 for (jp = jc - ra; jp < jc + ra; jp++) {
                     pt = m200[jp] + ic - ra;
-                    av = hr + random(2);
+                    av = hr + brtl_random(2);
                     p_surfacemap[pt] += av;
 
                     if (av) {
@@ -2172,7 +2140,7 @@ void make_ruins(int8_t style1, int8_t style2, int8_t style3, int8_t style4,
                     }
 
                     pt = m200[jp] + ic + ra;
-                    av = hr + random(3);
+                    av = hr + brtl_random(3);
                     p_surfacemap[pt] += av;
 
                     if (av) {
@@ -2184,10 +2152,10 @@ void make_ruins(int8_t style1, int8_t style2, int8_t style3, int8_t style4,
 
             case 2:
                 // piazzali e colonnati
-                hr = 5 + random(10);
-                ic = 30 + random(140);
-                jc = 30 + random(140);
-                ra = 15 + random(15);
+                hr = 5 + brtl_random(10);
+                ic = 30 + brtl_random(140);
+                jc = 30 + brtl_random(140);
+                ra = 15 + brtl_random(15);
                 av = average_of_y (ic, jc, ra);
 
                 for (jp = jc - ra; jp < jc + ra; jp++) {
@@ -2199,28 +2167,28 @@ void make_ruins(int8_t style1, int8_t style2, int8_t style3, int8_t style4,
 
                 ra /= 2;
 
-                if (!random(3)) {
-                    ai = 2 + random(3);
+                if (!brtl_random(3)) {
+                    ai = 2 + brtl_random(3);
 
                     for (ip = ic - ra; ip < ic + ra; ip += ai) {
                         pt = m200[jc - ra] + ip;
-                        p_surfacemap[pt] = av + hr + random(2);
+                        p_surfacemap[pt] = av + hr + brtl_random(2);
                         ruinschart[pt] = AF1;
                         pt = m200[jc + ra] + ip;
-                        p_surfacemap[pt] = av + hr + random(3);
+                        p_surfacemap[pt] = av + hr + brtl_random(3);
                         ruinschart[pt] = AF1;
                     }
                 }
 
-                if (!random(3)) {
-                    ai = 2 + random(3);
+                if (!brtl_random(3)) {
+                    ai = 2 + brtl_random(3);
 
                     for (jp = jc - ra; jp < jc + ra; jp += ai) {
                         pt = m200[jp] + ic - ra;
-                        p_surfacemap[pt] = av + hr + random(2);
+                        p_surfacemap[pt] = av + hr + brtl_random(2);
                         ruinschart[pt] = AF1;
                         pt = m200[jp] + ic + ra;
-                        p_surfacemap[pt] = av + hr + random(3);
+                        p_surfacemap[pt] = av + hr + brtl_random(3);
                         ruinschart[pt] = AF1;
                     }
                 }
@@ -2230,20 +2198,20 @@ void make_ruins(int8_t style1, int8_t style2, int8_t style3, int8_t style4,
                 // Stili Felisiani coloniali.
             case 3:
                 // palazzine e piccoli grattacieli
-                hr = 10 + random(10);
-                ic = 20 + random(160);
-                jc = 20 + random(160);
-                ra =  1 + random(2);
+                hr = 10 + brtl_random(10);
+                ic = 20 + brtl_random(160);
+                jc = 20 + brtl_random(160);
+                ra =  1 + brtl_random(2);
                 goto like0;
 
             case 4:
                 // edifici coloniali moderni, a forma di X
-                hr =  1 + random(3);
-                ic = 25 + random(150);
-                jc = 25 + random(150);
-                ra =  5 + random(5);
+                hr =  1 + brtl_random(3);
+                ic = 25 + brtl_random(150);
+                jc = 25 + brtl_random(150);
+                ra =  5 + brtl_random(5);
 
-                if (!random(5)) {
+                if (!brtl_random(5)) {
                     ra *= 2;
                 }
 
@@ -2264,10 +2232,10 @@ void make_ruins(int8_t style1, int8_t style2, int8_t style3, int8_t style4,
             case 5:
                 // edifici coloniali di Suricrasia (Ylastravenia)
                 // sono quadrati, ma hanno una cupoletta sul tetto
-                hr = 10 + random(10);
-                ic = 20 + random(160);
-                jc = 20 + random(160);
-                ra = 12 + random(8);
+                hr = 10 + brtl_random(10);
+                ic = 20 + brtl_random(160);
+                jc = 20 + brtl_random(160);
+                ra = 12 + brtl_random(8);
                 av = average_of_y (ic, jc, ra);
 
                 for (jp = jc - ra; jp < jc + ra; jp++) {
@@ -2280,7 +2248,7 @@ void make_ruins(int8_t style1, int8_t style2, int8_t style3, int8_t style4,
 
                 ra *= 2;
                 ra /= 3;
-                bstyle = random(2);
+                bstyle = brtl_random(2);
 
                 for (jp = jc - ra; jp < jc + ra; jp++) {
                     for (ip = ic - ra; ip < ic + ra; ip++) {
@@ -2309,11 +2277,10 @@ void make_ruins(int8_t style1, int8_t style2, int8_t style3, int8_t style4,
     STUB
 }
 
-/*  Funzione che costruisce la superficie del pianeta.
-    Regolata dal seme global_surface_seed, per ottenere risultati coerenti. */
-
+/* Function that builds the surface of the planet. Adjusted by the
+ * global_surface_seed seed, to get consistent results.
+ */
 void build_surface() {
-#if 0
     int16_t cx, cz, cr, n, incl;
     float hf, hr, ht;
     uint16_t ptr1;
@@ -2329,20 +2296,20 @@ void build_surface() {
     T_SCALE   = 32;
     quartz    = 0;
     gtx   = 1; // suolo con texture, per default
-    _fmemset (txtr, 16, 65535);
-    _fmemset (p_surfacemap, 0, ps_bytes);
-    _fmemset (objectschart, 0, oc_bytes);
+    memset(txtr, 16, 65535);
+    memset(p_surfacemap, 0, ps_bytes);
+    memset(objectschart, 0, oc_bytes);
     // regolazione dei parametri generali: coerente con il layout
     // del pianeta, e indipendente dalla superficie.
     fast_srand (global_surface_seed);
-    srand (global_surface_seed);
+    brtl_srand (global_surface_seed);
     // normalmente, la superficie non � trasparente o traslucida...
     groundflares = 0;
     // potrebbe esserlo? mah, per esempio in caso di ghiacci molto
     // particolari, o di interi pianeti fatti di sostanze trasparenti.
     // rarissimi, direi.
-    cz = random (2);
-    cx = random (100);
+    cz = brtl_random (2);
+    cx = brtl_random (100);
 
     if (cx > 97) {
         groundflares = 2 + (2 * cz);
@@ -2375,7 +2342,7 @@ void build_surface() {
 
     // un dettaglio raro ma possibile: alberi fibrosi, con il tronco
     // simile a un grosso stelo... tanto si parla di ambienti alieni...
-    switch (random(3)) {
+    switch (brtl_random(3)) {
         case 0:
             rootshade = 0x00;
             break;
@@ -2391,7 +2358,7 @@ void build_surface() {
 
     // altro dettaglio parecchio insolito, che per� conviene sia
     // davvero molto raro: alberi trasparenti (e chi lo sa? magari...)
-    switch (random(30)) {
+    switch (brtl_random(30)) {
         case 7:
             treeflares = 1;
             break;
@@ -2409,7 +2376,7 @@ void build_surface() {
     }
 
     // pi� probabile... foglie trasparenti... credo sia pi� plausibile.
-    switch (random(15)) {
+    switch (brtl_random(15)) {
         case 7:
             leafflares = 1;
             break;
@@ -2442,7 +2409,7 @@ void build_surface() {
     // pianeta abitabile e lo scenario non sia un ghiacciaio/deserto...
     if (nearstar_p_type[ip_targetted] == 3) {
         if (sctype != ICY && sctype != DESERT) {
-            if (random(4)) {
+            if (brtl_random(4)) {
                 groundflares = 8;
             }
         }
@@ -2451,28 +2418,28 @@ void build_surface() {
     // veniamo all'ambiente di superficie...
     // esso dipende strettamente dalle coordinate di sbarco.
     fast_srand (landing_pt_lat * landing_pt_lon);
-    srand (landing_pt_lat * landing_pt_lon);
+    brtl_srand (landing_pt_lat * landing_pt_lon);
 
     switch (nearstar_p_type[ip_targetted]) {
         // case 0: ATTUALMENTE non considerato: � un pianeta vulcanico.
         case 1: // rocciosi (stile luna)
             // terreno molto liscio ed estremamente arrotondato.
             // ma ci sono casi in cui � tutto l'opposto.
-            n = random(5);
+            n = brtl_random(5);
 
             if (n <= 2) {
-                rockyground (25, 4 + random (4), 0);
+                rockyground (25, 4 + brtl_random (4), 0);
             }
 
             if (n == 3) {
-                rockyground (5 + random(5), 1, 1);
+                rockyground (5 + brtl_random(5), 1, 1);
             }
 
             if (n == 4) {
-                rockyground (10, 2, -random(5));
+                rockyground (10, 2, -brtl_random(5));
             }
 
-            n = random(48) + 32 - albedo;
+            n = brtl_random(48) + 32 - albedo;
 
             if (n > 30) {
                 n = 30;
@@ -2483,15 +2450,15 @@ void build_surface() {
             }
 
             while (n) {
-                hf = (float)random(32) * 0.01;
-                hr = (float)(random(20) + 5) * 0.075;
+                hf = (float)brtl_random(32) * 0.01;
+                hr = (float)(brtl_random(20) + 5) * 0.075;
                 std_crater (p_surfacemap,
-                            random(200), random(200),
-                            random(50) + 5, 127, hf, hr, 200);
+                            brtl_random(200), brtl_random(200),
+                            brtl_random(50) + 5, 127, hf, hr, 200);
                 n--;
             }
 
-            n = random(48) + 64 - albedo;
+            n = brtl_random(48) + 64 - albedo;
 
             if (n < 0) {
                 n = 0;
@@ -2504,9 +2471,9 @@ void build_surface() {
             }
 
             while (n) {
-                cx = random (200);
-                cz = random (200);
-                cr = random (32) + 10;
+                cx = brtl_random (200);
+                cz = brtl_random (200);
+                cr = brtl_random (32) + 10;
                 std_crater (txtr, cx, cz, cr, 31, hf, 1, 256);
 
                 if (cr % 2) {
@@ -2516,48 +2483,48 @@ void build_surface() {
                 n--;
             }
 
-            n = random(100);
+            n = brtl_random(100);
 
             while (n) {
-                srf_darkline (txtr, random(1000), -1, -1, 256);
+                srf_darkline (txtr, brtl_random(1000), -1, -1, 256);
                 n--;
             }
 
             // molte piccole rocce aguzze, o nulla...
-            rockdensity = (15 + 16 * random(2)) * random(2);
-            rockscaling = 150 + random (500);
-            rockpeaking = 100 + random (300);
+            rockdensity = (15 + 16 * brtl_random(2)) * brtl_random(2);
+            rockscaling = 150 + brtl_random (500);
+            rockpeaking = 100 + brtl_random (300);
             break;
 
         case 2: // con spessa atmosfera (pianeti "venusiani")
             rockyground (10, 1, 0);
-            n = albedo + random (100);
+            n = albedo + brtl_random (100);
 
             while (n) { // basse colline e frequenti altipiani,
                 // oceani e mari sono rari ma possibili...
-                round_hill (random(200),
-                            random(200),
-                            random(100) + 50,
-                            random( 50) + 10, 0, 1);
+                round_hill (brtl_random(200),
+                            brtl_random(200),
+                            brtl_random(100) + 50,
+                            brtl_random( 50) + 10, 0, 1);
                 n--;
             }
 
             // per i dettagli di superficie, due scenari possibili:
-            switch (random(2)) {
+            switch (brtl_random(2)) {
                 case 0: // questo nebuloso, indefinito.
-                    n = albedo + random(200) - random (100);
-                    hf = (float)random(10) * 0.02;
+                    n = albedo + brtl_random(200) - brtl_random (100);
+                    hf = (float)brtl_random(10) * 0.02;
 
                     if (n < 0) {
                         n = 0;
                     }
 
                     while (n) {
-                        cx = random (256);
-                        cz = random (256);
-                        cr = random (8) + 8;
+                        cx = brtl_random (256);
+                        cz = brtl_random (256);
+                        cr = brtl_random (8) + 8;
 
-                        if (random(2)) {
+                        if (brtl_random(2)) {
                             std_crater (txtr, cx, cz, -cr, 31, hf, 1, 256);
                         } else {
                             std_crater (txtr, cx, cz, cr, 31, hf, 1, 256);
@@ -2569,19 +2536,19 @@ void build_surface() {
                     break;
 
                 case 1: // e questo con irregolarit� sparse...
-                    n = albedo + random(500);
-                    ptr = random (2000);
+                    n = albedo + brtl_random(500);
+                    ptr = brtl_random (2000);
 
                     while (n) {
-                        srf_darkline (txtr, random(ptr), -1, -1, 256);
+                        srf_darkline (txtr, brtl_random(ptr), -1, -1, 256);
                         n--;
                     }
             }
 
             // di solito poche grosse rocce erose
-            rockscaling = 500 + random (500);
-            rockdensity = 7 + 8 * random(2);
-            rockpeaking = 50 + random (150);
+            rockscaling = 500 + brtl_random (500);
+            rockdensity = 7 + 8 * brtl_random(2);
+            rockpeaking = 50 + brtl_random (150);
             break;
 
         case 3: // abitabili
@@ -2611,43 +2578,43 @@ void build_surface() {
                     // alte di quella del mare aperto(16):
                     // scogli sparsi che rompono le onde,
                     // nel qual caso il mare � calmo...
-                    if (albedo > 16 && random(2)) {
-                        rockyground (10, random(2), -5);
+                    if (albedo > 16 && brtl_random(2)) {
+                        rockyground (10, brtl_random(2), -5);
                         waves_in = 0;
                     }
 
                     // mentre in pieno oceano,
                     // al limite potrebbe esserci
                     // un'isoletta... raro, ma possibile.
-                    if (!random(3)) {
-                        cx = random(100) + 50;
-                        cz = random(100) + 50;
-                        round_hill (cx + random(15),
-                                    cz + random(15),
-                                    random(100) + 25,
-                                    random(10) + 1, 0, 1);
+                    if (!brtl_random(3)) {
+                        cx = brtl_random(100) + 50;
+                        cz = brtl_random(100) + 50;
+                        round_hill (cx + brtl_random(15),
+                                    cz + brtl_random(15),
+                                    brtl_random(100) + 25,
+                                    brtl_random(10) + 1, 0, 1);
                         round_hill (cx, cz,
-                                    random(100) + 25,
-                                    random(100) +  1, 0, 1);
+                                    brtl_random(100) + 25,
+                                    brtl_random(100) +  1, 0, 1);
                         waswet = 1;
                         goto addtrees;
                     }
 
                     // texture sabbiosa, direi...
                     T_SCALE = 128;
-                    n = random (30) + 2;
+                    n = brtl_random (30) + 2;
                     ptr = 65535;
 
                     while (ptr) {
-                        txtr[ptr] = random(n);
+                        txtr[ptr] = brtl_random(n);
                         ptr--;
                     }
 
                     // moltissimi sassolini, se ci sono.
-                    rockscaling = 50 + random (75);
-                    rockpeaking = 30 + random (25);
+                    rockscaling = 50 + brtl_random (75);
+                    rockpeaking = 30 + brtl_random (25);
 
-                    if (random(3)) {
+                    if (brtl_random(3)) {
                         rockdensity = 31;
                     } else {
                         rockdensity = 0;
@@ -2665,33 +2632,33 @@ void build_surface() {
                     // rientrano in questo scenario),
                     // allora diciamo cos�...
                 revert:
-                    if (random(2)) {
+                    if (brtl_random(2)) {
                         // nell'un caso, le pianure.
-                        ptr = random(50) + 5;
+                        ptr = brtl_random(50) + 5;
 
                         while (ptr) {
-                            round_hill (random(200),
-                                        random(200),
-                                        random(200) + 1,
-                                        random( 30) + 1, 0, 1);
+                            round_hill (brtl_random(200),
+                                        brtl_random(200),
+                                        brtl_random(200) + 1,
+                                        brtl_random( 30) + 1, 0, 1);
                             ptr--;
                         }
                     } else {
                         // nell'altro caso, i monti.
-                        ptr = random(25) + 10;
+                        ptr = brtl_random(25) + 10;
 
                         while (ptr) {
-                            round_hill (random(200),
-                                        random(200),
-                                        random(200) + 1,
-                                        random(100) + 1, 0, 1);
+                            round_hill (brtl_random(200),
+                                        brtl_random(200),
+                                        brtl_random(200) + 1,
+                                        brtl_random(100) + 1, 0, 1);
                             ptr--;
                         }
                     }
 
                 addtrees: // alberi sui rilievi...
                     // in certi casi, pianure steppose...
-                    n = random (6);
+                    n = brtl_random (6);
 
                     for (ptr = 0; ptr < oc_bytes; ptr ++) {
                         switch (p_surfacemap[ptr] / 25) {
@@ -2719,20 +2686,20 @@ void build_surface() {
 
                     // e texture con erba brada...
                     T_SCALE = 128;
-                    n = random (15) + 2;
+                    n = brtl_random (15) + 2;
                     ptr = 65535;
 
                     while (ptr) {
-                        txtr[ptr] = random(n);
+                        txtr[ptr] = brtl_random(n);
                         ptr--;
                     }
 
-                    n = 100 + random (500);
+                    n = 100 + brtl_random (500);
 
                     while (n) {
-                        asterism (txtr, random(256), random(256),
-                                  random(16), random(16), random(25) + 6,
-                                  random(15) + 6, 256);
+                        asterism (txtr, brtl_random(256), brtl_random(256),
+                                  brtl_random(16), brtl_random(16), brtl_random(25) + 6,
+                                  brtl_random(15) + 6, 256);
                         n--;
                     }
 
@@ -2747,16 +2714,16 @@ void build_surface() {
                     // scenario strano ma interessante:
                     // pozze d'acqua tra i cespugli,
                     // un luogo "paludoso"...
-                    if (!waswet || (waswet && !random(5))) {
+                    if (!waswet || (waswet && !brtl_random(5))) {
                         for (ptr = 0; ptr < oc_bytes; ptr ++) {
                             p_surfacemap[ptr] += fast_random (3);
                         }
                     }
 
                     // qualche sasso tanto per dire...
-                    rockscaling = 100 + random (200);
-                    rockpeaking = 100 + random (200);
-                    rockdensity = 3 + 4 * random(2);
+                    rockscaling = 100 + brtl_random (200);
+                    rockpeaking = 100 + brtl_random (200);
+                    rockdensity = 3 + 4 * brtl_random(2);
 
                     // a ogni modo, togli tutti gli
                     // oggetti dagli specchi d'acqua.
@@ -2776,14 +2743,14 @@ void build_surface() {
                     // maggiore lo smoothing,
                     // cos� vengono fuori dune
                     // arrotondate dal vento...
-                    n = random(100);
+                    n = brtl_random(100);
                     rockyground (50 + n, 5 + (n >> 4), 0);
                     // texture a grana grossa, ghiozza.
                     T_SCALE = 128;
                     ptr = 65535;
 
                     while (ptr) {
-                        txtr[ptr] = random(32);
+                        txtr[ptr] = brtl_random(32);
                         ptr--;
                     }
 
@@ -2797,7 +2764,7 @@ void build_surface() {
                     frosty = 0;
 
                     // mah, quattro tipi di orografia.
-                    switch (random(4)) {
+                    switch (brtl_random(4)) {
                         case 0: // praticamente piana,
                             // distesa nevosa...
                             rockyground (15, 5, 0);
@@ -2806,18 +2773,18 @@ void build_surface() {
 
                         case 1: // brulla distesa di
                             // ghiaccio permanente
-                            rockyground (10 + random(10), 1 + random(2), 0);
+                            rockyground (10 + brtl_random(10), 1 + brtl_random(2), 0);
                             frosty = 1;
                             break;
 
                         case 2: // colline di neve...
-                            ptr = random (50) + 50;
+                            ptr = brtl_random (50) + 50;
 
                             while (ptr) {
-                                round_hill (random(200),
-                                            random(200),
-                                            random(200) + 1,
-                                            random( 75) + 1, 0, 1);
+                                round_hill (brtl_random(200),
+                                            brtl_random(200),
+                                            brtl_random(200) + 1,
+                                            brtl_random( 75) + 1, 0, 1);
                                 ptr--;
                             }
 
@@ -2825,28 +2792,28 @@ void build_surface() {
                             break;
 
                         case 3: // e anche icebergs...
-                            rockyground (50 + random(50), 3 + random(3), -(random(40) + 20));
+                            rockyground (50 + brtl_random(50), 3 + brtl_random(3), -(brtl_random(40) + 20));
                             frosty = 1;
                             break;
                     }
 
                     // qualche sasso? raro e grosso.
-                    rockscaling = 200 + random (500);
-                    rockpeaking = 150 + random (250);
-                    rockdensity = 2 * random(2);
+                    rockscaling = 200 + brtl_random (500);
+                    rockpeaking = 150 + brtl_random (250);
+                    rockdensity = 2 * brtl_random(2);
                 similar:
 
                     if (snowy || frosty) { // textures "nevose"
                         T_SCALE = 32;
-                        n = random (16) + 16;
+                        n = brtl_random (16) + 16;
                         ptr = 65535;
 
                         while (ptr) {
-                            txtr[ptr] = random(n);
+                            txtr[ptr] = brtl_random(n);
                             ptr--;
                         }
 
-                        n = 1 + random(3);
+                        n = 1 + brtl_random(3);
 
                         while (n) {
                             ptr = 65535 - 257;
@@ -2862,11 +2829,11 @@ void build_surface() {
                     }
 
                     if (frosty) { // textures "ghiacciate"
-                        T_SCALE = 16 + random(48);
-                        n = random (250);
+                        T_SCALE = 16 + brtl_random(48);
+                        n = brtl_random (250);
 
                         while (n) {
-                            srf_darkline (txtr, 100 + random(200), -random(2), 0, 256);
+                            srf_darkline (txtr, 100 + brtl_random(200), -brtl_random(2), 0, 256);
                             n--;
                         }
                     }
@@ -2876,7 +2843,7 @@ void build_surface() {
 
             // I quarzi si possono trovare anche sui pianeti
             // abitabili, ma solo a volte...
-            if (!random(5)) {
+            if (!brtl_random(5)) {
                 quartz = 1;
             }
 
@@ -2893,13 +2860,14 @@ void build_surface() {
             // il terreno � piuttosto liscio, di per s�,
             // con dislivelli simili a colline molto schiacciate,
             // che possono essere inframezzate da ampie pianure...
-            rockyground (15, 3 + random (3), -random(5));
+            //TODO; Flip? See tips.
+            rockyground (15, 3 + brtl_random (3), -brtl_random(5));
             // e ora si aggiungono i pietroni della descrizione.
             // pu� anche non essercene nessuno, in un quadrante...
-            n = random (15);
+            n = brtl_random (15);
 
             while (n) {
-                hf = random (15) + 7;
+                hf = brtl_random (15) + 7;
                 hr = hf * (flandom() * 3.5 + 3.5);
                 ht = hr * (flandom() * 0.2 + 0.3);
 
@@ -2907,15 +2875,15 @@ void build_surface() {
                     ht = 127;
                 }
 
-                round_hill (random(200),
-                            random(200),
+                round_hill (brtl_random(200),
+                            brtl_random(200),
                             hf, hr, ht, 0);
                 n--;
             }
 
             // vanno per� arrotondati un po', perch� in effetti
             // � presumibile che siano coperti di polvere...
-            smoothterrain (1 + random(2));
+            smoothterrain (1 + brtl_random(2));
             // qui disegna dei piccolissimi crateri sulla texture
             // di superficie... che pi� che altro rappresentano
             // macchie e avvallamenti nelle zone a albedo bassa.
@@ -2928,18 +2896,18 @@ void build_surface() {
             }
 
             while (n) {
-                cx = random (150) + 25;
-                cz = random (150) + 25;
-                cr = random ( 10) + 15;
+                cx = brtl_random (150) + 25;
+                cz = brtl_random (150) + 25;
+                cr = brtl_random ( 10) + 15;
                 std_crater (txtr, cx, cz, -cr, 31, hf, 1, 256);
                 n--;
             }
 
             // piccoli sassi a grappoli, frammenti dei grandi
             // massi e polveri addensate..
-            rockscaling = 100 + random (200);
-            rockdensity = 3 + 4 * random(2);
-            rockpeaking = 100 + random (200);
+            rockscaling = 100 + brtl_random (200);
+            rockdensity = 3 + 4 * brtl_random(2);
+            rockpeaking = 100 + brtl_random (200);
             break;
 
         case 5: // con atmosfera sottile (marte etc...)
@@ -2949,8 +2917,8 @@ void build_surface() {
             // di pozze d'acqua date dalla presenza del permafrost,
             // per� sono gelate e ci si pu� viaggiare sopra...
             // scenari principali: pianure, territori accidentati.
-            if (random(2)) {
-                n = 5 + random(10);
+            if (brtl_random(2)) {
+                n = 5 + brtl_random(10);
 
                 if (albedo > 48) {
                     n /= 2;
@@ -2958,17 +2926,17 @@ void build_surface() {
 
                 rockyground (n, 1, 0);
             } else {
-                n = 15 + random(32);
+                n = 15 + brtl_random(32);
 
                 if (albedo > 48) {
                     n /= 2;
                 }
 
-                rockyground (n, 1, -random(24));
+                rockyground (n, 1, -brtl_random(24));
             }
 
             // va incluso qualche cratere eroso: � possibile...
-            n = random(68) - albedo;
+            n = brtl_random(68) - albedo;
 
             if (n > 10) {
                 n = 10;
@@ -2979,20 +2947,20 @@ void build_surface() {
             }
 
             while (n) {
-                hf = (float)random(5) * 0.015;
-                hr = (float)(random(10) + 10) * 0.27;
+                hf = (float)brtl_random(5) * 0.015;
+                hr = (float)(brtl_random(10) + 10) * 0.27;
                 std_crater (p_surfacemap,
-                            random(200), random(200),
-                            random(35) + 5, 127, hf, hr, 200);
+                            brtl_random(200), brtl_random(200),
+                            brtl_random(35) + 5, 127, hf, hr, 200);
                 n--;
             }
 
             // molte pietre e pietruzze... s�, s�...
             // per� non � detto che siano tantissime, e
             // in certi punti il terreno potrebbe essere sgombro.
-            rockscaling = 50 + random (400);
-            rockpeaking = 50 + random (250);
-            rockdensity = 1 + 30 * random(2);
+            rockscaling = 50 + brtl_random (400);
+            rockpeaking = 50 + brtl_random (250);
+            rockdensity = 1 + 30 * brtl_random(2);
 
             // zone ad albedo alta sono coperte di nubi brillanti
             if (albedo > 50) {
@@ -3008,50 +2976,50 @@ void build_surface() {
             // fatta "a padella", descrive ampie curve.
             if (albedo > 40 && albedo <= 50) {
                 rockscaling *= 2;
-                rockdensity = 15 + 16 * random(2);
-                hf = (float)random(5) * 0.01;
-                hr = (float)(random(5) + 5) * 0.5;
+                rockdensity = 15 + 16 * brtl_random(2);
+                hf = (float)brtl_random(5) * 0.01;
+                hr = (float)(brtl_random(5) + 5) * 0.5;
                 std_crater (p_surfacemap,
-                            90 + random(20), 90 + random(20),
-                            100 + random(10), 127, hf, hr, 200);
+                            90 + brtl_random(20), 90 + brtl_random(20),
+                            100 + brtl_random(10), 127, hf, hr, 200);
             }
 
             // e per quanto riguarda i dettagli sulla superficie,
             // roba molto irregolare: crepe, sassi e buche...
-            ptr = random (1500) + 500;
+            ptr = brtl_random (1500) + 500;
             n = albedo * 5;
 
             while (n) {
-                srf_darkline (txtr, random(ptr), -1, -1, 256);
+                srf_darkline (txtr, brtl_random(ptr), -1, -1, 256);
                 n--;
             }
 
             break;
 
         case 7: // gelidi, solcati di strie.
-            rockyground (10 - (albedo / 8), 0, 20 + random(100));
-            n = albedo - random(albedo) + 10;
+            rockyground (10 - (albedo / 8), 0, 20 + brtl_random(100));
+            n = albedo - brtl_random(albedo) + 10;
 
             while (n) { // fai qualche crepaccio nella superficie
-                srf_darkline (p_surfacemap, random(500), -1, -1, 200);
+                srf_darkline (p_surfacemap, brtl_random(500), -1, -1, 200);
                 n--;
             }
 
-            n = albedo + random(200) - random (100);
+            n = albedo + brtl_random(200) - brtl_random (100);
 
             if (n < 0) {
                 n = 0;
             }
 
             while (n) { // e aggiungi piccoli crateri "a macchia"
-                cx = random (192) + 32;
-                cz = random (192) + 32;
-                cr = random ( 16) + 16;
+                cx = brtl_random (192) + 32;
+                cz = brtl_random (192) + 32;
+                cr = brtl_random ( 16) + 16;
                 std_crater (txtr, cx, cz, -cr, 31, 0.15, 1, 256);
                 n--;
             }
 
-            n = albedo + random(100) - random (50);
+            n = albedo + brtl_random(100) - brtl_random (50);
 
             if (n < 0) {
                 n = 0;
@@ -3060,14 +3028,15 @@ void build_surface() {
             n /= 2;
 
             while (n) { // ma s�, anche qualche crepetta pi� piccola, sparsa...
-                srf_darkline (txtr, random(100), -random(2), -random(2), 256);
+                //TODO; Also flip?
+                srf_darkline (txtr, brtl_random(100), -brtl_random(2), -brtl_random(2), 256);
                 n--;
             }
 
             // pietre? poche. qualcuna, di media taglia...
-            rockscaling = 50 + random (400);
-            rockpeaking = 50 + random (200);
-            rockdensity = 3 + 4 * random(2);
+            rockscaling = 50 + brtl_random (400);
+            rockpeaking = 50 + brtl_random (200);
+            rockdensity = 3 + 4 * brtl_random(2);
             break;
 
         case 8: // lattiginosi (pianeti al quarzo).
@@ -3078,15 +3047,16 @@ void build_surface() {
                 ptr = 100 - albedo;
 
                 while (ptr) {
-                    hr = random (300);
-                    round_hill (random(150) + 25,
-                                random(150) + 25,
-                                random(  5) + 2,
+                    //TODO; Flip.
+                    hr = brtl_random (300);
+                    round_hill (brtl_random(150) + 25,
+                                brtl_random(150) + 25,
+                                brtl_random(  5) + 2,
                                 hr + 1, 127, 0);
                     ptr--;
                 }
 
-                smoothterrain (2 + random(3));
+                smoothterrain (2 + brtl_random(3));
             }
 
             // altrove, sono normalmente coperti di montagnole,
@@ -3094,19 +3064,20 @@ void build_surface() {
             ptr = (100 - albedo) * 2;
 
             while (ptr) {
-                round_hill (random(200),
-                            random(200),
-                            random( 25) + 1,
-                            random( 25) + 1, 0, 1);
+                //TODO; Flip.
+                round_hill (brtl_random(200),
+                            brtl_random(200),
+                            brtl_random( 25) + 1,
+                            brtl_random( 25) + 1, 0, 1);
                 ptr--;
             }
 
             // abbastanza roccioso, s�... direi.
             // quarziti molto irregolari, � ovvio...
             quartz = 1;
-            rockscaling = 50 + random (300);
-            rockpeaking = 50 + random (300);
-            rockdensity = 7 + 8 * random(2);
+            rockscaling = 50 + brtl_random (300);
+            rockpeaking = 50 + brtl_random (300);
+            rockdensity = 7 + 8 * brtl_random(2);
 
             // le macchie chiare sono zone pi� pianeggianti...
             // quarzo fuso e successivamente risolidificato
@@ -3114,8 +3085,8 @@ void build_surface() {
             if (albedo > 40) {
                 rockscaling *= 0.5;
                 rockpeaking = rockscaling;
-                rockdensity = 3 + 4 * random(2);
-                smoothterrain (1 + random(10));
+                rockdensity = 3 + 4 * brtl_random(2);
+                smoothterrain (1 + brtl_random(10));
             }
 
             // ripeti una texture "nevosa" o "ghiacciata".
@@ -3123,7 +3094,7 @@ void build_surface() {
             snowy = 0;
             frosty = 0;
 
-            if (random(2)) {
+            if (brtl_random(2)) {
                 snowy = 1;
             } else {
                 frosty = 1;
@@ -3132,11 +3103,11 @@ void build_surface() {
             goto similar;
     }
 
-    n = random (5);
+    n = brtl_random (5);
 
     if (n) {
         while (n) { // crepacci nella superficie possono essere ovunque
-            felisian_srf_darkline (p_surfacemap, random(500), -1, -1, 200);
+            felisian_srf_darkline (p_surfacemap, brtl_random(500), -1, -1, 200);
             n--;
         }
 
@@ -3163,15 +3134,15 @@ void build_surface() {
         incl += abs (p_surfacemap[ptr] - p_surfacemap[ptr + 200]);
 
         if (incl < 20) {
-            objectschart[ptr].nr_of_objects = random (2);
+            objectschart[ptr].nr_of_objects = brtl_random (2);
         }
 
         if (incl < 15) {
-            objectschart[ptr].nr_of_objects = random (3);
+            objectschart[ptr].nr_of_objects = brtl_random (3);
         }
 
         if (incl < 10) {
-            objectschart[ptr].nr_of_objects = random (4);
+            objectschart[ptr].nr_of_objects = brtl_random (4);
         }
     }
 
@@ -3199,7 +3170,7 @@ void build_surface() {
     // di certo cambia in minuscoli particolari, perch� si direbbe
     // generalmente costante.
     fast_srand (landing_pt_lat * landing_pt_lon);
-    srand (landing_pt_lat * landing_pt_lon);
+    brtl_srand (landing_pt_lat * landing_pt_lon);
 
     if ((int32_t)(nearstar_identity * 1E6) == -37828) {
         // Questa stella � Balastrackonastreya
@@ -3301,15 +3272,12 @@ void build_surface() {
             sh_delta -= 200;
         }
     }
-#endif
-    STUB
 }
 
 /*  Funzione che definisce il cielo visto da un pianeta.
     Oltretutto, definisce anche: tavola colori, temperatura e pressione. */
 
 void create_sky(int8_t atmosphere) {
-#if 0
     // filtri colorati di base.
     float br = (float)sky_red_filter / 64,
             bg = (float)sky_grn_filter / 64,
@@ -3401,7 +3369,7 @@ void create_sky(int8_t atmosphere) {
     float saturation = 1 - (0.15 * rainy);
     int16_t shade_nr;
     fast_srand (global_surface_seed);
-    srand (global_surface_seed);
+    brtl_srand (global_surface_seed);
 
     switch (nearstar_p_type[ip_targetted]) {
         // case 0: ATTUALMENTE non considerato: � un pianeta vulcanico.
@@ -3661,15 +3629,15 @@ void create_sky(int8_t atmosphere) {
     // se non c'� atmosfera, stelle sempre ben visibili.
     // alternativamente, si rendono visibili di notte.
     if (!atmosphere) {
-        shade (surface_palette, 64, 64, 0, 0, 0, 100, 110, 120);
+        shade((uint8_t*) surface_palette, 64, 64, 0, 0, 0, 100, 110, 120);
     } else {
         if (nightzone) {
-            shade (surface_palette, 64, 64, 0, 0, 0, 60, 62, 64);
+            shade((uint8_t*) surface_palette, 64, 64, 0, 0, 0, 60, 62, 64);
 
             if (nearstar_p_type[ip_targetted] == 3) {
-                shade (surface_palette, 0, 64, 0, 0, 0, 64, 62, 60);
-                shade (surface_palette, 128, 64, 0, 0, 0, 64, 64, 64);
-                shade (surface_palette, 192, 64, 8, 12, 16, 56, 60, 64);
+                shade((uint8_t*) surface_palette, 0, 64, 0, 0, 0, 64, 62, 60);
+                shade((uint8_t*) surface_palette, 128, 64, 0, 0, 0, 64, 64, 64);
+                shade((uint8_t*) surface_palette, 192, 64, 8, 12, 16, 56, 60, 64);
                 goto nightcolors;
             }
 
@@ -3683,21 +3651,21 @@ void create_sky(int8_t atmosphere) {
             fg[3] *= 0.44;
             fb[3] *= 0.55;
         } else {
-            shade (surface_palette, 64, 64, 0, 0, 0, fr[1], fg[1], fb[1]);
+            shade((uint8_t*) surface_palette, 64, 64, 0, 0, 0, fr[1], fg[1], fb[1]);
         }
     }
 
     // sfumatura per il suolo.
-    shade (surface_palette,   0, 44,     0,     0,     0, fr[0], fg[0], fb[0]);
-    shade (surface_palette,  44, 20, fr[0], fg[0], fb[0], fr[1], fg[1], fb[1]);
+    shade((uint8_t*) surface_palette,   0, 44,     0,     0,     0, fr[0], fg[0], fb[0]);
+    shade((uint8_t*) surface_palette,  44, 20, fr[0], fg[0], fb[0], fr[1], fg[1], fb[1]);
     // sfumatura per l'orizzonte.
-    shade (surface_palette, 128, 10,     0,     0,     0, fr[0], fg[0], fb[0]);
-    shade (surface_palette, 138, 44, fr[0], fg[0], fb[0], fr[2], fg[2], fb[2]);
-    shade (surface_palette, 182, 10, fr[2], fg[2], fb[2], fr[1], fg[1], fb[1]);
+    shade((uint8_t*) surface_palette, 128, 10,     0,     0,     0, fr[0], fg[0], fb[0]);
+    shade((uint8_t*) surface_palette, 138, 44, fr[0], fg[0], fb[0], fr[2], fg[2], fb[2]);
+    shade((uint8_t*) surface_palette, 182, 10, fr[2], fg[2], fb[2], fr[1], fg[1], fb[1]);
     // sfumatura per la vegetazione.
-    shade (surface_palette, 192, 10,     0,     0,     0, fr[0], fg[0], fb[0]);
-    shade (surface_palette, 202, 44, fr[0], fg[0], fb[0], fr[3], fg[3], fb[3]);
-    shade (surface_palette, 246, 10, fr[3], fg[3], fb[3], fr[1], fg[1], fb[1]);
+    shade((uint8_t*) surface_palette, 192, 10,     0,     0,     0, fr[0], fg[0], fb[0]);
+    shade((uint8_t*) surface_palette, 202, 44, fr[0], fg[0], fb[0], fr[3], fg[3], fb[3]);
+    shade((uint8_t*) surface_palette, 246, 10, fr[3], fg[3], fb[3], fr[1], fg[1], fb[1]);
     nightcolors:
     // calcolo della temperatura.
     pp_temp = 90 - dsd1 * 0.33;
@@ -3777,8 +3745,6 @@ void create_sky(int8_t atmosphere) {
 
     base_pp_temp = pp_temp;
     base_pp_pressure = pp_pressure;
-#endif
-    STUB
 }
 
 /* Funzione che definisce le forme di vita proprie ai pianeti abitabili. */
@@ -3802,25 +3768,25 @@ void setup_animals() {
 
     switch (sctype) {
         case OCEAN:
-            animals = LFS / 5  + random (LFS - LFS / 5);
+            animals = LFS / 5  + brtl_random (LFS - LFS / 5);
             break;
 
         case PLAINS:
-            animals = LFS / 2  + random (LFS - LFS / 2);
+            animals = LFS / 2  + brtl_random (LFS - LFS / 2);
             break;
 
         case DESERT:
-            animals = LFS / 10 + random (LFS / 5);
+            animals = LFS / 10 + brtl_random (LFS / 5);
             break;
 
         case ICY:
-            animals = LFS / 10 + random (LFS / 2);
+            animals = LFS / 10 + brtl_random (LFS / 2);
             break;
     }
 
     // impostazione seme pseudo e scala.
     // questo parametro dipende dal seme globale del pianeta.
-    srand (global_surface_seed);
+    brtl_srand (global_surface_seed);
     fast_srand (global_surface_seed);
 
     for (n = 0; n < animals; n++) {
@@ -3833,33 +3799,33 @@ void setup_animals() {
 
     switch (sctype) {
         case OCEAN:
-            bird_probability   = 1 + random(9);
+            bird_probability   = 1 + brtl_random(9);
             reptil_probability = 0;
             mammal_probability = 0;
             break;
 
         case PLAINS:
-            bird_probability   = 5 + random(9);
-            reptil_probability = 3 + random(3);
-            mammal_probability = 5 + random(4);
+            bird_probability   = 5 + brtl_random(9);
+            reptil_probability = 3 + brtl_random(3);
+            mammal_probability = 5 + brtl_random(4);
             break;
 
         case DESERT:
-            bird_probability   = 1 + random(2);
-            reptil_probability = 9 + random(9);
-            mammal_probability = 1 + random(2);
+            bird_probability   = 1 + brtl_random(2);
+            reptil_probability = 9 + brtl_random(9);
+            mammal_probability = 1 + brtl_random(2);
             break;
 
         case ICY:
-            bird_probability   = 2 + random(2);
-            reptil_probability = 0 + random(2);
-            mammal_probability = 0 + random(2);
+            bird_probability   = 2 + brtl_random(2);
+            reptil_probability = 0 + brtl_random(2);
+            mammal_probability = 0 + brtl_random(2);
     }
 
     for (n = 0; n < animals; n++) {
         while (1) {
-            x = random (3);
-            p = random (18);
+            x = brtl_random (3);
+            p = brtl_random (18);
 
             if (x == 0 && p <= bird_probability) {
                 ani_type[n] = BIRD;
@@ -3883,7 +3849,7 @@ void setup_animals() {
     // impostazione posizione attuale e dati accessori sugli animali.
     // questi parametri sono del tutto casuali: certo, solo insetti
     // e uccelli possono volare, e quindi c'� da tenerne conto.
-    srand (secs);
+    brtl_srand (secs);
     fast_srand (secs);
 
     for (n = 0; n < animals; n++) {
@@ -3904,7 +3870,7 @@ void setup_animals() {
         ani_lcount[n] = 0;
         ani_sqc[n] = ani_z[n] / 16384;
         ani_sqc[n] = m200[ani_sqc[n]] + ani_x[n] / 16384;
-        ani_mtype[n] = random (3);
+        ani_mtype[n] = brtl_random (3);
     }
 
     // caricamento forme di base.
@@ -3926,12 +3892,11 @@ void setup_animals() {
     STUB
 }
 
-/*  Questa funzione aggiorna sp_x;y;z in modo da tener conto della distanza
-    dalla superficie (il parametro height) e dell'orientamento della normale
-    alla superficie in quel punto. sp_x;y;z stanno per "stepping pos x;y;z" */
-
+/* This function updates sp_x/y/z to take into account the height and the
+ * orientation of the normal vector to the surface at that point. sp_x/y/z
+ * stands for stepping pos x/y/z.
+ */
 void add_height(int32_t px, int32_t pz, float height) {
-#if 0
     int32_t cpos;
     float x[3], y[3], z[3];
     float h1, h2, h3, h4, icx, icz;
@@ -3969,8 +3934,6 @@ void add_height(int32_t px, int32_t pz, float height) {
     sp_x += (pnx * height - sp_x) * 0.25;
     sp_y += (pny * height - sp_y) * 0.25;
     sp_z += (pnz * height - sp_z) * 0.25;
-#endif
-    STUB
 }
 
 /* Ciclo principale nell'esplorazione delle superfici planetarie. */
@@ -3984,7 +3947,6 @@ int8_t entryflag = 0; // flag: se settato all'ingresso di planetary_main,
 // di superficie.
 
 void planetary_main() {
-#if 0
     const int16_t widesnappingangle = 71;
     uint16_t pqw = QUADWORDS;
     int32_t     cpos;
@@ -4086,9 +4048,9 @@ void planetary_main() {
     // backup colori di ritorno.
     memcpy (return_palette, tmppal, 768);
 
-    // Dissolvenza al nero (blank frame).
+    // Fade to black (blank frame.)
     for (w = 64; w >= 0; w -= 4) {
-        tavola_colori (return_palette, 0, 256, w, w, w);
+        tavola_colori((const uint8_t*) return_palette, 0, 256, w, w, w);
         ll = clock();
 
         while (ll == clock());
@@ -4109,15 +4071,15 @@ void planetary_main() {
     while (w) {
         w--;
         wy[w] = 50;
-        wx[w] = 1E6 + random (30000) - random (30000);
-        wz[w] = 1E6 + random (30000) - random (30000);
-        wr[w] = 25E5 - (float) random (2500) * 1000;
-        wd[w] = - random (500) - 500;
-        wl[w] = random (5000) + 1000;
-        wh[w] = random (1500);
+        wx[w] = 1E6 + brtl_random (30000) - brtl_random (30000);
+        wz[w] = 1E6 + brtl_random (30000) - brtl_random (30000);
+        wr[w] = 25E5 - (float) brtl_random (2500) * 1000;
+        wd[w] = - brtl_random (500) - 500;
+        wl[w] = brtl_random (5000) + 1000;
+        wh[w] = brtl_random (1500);
 
         if (wh[w] < 0) {
-            wh[w] = random (100);
+            wh[w] = brtl_random (100);
         }
     }
 
@@ -4346,13 +4308,13 @@ void planetary_main() {
 
         case 3: // attribuzione pseudo-casuale degli scenari
             // per le caratteristiche generali del pianeta...
-            srand (landing_pt_lon * landing_pt_lat);
+            brtl_srand (landing_pt_lon * landing_pt_lat);
 
-            if (random(100) > 5) {
+            if (brtl_random(100) > 5) {
                 cpos   = 555 * nearstar_p_orb_orient[ip_targetted];
                 sctype = (cpos % 4) + 1;
             } else {
-                sctype = random (4) + 1;
+                sctype = brtl_random (4) + 1;
             }
 
             // correzioni per le regioni oceaniche
@@ -4365,7 +4327,7 @@ void planetary_main() {
                 sctype = ICY;
             }
 
-            if (latitude > 60 && random (3)) {
+            if (latitude > 60 && brtl_random (3)) {
                 sctype = ICY;
             }
 
@@ -4374,11 +4336,11 @@ void planetary_main() {
             // praticamente non pu� piovere)
             switch (sctype) {
                 case DESERT:
-                    rainy /= random(4) + 1;
+                    rainy /= brtl_random(4) + 1;
                     break;
 
                 case ICY:
-                    rainy /= random(3) + 2;
+                    rainy /= brtl_random(3) + 2;
                     break;
             }
 
@@ -4411,15 +4373,15 @@ void planetary_main() {
                            + nearstar_p_orb_orient[ip_targetted]) * 4112;
 
     if (nearstar_p_type[ip_targetted] == 3) {
-        srand (global_surface_seed + landing_pt_lon);
+        brtl_srand (global_surface_seed + landing_pt_lon);
 
-        if (latitude > 25 + (global_surface_seed % 15) + random(5)) {
+        if (latitude > 25 + (global_surface_seed % 15) + brtl_random(5)) {
             global_surface_seed++;
         }
     }
 
     /* generazione del cielo (in sfondo). */
-    _fmemset (s_background, sky_brightness, st_bytes);
+    memset(s_background, sky_brightness, st_bytes);
     create_sky (atmosphere);
     vptr = 0;
 
@@ -4453,24 +4415,24 @@ void planetary_main() {
     exitflag = 0;
 
     if (entryflag) {
-        sfh = _rtl_open (surface_file, 0);
+        sfh = open(surface_file, 0);
 
         if (sfh != -1) {
-            _rtl_read (sfh, &landing_pt_lon, 2);
-            _rtl_read (sfh, &landing_pt_lat, 2);
-            _rtl_read (sfh, &atl_x, 4);
-            _rtl_read (sfh, &atl_z, 4);
-            _rtl_read (sfh, &atl_x2, 4);
-            _rtl_read (sfh, &atl_z2, 4);
-            _rtl_read (sfh, &pos_x, 4);
-            _rtl_read (sfh, &pos_y, 4);
-            _rtl_read (sfh, &pos_z, 4);
-            _rtl_read (sfh, &user_alfa, 4);
-            _rtl_read (sfh, &user_beta, 4);
-            _rtl_read (sfh, &openhuddelta, 2);
-            _rtl_read (sfh, &openhudcount, 2);
-            _rtl_read (sfh, &hud_rtl_closed, 1);
-            _rtl_close (sfh);
+            read (sfh, &landing_pt_lon, 2);
+            read (sfh, &landing_pt_lat, 2);
+            read (sfh, &atl_x, 4);
+            read (sfh, &atl_z, 4);
+            read (sfh, &atl_x2, 4);
+            read (sfh, &atl_z2, 4);
+            read (sfh, &pos_x, 4);
+            read (sfh, &pos_y, 4);
+            read (sfh, &pos_z, 4);
+            read (sfh, &user_alfa, 4);
+            read (sfh, &user_beta, 4);
+            read (sfh, &openhuddelta, 2);
+            read (sfh, &openhudcount, 2);
+            read (sfh, &hud_rtl_closed, 1);
+            close (sfh);
             landed = 1;
             opencapdelta = 0;
             opencapcount = 0;
@@ -4479,7 +4441,7 @@ void planetary_main() {
         }
     } else {
         nosurfacefile:
-        srand (clock());
+        brtl_srand (clock());
         pos_x = 1638400;
         pos_z = 1638400;
         pos_y = hpoint (pos_x, pos_z) - 3.2E5;
@@ -4491,14 +4453,14 @@ void planetary_main() {
     directional_beta = user_beta;
 
     do {
-        // inizio sincronizzazione e risolvenza dal "blank frame".
+        // Start of synchronization and resolution from the blank frame.
         sync_start ();
         getsecs ();
         fast_srand (secs / 2);
 
         if (resolve <= 63) {
-            tavola_colori (surface_palette, 0, 256,
-                           resolve, resolve, resolve);
+            tavola_colori((const uint8_t *) surface_palette, 0, 256, resolve,
+                          resolve, resolve);
             resolve += 4;
         }
 
@@ -4529,7 +4491,7 @@ void planetary_main() {
         bkshift = shift;
         bkstep = step;
         mpul = 0;
-        mouse_input ();
+        handle_input();
 
         if (mpul & 2) {
             shift += mdltx;
@@ -4718,9 +4680,9 @@ void planetary_main() {
             pos_z   = drop_z + 1.6384E6;
         }
 
-        // visualizzazione fulmini (ove presenti).
+        // Lightning display (where present).
         if (flashed) {
-            tavola_colori (surface_palette, 0, 256, 63, 63, 63);
+            tavola_colori ((const uint8_t*) surface_palette, 0, 256, 63, 63, 63);
             flashed = 0;
         }
 
@@ -4738,8 +4700,8 @@ void planetary_main() {
                 ptr--;
             }
 
-            // (p.s. i fulmini illuminano anche il suolo, un po')
-            w = random (64) + 64;
+            // Lightning also illuminates the ground a little.
+            w = brtl_random (64) + 64;
             tavola_colori (tmppal, 0, 256, w, w, w);
             flashed = 1;
         }
@@ -4824,11 +4786,11 @@ void planetary_main() {
         QUADWORDS = 256;
 
         for (ptr = 0; ptr < 32; ptr++) {
-            pclear (&n_globes_map[ptr << 10], ptr >> 1);
+            memset(&n_globes_map[ptr << 10], ptr >> 1, QUADWORDS * 4);
         }
 
         QUADWORDS = pqw;
-        txtr = n_globes_map;
+        txtr = (uint8_t*) n_globes_map;
         // tracciamento dell'orizzonte.
         // punto di vista: all'incirca quello dell'utente,
         // ma l'angolo beta (orientamento) viene
@@ -4894,7 +4856,7 @@ void planetary_main() {
                     ipfx = ((int32_t)(cam_x)) >> 14;
                     ipfz = ((int32_t)(cam_z)) >> 14;
                     iperficie (0);
-                    txtr = n_globes_map;
+                    txtr = (uint8_t*) n_globes_map;
                     halfscan_needed = 0;
                     cam_x = backup_cam_x;
                     cam_y = backup_cam_y;
@@ -5081,7 +5043,7 @@ void planetary_main() {
             // calcolo della distanza del player dal centro onde.
             dfc = sqrt (pos_x0 * pos_x0 + pos_z0 * pos_z0);
             // inizializzazione texture delle onde in arrivo.
-            txtr = n_globes_map;
+            txtr = (uint8_t*) n_globes_map;
 
             for (ptr = 20480 + 256; ptr < 32768; ptr++) {
                 n_globes_map[ptr] = n_globes_map[ptr - 256] >> 1;
@@ -5103,7 +5065,7 @@ void planetary_main() {
 
                 if (wr[w] <= 0) {
                     // questo produce nuove onde...
-                    wh[w] = 500 + wp * 100 + random(1500);
+                    wh[w] = 500 + wp * 100 + brtl_random(1500);
                     wd[w] = (wp + 50) * -10;
                     wr[w] = 15E5;
                 } else {
@@ -5114,11 +5076,11 @@ void planetary_main() {
                             if (waveblur) {
                                 pos_x = pos_x0 / (1 - (wd[w] / 2E6)) + 1E6;
                                 pos_z = pos_z0 / (1 - (wd[w] / 2E6)) + 1E6;
-                                user_alfa *= 1 + (float) random(5) * 0.002;
+                                user_alfa *= 1 + (float) brtl_random(5) * 0.002;
                             }
 
                             if (fabs (dfc - wr[w]) - 3 * wl[w] <= fabs (2 * wd[w])) {
-                                waveblur = 1 + random (3);
+                                waveblur = 1 + brtl_random (3);
                             }
                         }
                     }
@@ -5186,7 +5148,7 @@ void planetary_main() {
             H_MATRIXS = 0;
             V_MATRIXS = 0;
             change_txm_repeating_mode();
-            txtr = n_globes_map;
+            txtr = (uint8_t*) n_globes_map;
             cam_x = 0;
             cam_z = 0;
             cam_y = 1030;
@@ -5212,7 +5174,7 @@ void planetary_main() {
             // inizializzazione della texture per gli spruzzi
             // prodotti dal fatto che si sta nuotando, o comunque
             // annaspando da fermi, per rimanere a galla...
-            txtr = n_globes_map;
+            txtr = (uint8_t*) n_globes_map;
             // usa i primi 32K, dove c'� la sfumatura del mare...
             V_MATRIXS = 8;
             change_txm_repeating_mode();
@@ -5258,7 +5220,7 @@ void planetary_main() {
                 }
 
                 if (wr[w] == 0) {
-                    goto prox;
+                    continue;
                 }
 
                 drop_x = 0;
@@ -5287,7 +5249,6 @@ void planetary_main() {
 
                 wr[w] += wd[w];
                 wh[w] /= 1.025;
-                prox:
             }
 
             // reimpostazione dei normali parametri
@@ -5334,8 +5295,8 @@ void planetary_main() {
             // effetti del vento, che si fanno sentire quandunque
             // ci sia un'atmosfera, al di l� del fatto che essa
             // sia respirabile o meno.
-            iwp  += (float)(random(albedo)) * 0.020;
-            iwp  -= (float)(random(albedo)) * 0.020;
+            iwp  += (float)(brtl_random(albedo)) * 0.020;
+            iwp  -= (float)(brtl_random(albedo)) * 0.020;
 
             if (iwp < -1) {
                 iwp = -1;
@@ -5363,19 +5324,19 @@ void planetary_main() {
                 wdircos = cos (wdir) * wp;
                 wdirsin -= (pos_z - refz) * 0.333;
                 wdircos -= (pos_x - refx) * 0.333;
-                srand (clock());
+                brtl_srand (clock());
                 fast_srand (clock() % 18);
-                ptr = random(3) + 1 ;
+                ptr = brtl_random(3) + 1 ;
 
                 while (ptr) {
-                    flash = random (150 / rainy);
+                    flash = brtl_random (150 / rainy);
                     ptr--;
                 }
 
                 if (rainy > 3) {
                     setfx (1);
                     Forward (-1000);
-                    ptr = random (25 * flashes) + 50;
+                    ptr = brtl_random (25 * flashes) + 50;
                     temp = (float)(clock() % 18) * 100;
 
                     while (ptr) {
@@ -5407,12 +5368,12 @@ void planetary_main() {
 
                 if (!(clock() % waveratio)) {
                     from_user ();
-                    srand (clock());
+                    brtl_srand (clock());
                     wr[lw] = 200;
-                    wh[lw] = random (100)    + fabs(3 * step);
+                    wh[lw] = brtl_random (100)    + fabs(3 * step);
                     wy[lw] = 50          + fabs(3 * step);
-                    wd[lw] = random (5) + 12 + fabs(2 * step);
-                    wl[lw] = random (50)     + fabs(2 * step);
+                    wd[lw] = brtl_random (5) + 12 + fabs(2 * step);
+                    wl[lw] = brtl_random (50)     + fabs(2 * step);
                     wx[lw] = pos_x - step * opt_tsinbeta * opt_tcosalfa;
                     wz[lw] = pos_z + step * opt_tcosbeta * opt_tcosalfa;
                     lw++;
@@ -5449,7 +5410,7 @@ void planetary_main() {
         QUADWORDS = 16000;
 
         if (!widesnapping) {
-            pcopy (adaptor, adapted);
+            swapBuffers();
         }
 
         QUADWORDS = pqw;
@@ -5536,10 +5497,10 @@ void planetary_main() {
                     goto wserror;
                 }
 
-                _rtl_read (ih, t, 54);
+                read (ih, t, 54);
                 t[18] = 0x94;
                 t[19] = 0x03;
-                _rtl_close (ih);
+                close (ih);
                 //
                 prog = -1;
 
@@ -5550,76 +5511,76 @@ void planetary_main() {
                         goto wserror;
                     }
 
-                    sprintf (snapfilename, "..\\GALLERY\\SNAP%04d.BMP", prog);
-                    ih = _rtl_open (snapfilename, 0);
+                    sprintf((char*) snapfilename, "..\\GALLERY\\SNAP%04d.BMP", prog);
+                    ih = open((char*) snapfilename, 0);
 
                     if (ih != -1) {
-                        _rtl_close (ih);
+                        close (ih);
                     }
                 } while (ih != -1);
 
                 //
-                i9997 = _rtl_open ("..\\GALLERY\\SNAP9997.BMP", 0);
-                i9998 = _rtl_open ("..\\GALLERY\\SNAP9998.BMP", 0);
-                i9999 = _rtl_open ("..\\GALLERY\\SNAP9999.BMP", 0);
+                i9997 = open ("..\\GALLERY\\SNAP9997.BMP", 0);
+                i9998 = open ("..\\GALLERY\\SNAP9998.BMP", 0);
+                i9999 = open ("..\\GALLERY\\SNAP9999.BMP", 0);
 
                 if (i9997 == -1 || i9998 == -1 || i9999 == -1) {
                     if (i9997 != -1) {
-                        _rtl_close (i9997);
+                        close (i9997);
                     }
 
                     if (i9998 != -1) {
-                        _rtl_close (i9998);
+                        close (i9998);
                     }
 
                     if (i9999 != -1) {
-                        _rtl_close (i9999);
+                        close (i9999);
                     }
 
                     goto wserror;
                 }
 
                 //
-                oh = _rtl_creat (snapfilename, 0);
+                oh = creat((char*) snapfilename, 0);
 
                 if (oh == -1) {
                     goto wserror;
                 }
 
-                _rtl_write (oh, t, 54);
+                write (oh, t, 54);
                 //
                 lseek (i9997, 54L, SEEK_SET);
-                _rtl_read (i9997, adapted, 1024);
-                _rtl_write (oh, adapted, 1024);
+                read (i9997, adapted, 1024);
+                write (oh, adapted, 1024);
                 //
                 lseek (i9997, 1078L, SEEK_SET);
 
                 for (line = 0; line < 200; line++) {
-                    _rtl_read (i9997, adapted, 320);
+                    read (i9997, adapted, 320);
                     lseek (oh, line * 916L + 1078L + 309L, SEEK_SET);
-                    _rtl_write (oh, adapted + 10, 299);
+                    write (oh, adapted + 10, 299);
                 }
 
                 //
                 lseek (i9998, 1078L, SEEK_SET);
 
                 for (line = 0; line < 200; line++) {
-                    _rtl_read (i9998, adapted, 320);
+                    read (i9998, adapted, 320);
                     lseek (oh, line * 916L + 1078L, SEEK_SET);
-                    _rtl_write (oh, adapted, 309);
+                    write (oh, adapted, 309);
                 }
 
                 //
                 lseek (i9999, 1078L, SEEK_SET);
 
                 for (line = 0; line < 200; line++) {
-                    _rtl_read (i9999, adapted, 320);
+                    read (i9999, adapted, 320);
                     lseek (oh, line * 916L + 1078L + 608L, SEEK_SET);
-                    _rtl_write (oh, adapted + 10, 308);
+                    write (oh, adapted + 10, 308);
                 }
 
                 //
-                _rtl_close (oh);
+                close (oh);
                 //
                 wserror:
                 remove ("..\\GALLERY\\SNAP9997.BMP");
@@ -5771,24 +5732,24 @@ void planetary_main() {
                 }
 
                 if (w == 27 && landed) {
-                    sfh = _rtl_creat (surface_file, 0);
+                    sfh = creat (surface_file, 0);
 
                     if (sfh != -1) {
-                        _rtl_write (sfh, &landing_pt_lon, 2);
-                        _rtl_write (sfh, &landing_pt_lat, 2);
-                        _rtl_write (sfh, &atl_x, 4);
-                        _rtl_write (sfh, &atl_z, 4);
-                        _rtl_write (sfh, &atl_x2, 4);
-                        _rtl_write (sfh, &atl_z2, 4);
-                        _rtl_write (sfh, &pos_x, 4);
-                        _rtl_write (sfh, &pos_y, 4);
-                        _rtl_write (sfh, &pos_z, 4);
-                        _rtl_write (sfh, &user_alfa, 4);
-                        _rtl_write (sfh, &user_beta, 4);
-                        _rtl_write (sfh, &openhuddelta, 2);
-                        _rtl_write (sfh, &openhudcount, 2);
-                        _rtl_write (sfh, &hud_rtl_closed, 1);
-                        _rtl_close (sfh);
+                        write (sfh, &landing_pt_lon, 2);
+                        write (sfh, &landing_pt_lat, 2);
+                        write (sfh, &atl_x, 4);
+                        write (sfh, &atl_z, 4);
+                        write (sfh, &atl_x2, 4);
+                        write (sfh, &atl_z2, 4);
+                        write (sfh, &pos_x, 4);
+                        write (sfh, &pos_y, 4);
+                        write (sfh, &pos_z, 4);
+                        write (sfh, &user_alfa, 4);
+                        write (sfh, &user_beta, 4);
+                        write (sfh, &openhuddelta, 2);
+                        write (sfh, &openhudcount, 2);
+                        write (sfh, &hud_rtl_closed, 1);
+                        close (sfh);
                         exitflag = 1;
                         goto nodissolve;
                     }
@@ -5799,17 +5760,16 @@ void planetary_main() {
 
     /* operazioni di recupero per ritornare al ciclo principale. */
 
-    // Dissolvenza al nero (blank frame di ritorno).
+    // Fade to black (return blank frame).
     for (w = 64; w >= 0; w -= 4) {
-        tavola_colori (surface_palette, 0, 256, w, w, w);
+        tavola_colori((const uint8_t*) surface_palette, 0, 256, w, w, w);
         ll = clock();
 
         while (ll == clock());
     }
 
     nodissolve:
-    pclear (adapted, 0);
-    pclear (adaptor, 0);
+    memset(adapted, 0, QUADWORDS * 4);
     dzat_x = backup_dzat_x;
     dzat_y = backup_dzat_y;
     dzat_z = backup_dzat_z;
@@ -5829,6 +5789,4 @@ void planetary_main() {
     load_starface ();
     load_digimap2 ();
     npcs = -12345;
-#endif
-    FIXME
 }
