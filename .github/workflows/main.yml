@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install dependencies
+      run: apt-get install -y clang cmake make libsdl2-dev
+    - name: Build for Linux x64
+      run: mkdir build && cd build && -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ cmake .. && make
+    - name: Compress Linux x64 artifact
+      run: tar -czvf nivlr.tar.gz nivlr ../res
+    - name: Upload Linux x64 artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: Noctis IV LR Linux x64 Build
+        path: nivlr.tar.gz
