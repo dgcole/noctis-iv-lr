@@ -13,7 +13,7 @@ jobs:
     - name: Install dependencies
       run: sudo apt-get update && sudo apt-get install -y clang cmake make libsdl2-dev
     - name: Build for Linux x64
-      run: mkdir build && cd build && -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ cmake .. && make
+      run: mkdir build && cd build && cmake -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ .. && make
     - name: Compress Linux x64 artifact
       run: tar -czvf nivlr.tar.gz nivlr ../res
     - name: Upload Linux x64 artifact
