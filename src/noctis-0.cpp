@@ -2402,10 +2402,10 @@ void background(uint16_t start, uint8_t *target, uint8_t *background,
     bp = start /*+ 4*/;
 
     rigiro:
-    uint16_t word = (((uint16_t) ds[si + 1]) << 8u) | ((uint16_t) ds[si]);
+    uint16_t word = ((uint16_t) (((uint16_t) ds[si + 1]) << 8u)) | ((uint16_t) ds[si]);
     if (word >= 64000)
         goto blanket;
-    di = (((uint16_t) ds[si + 1]) << 8u) | ((uint16_t) ds[si]);
+    di = ((uint16_t) (((uint16_t) ds[si + 1]) << 8u)) | ((uint16_t) ds[si]);
     di += dx;
     al = fs[bp];
 
@@ -2423,7 +2423,7 @@ void background(uint16_t start, uint8_t *target, uint8_t *background,
     return;
 
     blanket:
-    bx = ds[si];
+    bx = ((uint16_t) (((uint16_t) ds[si + 1]) << 8u)) | ((uint16_t) ds[si]);
     bx -= 64000;
     bp += bx;
     si += 2;
