@@ -2392,104 +2392,45 @@ char *alphavalue(double value) {
 void background(uint16_t start, uint8_t *target, uint8_t *background,
                 uint8_t *offsetsmap, uint16_t total_map_bytes,
                 uint16_t screenshift) {
-    //es: target[ax]
-    //fs: background[bx]
-    //ds: offsetsmap[si]
-    //make sure to add screenshift to target index.
-    uint16_t tdx = screenshift;
-    uint16_t tcx = total_map_bytes >> 1;
-    uint16_t tbp = start + 4; // might not need +4
-    uint16_t tsi = 0, tdi = 0, tbx = 0;
-    uint8_t tal = 0;
-    /*asm {   pusha
-            push ds
-            les ax, dword ptr target
-            add screenshift, ax
-            mov dx, screenshift
-            mov ax, es
-            les bx, dword ptr background
-            mov bx, es
-            mov cx, total_map_bytes
-            shr cx, 1
-            lds si, dword ptr offsetsmap
-            mov bp, start
-            add bp, 4
-            db 0x8E, 0xE3 // mov fs, bx
-            mov es, ax }*/
+    uint16_t ax = 0, bx = 0, dx = 0, cx = 0, si = 0, di = 0, bp = 0;
+    uint8_t al = 0;
+    uint8_t* es = target;
+    dx = screenshift;
+    cx = total_map_bytes >> 1u;
+    uint8_t* fs = background;
+    uint8_t* ds = offsetsmap;
+    bp = start /*+ 4*/;
+
     rigiro:
-    uint16_t comp = (((uint16_t) offsetsmap[tsi + 1]) << 8) | ((uint16_t) offsetsmap[tsi]);
-    if (comp >= 64000) {
+    uint16_t word = (((uint16_t) ds[si + 1]) << 8u) | ((uint16_t) ds[si]);
+    if (word >= 64000)
         goto blanket;
-    }
-    tdi = offsetsmap[tsi];
-    tdi += tdx;
-    tal = background[tbp];
+    di = (((uint16_t) ds[si + 1]) << 8u) | ((uint16_t) ds[si]);
+    di += dx;
+    al = fs[bp];
 
-    memset(&target[tdi], tal, 8);
-    memset(&target[tdi + 320], tal, 8);
-    memset(&target[tdi + 640], tal, 8);
-    memset(&target[tdi + 960], tal, 8);
-    memset(&target[tdi + 1280], tal, 8);
-    tbp += 1;
-    tsi += 2;
-    tcx--;
-    if (tcx != 0) {
-        goto rigiro;
-    }
-    goto fine;
+    memset(&es[di], al, 5);
+    memset(&es[di + 320], al, 5);
+    memset(&es[di + 640], al, 5);
+    memset(&es[di + 960], al, 5);
+    memset(&es[di + 1280], al, 5);
 
-    /*
-    asm {   cmp word ptr [si], 64000
-            jnb blanket
-            mov di, [si]
-            add di, dx
-            db 0x64, 0x8A, 0x46, 0x00 // mov al, fs:[bp]
-            mov ah, al
-            db 0x66;
-            shl ax, 8
-            mov al, ah
-            db 0x66;
-            shl ax, 8
-            mov al, ah
-            db 0x66;
-            mov es:[di], ax
-            mov es:[di+4], al
-            db 0x66;
-            mov es:[di+320], ax
-            mov es:[di+324], al
-            db 0x66;
-            mov es:[di+640], ax
-            mov es:[di+644], al
-            db 0x66;
-            mov es:[di+960], ax
-            mov es:[di+964], al
-            db 0x66;
-            mov es:[di+1280], ax
-            mov es:[di+1284], al
-            add bp, 1
-            add si, 2
-            dec cx
-            jnz rigiro
-            jmp fine }*/
-    blanket:
-    tbx = (((uint16_t) offsetsmap[tsi + 1]) << 8) | ((uint16_t) offsetsmap[tsi]);
-    tbx -= 64000;
-    tbp += tbx;
-    tsi += 2;
-    tcx--;
-    if (tcx != 0) {
+    bp += 1;
+    si += 2;
+    cx--;
+    if (cx != 0)
         goto rigiro;
-    }
-    /*asm {   mov bx, [si]
-            sub bx, 64000
-            add bp, bx
-            add si, 2
-            dec cx
-            jnz rigiro }*/
-    fine:
-    /*asm {   pop ds
-            popa }*/
     return;
+
+    blanket:
+    bx = ds[si];
+    bx -= 64000;
+    bp += bx;
+    si += 2;
+    cx--;
+    if (cx != 0)
+        goto rigiro;
+
 }
 
 /*
