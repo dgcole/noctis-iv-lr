@@ -1718,7 +1718,6 @@ void round_hill(int16_t cx, int16_t cz, uint16_t r, float h, float hmax,
 }
 
 void smoothterrain(int16_t rounding) {
-#if 0
     // Smussa il profilo del terreno.
     int16_t n;
 
@@ -1733,12 +1732,9 @@ void smoothterrain(int16_t rounding) {
 
         rounding--;
     }
-#endif
-    STUB
 }
 
 void rockyground(int16_t roughness, int16_t rounding, int8_t level) {
-#if 0
     // Produce una superficie pi? o meno accidentata.
     for (ptr = 0; ptr < 40000; ptr++) {
         p_surfacemap[ptr] = brtl_random (roughness);
@@ -1757,8 +1753,6 @@ void rockyground(int16_t roughness, int16_t rounding, int8_t level) {
             p_surfacemap[ptr] = 0;
         }
     }
-#endif
-    STUB
 }
 
 void std_crater(uint8_t *map, int16_t cx, int16_t cz, int16_t r, int16_t lim_h,
@@ -1822,45 +1816,42 @@ void srf_darkline(uint8_t *map, int16_t length, int16_t x_trend,
 
 void felisian_srf_darkline(uint8_t *map, int16_t length, int16_t x_trend,
                            int16_t z_trend, int32_t align) {
-#if 0
-// Un crepaccio (versione principalmente per superfici).
-int16_t fx = brtl_random(align), fz = brtl_random(align);
-int16_t peak, deviation, variability;
-int32_t mapsize = align * align;
-uint16_t location;
-//
-deviation = brtl_random(25) - 50;
-variability = 2 + brtl_random(10);
+    // Un crepaccio (versione principalmente per superfici).
+    int16_t fx = brtl_random(align), fz = brtl_random(align);
+    int16_t peak, deviation, variability;
+    int32_t mapsize = align * align;
+    uint16_t location;
+    //
+    deviation   = brtl_random(25) - 50;
+    variability = 2 + brtl_random(10);
 
-while (length) {
-fx += brtl_random(3) + x_trend;
-fz += brtl_random(3) + z_trend;
-deviation += brtl_random(variability) - (variability >> 1);
-location = align * (int32_t)fz + fx;
+    while (length) {
+        fx += brtl_random(3) + x_trend;
+        fz += brtl_random(3) + z_trend;
+        deviation += brtl_random(variability) - (variability >> 1);
+        location = align * (int32_t) fz + fx;
 
-if (location > 0 && location < mapsize) {
-peak = map[location];
-peak += deviation;
+        if (location > 0 && location < mapsize) {
+            peak = map[location];
+            peak += deviation;
 
-if (peak < 0) {
-peak = 0;
-}
+            if (peak < 0) {
+                peak = 0;
+            }
 
-if (peak > 127) {
-peak = 127;
-}
+            if (peak > 127) {
+                peak = 127;
+            }
 
-map[location] = peak;
-map[location + 1] = peak;
-map[location - 1] = peak;
-map[location + align] = peak;
-map[location - align] = peak;
-}
+            map[location]         = peak;
+            map[location + 1]     = peak;
+            map[location - 1]     = peak;
+            map[location + align] = peak;
+            map[location - align] = peak;
+        }
 
-length--;
-}
-#endif
-    STUB
+        length--;
+    }
 }
 
 void asterism(uint8_t *map, int16_t x, int16_t y, int16_t base, int16_t variation,

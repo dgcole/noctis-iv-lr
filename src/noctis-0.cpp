@@ -2392,45 +2392,31 @@ char *alphavalue(double value) {
 void background(uint16_t start, uint8_t *target, uint8_t *background,
                 uint8_t *offsetsmap, uint16_t total_map_bytes,
                 uint16_t screenshift) {
-    uint16_t ax = 0, bx = 0, dx = 0, cx = 0, si = 0, di = 0, bp = 0;
-    uint8_t al = 0;
-    uint8_t* es = target;
-    dx = screenshift;
-    cx = total_map_bytes >> 1u;
-    uint8_t* fs = background;
-    uint8_t* ds = offsetsmap;
-    bp = start /*+ 4*/;
+    uint16_t tex_loc = start /*+ 4*/;
 
-    rigiro:
-    uint16_t word = ((uint16_t) (((uint16_t) ds[si + 1]) << 8u)) | ((uint16_t) ds[si]);
-    if (word >= 64000)
-        goto blanket;
-    di = ((uint16_t) (((uint16_t) ds[si + 1]) << 8u)) | ((uint16_t) ds[si]);
-    di += dx;
-    al = fs[bp];
+    for (uint16_t i = (total_map_bytes / 2), si = 0; i > 0; i--, si += 2) {
+        uint16_t word = ((uint16_t)(((uint16_t) offsetsmap[si + 1]) << 8u)) |
+                        ((uint16_t) offsetsmap[si]);
+        if (word >= 64000) {
+            uint16_t offset = (((uint16_t)(((uint16_t) offsetsmap[si + 1]) << 8u)) |
+                 ((uint16_t) offsetsmap[si])) - 64000;
 
-    memset(&es[di], al, 5);
-    memset(&es[di + 320], al, 5);
-    memset(&es[di + 640], al, 5);
-    memset(&es[di + 960], al, 5);
-    memset(&es[di + 1280], al, 5);
+            tex_loc += offset;
+        } else {
+            uint16_t screen_loc = ((uint16_t)(((uint16_t) offsetsmap[si + 1]) << 8u)) |
+                 ((uint16_t) offsetsmap[si]);
+            screen_loc += screenshift;
+            uint8_t color = background[tex_loc];
 
-    bp += 1;
-    si += 2;
-    cx--;
-    if (cx != 0)
-        goto rigiro;
-    return;
+            memset(&target[screen_loc], color, 5);
+            memset(&target[screen_loc + 320], color, 5);
+            memset(&target[screen_loc + 640], color, 5);
+            memset(&target[screen_loc + 960], color, 5);
+            memset(&target[screen_loc + 1280], color, 5);
 
-    blanket:
-    bx = ((uint16_t) (((uint16_t) ds[si + 1]) << 8u)) | ((uint16_t) ds[si]);
-    bx -= 64000;
-    bp += bx;
-    si += 2;
-    cx--;
-    if (cx != 0)
-        goto rigiro;
-
+            tex_loc += 1;
+        }
+    }
 }
 
 /*
@@ -3118,13 +3104,9 @@ int8_t lens_flares_init() {
     int16_t c;
     double a = 0, interval = M_PI / 180;
 
-    if (!lft_sin || !lft_cos) {
-        return (0);
-    }
-
     for (c = 0; c <= 360; c++) {
-        lft_cos[c] = cos(a);
-        lft_sin[c] = sin(a);
+        lft_cos[c] = (float) cos(a);
+        lft_sin[c] = (float) sin(a);
         a += interval;
     }
 
@@ -3191,8 +3173,8 @@ void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight,
                 if (on_hud && !(c % 8)) {
                     dx /= 10;
                     dy /= 10;
-                    xr = (float)xs * -0.1;
-                    yr = (float)ys * -0.1;
+                    xr = (float) xs * -0.1;
+                    yr = (float) ys * -0.1;
 
                     for (r = 0; r < 3; r++) {
                         fline((int32_t) (xr - dx), (int32_t) (yr - dy),
@@ -3319,10 +3301,10 @@ int8_t far_pixel_at(double xlight, double ylight, double zlight, double radii,
             vptr = (uint16_t) (320 * (int16_t)pyy + pxx);
 
             if (pixel_spreads) {
-                edge_color_1 = pixel_color >> 1;
-                edge_color_2 = pixel_color >> 2;
-                edge_color_3 = pixel_color >> 3;
-                edge_color_4 = pixel_color >> 4;
+                edge_color_1 = pixel_color >> 1u;
+                edge_color_2 = pixel_color >> 2u;
+                edge_color_3 = pixel_color >> 3u;
+                edge_color_4 = pixel_color >> 4u;
 
                 if (edge_color_1 > 7) {
                     single_pixel_at_ptr(vptr - 320, edge_color_1);
@@ -3453,7 +3435,9 @@ void extract_ap_target_infos() {
 }
 
 // Extracts a whole-type pseudo-random number by converting it to f-p.
-float zrandom(int16_t range) { return (brtl_random(range) - brtl_random(range)); } // NOLINT(misc-redundant-expression)
+float zrandom(int16_t range) {
+    return (brtl_random(range) - brtl_random(range));
+} // NOLINT(misc-redundant-expression)
 
 /*  Part of the cartography management.
  *  It has been moved here to be called by "prepare_nearstar".
