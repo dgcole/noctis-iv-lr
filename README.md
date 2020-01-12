@@ -3,7 +3,7 @@
 
 ![Linux Build Badge](https://github.com/dgcole/noctis-iv-lr/workflows/Linux%20Build/badge.svg) 
 
-![Image of Star](doc/img/roof.png)
+![Image of Star](doc/img/rings.png)
 
 **PLEASE NOTE: This project is a heavy WIP. It is unstable and unfinished. Additionally, I recommend not reading any part of this codebase. It will probably cause permanent harm to both your eyeballs and eliminate your faith in humanity**
 
