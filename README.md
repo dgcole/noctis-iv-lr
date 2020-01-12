@@ -32,7 +32,9 @@ cmake . -DCMAKE_C_COMPILER="/usr/bin/clang" -DCMAKE_CXX_COMPILER="/usr/bin/clang
 make
 ```
 ### Windows
-Build instructions are not currently provided for Windows, but it can be built by following similar steps to the Linux instructions above in MSYS2 using the mingw-w64 packages.
+**Please Note:** The game is extremely buggy on Windows right now, to a [significantly](https://i.imgur.com/9km1Osf.gif) greater extent than on Linux. Fixing bugs that only exist under Windows is not a current priority.
+
+Build instructions are not currently provided for Windows, but it can be built by following similar steps to the Linux instructions above in MSYS2 using the mingw-w64 packages. 
 
 ## Port Status
 - [x] Space Game Logic
