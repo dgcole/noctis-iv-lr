@@ -2392,104 +2392,31 @@ char *alphavalue(double value) {
 void background(uint16_t start, uint8_t *target, uint8_t *background,
                 uint8_t *offsetsmap, uint16_t total_map_bytes,
                 uint16_t screenshift) {
-    //es: target[ax]
-    //fs: background[bx]
-    //ds: offsetsmap[si]
-    //make sure to add screenshift to target index.
-    uint16_t tdx = screenshift;
-    uint16_t tcx = total_map_bytes >> 1;
-    uint16_t tbp = start + 4; // might not need +4
-    uint16_t tsi = 0, tdi = 0, tbx = 0;
-    uint8_t tal = 0;
-    /*asm {   pusha
-            push ds
-            les ax, dword ptr target
-            add screenshift, ax
-            mov dx, screenshift
-            mov ax, es
-            les bx, dword ptr background
-            mov bx, es
-            mov cx, total_map_bytes
-            shr cx, 1
-            lds si, dword ptr offsetsmap
-            mov bp, start
-            add bp, 4
-            db 0x8E, 0xE3 // mov fs, bx
-            mov es, ax }*/
-    rigiro:
-    uint16_t comp = (((uint16_t) offsetsmap[tsi + 1]) << 8) | ((uint16_t) offsetsmap[tsi]);
-    if (comp >= 64000) {
-        goto blanket;
-    }
-    tdi = offsetsmap[tsi];
-    tdi += tdx;
-    tal = background[tbp];
+    uint16_t tex_loc = start /*+ 4*/;
 
-    memset(&target[tdi], tal, 8);
-    memset(&target[tdi + 320], tal, 8);
-    memset(&target[tdi + 640], tal, 8);
-    memset(&target[tdi + 960], tal, 8);
-    memset(&target[tdi + 1280], tal, 8);
-    tbp += 1;
-    tsi += 2;
-    tcx--;
-    if (tcx != 0) {
-        goto rigiro;
-    }
-    goto fine;
+    for (uint16_t i = (total_map_bytes / 2), si = 0; i > 0; i--, si += 2) {
+        uint16_t word = ((uint16_t)(((uint16_t) offsetsmap[si + 1]) << 8u)) |
+                        ((uint16_t) offsetsmap[si]);
+        if (word >= 64000) {
+            uint16_t offset = (((uint16_t)(((uint16_t) offsetsmap[si + 1]) << 8u)) |
+                 ((uint16_t) offsetsmap[si])) - 64000;
 
-    /*
-    asm {   cmp word ptr [si], 64000
-            jnb blanket
-            mov di, [si]
-            add di, dx
-            db 0x64, 0x8A, 0x46, 0x00 // mov al, fs:[bp]
-            mov ah, al
-            db 0x66;
-            shl ax, 8
-            mov al, ah
-            db 0x66;
-            shl ax, 8
-            mov al, ah
-            db 0x66;
-            mov es:[di], ax
-            mov es:[di+4], al
-            db 0x66;
-            mov es:[di+320], ax
-            mov es:[di+324], al
-            db 0x66;
-            mov es:[di+640], ax
-            mov es:[di+644], al
-            db 0x66;
-            mov es:[di+960], ax
-            mov es:[di+964], al
-            db 0x66;
-            mov es:[di+1280], ax
-            mov es:[di+1284], al
-            add bp, 1
-            add si, 2
-            dec cx
-            jnz rigiro
-            jmp fine }*/
-    blanket:
-    tbx = (((uint16_t) offsetsmap[tsi + 1]) << 8) | ((uint16_t) offsetsmap[tsi]);
-    tbx -= 64000;
-    tbp += tbx;
-    tsi += 2;
-    tcx--;
-    if (tcx != 0) {
-        goto rigiro;
+            tex_loc += offset;
+        } else {
+            uint16_t screen_loc = ((uint16_t)(((uint16_t) offsetsmap[si + 1]) << 8u)) |
+                 ((uint16_t) offsetsmap[si]);
+            screen_loc += screenshift;
+            uint8_t color = background[tex_loc];
+
+            memset(&target[screen_loc], color, 5);
+            memset(&target[screen_loc + 320], color, 5);
+            memset(&target[screen_loc + 640], color, 5);
+            memset(&target[screen_loc + 960], color, 5);
+            memset(&target[screen_loc + 1280], color, 5);
+
+            tex_loc += 1;
+        }
     }
-    /*asm {   mov bx, [si]
-            sub bx, 64000
-            add bp, bx
-            add si, 2
-            dec cx
-            jnz rigiro }*/
-    fine:
-    /*asm {   pop ds
-            popa }*/
-    return;
 }
 
 /*
@@ -3177,13 +3104,9 @@ int8_t lens_flares_init() {
     int16_t c;
     double a = 0, interval = M_PI / 180;
 
-    if (!lft_sin || !lft_cos) {
-        return (0);
-    }
-
     for (c = 0; c <= 360; c++) {
-        lft_cos[c] = cos(a);
-        lft_sin[c] = sin(a);
+        lft_cos[c] = (float) cos(a);
+        lft_sin[c] = (float) sin(a);
         a += interval;
     }
 
@@ -3250,8 +3173,8 @@ void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight,
                 if (on_hud && !(c % 8)) {
                     dx /= 10;
                     dy /= 10;
-                    xr = (float)xs * -0.1;
-                    yr = (float)ys * -0.1;
+                    xr = (float) xs * -0.1;
+                    yr = (float) ys * -0.1;
 
                     for (r = 0; r < 3; r++) {
                         fline((int32_t) (xr - dx), (int32_t) (yr - dy),
@@ -3378,10 +3301,10 @@ int8_t far_pixel_at(double xlight, double ylight, double zlight, double radii,
             vptr = (uint16_t) (320 * (int16_t)pyy + pxx);
 
             if (pixel_spreads) {
-                edge_color_1 = pixel_color >> 1;
-                edge_color_2 = pixel_color >> 2;
-                edge_color_3 = pixel_color >> 3;
-                edge_color_4 = pixel_color >> 4;
+                edge_color_1 = pixel_color >> 1u;
+                edge_color_2 = pixel_color >> 2u;
+                edge_color_3 = pixel_color >> 3u;
+                edge_color_4 = pixel_color >> 4u;
 
                 if (edge_color_1 > 7) {
                     single_pixel_at_ptr(vptr - 320, edge_color_1);
@@ -3512,7 +3435,9 @@ void extract_ap_target_infos() {
 }
 
 // Extracts a whole-type pseudo-random number by converting it to f-p.
-float zrandom(int16_t range) { return (brtl_random(range) - brtl_random(range)); } // NOLINT(misc-redundant-expression)
+float zrandom(int16_t range) {
+    return (brtl_random(range) - brtl_random(range));
+} // NOLINT(misc-redundant-expression)
 
 /*  Part of the cartography management.
  *  It has been moved here to be called by "prepare_nearstar".
