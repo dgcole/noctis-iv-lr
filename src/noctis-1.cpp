@@ -1284,20 +1284,21 @@ void fragment(int32_t x, int32_t z) {
 
     // tracciamento del suolo.
     if (!mirror) {
-        // verifica visibilit? poligoni.
-        poly1 = 0;
+        // TODO; Restore depth culling. Low priority because performance isn't
+        // currently a concern.
+        poly1 = 1;
 
-        if (facing(vx1, vy1, vz1))
+        /*if (facing(vx1, vy1, vz1))
             if (gtx || (vy1[0] + vy1[1] + vy1[2] != 0)) {
                 poly1 = 1;
-            }
+            }*/
 
-        poly2 = 0;
+        poly2 = 1;
 
-        if (facing(vx2, vy2, vz2))
+        /*if (facing(vx2, vy2, vz2))
             if (gtx || (vy2[0] + vy2[1] + vy2[2] != 0)) {
                 poly2 = 1;
-            }
+            }*/
 
         if (poly1 || poly2) {
             // impostazione parametri della texture del suolo.
