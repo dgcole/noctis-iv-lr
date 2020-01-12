@@ -6,6 +6,8 @@
 #include "brtl.h"
 #include "noctis-0.h"
 #include "noctis-d.h"
+#include <chrono>
+#include <thread>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -2780,10 +2782,26 @@ void swapBuffers() {
             }
         }
     }*/
+
+    // Clear back buffer.
+    memset(adapted, 0, 64000);
+
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, sdl_surface);
     SDL_RenderCopy(renderer, texture, nullptr, nullptr);
     SDL_RenderPresent(renderer);
     SDL_DestroyTexture(texture);
+
+    // Frame limiter (24 FPS)
+    static const auto goal = std::chrono::milliseconds(1000 / 24);
+    static auto last = std::chrono::high_resolution_clock::now();
+
+    auto now = std::chrono::high_resolution_clock::now();
+
+    if ((now - last) < goal) {
+        std::this_thread::sleep_for(goal - (now - last));
+    }
+
+    last = now;
 }
 
 void loop() {
