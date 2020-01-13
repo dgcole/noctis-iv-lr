@@ -1201,15 +1201,14 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
     int32_t a, b, L;
     uint16_t pi, pf;
     uint16_t offset    = 0;
-    uint8_t *truncated = adapted;
 
     if (xp == xa) {
         if (ya >= yp) {
-            pi = riga[yp] + xp;
-            pf = riga[ya + 1];
+            pi = 320 * yp + xp;
+            pf = 320 * (ya + 1);
         } else {
-            pi = riga[ya] + xp;
-            pf = riga[yp + 1];
+            pi = 320 * ya + xp;
+            pf = 320 * (yp + 1);
         }
 
         pi += offset;
@@ -1220,46 +1219,46 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
         switch (flares) {
         case 0:
             while (offset < pf) {
-                truncated[offset]     = 0x3E;
-                truncated[offset + 1] = 0x00;
+                adapted[offset]     = 0x3E;
+                adapted[offset + 1] = 0x00;
 
                 offset += 320;
             }
             break;
         case 1:
             while (offset < pf) {
-                uint8_t mask = truncated[offset];
+                uint8_t mask = adapted[offset];
                 mask &= 0x3Fu;
                 mask += 0x08;
 
-                truncated[offset] &= 0xC0u;
+                adapted[offset] &= 0xC0u;
 
                 if (mask > 0x3E) {
                     mask = 0x3E;
                 }
 
-                truncated[offset] += mask;
+                adapted[offset] += mask;
                 offset += 320;
             }
             break;
         case 2:
             while (offset < pf) {
-                uint8_t mask = truncated[offset];
+                uint8_t mask = adapted[offset];
                 mask &= 0x3Fu;
                 mask >>= 1u;
 
-                truncated[offset] &= 0xC0u;
+                adapted[offset] &= 0xC0u;
 
-                truncated[offset] += mask;
+                adapted[offset] += mask;
                 offset += 320;
             }
             break;
         case 3:
             while (offset < pf) {
-                truncated[offset]     = 0x2E;
-                truncated[offset + 1] = 0x1E;
-                truncated[offset + 2] = 0x13;
-                truncated[offset + 3] = 0x0E;
+                adapted[offset]     = 0x2E;
+                adapted[offset + 1] = 0x1E;
+                adapted[offset + 2] = 0x13;
+                adapted[offset + 3] = 0x0E;
                 offset += 320;
             }
             break;
@@ -1302,8 +1301,8 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
 
     xa <<= 16u;
 
-    global_x = xp << 16u;
-    global_y = yp << 16u;
+    uint32_t global_x = xp << 16u;
+    uint32_t global_y = yp << 16u;
 
     a <<= 16;
     a /= L;
@@ -1320,35 +1319,29 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
     switch (flares) {
     case 0: // Solid sticks that "reflect" light;
         while (global_x < xa) {
-            uint16_t tempB = (global_y >> 16u) * 2;
+            uint16_t tempB = (global_y >> 16u);
             uint32_t index = global_x >> 16u;
 
             global_x += a;
             global_y += b;
 
-            uint16_t rLow, rHigh;
-            rLow  = ((uint8_t *)riga)[tempB];
-            rHigh = ((uint8_t *)riga)[tempB + 1];
-            index += (rHigh << 8u) + rLow;
+            index += 320 * tempB;
 
-            truncated[index]     = 0x00;
-            truncated[index + 1] = 0x3E;
+            adapted[index]     = 0x00;
+            adapted[index + 1] = 0x3E;
         }
         break;
     case 1: // Intrinsically luminous sticks.
         while (global_x < xa) {
-            uint16_t tempB = (global_y >> 16u) * 2;
+            uint16_t tempB = (global_y >> 16u);
             uint32_t index = global_x >> 16u;
 
             global_x += a * 2;
             global_y += b * 2;
 
-            uint16_t rLow, rHigh;
-            rLow  = ((uint8_t *)riga)[tempB];
-            rHigh = ((uint8_t *)riga)[tempB + 1];
-            index += (rHigh << 8u) + rLow;
+            index += 320 * tempB;
 
-            uint16_t color = truncated[index] << 2u;
+            uint16_t color = adapted[index] << 2u;
 
             if ((color & 0xFFu) <= 0xDF) {
                 color += 32;
@@ -1356,50 +1349,44 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
                 color = (color & 0xFF00u) + 0xFB;
             }
 
-            truncated[index] = (color >> 2u) & 0xFFu;
+            adapted[index] = (color >> 2u) & 0xFFu;
         }
         break;
     case 2: // Sticks that absorb light ("smoked")
         while (global_x < xa) {
-            uint16_t tempB = (global_y >> 16u) * 2;
+            uint16_t tempB = (global_y >> 16u);
             uint32_t index = global_x >> 16u;
 
             global_x += a;
             global_y += b;
 
-            uint16_t rLow, rHigh;
-            rLow  = ((uint8_t *)riga)[tempB];
-            rHigh = ((uint8_t *)riga)[tempB + 1];
-            index += (rHigh << 8u) + rLow;
+            index += 320 * tempB;
 
-            uint16_t color = truncated[index];
+            uint16_t color = adapted[index];
 
             color &= 0x3Fu;
-            truncated[index] &= 0xC0u;
+            adapted[index] &= 0xC0u;
 
             color >>= 1u;
-            truncated[index] += color;
+            adapted[index] += color;
         }
 
         break;
 
     case 3: // Same as type 0, but wider.
         while (global_x < xa) {
-            uint16_t tempB = (global_y >> 16u) * 2;
+            uint16_t tempB = (global_y >> 16u);
             uint32_t index = global_x >> 16u;
 
             global_x += a;
             global_y += b;
 
-            uint16_t rLow, rHigh;
-            rLow  = ((uint8_t *)riga)[tempB];
-            rHigh = ((uint8_t *)riga)[tempB + 1];
-            index += (rHigh << 8u) + rLow;
+            index += 320 * tempB;
 
-            truncated[index]     = 0xCE;
-            truncated[index + 1] = 0xD3;
-            truncated[index + 2] = 0xDE;
-            truncated[index + 3] = 0xEE;
+            adapted[index]     = 0xCE;
+            adapted[index + 1] = 0xD3;
+            adapted[index + 2] = 0xDE;
+            adapted[index + 3] = 0xEE;
         }
     default:
         break;
@@ -2564,11 +2551,7 @@ void sky(uint16_t limits) {
                     continue;
                 }
 
-                nety <<= 1u;
-                uint16_t toAddLow  = ((uint8_t *)riga)[nety];
-                uint16_t toAddHigh = ((uint8_t *)riga)[nety + 1];
-                uint16_t toAdd     = (toAddHigh << 8u) + toAddLow;
-                index += toAdd;
+                index += (uint16_t) (320 * nety);
 
                 if (ap_targetting != 1) {
                     uint8_t color = adapted[index];
@@ -2699,7 +2682,7 @@ void globe(uint16_t start, uint8_t *target, const uint8_t *tapestry,
 
             if (pos > 6 && pos < 191) {
                 offset = (int8_t) offsetsmap[j + 1];
-                pos    = riga[pos];
+                pos    = 320 * pos;
                 temp   = offset;
                 temp   = (int16_t)round(((int16_t)temp) * mag_factor);
                 offset = temp + center_x;
@@ -2850,7 +2833,7 @@ void glowinglobe(int16_t start, uint8_t *target, const uint8_t *offsetsmap,
                 uint16_t pos  = temp + center_y;
                 if (pos > 10 && pos < 190) { // Y bounds.
                     offset = (int8_t) offsetsmap[j + 1];
-                    pos  = riga[pos];
+                    pos  = 320 * pos;
                     temp = offset;
                     temp = (uint16_t) round(((int16_t)temp) * mag_factor);
                     offset  = temp + center_x;
@@ -2961,7 +2944,7 @@ void whiteglobe(uint8_t *target, double x, double y, double z, float mag_factor,
                         pix = 0x3F;
                     }
 
-                    pixptr = riga[(int16_t) yy] + (int16_t) xx;
+                    pixptr = (320 * yy) + (int16_t) xx;
                     pix += target[pixptr];
 
                     if (pix > 0x3F) {
@@ -3072,7 +3055,7 @@ void whitesun(uint8_t *target, double x, double y, double z, float mag_factor,
                         pix = 0x3F;
                     }
 
-                    pixptr = riga[(int16_t)yy] + (int16_t)xx;
+                    pixptr = 320 * yy + (int16_t) xx;
                     pix += target[pixptr];
 
                     if (pix > 0x3F) {
@@ -3145,7 +3128,7 @@ void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight,
         if (xs > -150 && ys > -90 && xs < 160 && ys < 90) {
             switch (condition) {
             case 1:
-                temp = adapted[xs + x_centro + riga[ys + y_centro]];
+                temp = adapted[xs + x_centro + 320 * (ys + y_centro)];
 
                 if (temp < 64) {
                     goto exit_local;
@@ -3154,7 +3137,7 @@ void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight,
                 break;
 
             case 2:
-                temp = adapted[xs + x_centro + riga[ys + y_centro]];
+                temp = adapted[xs + x_centro + 320 * (ys + y_centro)];
 
                 if (temp < 64 || temp > 127) {
                     goto exit_local;

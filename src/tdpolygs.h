@@ -15,9 +15,7 @@
 	the "Segmento" and "poly3d" functions.
 
 
-TODO: Translate this chunk
-    Chiamare initscanlines prima di tracciare alcunch�,
-    senn� non traccia una bella sega.
+    Call initscanlines() before tracing anything, otherwise things will break.
 
     Born (incredible to say) for Alpha Dream
     Last revised December 21st 1997.
@@ -25,14 +23,13 @@ TODO: Translate this chunk
     Additions:
     	3d-2d conversion optimization, 23.6.1997;
 
-	fast-load cycle of the vertices when they 
-	are all in front of the camera 
-	(that is almost always), 23.6.1997;
+	    fast-load cycle of the vertices when they
+	    are all in front of the camera
+	    (that is almost always), 23.6.1997;
 
-	intelligent clipping, October '97;
+	    intelligent clipping, October '97;
 
-	texture mapping, February '98.
-
+	    texture mapping, February '98.
 */
 
 #include <math.h>
@@ -125,19 +122,6 @@ int32_t YSIZE     = TEXTURE_YSIZE * V_MATRIXS; // Calibrate dimensions.
 float XCOEFF      = EMU_K / dpp;               // Coefficient of convenience.
 float YCOEFF      = EMU_K / dpp;               // Coefficient of convenience.
 
-// Riga is just a lookup table with 320 * i for each i.
-// Riga is italian for line.
-uint16_t riga[200];
-
-// Initialize scanline addresses.
-void initscanlines() {
-    uint16_t c;
-
-    for (c = 0; c < 200; c++) {
-        riga[c] = static_cast<uint16_t>(320 * c);
-    }
-}
-
 // Draw a segment without checking limits. Faster.
 // Trace with color 255.
 // It does not carry out checks, so it should not be used for other things,
@@ -148,20 +132,18 @@ void initscanlines() {
 
 uint16_t ptr;
 
-uint32_t global_x, global_y;
-
-void Segmento(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
+void Segmento(int32_t xp, int32_t yp, int32_t xa, int32_t ya) {
     int32_t a, b, L;
     uint32_t pi, pf;
     bool flip = false;
 
     if (xp == xa) {
         if (ya >= yp) {
-            pi = riga[yp] + xp;
-            pf = riga[ya + 1];
+            pi = 320 * yp + xp;
+            pf = 320 * (ya + 1);
         } else {
-            pi = riga[ya] + xp;
-            pf = riga[yp + 1];
+            pi = 320 * ya + xp;
+            pf = 320 * (yp + 1);
         }
 
         while (pi < pf) {
@@ -172,23 +154,24 @@ void Segmento(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
         return;
     }
 
-    pi = abs((int32_t)xa - (int32_t)xp);
+    pi = abs(xa - xp);
     if (xa < xp) {
-        uint32_t temp;
+        uint32_t swap;
 
-        temp = xp;
+        swap = xp;
         xp   = xa;
-        xa   = temp;
+        xa   = swap;
 
-        temp = yp;
+        swap = yp;
         yp   = ya;
-        ya   = temp;
+        ya   = swap;
     }
 
     a = pi;
     L = pi;
 
-    b = abs((int32_t)ya - (int32_t)yp);
+    // Account for steep lines.
+    b = abs(ya - yp);
     if (ya < yp) {
         flip = true;
     }
@@ -200,11 +183,11 @@ void Segmento(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
     L++;
     xa <<= 16u;
 
-    global_x = xp << 16u;
-    global_y = yp << 16u;
+    uint32_t  global_x = xp << 16u;
+    uint32_t global_y = yp << 16u;
 
-    a *= 65536;
-    b *= 65536;
+    a <<= 16;
+    b <<= 16;
 
     a /= L;
     b /= L;
@@ -213,17 +196,13 @@ void Segmento(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
         b = -b;
 
     while (global_x < xa) {
-        uint16_t argblarg = 2 * (global_y >> 16u);
-        uint16_t index    = (global_x >> 16u);
+        uint16_t line = (global_y >> 16u);
+        uint16_t col  = (global_x >> 16u);
 
         global_x += a;
         global_y += b;
 
-        auto *charRiga = (uint8_t *)riga;
-        uint16_t shift = (charRiga[argblarg + 1] << 8u) + charRiga[argblarg];
-        index += shift;
-
-        adapted[index] = 255;
+        adapted[320 * line + col] = 255;
     }
 }
 
@@ -897,9 +876,9 @@ drawb:
     if (!flares) {
         if (min_y == max_y) {
             if (min_x == max_x) {
-                adapted[min_x + riga[min_y]] = colore;
+                adapted[min_x + 320 * min_y] = colore;
             } else {
-                ptr = max_x + riga[min_y];
+                ptr = max_x + 320 * min_y;
 
                 while (max_x >= min_x) {
                     adapted[ptr] = colore;
@@ -920,9 +899,9 @@ drawb:
 
     Segmento(mp[fakedi], mp[fakedi + 1], mp[0], mp[1]);
     // Starting Pixels
-    uint16_t segmptr = riga[min_y] + min_x;
+    uint16_t segmptr = 320 * min_y + min_x;
     // Arrival pixels
-    uint16_t lim_y = riga[max_y] + min_x;
+    uint16_t lim_y = 320 * max_y + min_x;
     uint16_t lim_x = segmptr + max_x - min_x;
     uint16_t bytes = lim_x - segmptr + 2;
 
@@ -1638,7 +1617,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         v = round((_y * tempYsize) * k4);
 
         sections = fpart[i] - ipart[i];
-        fakedi = riga[i] + ipart[i] - 4;//i * 320 + ipart[i] - 4; // NOTE: Fudge factor to account for loss of offset on adapted.
+        fakedi = 320 * i + ipart[i] - 4;//i * 320 + ipart[i] - 4; // NOTE: Fudge factor to account for loss of offset on adapted.
 
         if (culling) {
             goto c_row;
@@ -2000,7 +1979,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         if (i > max_y) return;
         tdx = ipart[i - 2];
         tax = fpart[i - 2];
-        fakedi = riga[i];
+        fakedi = 320 * i;
         if (tax <= tdx) {
             tax -= tdx;
             goto do_singlescan;
