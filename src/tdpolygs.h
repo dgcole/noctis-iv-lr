@@ -1344,7 +1344,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
 
     // Calculation of texture mapping tracking vectors.
     vectors:
-
+    uint16_t target = 0;
     if (nv == 3) {
         midx = (rxf[0] + rxf[1] + rxf[2]) * 0.3333333;
         midy = (ryf[0] + ryf[1] + ryf[2]) * 0.3333333;
@@ -1355,6 +1355,8 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
             tryf[vr] = (ryf[vr] - midy) * y_antialias + midy;
             trzf[vr] = (rzf[vr] - midz) * z_antialias + midz;
         }
+
+        target = 2;
     } else {
         midx = (rxf[0] + rxf[1] + rxf[2] + rxf[3]) * 0.25;
         midy = (ryf[0] + ryf[1] + ryf[2] + ryf[3]) * 0.25;
@@ -1365,19 +1367,21 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
             tryf[vr] = (ryf[vr] - midy) * y_antialias + midy;
             trzf[vr] = (rzf[vr] - midz) * z_antialias + midz;
         }
+
+        target = 3;
     }
 
     rx = trxf[0];
     mx = trxf[1] - rx;
-    nx = rx - trxf[3];
+    nx = rx - trxf[target];
 
     ry = tryf[0];
     my = tryf[1] - ry;
-    ny = ry - tryf[3];
+    ny = ry - tryf[target];
 
     rz = trzf[0];
     mz = trzf[1] - rz;
-    nz = rz - trzf[3];
+    nz = rz - trzf[target];
 
     hx = (rx * mz - rz * mx) * YCOEFF;
     hy = (rx * nz - rz * nx) * YCOEFF;
