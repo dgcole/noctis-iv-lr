@@ -2781,9 +2781,6 @@ void swapBuffers() {
         }
     }*/
 
-    // Clear back buffer.
-    memset(adapted, 0, 64000);
-
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, sdl_surface);
     SDL_RenderCopy(renderer, texture, nullptr, nullptr);
     SDL_RenderPresent(renderer);
