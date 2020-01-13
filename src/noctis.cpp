@@ -6,6 +6,8 @@
 #include "brtl.h"
 #include "noctis-0.h"
 #include "noctis-d.h"
+#include <chrono>
+#include <thread>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -2672,8 +2674,6 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // tweakedVGA (X320Y200C4YPAL); // INIZIALIZZAZIONE GRAFICA.
-    initscanlines();
     unfreeze();
     memset(adapted, 0, QUADWORDS * 4);
     QUADWORDS -= 1440;
@@ -2780,10 +2780,23 @@ void swapBuffers() {
             }
         }
     }*/
+
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, sdl_surface);
     SDL_RenderCopy(renderer, texture, nullptr, nullptr);
     SDL_RenderPresent(renderer);
     SDL_DestroyTexture(texture);
+
+    // Frame limiter (24 FPS)
+    static const auto goal = std::chrono::milliseconds(1000 / 24);
+    static auto last = std::chrono::high_resolution_clock::now();
+
+    auto now = std::chrono::high_resolution_clock::now();
+
+    if ((now - last) < goal) {
+        std::this_thread::sleep_for(goal - (now - last));
+    }
+
+    last = now;
 }
 
 void loop() {
@@ -3843,7 +3856,7 @@ ext_1: //
 
                 break;
 
-            case 2: // local target data
+            case 2: // local intarget data
                 if (ip_targetted != -1) {
                     wrouthud(14, 87, mc, (char *) planet_label);
                     wrouthud(14, 97, mc, "PERIOD OF ROTATION:");

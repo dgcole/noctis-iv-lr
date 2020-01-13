@@ -1201,15 +1201,14 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
     int32_t a, b, L;
     uint16_t pi, pf;
     uint16_t offset    = 0;
-    uint8_t *truncated = adapted;
 
     if (xp == xa) {
         if (ya >= yp) {
-            pi = riga[yp] + xp;
-            pf = riga[ya + 1];
+            pi = 320 * yp + xp;
+            pf = 320 * (ya + 1);
         } else {
-            pi = riga[ya] + xp;
-            pf = riga[yp + 1];
+            pi = 320 * ya + xp;
+            pf = 320 * (yp + 1);
         }
 
         pi += offset;
@@ -1220,46 +1219,46 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
         switch (flares) {
         case 0:
             while (offset < pf) {
-                truncated[offset]     = 0x3E;
-                truncated[offset + 1] = 0x00;
+                adapted[offset]     = 0x3E;
+                adapted[offset + 1] = 0x00;
 
                 offset += 320;
             }
             break;
         case 1:
             while (offset < pf) {
-                uint8_t mask = truncated[offset];
+                uint8_t mask = adapted[offset];
                 mask &= 0x3Fu;
                 mask += 0x08;
 
-                truncated[offset] &= 0xC0u;
+                adapted[offset] &= 0xC0u;
 
                 if (mask > 0x3E) {
                     mask = 0x3E;
                 }
 
-                truncated[offset] += mask;
+                adapted[offset] += mask;
                 offset += 320;
             }
             break;
         case 2:
             while (offset < pf) {
-                uint8_t mask = truncated[offset];
+                uint8_t mask = adapted[offset];
                 mask &= 0x3Fu;
                 mask >>= 1u;
 
-                truncated[offset] &= 0xC0u;
+                adapted[offset] &= 0xC0u;
 
-                truncated[offset] += mask;
+                adapted[offset] += mask;
                 offset += 320;
             }
             break;
         case 3:
             while (offset < pf) {
-                truncated[offset]     = 0x2E;
-                truncated[offset + 1] = 0x1E;
-                truncated[offset + 2] = 0x13;
-                truncated[offset + 3] = 0x0E;
+                adapted[offset]     = 0x2E;
+                adapted[offset + 1] = 0x1E;
+                adapted[offset + 2] = 0x13;
+                adapted[offset + 3] = 0x0E;
                 offset += 320;
             }
             break;
@@ -1302,8 +1301,8 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
 
     xa <<= 16u;
 
-    global_x = xp << 16u;
-    global_y = yp << 16u;
+    uint32_t global_x = xp << 16u;
+    uint32_t global_y = yp << 16u;
 
     a <<= 16;
     a /= L;
@@ -1320,35 +1319,29 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
     switch (flares) {
     case 0: // Solid sticks that "reflect" light;
         while (global_x < xa) {
-            uint16_t tempB = (global_y >> 16u) * 2;
+            uint16_t tempB = (global_y >> 16u);
             uint32_t index = global_x >> 16u;
 
             global_x += a;
             global_y += b;
 
-            uint16_t rLow, rHigh;
-            rLow  = ((uint8_t *)riga)[tempB];
-            rHigh = ((uint8_t *)riga)[tempB + 1];
-            index += (rHigh << 8u) + rLow;
+            index += 320 * tempB;
 
-            truncated[index]     = 0x00;
-            truncated[index + 1] = 0x3E;
+            adapted[index]     = 0x00;
+            adapted[index + 1] = 0x3E;
         }
         break;
     case 1: // Intrinsically luminous sticks.
         while (global_x < xa) {
-            uint16_t tempB = (global_y >> 16u) * 2;
+            uint16_t tempB = (global_y >> 16u);
             uint32_t index = global_x >> 16u;
 
             global_x += a * 2;
             global_y += b * 2;
 
-            uint16_t rLow, rHigh;
-            rLow  = ((uint8_t *)riga)[tempB];
-            rHigh = ((uint8_t *)riga)[tempB + 1];
-            index += (rHigh << 8u) + rLow;
+            index += 320 * tempB;
 
-            uint16_t color = truncated[index] << 2u;
+            uint16_t color = adapted[index] << 2u;
 
             if ((color & 0xFFu) <= 0xDF) {
                 color += 32;
@@ -1356,50 +1349,44 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
                 color = (color & 0xFF00u) + 0xFB;
             }
 
-            truncated[index] = (color >> 2u) & 0xFFu;
+            adapted[index] = (color >> 2u) & 0xFFu;
         }
         break;
     case 2: // Sticks that absorb light ("smoked")
         while (global_x < xa) {
-            uint16_t tempB = (global_y >> 16u) * 2;
+            uint16_t tempB = (global_y >> 16u);
             uint32_t index = global_x >> 16u;
 
             global_x += a;
             global_y += b;
 
-            uint16_t rLow, rHigh;
-            rLow  = ((uint8_t *)riga)[tempB];
-            rHigh = ((uint8_t *)riga)[tempB + 1];
-            index += (rHigh << 8u) + rLow;
+            index += 320 * tempB;
 
-            uint16_t color = truncated[index];
+            uint16_t color = adapted[index];
 
             color &= 0x3Fu;
-            truncated[index] &= 0xC0u;
+            adapted[index] &= 0xC0u;
 
             color >>= 1u;
-            truncated[index] += color;
+            adapted[index] += color;
         }
 
         break;
 
     case 3: // Same as type 0, but wider.
         while (global_x < xa) {
-            uint16_t tempB = (global_y >> 16u) * 2;
+            uint16_t tempB = (global_y >> 16u);
             uint32_t index = global_x >> 16u;
 
             global_x += a;
             global_y += b;
 
-            uint16_t rLow, rHigh;
-            rLow  = ((uint8_t *)riga)[tempB];
-            rHigh = ((uint8_t *)riga)[tempB + 1];
-            index += (rHigh << 8u) + rLow;
+            index += 320 * tempB;
 
-            truncated[index]     = 0xCE;
-            truncated[index + 1] = 0xD3;
-            truncated[index + 2] = 0xDE;
-            truncated[index + 3] = 0xEE;
+            adapted[index]     = 0xCE;
+            adapted[index + 1] = 0xD3;
+            adapted[index + 2] = 0xDE;
+            adapted[index + 3] = 0xEE;
         }
     default:
         break;
@@ -1838,7 +1825,6 @@ void randomic_mapper(float x0, float y0, float z0, float x1, float y1, float z1,
 */
 
 void unloadpv(int16_t handle) {
-#if 0
     int16_t      h;
     uint16_t eod;
 
@@ -1858,18 +1844,18 @@ void unloadpv(int16_t handle) {
     */
     for (h = 0; h < handles; h++)
         if (pvfile_dataptr[h] > pvfile_dataptr[handle]) {
-            (int8_t far*) pv_n_vtx[h] -= pvfile_datalen[handle];
-            (int8_t far*) pvfile_x[h] -= pvfile_datalen[handle];
-            (int8_t far*) pvfile_y[h] -= pvfile_datalen[handle];
-            (int8_t far*) pvfile_z[h] -= pvfile_datalen[handle];
-            (int8_t far*) pvfile_c[h] -= pvfile_datalen[handle];
+            ((int8_t*) pv_n_vtx)[h] -= pvfile_datalen[handle];
+            ((int8_t*) pvfile_x)[h] -= pvfile_datalen[handle];
+            ((int8_t*) pvfile_y)[h] -= pvfile_datalen[handle];
+            ((int8_t*) pvfile_z)[h] -= pvfile_datalen[handle];
+            ((int8_t*) pvfile_c)[h] -= pvfile_datalen[handle];
 
             if (pv_mid_x[h]) {
-                (int8_t far*) pv_mid_x[h] -= pvfile_datalen[handle];
-                (int8_t far*) pv_mid_y[h] -= pvfile_datalen[handle];
-                (int8_t far*) pv_mid_z[h] -= pvfile_datalen[handle];
-                (int8_t far*) pv_mid_d[h] -= pvfile_datalen[handle];
-                (int8_t far*) pv_dep_i[h] -= pvfile_datalen[handle];
+                ((int8_t*) pv_mid_x)[h] -= pvfile_datalen[handle];
+                ((int8_t*) pv_mid_y)[h] -= pvfile_datalen[handle];
+                ((int8_t*) pv_mid_z)[h] -= pvfile_datalen[handle];
+                ((int8_t*) pv_mid_d)[h] -= pvfile_datalen[handle];
+                ((int8_t*) pv_dep_i)[h] -= pvfile_datalen[handle];
             }
 
             pvfile_dataptr[h] -= pvfile_datalen[handle];
@@ -1878,17 +1864,15 @@ void unloadpv(int16_t handle) {
     // Move data back to free memory in the polyonal area (if necessary).
     eod = pvfile_dataptr[handle] + pvfile_datalen[handle];
 
-    if (eod < pvfile_datatop)
-        _fmemmove (pv_n_vtx[handle],
-                   pv_n_vtx[handle] + pvfile_datalen[handle],
-                   pvfile_datatop - eod);
+    if (eod < pvfile_datatop) {
+        memmove(pv_n_vtx[handle], pv_n_vtx[handle] + pvfile_datalen[handle],
+                pvfile_datatop - eod);
+    }
 
     // Update the top of the polygonal area.
     pvfile_datatop -= pvfile_datalen[handle];
     // Update the memory situaton for polygonal graphics, to free the handle.
     pvfile_datalen[handle] = 0;
-#endif
-    FIXME;
 }
 
 // Free all the handles.
@@ -2392,104 +2376,31 @@ char *alphavalue(double value) {
 void background(uint16_t start, uint8_t *target, uint8_t *background,
                 uint8_t *offsetsmap, uint16_t total_map_bytes,
                 uint16_t screenshift) {
-    //es: target[ax]
-    //fs: background[bx]
-    //ds: offsetsmap[si]
-    //make sure to add screenshift to target index.
-    uint16_t tdx = screenshift;
-    uint16_t tcx = total_map_bytes >> 1;
-    uint16_t tbp = start + 4; // might not need +4
-    uint16_t tsi = 0, tdi = 0, tbx = 0;
-    uint8_t tal = 0;
-    /*asm {   pusha
-            push ds
-            les ax, dword ptr target
-            add screenshift, ax
-            mov dx, screenshift
-            mov ax, es
-            les bx, dword ptr background
-            mov bx, es
-            mov cx, total_map_bytes
-            shr cx, 1
-            lds si, dword ptr offsetsmap
-            mov bp, start
-            add bp, 4
-            db 0x8E, 0xE3 // mov fs, bx
-            mov es, ax }*/
-    rigiro:
-    uint16_t comp = (((uint16_t) offsetsmap[tsi + 1]) << 8) | ((uint16_t) offsetsmap[tsi]);
-    if (comp >= 64000) {
-        goto blanket;
-    }
-    tdi = offsetsmap[tsi];
-    tdi += tdx;
-    tal = background[tbp];
+    uint16_t tex_loc = start /*+ 4*/;
 
-    memset(&target[tdi], tal, 8);
-    memset(&target[tdi + 320], tal, 8);
-    memset(&target[tdi + 640], tal, 8);
-    memset(&target[tdi + 960], tal, 8);
-    memset(&target[tdi + 1280], tal, 8);
-    tbp += 1;
-    tsi += 2;
-    tcx--;
-    if (tcx != 0) {
-        goto rigiro;
-    }
-    goto fine;
+    for (uint16_t i = (total_map_bytes / 2), si = 0; i > 0; i--, si += 2) {
+        uint16_t word = ((uint16_t)(((uint16_t) offsetsmap[si + 1]) << 8u)) |
+                        ((uint16_t) offsetsmap[si]);
+        if (word >= 64000) {
+            uint16_t offset = (((uint16_t)(((uint16_t) offsetsmap[si + 1]) << 8u)) |
+                 ((uint16_t) offsetsmap[si])) - 64000;
 
-    /*
-    asm {   cmp word ptr [si], 64000
-            jnb blanket
-            mov di, [si]
-            add di, dx
-            db 0x64, 0x8A, 0x46, 0x00 // mov al, fs:[bp]
-            mov ah, al
-            db 0x66;
-            shl ax, 8
-            mov al, ah
-            db 0x66;
-            shl ax, 8
-            mov al, ah
-            db 0x66;
-            mov es:[di], ax
-            mov es:[di+4], al
-            db 0x66;
-            mov es:[di+320], ax
-            mov es:[di+324], al
-            db 0x66;
-            mov es:[di+640], ax
-            mov es:[di+644], al
-            db 0x66;
-            mov es:[di+960], ax
-            mov es:[di+964], al
-            db 0x66;
-            mov es:[di+1280], ax
-            mov es:[di+1284], al
-            add bp, 1
-            add si, 2
-            dec cx
-            jnz rigiro
-            jmp fine }*/
-    blanket:
-    tbx = (((uint16_t) offsetsmap[tsi + 1]) << 8) | ((uint16_t) offsetsmap[tsi]);
-    tbx -= 64000;
-    tbp += tbx;
-    tsi += 2;
-    tcx--;
-    if (tcx != 0) {
-        goto rigiro;
+            tex_loc += offset;
+        } else {
+            uint16_t screen_loc = ((uint16_t)(((uint16_t) offsetsmap[si + 1]) << 8u)) |
+                 ((uint16_t) offsetsmap[si]);
+            screen_loc += screenshift;
+            uint8_t color = background[tex_loc];
+
+            memset(&target[screen_loc], color, 5);
+            memset(&target[screen_loc + 320], color, 5);
+            memset(&target[screen_loc + 640], color, 5);
+            memset(&target[screen_loc + 960], color, 5);
+            memset(&target[screen_loc + 1280], color, 5);
+
+            tex_loc += 1;
+        }
     }
-    /*asm {   mov bx, [si]
-            sub bx, 64000
-            add bp, bx
-            add si, 2
-            dec cx
-            jnz rigiro }*/
-    fine:
-    /*asm {   pop ds
-            popa }*/
-    return;
 }
 
 /*
@@ -2637,11 +2548,7 @@ void sky(uint16_t limits) {
                     continue;
                 }
 
-                nety <<= 1u;
-                uint16_t toAddLow  = ((uint8_t *)riga)[nety];
-                uint16_t toAddHigh = ((uint8_t *)riga)[nety + 1];
-                uint16_t toAdd     = (toAddHigh << 8u) + toAddLow;
-                index += toAdd;
+                index += (uint16_t) (320 * nety);
 
                 if (ap_targetting != 1) {
                     uint8_t color = adapted[index];
@@ -2772,7 +2679,7 @@ void globe(uint16_t start, uint8_t *target, const uint8_t *tapestry,
 
             if (pos > 6 && pos < 191) {
                 offset = (int8_t) offsetsmap[j + 1];
-                pos    = riga[pos];
+                pos    = 320 * pos;
                 temp   = offset;
                 temp   = (int16_t)round(((int16_t)temp) * mag_factor);
                 offset = temp + center_x;
@@ -2923,7 +2830,7 @@ void glowinglobe(int16_t start, uint8_t *target, const uint8_t *offsetsmap,
                 uint16_t pos  = temp + center_y;
                 if (pos > 10 && pos < 190) { // Y bounds.
                     offset = (int8_t) offsetsmap[j + 1];
-                    pos  = riga[pos];
+                    pos  = 320 * pos;
                     temp = offset;
                     temp = (uint16_t) round(((int16_t)temp) * mag_factor);
                     offset  = temp + center_x;
@@ -3034,7 +2941,7 @@ void whiteglobe(uint8_t *target, double x, double y, double z, float mag_factor,
                         pix = 0x3F;
                     }
 
-                    pixptr = riga[(int16_t) yy] + (int16_t) xx;
+                    pixptr = (uint16_t) (320 * ((int16_t) yy)) + (int16_t) xx;
                     pix += target[pixptr];
 
                     if (pix > 0x3F) {
@@ -3145,7 +3052,7 @@ void whitesun(uint8_t *target, double x, double y, double z, float mag_factor,
                         pix = 0x3F;
                     }
 
-                    pixptr = riga[(int16_t)yy] + (int16_t)xx;
+                    pixptr = 320 * yy + (int16_t) xx;
                     pix += target[pixptr];
 
                     if (pix > 0x3F) {
@@ -3177,13 +3084,9 @@ int8_t lens_flares_init() {
     int16_t c;
     double a = 0, interval = M_PI / 180;
 
-    if (!lft_sin || !lft_cos) {
-        return (0);
-    }
-
     for (c = 0; c <= 360; c++) {
-        lft_cos[c] = cos(a);
-        lft_sin[c] = sin(a);
+        lft_cos[c] = (float) cos(a);
+        lft_sin[c] = (float) sin(a);
         a += interval;
     }
 
@@ -3222,7 +3125,7 @@ void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight,
         if (xs > -150 && ys > -90 && xs < 160 && ys < 90) {
             switch (condition) {
             case 1:
-                temp = adapted[xs + x_centro + riga[ys + y_centro]];
+                temp = adapted[xs + x_centro + 320 * (ys + y_centro)];
 
                 if (temp < 64) {
                     goto exit_local;
@@ -3231,7 +3134,7 @@ void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight,
                 break;
 
             case 2:
-                temp = adapted[xs + x_centro + riga[ys + y_centro]];
+                temp = adapted[xs + x_centro + 320 * (ys + y_centro)];
 
                 if (temp < 64 || temp > 127) {
                     goto exit_local;
@@ -3250,8 +3153,8 @@ void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight,
                 if (on_hud && !(c % 8)) {
                     dx /= 10;
                     dy /= 10;
-                    xr = (float)xs * -0.1;
-                    yr = (float)ys * -0.1;
+                    xr = (float) xs * -0.1;
+                    yr = (float) ys * -0.1;
 
                     for (r = 0; r < 3; r++) {
                         fline((int32_t) (xr - dx), (int32_t) (yr - dy),
@@ -3378,10 +3281,10 @@ int8_t far_pixel_at(double xlight, double ylight, double zlight, double radii,
             vptr = (uint16_t) (320 * (int16_t)pyy + pxx);
 
             if (pixel_spreads) {
-                edge_color_1 = pixel_color >> 1;
-                edge_color_2 = pixel_color >> 2;
-                edge_color_3 = pixel_color >> 3;
-                edge_color_4 = pixel_color >> 4;
+                edge_color_1 = pixel_color >> 1u;
+                edge_color_2 = pixel_color >> 2u;
+                edge_color_3 = pixel_color >> 3u;
+                edge_color_4 = pixel_color >> 4u;
 
                 if (edge_color_1 > 7) {
                     single_pixel_at_ptr(vptr - 320, edge_color_1);
@@ -3512,7 +3415,9 @@ void extract_ap_target_infos() {
 }
 
 // Extracts a whole-type pseudo-random number by converting it to f-p.
-float zrandom(int16_t range) { return (brtl_random(range) - brtl_random(range)); } // NOLINT(misc-redundant-expression)
+float zrandom(int16_t range) {
+    return (brtl_random(range) - brtl_random(range));
+} // NOLINT(misc-redundant-expression)
 
 /*  Part of the cartography management.
  *  It has been moved here to be called by "prepare_nearstar".
