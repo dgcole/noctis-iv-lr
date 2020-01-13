@@ -128,7 +128,7 @@ void greenmush(float x, float y, float z, uint8_t mask_1, uint8_t mask_2,
         int32_t fr1 = fast_random(scaling);
         int32_t fr2 = fast_random(scaling);
 
-        if (getcoords(x - fr2, y - fr1, z - fr0)) {
+        if (get_coords(x - fr2, y - fr1, z - fr0)) {
             m2 = 1 + fast_random(mask_2);
 
             for (n2 = 0; n2 < m2; n2++) {
@@ -1283,21 +1283,21 @@ void fragment(int32_t x, int32_t z) {
 
     // tracciamento del suolo.
     if (!mirror) {
-        // TODO; Restore depth culling. Low priority because performance isn't
-        // currently a concern.
-        poly1 = 1;
+        poly1 = 0;
 
-        /*if (facing(vx1, vy1, vz1))
+        if (facing(vx1, vy1, vz1)) {
             if (gtx || (vy1[0] + vy1[1] + vy1[2] != 0)) {
                 poly1 = 1;
-            }*/
+            }
+        }
 
-        poly2 = 1;
+        poly2 = 0;
 
-        /*if (facing(vx2, vy2, vz2))
+        if (facing(vx2, vy2, vz2)) {
             if (gtx || (vy2[0] + vy2[1] + vy2[2] != 0)) {
                 poly2 = 1;
-            }*/
+            }
+        }
 
         if (poly1 || poly2) {
             // impostazione parametri della texture del suolo.
@@ -4630,12 +4630,12 @@ void planetary_main() {
         alfa = 0;
         beta = directional_beta - 90;
         change_angle_of_view ();
-        p_Forward (shift);
+        p_forward(shift);
         // moto diretto.
         alfa = 0;
         beta = directional_beta;
         change_angle_of_view ();
-        p_Forward (step);
+        p_forward(step);
 
         // attrito.
         if (pos_y >= crcy) {
@@ -4672,11 +4672,11 @@ void planetary_main() {
                 alfa = 0;
                 beta = directional_beta - 90;
                 change_angle_of_view ();
-                p_Forward (shift);
+                p_forward(shift);
                 alfa = 0;
                 beta = directional_beta;
                 change_angle_of_view ();
-                p_Forward (step);
+                p_forward(step);
             }
 
             if (pos_y > crcy - 1200) {
@@ -4780,11 +4780,9 @@ void planetary_main() {
             cam_z = 0;
 
             if (atmosphere)
-                whitesun (adapted, sun_x, sun_y, sun_z,
-                          4 * nray1, 0);
+                white_sun(adapted, sun_x, sun_y, sun_z, 4 * nray1, 0);
             else
-                whitesun (adapted, sun_x, sun_y, sun_z,
-                          3 * nray1, 0.5);
+                white_sun(adapted, sun_x, sun_y, sun_z, 3 * nray1, 0.5);
         }
 
         if (secondarysun) {
@@ -4797,11 +4795,9 @@ void planetary_main() {
                 cam_z = 0;
 
                 if (atmosphere)
-                    whitesun (adapted, pri_x, pri_y, pri_z,
-                              4 * nray2, 0);
+                    white_sun(adapted, pri_x, pri_y, pri_z, 4 * nray2, 0);
                 else
-                    whitesun (adapted, pri_x, pri_y, pri_z,
-                              3 * nray2, 0.5);
+                    white_sun(adapted, pri_x, pri_y, pri_z, 3 * nray2, 0.5);
             }
         }
 
@@ -5360,7 +5356,7 @@ void planetary_main() {
 
                 if (rainy > 3) {
                     setfx (1);
-                    Forward (-1000);
+                    forward(-1000);
                     ptr = brtl_random (25 * flashes) + 50;
                     temp = (float)(clock() % 18) * 100;
 

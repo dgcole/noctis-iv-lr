@@ -3118,10 +3118,10 @@ nop:
     alfa = user_alfa;
     beta = user_beta - 90;
     change_angle_of_view();
-    p_Forward(shift);
+    p_forward(shift);
     beta = user_beta;
     change_angle_of_view();
-    p_Forward(step);
+    p_forward(step);
     shift /= 1.5;
 
     if (fabs(shift) < 0.5) {
@@ -3177,16 +3177,16 @@ nop:
 
     //
     if (l_dsd < 100 * nearstar_ray)
-        whiteglobe(adapted, nearstar_x, nearstar_y, nearstar_z, 3 * nearstar_ray,
-                   0.3);
+        white_globe(adapted, nearstar_x, nearstar_y, nearstar_z,
+                    3 * nearstar_ray, 0.3);
 
     for (ir = 0; ir < nearstar_nop; ir++) {
         if (nearstar_p_type[ir] == 10) {
             planet_xyz(ir);
             p_dsd = nearstar_p_qsortdist[ir];
             fast_srand((int32_t) (ir + nearstar_x));
-            whiteglobe(adapted, plx, ply, plz, 3 * nearstar_p_ray[ir],
-                       0.15 - fast_flandom() * 0.3);
+            white_globe(adapted, plx, ply, plz, 3 * nearstar_p_ray[ir],
+                        0.15 - fast_flandom() * 0.3);
 
             if (p_dsd > 5 * nearstar_p_ray[ir] && p_dsd < 1000 * nearstar_p_ray[ir])
                 lens_flares_for(dzat_x, dzat_y, dzat_z, plx, ply, plz,
@@ -3294,7 +3294,7 @@ nop:
     do {
         zz = fabs(cam_z);
         xx = fabs(cam_x);
-        Forward(zz / 2);
+        forward(zz / 2);
     } while (zz > 25 && xx < 3000);
 
     if (zz < 25) {
@@ -3791,8 +3791,8 @@ ext_1: //
     // Any glyph will not be treated with dithering.
     //
     if (datasheetscroll) {
-        areaclear(adapted, 11, 85, 0, 0, 1 + datasheetscroll, 9, 72);
-        areaclear(adapted, 11, 95, 0, 0, 1 + datasheetscroll, 40, 112);
+        area_clear(adapted, 11, 85, 0, 0, 1 + datasheetscroll, 9, 72);
+        area_clear(adapted, 11, 95, 0, 0, 1 + datasheetscroll, 40, 112);
         mc = (datasheetscroll / 4) - 1;
 
         if (mc > 0) {

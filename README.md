@@ -47,7 +47,7 @@ Build instructions are not currently provided for Windows, but it can be built b
 - [x] Space Object Rendering
 - [x] Flat-Shaded 3D Rendering
 - [x] High Resolution Texture Mapping
-- [ ] Low Resolution Texture Mapping
+- [x] Low Resolution Texture Mapping
 - [x] Planetary Game Logic
 - [ ] Planetary Object Rendering
 - [ ] Planet Surface Generation

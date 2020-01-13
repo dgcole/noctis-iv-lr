@@ -12,7 +12,7 @@
 	in the work area, when using this routine, because only 
 	you use it to delimit the polygons. If you want to use another 
 	color to delimit them, you need to change all the 255 values in 
-	the "Segmento" and "poly3d" functions.
+	the "segment" and "poly3d" functions.
 
 
     Call initscanlines() before tracing anything, otherwise things will break.
@@ -132,7 +132,7 @@ float YCOEFF      = EMU_K / dpp;               // Coefficient of convenience.
 
 uint16_t ptr;
 
-void Segmento(int32_t xp, int32_t yp, int32_t xa, int32_t ya) {
+void segment(int32_t xp, int32_t yp, int32_t xa, int32_t ya) {
     int32_t a, b, L;
     uint32_t pi, pf;
     bool flip = false;
@@ -894,10 +894,10 @@ drawb:
     // Complete tracing.
     // Draw the edges of the polygon, with the segment function.
     for (fakedi = 0; fakedi < (_8n / 4); fakedi += 2) {
-        Segmento(mp[fakedi], mp[fakedi + 1], mp[fakedi + 2], mp[fakedi + 3]);
+        segment(mp[fakedi], mp[fakedi + 1], mp[fakedi + 2], mp[fakedi + 3]);
     }
 
-    Segmento(mp[fakedi], mp[fakedi + 1], mp[0], mp[1]);
+    segment(mp[fakedi], mp[fakedi + 1], mp[0], mp[1]);
     // Starting Pixels
     uint16_t segmptr = 320 * min_y + min_x;
     // Arrival pixels
@@ -2005,7 +2005,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
     }
 }
 
-void Forward(float delta) 
+void forward(float delta)
 /* Causes the observer to advance 
  * in the direction of flight of <delta> virtual units */
 {
@@ -2016,7 +2016,7 @@ void Forward(float delta)
 
 int32_t _x_, _y_;
 
-int8_t getcoords(float x, float y, float z)
+int8_t get_coords(float x, float y, float z)
 {
 	/* Calculate the coordinates on the screen of a point in space, 
 	 * using the same calculation nucleus(unit? group?) of poly3d and polymap, 
@@ -2064,6 +2064,7 @@ convert:
     }
 }
 
+//TODO; Fix.
 int8_t facing(float *x, float *y, float *z)
 {
 /* Controls whether a single-sided polygon is visible or not.
@@ -2071,7 +2072,7 @@ int8_t facing(float *x, float *y, float *z)
  * the surface normal must be calculated, even approximately; 
  * however, always better than calculating the entire polygon. */
 
-    float x1, y1, z1, x2, y2, z2, xr, yr, zr;
+    /*float x1, y1, z1, x2, y2, z2, xr, yr, zr;
 
     x1 = *x - x[8];
     y1 = *y - y[8];
@@ -2086,7 +2087,7 @@ int8_t facing(float *x, float *y, float *z)
 
     if (((cam_x - x[8]) * xr) + ((cam_y - y[8]) * yr) + ((cam_z - z[8]) * zr) < 0) {
 	    return 0;
-    }
+    }*/
 
     return 1;
 }
