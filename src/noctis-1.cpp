@@ -1757,40 +1757,37 @@ void rockyground(int16_t roughness, int16_t rounding, int8_t level) {
 
 void std_crater(uint8_t *map, int16_t cx, int16_t cz, int16_t r, int16_t lim_h,
                 float h_factor, float h_raiser, int32_t align) {
-#if 0
-// Un cratere.
-int16_t x, z;
-float dx, dz, d, y, h, fr;
-h = (float)r * h_factor;
-r = abs (r);
-fr = r;
+    // Un cratere.
+    int16_t x, z;
+    float dx, dz, d, y, h, fr;
+    h  = (float) r * h_factor;
+    r  = abs(r);
+    fr = r;
 
-for (x = cx - r; x < cx + r; x++)
-for (z = cz - r; z < cz + r; z++) {
-if (x > -1 && z > -1 && x < align && z < align) {
-dx = x - cx;
-dz = z - cz;
-d  = sqrt (dx * dx + dz * dz);
+    for (x = cx - r; x < cx + r; x++)
+        for (z = cz - r; z < cz + r; z++) {
+            if (x > -1 && z > -1 && x < align && z < align) {
+                dx = x - cx;
+                dz = z - cz;
+                d  = sqrt(dx * dx + dz * dz);
 
-if (d <= fr) {
-y  = sin (M_PI * (d / fr)) * h;
-y  = pow (y, h_raiser);
-y += map[align * (int32_t)z + x];
+                if (d <= fr) {
+                    y = sin(M_PI * (d / fr)) * h;
+                    y = pow(y, h_raiser);
+                    y += map[align * (int32_t) z + x];
 
-if (y < 0) {
-y = 0;
-}
+                    if (y < 0) {
+                        y = 0;
+                    }
 
-if (y > lim_h) {
-y = lim_h;
-}
+                    if (y > lim_h) {
+                        y = lim_h;
+                    }
 
-map[align * (int32_t)z + x] = y;
-}
-}
-}
-#endif
-    STUB
+                    map[align * (int32_t) z + x] = y;
+                }
+            }
+        }
 }
 
 void srf_darkline(uint8_t *map, int16_t length, int16_t x_trend,
@@ -1856,46 +1853,44 @@ void felisian_srf_darkline(uint8_t *map, int16_t length, int16_t x_trend,
 
 void asterism(uint8_t *map, int16_t x, int16_t y, int16_t base, int16_t variation,
               int16_t density, int16_t size, int32_t align) {
-#if 0
-// Simile a un asterisco variabile. Viene usata per i ceppi d'erba.
-if (density <= 0) {
-return;
-}
+    // Simile a un asterisco variabile. Viene usata per i ceppi d'erba.
+    if (density <= 0) {
+        return;
+    }
 
-float ad  = M_PI * 2 / (float)density;
-float ang = 0;
-float shift_d;
-int32_t  shift_x;
-int32_t  shift_y;
-int32_t  shift_p;
-float color, var;
+    float ad  = M_PI * 2 / (float) density;
+    float ang = 0;
+    float shift_d;
+    int32_t shift_x;
+    int32_t shift_y;
+    int32_t shift_p;
+    float color, var;
 
-while (ang < M_PI * 2) {
-shift_d  = (float)brtl_random(1000) / 1000;
-shift_d *= size;
+    while (ang < M_PI * 2) {
+        shift_d = (float) brtl_random(1000) / 1000;
+        shift_d *= size;
 
-if (shift_d >= 1) {
-var = (float)variation / shift_d;
-color = base;
+        if (shift_d >= 1) {
+            var   = (float) variation / shift_d;
+            color = base;
 
-while (shift_d > 0) {
-shift_x = cos (ang) * shift_d + x;
-shift_y = sin (ang) * shift_d + y;
+            while (shift_d > 0) {
+                shift_x = cos(ang) * shift_d + x;
+                shift_y = sin(ang) * shift_d + y;
 
-if (shift_x > 0 && shift_y > 0 && shift_x < align && shift_y < align) {
-shift_p = shift_y * align + shift_x;
-map[shift_p] = color;
-}
+                if (shift_x > 0 && shift_y > 0 && shift_x < align &&
+                    shift_y < align) {
+                    shift_p      = shift_y * align + shift_x;
+                    map[shift_p] = color;
+                }
 
-color += var;
-shift_d--;
-}
-}
+                color += var;
+                shift_d--;
+            }
+        }
 
-ang += ad;
-}
-#endif
-    STUB
+        ang += ad;
+    }
 }
 
 /* Functions for mapping planetary skies. */
@@ -1938,7 +1933,6 @@ rndpat:
 }
 
 void cloudy_sky(int16_t density, int16_t smooths) {
-#if 0
     // Cielo con nuvole sparse, di tipo terrestre.
     int16_t      n = brtl_random (density + albedo);
     float    x, y, cx, cy, r, b;
@@ -1978,8 +1972,6 @@ void cloudy_sky(int16_t density, int16_t smooths) {
     }
 
     QUADWORDS = pqw;
-#endif
-    STUB
 }
 
 /*  Funzioni che costruiscono rovine sulle superfici dei pianeti "storici",
@@ -1995,7 +1987,6 @@ void cloudy_sky(int16_t density, int16_t smooths) {
     5 - edifici coloniali con tetto a cupola (stile Suricrasiano) */
 
 int16_t average_of_y(int16_t ic, int16_t jc, int16_t ra) {
-#if 0
     int16_t av = 0;
     int16_t ai = 1;
     int16_t ip, jp, pt;
@@ -2009,13 +2000,10 @@ int16_t average_of_y(int16_t ic, int16_t jc, int16_t ra) {
 
     av /= ai;
     return (av);
-#endif
-    STUB return 0;
 }
 
 void make_ruins(int8_t style1, int8_t style2, int8_t style3, int8_t style4,
                 int8_t style5, int16_t density) {
-#if 0
     int16_t buildings = 0;
 
     switch (sctype) {
@@ -2268,8 +2256,6 @@ void make_ruins(int8_t style1, int8_t style2, int8_t style3, int8_t style4,
 
         buildings--;
     }
-#endif
-    STUB
 }
 
 /* Function that builds the surface of the planet. Adjusted by the
@@ -3794,7 +3780,6 @@ void create_sky(int8_t atmosphere) {
 /* Funzione che definisce le forme di vita proprie ai pianeti abitabili. */
 
 void setup_animals() {
-#if 0
     int16_t n, p, x;
     int16_t bird_probability;
     int16_t reptil_probability;
@@ -3873,21 +3858,19 @@ void setup_animals() {
 
             if (x == 0 && p <= bird_probability) {
                 ani_type[n] = BIRD;
-                goto anitypeselected;
+                continue;
             }
 
             if (x == 1 && p <= reptil_probability) {
                 ani_type[n] = REPTIL;
-                goto anitypeselected;
+                continue;
             }
 
             if (x == 2 && p <= mammal_probability) {
                 ani_type[n] = MAMMAL;
-                goto anitypeselected;
+                continue;
             }
         }
-
-        anitypeselected:
     }
 
     // impostazione posizione attuale e dati accessori sugli animali.
@@ -3932,8 +3915,6 @@ void setup_animals() {
             1, 0.3 + flandom(), 0.75 + flandom(),
             0, 0, 0, fast_random(0xC0), 1);
     loadpv (bird_result, birdy_ncc, 1, 1, 1, 0, 0, 0, 0x80, 1);
-#endif
-    STUB
 }
 
 /* This function updates sp_x/y/z to take into account the height and the

@@ -1825,7 +1825,6 @@ void randomic_mapper(float x0, float y0, float z0, float x1, float y1, float z1,
 */
 
 void unloadpv(int16_t handle) {
-#if 0
     int16_t      h;
     uint16_t eod;
 
@@ -1845,18 +1844,18 @@ void unloadpv(int16_t handle) {
     */
     for (h = 0; h < handles; h++)
         if (pvfile_dataptr[h] > pvfile_dataptr[handle]) {
-            (int8_t far*) pv_n_vtx[h] -= pvfile_datalen[handle];
-            (int8_t far*) pvfile_x[h] -= pvfile_datalen[handle];
-            (int8_t far*) pvfile_y[h] -= pvfile_datalen[handle];
-            (int8_t far*) pvfile_z[h] -= pvfile_datalen[handle];
-            (int8_t far*) pvfile_c[h] -= pvfile_datalen[handle];
+            ((int8_t*) pv_n_vtx)[h] -= pvfile_datalen[handle];
+            ((int8_t*) pvfile_x)[h] -= pvfile_datalen[handle];
+            ((int8_t*) pvfile_y)[h] -= pvfile_datalen[handle];
+            ((int8_t*) pvfile_z)[h] -= pvfile_datalen[handle];
+            ((int8_t*) pvfile_c)[h] -= pvfile_datalen[handle];
 
             if (pv_mid_x[h]) {
-                (int8_t far*) pv_mid_x[h] -= pvfile_datalen[handle];
-                (int8_t far*) pv_mid_y[h] -= pvfile_datalen[handle];
-                (int8_t far*) pv_mid_z[h] -= pvfile_datalen[handle];
-                (int8_t far*) pv_mid_d[h] -= pvfile_datalen[handle];
-                (int8_t far*) pv_dep_i[h] -= pvfile_datalen[handle];
+                ((int8_t*) pv_mid_x)[h] -= pvfile_datalen[handle];
+                ((int8_t*) pv_mid_y)[h] -= pvfile_datalen[handle];
+                ((int8_t*) pv_mid_z)[h] -= pvfile_datalen[handle];
+                ((int8_t*) pv_mid_d)[h] -= pvfile_datalen[handle];
+                ((int8_t*) pv_dep_i)[h] -= pvfile_datalen[handle];
             }
 
             pvfile_dataptr[h] -= pvfile_datalen[handle];
@@ -1865,17 +1864,15 @@ void unloadpv(int16_t handle) {
     // Move data back to free memory in the polyonal area (if necessary).
     eod = pvfile_dataptr[handle] + pvfile_datalen[handle];
 
-    if (eod < pvfile_datatop)
-        _fmemmove (pv_n_vtx[handle],
-                   pv_n_vtx[handle] + pvfile_datalen[handle],
-                   pvfile_datatop - eod);
+    if (eod < pvfile_datatop) {
+        memmove(pv_n_vtx[handle], pv_n_vtx[handle] + pvfile_datalen[handle],
+                pvfile_datatop - eod);
+    }
 
     // Update the top of the polygonal area.
     pvfile_datatop -= pvfile_datalen[handle];
     // Update the memory situaton for polygonal graphics, to free the handle.
     pvfile_datalen[handle] = 0;
-#endif
-    FIXME;
 }
 
 // Free all the handles.
@@ -2944,7 +2941,7 @@ void whiteglobe(uint8_t *target, double x, double y, double z, float mag_factor,
                         pix = 0x3F;
                     }
 
-                    pixptr = (320 * yy) + (int16_t) xx;
+                    pixptr = (uint16_t) (320 * ((int16_t) yy)) + (int16_t) xx;
                     pix += target[pixptr];
 
                     if (pix > 0x3F) {

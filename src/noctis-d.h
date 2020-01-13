@@ -172,28 +172,6 @@ struct pvlist {
 
 // Defines to help with porting.
 
-#ifdef __EMSCRIPTEN__
-#define FIXME                                                                      \
-    { assert(false); }
-#define STUB                                                                       \
-    {}
-#else
-#define FIXME                                                                      \
-    {                                                                              \
-        printf("FIXME: %s:%d\n", __FUNCTION__, __LINE__);                          \
-        assert(false);                                                             \
-    }
-
-#define STUB                                                                       \
-    { printf("STUB: %s:%d\n", __FUNCTION__, __LINE__); }
-
-#define STUB_RAND                                                                  \
-    { printf("STUB_RAND: %s:%d\n", __FUNCTION__, __LINE__); }
-
-#define STUB_TRIG                                                                  \
-    { printf("STUB_TRIG: %s:%d\n", __FUNCTION__, __LINE__); }
-#endif
-
 // Some stuff to make porting assembly easier for now.
 
 struct DWORDREGS {
