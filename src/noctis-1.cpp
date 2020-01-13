@@ -132,8 +132,7 @@ void greenmush(float x, float y, float z, uint8_t mask_1, uint8_t mask_2,
             m2 = 1 + fast_random(mask_2);
 
             for (n2 = 0; n2 < m2; n2++) {
-                uint16_t tdi =
-                    riga[_y_ + fast_random(7)] + _x_ + fast_random(7);
+                uint16_t tdi = 320 * (_y_ + fast_random(7)) + _x_ + fast_random(7);
                 uint8_t tcl        = colorgrade + fast_random(colormask);
                 adapted[tdi + 3]   = tcl;
                 adapted[tdi + 4]   = tcl;

@@ -2674,8 +2674,6 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // tweakedVGA (X320Y200C4YPAL); // INIZIALIZZAZIONE GRAFICA.
-    initscanlines();
     unfreeze();
     memset(adapted, 0, QUADWORDS * 4);
     QUADWORDS -= 1440;
@@ -3861,7 +3859,7 @@ ext_1: //
 
                 break;
 
-            case 2: // local target data
+            case 2: // local intarget data
                 if (ip_targetted != -1) {
                     wrouthud(14, 87, mc, (char *) planet_label);
                     wrouthud(14, 97, mc, "PERIOD OF ROTATION:");
