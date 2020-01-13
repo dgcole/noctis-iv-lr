@@ -1,17 +1,18 @@
 #pragma once
 
-// C Standard Library Includes
+// C Standard Library includes
 
-#include <assert.h>
+#include <cassert>
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+
 #include <fcntl.h>
-#include <math.h>
 #include <memory.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
-#include <time.h>
 #include <unistd.h>
 
 #ifdef _WIN32
@@ -101,17 +102,17 @@
 
 // Working parameters for "tdpolygs.h", the polygonal 3D library.
 
-#define VERTICI_PER_POLIGONO 4
+#define VERTEXES_PER_POLYGON 4
 
-#define larghezza 306
-#define altezza 180
-#define x_centro 158
-#define y_centro 100
+#define VIEW_WIDTH 306
+#define VIEW_HEIGHT 180
+#define VIEW_X_CENTER 158
+#define VIEW_Y_CENTER 100
 
-#define lbx -larghezza / 2 + x_centro
-#define ubx larghezza / 2 + x_centro
-#define lby -altezza / 2 + y_centro
-#define uby altezza / 2 + y_centro
+#define lbx ((-VIEW_WIDTH / 2) + VIEW_X_CENTER)
+#define ubx ((VIEW_WIDTH / 2) + VIEW_X_CENTER)
+#define lby ((-VIEW_HEIGHT / 2) + VIEW_Y_CENTER)
+#define uby ((VIEW_HEIGHT / 2) + VIEW_Y_CENTER)
 
 // Four thirds of PI.
 

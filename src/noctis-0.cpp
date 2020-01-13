@@ -1570,7 +1570,7 @@ void stick3d(float p_x, float p_y, float p_z, float x, float y, float z) {
         return; // Excludes lines consisting of a single point.
     }
 
-    stick(fpx + x_centro, fpy + y_centro, lx + x_centro, ly + y_centro);
+    stick(fpx + VIEW_X_CENTER, fpy + VIEW_Y_CENTER, lx + VIEW_X_CENTER, ly + VIEW_Y_CENTER);
 }
 
 // Tracing luminous sticks (in 2d, for the glows, generally used with the
@@ -1687,7 +1687,7 @@ void fline(int32_t fx, int32_t fy, int32_t lx, int32_t ly) {
         return;
     }
 
-    stick(fx + x_centro, fy + y_centro, lx + x_centro, ly + y_centro);
+    stick(fx + VIEW_X_CENTER, fy + VIEW_Y_CENTER, lx + VIEW_X_CENTER, ly + VIEW_Y_CENTER);
 }
 
 /*
@@ -2475,14 +2475,14 @@ void sky(uint16_t limits) {
                 inv_rz = uno / rz;
                 rx = (int32_t) round(((xx * opt_pcosbeta) + (zz * opt_psinbeta)) * inv_rz);
 
-                index = rx + x_centro;
+                index = rx + VIEW_X_CENTER;
                 if (index <= 10 || index >= 310) {
                     continue;
                 }
 
                 ry = (int32_t) round((yy * opt_pcosalfa - z2 * opt_psinalfa) * inv_rz) - 2;
 
-                uint16_t nety = ry + y_centro;
+                uint16_t nety = ry + VIEW_Y_CENTER;
                 if (nety <= 10 || nety >= 190) {
                     continue;
                 }
@@ -3064,7 +3064,7 @@ void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight,
         if (xs > -150 && ys > -90 && xs < 160 && ys < 90) {
             switch (condition) {
             case 1:
-                temp = adapted[xs + x_centro + 320 * (ys + y_centro)];
+                temp = adapted[xs + VIEW_X_CENTER + 320 * (ys + VIEW_Y_CENTER)];
 
                 if (temp < 64) {
                     goto exit_local;
@@ -3073,7 +3073,7 @@ void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight,
                 break;
 
             case 2:
-                temp = adapted[xs + x_centro + 320 * (ys + y_centro)];
+                temp = adapted[xs + VIEW_X_CENTER + 320 * (ys + VIEW_Y_CENTER)];
 
                 if (temp < 64 || temp > 127) {
                     goto exit_local;
@@ -3212,9 +3212,9 @@ int8_t far_pixel_at(double xlight, double ylight, double zlight, double radii,
         }
 
         pxx /= rz;
-        pxx += x_centro;
+        pxx += VIEW_X_CENTER;
         pyy /= rz;
-        pyy += y_centro;
+        pyy += VIEW_Y_CENTER;
 
         if (pxx > 10 && pyy > 10 && pxx < 310 && pyy < 190) {
             vptr = (uint16_t) (320 * (int16_t)pyy + pxx);
@@ -4998,8 +4998,8 @@ void planets() {
             far_pixel_at(plx, ply, plz, nearstar_p_ray[n], 0);
 
             if (ip_targetting) {
-                pxx -= x_centro;
-                pyy -= y_centro;
+                pxx -= VIEW_X_CENTER;
+                pyy -= VIEW_Y_CENTER;
                 d2 = pxx * pxx + pyy * pyy;
 
                 if (d2 < md2) {

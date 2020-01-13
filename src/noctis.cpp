@@ -284,9 +284,9 @@ void pointer_cross_for(double xlight, double ylight, double zlight) {
 
     if (rz > 1) {
         rx /= rz;
-        rx += x_centro;
+        rx += VIEW_X_CENTER;
         ry /= rz;
-        ry += y_centro - 2;
+        ry += VIEW_Y_CENTER - 2;
 
         if (rx > 10 && ry > 10 && rx < 310 && ry < 190) {
             uint16_t offset = (320 * ((uint16_t) ry)) + ((uint16_t) rx);

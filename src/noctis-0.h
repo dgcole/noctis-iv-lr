@@ -64,7 +64,7 @@ extern void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
                    uint8_t colore);
 extern void forward(float delta);
 extern float pnx, pny, pnz;
-extern void pnorm(float *x, float *y, float *z);
+extern void pnorm(const float *x, const float *y, const float *z);
 extern uint8_t *txtr;
 extern float x_antialias, y_antialias, z_antialias;
 extern int8_t culling_needed, halfscan_needed;
