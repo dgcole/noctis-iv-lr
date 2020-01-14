@@ -829,11 +829,11 @@ int16_t ranged_fast_random(int16_t range) {
 }
 
 float flandom() {
-    return ((float) brtl_random(32767) * 0.000030518);
+    return ((float) brtl_random(32767) * 0.000030518f);
 }
 
 float fast_flandom() {
-    return ((float) fast_random(32767) * 0.000030518);
+    return ((float) fast_random(32767) * 0.000030518f);
 }
 
 // Loads virtual file handles from supports.nct
@@ -859,7 +859,7 @@ void shade(uint8_t *palette_buffer, int16_t first_color, int16_t number_of_color
            float start_r, float start_g, float start_b, float finish_r,
            float finish_g, float finish_b) {
     int16_t count = number_of_colors;
-    float k       = 1.00 / (float)number_of_colors;
+    float k       = 1.00f / (float)number_of_colors;
     float delta_r = (finish_r - start_r) * k;
     float delta_g = (finish_g - start_g) * k;
     float delta_b = (finish_b - start_b) * k;
@@ -909,9 +909,9 @@ void shade(uint8_t *palette_buffer, int16_t first_color, int16_t number_of_color
 
 // Sets the 3d projection from a still viewpoint.
 void from_vehicle() {
-    cam_x = dzat_x;
-    cam_y = dzat_y;
-    cam_z = dzat_z;
+    cam_x = (float) dzat_x;
+    cam_y = (float) dzat_y;
+    cam_z = (float) dzat_z;
     alfa  = user_alfa;
     beta  = user_beta + navigation_beta + 180;
 
@@ -989,8 +989,8 @@ void watch(double cam_x, double cam_y, double cam_z, double see_x, double see_y,
         f3 /= 5;
     }
 
-    alfa /= deg;
-    beta /= deg;
+    alfa /= (float) deg;
+    beta /= (float) deg;
 }
 
 // Calculates the x-y offset from the center of the display by the point given
@@ -1445,81 +1445,81 @@ void stick3d(float p_x, float p_y, float p_z, float x, float y, float z) {
     */
 
     if (fpx < stk_lbx) {
-        diff = fpx - lx;
+        diff = (float) (fpx - lx);
 
         if (diff < -mindiff || diff > mindiff) {
-            kk  = (stk_lbx - lx) / diff;
-            fpy = (int32_t) (kk * (fpy - ly) + ly);
+            kk  = ((float) (stk_lbx - lx)) / diff;
+            fpy = (int32_t) (kk * ((float) (fpy - ly)) + ly);
             fpx = stk_lbx;
         }
     }
 
     if (lx < stk_lbx) {
-        diff = lx - fpx;
+        diff = (float) (lx - fpx);
 
         if (diff < -mindiff || diff > mindiff) {
-            kk = (stk_lbx - fpx) / diff;
-            ly = (int32_t) (kk * (ly - fpy) + fpy);
+            kk = ((float) (stk_lbx - fpx)) / diff;
+            ly = (int32_t) (kk * ((float) (ly - fpy)) + fpy);
             lx = stk_lbx;
         }
     }
 
     if (fpy < stk_lby) {
-        diff = fpy - ly;
+        diff = (float) (fpy - ly);
 
         if (diff < -mindiff || diff > mindiff) {
-            kk  = (stk_lby - ly) / diff;
-            fpx = (int32_t) (kk * (fpx - lx) + lx);
+            kk  = ((float) (stk_lby - ly)) / diff;
+            fpx = (int32_t) (kk * ((float) (fpx - lx)) + lx);
             fpy = stk_lby;
         }
     }
 
     if (ly < stk_lby) {
-        diff = ly - fpy;
+        diff = (float) (ly - fpy);
 
         if (diff < -mindiff || diff > mindiff) {
-            kk = (stk_lby - fpy) / diff;
-            lx = (int32_t) (kk * (lx - fpx) + fpx);
+            kk = ((float) (stk_lby - fpy)) / diff;
+            lx = (int32_t) (kk * ((float) (lx - fpx)) + fpx);
             ly = stk_lby;
         }
     }
 
     if (fpx > stk_ubx) {
-        diff = fpx - lx;
+        diff = (float) (fpx - lx);
 
         if (diff < -mindiff || diff > mindiff) {
-            kk  = (stk_ubx - lx) / diff;
-            fpy = (int32_t) (kk * (fpy - ly) + ly);
+            kk  = ((float) (stk_ubx - lx)) / diff;
+            fpy = (int32_t) (kk * ((float) (fpy - ly)) + ly);
             fpx = stk_ubx;
         }
     }
 
     if (lx > stk_ubx) {
-        diff = lx - fpx;
+        diff = (float) (lx - fpx);
 
         if (diff < -mindiff || diff > mindiff) {
-            kk = (stk_ubx - fpx) / diff;
-            ly = (int32_t) (kk * (ly - fpy) + fpy);
+            kk = ((float) (stk_ubx - fpx)) / diff;
+            ly = (int32_t) (kk * ((float) (ly - fpy)) + fpy);
             lx = stk_ubx;
         }
     }
 
     if (fpy > stk_uby) {
-        diff = fpy - ly;
+        diff = (float) (fpy - ly);
 
         if (diff < -mindiff || diff > mindiff) {
-            kk  = (stk_uby - ly) / diff;
-            fpx = (int32_t) (kk * (fpx - lx) + lx);
+            kk  = ((float) (stk_uby - ly)) / diff;
+            fpx = (int32_t) (kk * ((float) (fpx - lx)) + lx);
             fpy = stk_uby;
         }
     }
 
     if (ly > stk_uby) {
-        diff = ly - fpy;
+        diff = (float) (ly - fpy);
 
         if (diff < -mindiff || diff > mindiff) {
-            kk = (stk_uby - fpy) / diff;
-            lx = (int32_t) (kk * (lx - fpx) + fpx);
+            kk = ((float) (stk_uby - fpy)) / diff;
+            lx = (int32_t) (kk * ((float) (lx - fpx)) + fpx);
             ly = stk_uby;
         }
     }
@@ -1546,81 +1546,81 @@ void fline(int32_t fx, int32_t fy, int32_t lx, int32_t ly) {
     */
 
     if (fx < stk_lbx) {
-        diff = fx - lx;
+        diff = (float) (fx - lx);
 
         if (diff < -mindiff || diff > mindiff) {
-            kk = (stk_lbx - lx) / diff;
-            fy = (int32_t) (kk * (fy - ly) + ly);
+            kk = ((float) (stk_lbx - lx)) / diff;
+            fy = (int32_t) (kk * ((float) (fy - ly)) + ly);
             fx = stk_lbx;
         }
     }
 
     if (lx < stk_lbx) {
-        diff = lx - fx;
+        diff = (float) (lx - fx);
 
         if (diff < -mindiff || diff > mindiff) {
-            kk = (stk_lbx - fx) / diff;
-            ly = (int32_t) (kk * (ly - fy) + fy);
+            kk = ((float) (stk_lbx - fx)) / diff;
+            ly = (int32_t) (kk * ((float) (ly - fy)) + fy);
             lx = stk_lbx;
         }
     }
 
     if (fy < stk_lby) {
-        diff = fy - ly;
+        diff = (float) (fy - ly);
 
         if (diff < -mindiff || diff > mindiff) {
-            kk = (stk_lby - ly) / diff;
-            fx = (int32_t) (kk * (fx - lx) + lx);
+            kk = ((float) (stk_lby - ly)) / diff;
+            fx = (int32_t) (kk * ((float) (fx - lx)) + lx);
             fy = stk_lby;
         }
     }
 
     if (ly < stk_lby) {
-        diff = ly - fy;
+        diff = (float) (ly - fy);
 
         if (diff < -mindiff || diff > mindiff) {
-            kk = (stk_lby - fy) / diff;
-            lx = (int32_t) (kk * (lx - fx) + fx);
+            kk = ((float) (stk_lby - fy)) / diff;
+            lx = (int32_t) (kk * ((float) (lx - fx)) + fx);
             ly = stk_lby;
         }
     }
 
     if (fx > stk_ubx) {
-        diff = fx - lx;
+        diff = (float) (fx - lx);
 
         if (diff < -mindiff || diff > mindiff) {
-            kk = (stk_ubx - lx) / diff;
-            fy = (int32_t) (kk * (fy - ly) + ly);
+            kk = ((float) (stk_ubx - lx)) / diff;
+            fy = (int32_t) (kk * ((float) (fy - ly)) + ly);
             fx = stk_ubx;
         }
     }
 
     if (lx > stk_ubx) {
-        diff = lx - fx;
+        diff = (float) (lx - fx);
 
         if (diff < -mindiff || diff > mindiff) {
-            kk = (stk_ubx - fx) / diff;
-            ly = (int32_t) (kk * (ly - fy) + fy);
+            kk = ((float) (stk_ubx - fx)) / diff;
+            ly = (int32_t) (kk * ((float) (ly - fy)) + fy);
             lx = stk_ubx;
         }
     }
 
     if (fy > stk_uby) {
-        diff = fy - ly;
+        diff = (float) (fy - ly);
 
         if (diff < -mindiff || diff > mindiff) {
-            kk = (stk_uby - ly) / diff;
-            fx = (int32_t) (kk * (fx - lx) + lx);
+            kk = ((float) (stk_uby - ly)) / diff;
+            fx = (int32_t) (kk * ((float) (fx - lx)) + lx);
             fy = stk_uby;
         }
     }
 
     if (ly > stk_uby) {
-        diff = ly - fy;
+        diff = (float) (ly - fy);
 
         if (diff < -mindiff || diff > mindiff) {
-            kk = (stk_uby - fy) / diff;
-            lx = (int32_t) (kk * (lx - fx) + fx);
+            kk = ((float) (stk_uby - fy)) / diff;
+            lx = (int32_t) (kk * ((float) (lx - fx)) + fx);
             ly = stk_uby;
         }
     }
@@ -1667,15 +1667,15 @@ void randomic_mapper(float x0, float y0, float z0, float x1, float y1, float z1,
     divisions--;
 
     if (divisions) {
-        e0 = (x0 + x1) * 0.5;
-        f0 = (y0 + y1) * 0.5;
-        g0 = (z0 + z1) * 0.5;
-        e1 = (x1 + x2) * 0.5;
-        f1 = (y1 + y2) * 0.5;
-        g1 = (z1 + z2) * 0.5;
-        e2 = (x0 + x2) * 0.5;
-        f2 = (y0 + y2) * 0.5;
-        g2 = (z0 + z2) * 0.5;
+        e0 = (x0 + x1) * 0.5f;
+        f0 = (y0 + y1) * 0.5f;
+        g0 = (z0 + z1) * 0.5f;
+        e1 = (x1 + x2) * 0.5f;
+        f1 = (y1 + y2) * 0.5f;
+        g1 = (z1 + z2) * 0.5f;
+        e2 = (x0 + x2) * 0.5f;
+        f2 = (y0 + y2) * 0.5f;
+        g2 = (z0 + z2) * 0.5f;
 
         if (divisions == 1) {
             vx[0] = x0;
@@ -2153,12 +2153,12 @@ void modpv(int16_t handle, int16_t polygon_id, int16_t vertex_id, float x_scale,
         return;
     }
 
-    float sin_x = sin(deg * x_angle);
-    float cos_x = cos(deg * x_angle);
-    float sin_y = sin(deg * y_angle);
-    float cos_y = cos(deg * y_angle);
-    float sin_z = sin(deg * z_angle);
-    float cos_z = cos(deg * z_angle);
+    auto sin_x = (float) sin(deg * x_angle);
+    auto cos_x = (float) cos(deg * x_angle);
+    auto sin_y = (float) sin(deg * y_angle);
+    auto cos_y = (float) cos(deg * y_angle);
+    auto sin_z = (float) sin(deg * z_angle);
+    auto cos_z = (float) cos(deg * z_angle);
     int16_t c, p, v, i, j;
     float x1, y1, z1;
     float cx, cy, cz;
@@ -2307,8 +2307,6 @@ void background(uint16_t start, uint8_t *target, uint8_t *background,
 */
 
 void sky(uint16_t limits) {
-    uint16_t debug;
-
     auto min_xy            = (int32_t) (1E9);
     int8_t visible_sectors = 9;
 
@@ -2780,7 +2778,7 @@ void white_globe(uint8_t *target, double x, double y, double z, float mag_factor
         return;
     }
 
-    mag_factor /= rz;
+    mag_factor /= (float) rz;
 
     if (mag_factor > 2.99) {
         mag_factor = 2.99;
@@ -2891,7 +2889,7 @@ void white_sun(uint8_t *target, double x, double y, double z, float mag_factor,
         return;
     }
 
-    mag_factor /= rz;
+    mag_factor /= (float) rz;
 
     if (mag_factor > 2.99) {
         mag_factor = 2.99;
@@ -2994,7 +2992,7 @@ void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight,
                      double ylight, double zlight, double interval, int16_t added,
                      int8_t on_hud, int8_t condition, int16_t xshift,
                      int16_t yshift) {
-    double k = 10 / interval, l = 1, u = 1.5;
+    double k = 0, l = 1, u = 1.5;
     double xx, yy, zz, z2, rx, ry, rz;
     int32_t xs, ys, dx, dy;
     float xr, yr;
@@ -3050,8 +3048,8 @@ void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight,
                 if (on_hud && !(c % 8)) {
                     dx /= 10;
                     dy /= 10;
-                    xr = (float) xs * -0.1;
-                    yr = (float) ys * -0.1;
+                    xr = (float) xs * -0.1f;
+                    yr = (float) ys * -0.1f;
 
                     for (r = 0; r < 3; r++) {
                         fline((int32_t) (xr - dx), (int32_t) (yr - dy),
@@ -3292,7 +3290,7 @@ void extract_ap_target_infos() {
     brtl_srand((uint16_t) (ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z / 100000));
     ap_target_class = brtl_random(star_classes);
     ap_target_ray   = ((float)class_ray[ap_target_class] +
-                     (float) brtl_random(class_rayvar[ap_target_class])) * 0.001;
+                     (float) brtl_random(class_rayvar[ap_target_class])) * 0.001f;
     ap_target_r    = class_rgb[3 * ap_target_class + 0];
     ap_target_g    = class_rgb[3 * ap_target_class + 1];
     ap_target_b    = class_rgb[3 * ap_target_class + 2];
@@ -3541,6 +3539,8 @@ void prepare_nearstar() {
                 }
             }
 
+            break;
+        default:
             break;
         }
     }
@@ -3994,8 +3994,8 @@ void fracture(uint8_t *target, float max_latitude) {
     int16_t rand0 = brtl_random(360);
     a = (float) (rand0 * deg);
     gr++;
-    float px = cx;
-    float py = cy;
+    float px = (float) cx;
+    float py = (float) cy;
 
     do {
         a += (float) ((brtl_random(g) - brtl_random(g)) * deg); // NOLINT(misc-redundant-expression)
@@ -4009,7 +4009,7 @@ void fracture(uint8_t *target, float max_latitude) {
             px += 360;
         }
 
-        py += kfract * sin((double) a);
+        py += kfract * (float) sin((double) a);
 
         if (py > max_latitude - 1) {
             py -= max_latitude;
@@ -4175,7 +4175,7 @@ void atm_cyclon() {
             cr--;
         }
 
-        a += 6 * deg;
+        a += 6 * (float) (deg);
     }
 }
 
@@ -4356,6 +4356,8 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
                 cr *= 360;
                 g = 1 + ranged_fast_random(gr);
                 band();
+            default:
+                break;
             }
         }
 
@@ -4406,7 +4408,7 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
 
             cx = ((int32_t)(secs) / (ranged_fast_random(360) + 180)) % 360;
             g  = ranged_fast_random(5) + 7;
-            a  = ranged_fast_random(360) * deg;
+            a  = ranged_fast_random(360) * (float) (deg);
             atm_cyclon();
         }
 
@@ -4757,7 +4759,6 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
     r3 *= 1.25;
     g3 *= 1.25;
     b3 *= 1.25;
-    type >>= 2;
     shade(tmppal, colorbase + 00, 16, 00, 00, 00, r1, g1, b1);
     shade(tmppal, colorbase + 16, 16, r1, g1, b1, r2, g2, b2);
     shade(tmppal, colorbase + 32, 16, r2, g2, b2, r3, g3, b3);
@@ -5175,7 +5176,7 @@ void planets() {
                         albedo *= 2; // da 0 a 1F --> da 0 a 3F
                     }
 
-                    rainy = (float)atmosphere[ptr >> 1u] * 0.25;
+                    rainy = (float)atmosphere[ptr >> 1u] * 0.25f;
 
                     if (rainy > 5) {
                         rainy = 5;
@@ -5231,7 +5232,7 @@ void planets() {
 
                 globe(plwp + nearstar_p_rotation[n], adapted, p_background,
                       (uint8_t *)n_globes_map, gl_bytes, plx, ply, plz,
-                      nearstar_p_ray[n], colorbase, 0);
+                      (float) nearstar_p_ray[n], colorbase, 0);
 
                 if (n == ip_targetted && landing_point) {
                     for (poffs = -180; poffs < 180; poffs++) {
@@ -5264,7 +5265,7 @@ void planets() {
                 }
 
                 glowing_globe(plwp, adapted, (uint8_t *) n_globes_map, gl_bytes,
-                              plx, ply, plz, nearstar_p_ray[n], ts, 130, 127);
+                              plx, ply, plz, (float) nearstar_p_ray[n], ts, 130, 127);
             }
         }
 
@@ -5577,7 +5578,7 @@ void cupola(float y_or, float brk) {
         }
 
         if (gburst > 1) {
-            lat = (M_PI / 20) * 8 * ((float)gburst / 63);
+            lat = ((float) (M_PI / 20)) * 8 * ((float)gburst / 63);
             lens_flares_for(cam_x, cam_y, cam_z, +cupsize * clon * sin(lat),
                             -cupheight * cos(lat), +cupsize * slon * sin(lat),
                             -50000, 10, 1, 0, 1, 1);
@@ -5625,8 +5626,8 @@ void polycupola(float y_or, int8_t textured) {
             z[3] = xx * slon;
 
             if (ontheroof && y_or == 1) {
-                d1 = 0.5 * (x[0] + x[1]) - cam_x;
-                d2 = 0.5 * (z[0] + z[1]) - cam_z;
+                d1 = 0.5f * (x[0] + x[1]) - cam_x;
+                d2 = 0.5f * (z[0] + z[1]) - cam_z;
                 dd = 1000 - sqrt(d1 * d1 + d2 * d2);
 
                 if (dd > 600) {
@@ -5642,9 +5643,9 @@ void polycupola(float y_or, int8_t textured) {
                 cam_y -= dd;
             } else {
                 if (textured) {
-                    d1 = 0.5 * (x[0] + x[1]) - cam_x;
-                    d2 = 0.5 * (y[0] + y[2]) - cam_y;
-                    d3 = 0.5 * (z[0] + z[1]) - cam_z;
+                    d1 = 0.5f * (x[0] + x[1]) - cam_x;
+                    d2 = 0.5f * (y[0] + y[2]) - cam_y;
+                    d3 = 0.5f * (z[0] + z[1]) - cam_z;
                     dd = 500 - sqrt(d1 * d1 + d2 * d2 + d3 * d3);
 
                     if (dd > 500) {
@@ -5802,7 +5803,7 @@ void wrouthud(uint16_t x, uint16_t y, uint16_t l, const char *text) {
 
 void surrounding(int8_t compass_on, int16_t openhudcount) {
     int16_t cpos, crem;
-    int32_t lsecs, lptr;
+    int32_t lptr;
     float pp_delta, ccom;
 
     for (lptr = 0; lptr < 04; lptr++) {
@@ -5915,13 +5916,13 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
     }
 
     wrouthud(2, 2, 0, (char *)outhudbuffer);
-    pp_delta = (pp_gravity - tp_gravity) * 0.25;
+    pp_delta = (pp_gravity - tp_gravity) * 0.25f;
     tp_gravity += pp_delta;
-    pp_delta = (pp_temp - tp_temp) * 0.05;
+    pp_delta = (pp_temp - tp_temp) * 0.05f;
     tp_temp += pp_delta;
-    pp_delta = (pp_pressure - tp_pressure) * 0.02;
+    pp_delta = (pp_pressure - tp_pressure) * 0.02f;
     tp_pressure += pp_delta;
-    pp_delta = (pp_pulse - tp_pulse) * 0.01;
+    pp_delta = (pp_pulse - tp_pulse) * 0.01f;
     tp_pulse += pp_delta;
     // unit� di debugging dell'albedo:
     // sprintf (outhudbuffer, "GRAVITY %2.3f FG & TEMPERATURE %+3.1f@C & PRESSURE
@@ -5945,7 +5946,6 @@ int8_t snapfilename[24];
  */
 void snapshot(int16_t forcenumber, int8_t showdata) {
     int16_t prog;
-    uint16_t pqw;
     double parsis_x, parsis_y, parsis_z;
     uint16_t ptr, c;
     int8_t a, b, t[54];
