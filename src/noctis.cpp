@@ -622,10 +622,10 @@ void digit_at(int8_t digit, float x, float y, float size, uint8_t color,
     // This is an alphanumeric character.
     uint8_t *prev_txtr = txtr;
     float vx[4], vy[4], vz[4] = {0, 0, 0, 0};
-    float size_x_left  = size * -1.5f;
-    float size_y_left  = size * -2.0f;
-    float size_x_right = size * +4.0f;
-    float size_y_right = size * +8.0f;
+    float size_x_left  = size * - 1.5f;
+    float size_y_left  = size * - 2.0f;
+    float size_x_right = size * + 4.0f;
+    float size_y_right = size * + 8.0f;
     int32_t prev_xs    = XSIZE;
     int32_t prev_ys    = YSIZE;
     int16_t n, m, d, i;
@@ -1757,10 +1757,10 @@ void devices() {
 
         if (pl_search) {
             command(1, "LOCAL PLANETS FINDER");
-            auto xx = (float) (nearstar_x - dzat_x);
-            auto yy = (float) (nearstar_y - dzat_y);
-            auto zz = (float) (nearstar_z - dzat_z);
-            xx      = sqrt(xx * xx + yy * yy + zz * zz);
+            float xx = (float) (nearstar_x - dzat_x);
+            float yy = (float) (nearstar_y - dzat_y);
+            float zz = (float) (nearstar_z - dzat_z);
+            xx       = sqrt(xx * xx + yy * yy + zz * zz);
 
             if (xx < 20000) {
                 if (nearstar_nop) {
@@ -2096,7 +2096,7 @@ void dev_commands() {
                         lseek(smh, 4, SEEK_SET);
 
                         while (read(smh, comp_data, 32) == 32)
-                            if (memcmp(comp_data, dummy_identity, 8) != 0) {
+                            if (memcmp(comp_data, dummy_identity, 8)) {
                                 if (!strcasecmp((char *) (comp_data + 8),
                                                 (char *) star_label)) {
                                     status("EXTANT", 50);
@@ -2170,7 +2170,7 @@ void dev_commands() {
                         lseek(smh, 4, SEEK_SET);
 
                         while (read(smh, comp_data, 32) == 32)
-                            if (memcmp(comp_data, dummy_identity, 8) != 0) {
+                            if (memcmp(comp_data, dummy_identity, 8)) {
                                 if (!strcasecmp((char *) (comp_data + 8),
                                                 (char *) planet_label)) {
                                     status("EXTANT", 50);
@@ -2243,7 +2243,7 @@ void dev_commands() {
 
         case 2: // help request
             if (pwr <= 15000 && !charge) {
-                dist = (float) (fabs(dzat_x + dzat_y + dzat_z) * 0.0001);
+                dist = fabs(dzat_x + dzat_y + dzat_z) * 0.0001;
 
                 if (dist > 1800) {
                     dist = 1800;
@@ -2641,12 +2641,12 @@ int main(int argc, char **argv) {
     n_globes_map = (int8_t *) malloc((uint16_t) gl_bytes + (uint16_t) gl_brest);
     s_background = (uint8_t *) malloc(st_bytes);
     p_background = (uint8_t *) malloc(pl_bytes);
-    /* NOTE: This was ps_bytes, but is 65k because polymap is running over the
+    /* NOTE: This is set to at least 65k because polymap keeps running over the
      * end. It happens in the original source too, and somehow isn't a problem
      * there, but we can't have it running over into random memory. The bug is
      * present in the original source.
      */
-    p_surfacemap = (uint8_t *) malloc(65536);
+    p_surfacemap = (uint8_t *) malloc(ps_bytes | 65536);
     objectschart = (quadrant *) malloc(oc_bytes);
     ruinschart   = (uint8_t *) objectschart; // oc alias
     pvfile       = (uint8_t *) malloc(pv_bytes);
@@ -2808,25 +2808,25 @@ void loop() {
     // Controllo del flag che indica quando ci si trova
     // sulla "terrazza panoramica", il tetto dello stardrifter.
     //
-    pos_y += (float) lifter;
+    pos_y += lifter;
 
     if (lifter > 0) {
         lifter--;
 
         if (lifter > 65) {
-            user_alfa += 0.11f * (40 - user_alfa);
+            user_alfa += 0.11 * (40 - user_alfa);
         } else {
-            user_alfa -= 0.25f * user_alfa;
+            user_alfa -= 0.25 * user_alfa;
         }
 
-        step = (float) (0.5 * lifter);
+        step = 0.5 * lifter;
     }
 
     if (lifter < 0) {
         lifter++;
 
         if (pos_y > -325) {
-            user_alfa += 0.12f * (user_alfa - 40);
+            user_alfa += 0.12 * (user_alfa - 40);
         }
 
         if (pos_y < -325 && pos_y > -715) {
@@ -2978,10 +2978,10 @@ void loop() {
     handle_input();
 
     if (mpul & 2u) {
-        shift += (float) (3 * mdltx);
+        shift += 3 * mdltx;
         dlt_alfa -= (float) mdlty / 8;
     } else {
-        step -= (float) (3 * mdlty);
+        step -= 3 * mdlty;
 
         if (abs(mdlty) > 7) {
             dlt_alfa = -user_alfa / 6;
@@ -3042,7 +3042,7 @@ void loop() {
                 user_beta += 90;
                 user_beta /= 1.5;
                 xx = pos_x - 2900;
-                pos_x -= xx * 0.25f;
+                pos_x -= xx * 0.25;
 
                 if (landing_point) {
                     zz = pos_z + 104 * 15 + 1980;
@@ -3050,7 +3050,7 @@ void loop() {
                     zz = pos_z + 1940;
                 }
 
-                pos_z -= zz * 0.25f;
+                pos_z -= zz * 0.25;
 
                 if (fabs(xx) < 25 && fabs(zz) < 25 && fabs(user_beta) < 1) {
                     right_dblclick_timing = 0;
@@ -3061,7 +3061,7 @@ void loop() {
             } else {
                 user_beta /= 1.5;
                 zz = pos_z + 500;
-                pos_z -= zz * 0.25f;
+                pos_z -= zz * 0.25;
 
                 if (sys != 4) {
                     if (fabs(zz) < 25 && fabs(user_beta) < 1) {
@@ -3070,7 +3070,7 @@ void loop() {
                     }
                 } else {
                     xx = pos_x + 1700;
-                    pos_x -= xx * 0.25f;
+                    pos_x -= xx * 0.25;
 
                     if (fabs(zz) < 25 && fabs(xx) < 25 && fabs(user_beta) < 1) {
                         right_dblclick_timing = 0;
@@ -3166,7 +3166,7 @@ nop:
     dyy   = dzat_y - nearstar_y;
     dzz   = dzat_z - nearstar_z;
     l_dsd = sqrt(dxx * dxx + dyy * dyy + dzz * dzz) + 1;
-    satur = ((float) (12 * dsd)) / nearstar_ray;
+    satur = (12 * dsd) / nearstar_ray;
     fast_srand((int32_t) nearstar_z);
     ir = fast_random(31) + 29;
 
@@ -3188,9 +3188,8 @@ nop:
             planet_xyz(ir);
             p_dsd = nearstar_p_qsortdist[ir];
             fast_srand((int32_t)(ir + nearstar_x));
-            white_globe(adapted, plx, ply, plz,
-                        (float) (3 * nearstar_p_ray[ir]),
-                        0.15f - fast_flandom() * 0.3f);
+            white_globe(adapted, plx, ply, plz, 3 * nearstar_p_ray[ir],
+                        0.15 - fast_flandom() * 0.3);
 
             if (p_dsd > 5 * nearstar_p_ray[ir] &&
                 p_dsd < 1000 * nearstar_p_ray[ir])
@@ -3809,8 +3808,8 @@ ext_1: //
                 if (ap_targetted) {
                     if (ap_targetted == 1) {
                         wrouthud(14, 87, mc, (char *) star_label);
-                        tmp_float = (float) (1e-3 * qt_M_PI * ap_target_ray *
-                                    ap_target_ray * ap_target_ray);
+                        tmp_float = 1e-3 * qt_M_PI * ap_target_ray *
+                                    ap_target_ray * ap_target_ray;
                         tmp_float *= starmass_correction[ap_target_class];
 
                         if (nearstar_class == 8 || nearstar_class == 9) {
@@ -3842,7 +3841,7 @@ ext_1: //
                         sprintf((char *) outhudbuffer, "%1.8f BAL. M.",
                                 tmp_float);
                         wrouthud(14, 103, mc, (char *) outhudbuffer);
-                        tmp_float /= 0.38e-4f * ap_target_ray;
+                        tmp_float /= 0.38e-4 * ap_target_ray;
 
                         if (ap_target_class == 6) {
                             tmp_float *= 0.0022;
@@ -3930,9 +3929,9 @@ ext_1: //
             case 3: // environment data
                 wrouthud(14, 87, mc, "EXTERNAL ENVIRONMENT");
                 fast_srand((int32_t)(secs / 2));
-                tmp_float = (float) (16 - dsd * 0.044);
+                tmp_float = 16 - dsd * 0.044;
                 tmp_float *= fabs(tmp_float);
-                tmp_float -= (float) ((tmp_float + 273.15f) * eclipse);
+                tmp_float -= (tmp_float + 273.15) * eclipse;
 
                 if (tmp_float < -269) {
                     tmp_float = fast_flandom() - 269;
@@ -3966,14 +3965,14 @@ ext_1: //
                 sprintf((char *) outhudbuffer, "LI+ IONS: %d MTPD EST.", ir);
                 wrouthud(14, 119, mc, (char *) outhudbuffer);
 
-                tmp_float = (float) (50 + (brtl_random(10)) - (brtl_random(10)));
+                tmp_float = 50 + (brtl_random(10)) - (brtl_random(10));
 
-                tmp_float *= (float) (1 - eclipse);
-                tmp_float *= (float) (100 / dsd);
+                tmp_float *= (1 - eclipse);
+                tmp_float *= 100 / dsd;
 
                 if (nearstar_class == 11) {
                     if (gl_start < 90) {
-                        tmp_float *= (float) (75 + brtl_random(50));
+                        tmp_float *= 75 + brtl_random(50);
                     } else {
                         tmp_float *= 50;
                     }
@@ -4020,8 +4019,8 @@ ext_1: //
                 }
 
                 brtl_srand((uint16_t) secs);
-                tmp_float *= 1.0f + (float) (brtl_random(100)) * 0.001f -
-                             (float) (brtl_random(100)) * 0.001f;
+                tmp_float *= 1 + (float) (brtl_random(100)) * 0.001 -
+                             (float) (brtl_random(100)) * 0.001;
                 sprintf((char *) outhudbuffer, "RADIATION: %1.1f KR",
                         tmp_float);
                 wrouthud(14, 126, mc, (char *) outhudbuffer);
@@ -4177,7 +4176,7 @@ resynctoplanet:
 
             if (nsync == 3) { // syncrone orbit
                 ang = (double) nearstar_p_rotation[ip_targetted] * (double) deg;
-                hold_z = (float) (1.8 + 0.1 * nearstar_p_ray[ip_targetted]);
+                hold_z = 1.8 + 0.1 * nearstar_p_ray[ip_targetted];
             }
 
             if (nsync == 4) { // vimana orbit
@@ -4400,10 +4399,10 @@ resynctoplanet:
     // too much because it is contrasted by air conditioning.
     //
     fast_srand((int32_t)(secs / 2));
-    pp_temp = (float) (90 - dsd * 0.33);
+    pp_temp = 90 - dsd * 0.33;
     pp_temp -= 44;
-    pp_temp *= (float) fabs(pp_temp * 0.44);
-    pp_temp -= (float) ((pp_temp + 273.15f) * eclipse);
+    pp_temp *= fabs(pp_temp * 0.44);
+    pp_temp -= (pp_temp + 273.15) * eclipse;
 
     if (pp_temp < -269) {
         pp_temp = fast_flandom() - 269;
@@ -4419,23 +4418,23 @@ resynctoplanet:
         }
 
         while (pp_temp < 14) {
-            pp_temp += fast_flandom() * 2.5f;
+            pp_temp += fast_flandom() * 2.5;
         }
 
         while (pp_temp > 32) {
-            pp_temp -= fast_flandom() * 2.5f;
+            pp_temp -= fast_flandom() * 2.5;
         }
 
         l_dsd = (24 * nearstar_ray) / (dsd - stz);
         l_dsd -= l_dsd * eclipse;
-        pp_temp += (float) l_dsd;
+        pp_temp += l_dsd;
 
         if (pp_temp > 40) {
             pp_temp = 40;
         }
 
         while (pp_temp > 38) {
-            pp_temp -= fast_flandom() * 2.5f;
+            pp_temp -= fast_flandom() * 2.5;
         }
 
         pp_pressure = 1;
@@ -4454,7 +4453,7 @@ resynctoplanet:
         ilight = 63;
     }
 
-    l_dsd = (15 * nearstar_ray * ((float) nearstar_r)) / (dsd - stz);
+    l_dsd = (15 * nearstar_ray * nearstar_r) / (dsd - stz);
     l_dsd -= l_dsd * eclipse;
 
     if (elight) {
@@ -4475,7 +4474,7 @@ resynctoplanet:
         ir3 = 63;
     }
 
-    l_dsd = (7 * nearstar_ray * ((float) nearstar_g)) / (dsd - stz);
+    l_dsd = (7 * nearstar_ray * nearstar_g) / (dsd - stz);
     l_dsd -= l_dsd * eclipse;
 
     if (elight) {
@@ -4496,7 +4495,7 @@ resynctoplanet:
         ig3 = 63;
     }
 
-    l_dsd = (7 * nearstar_ray * ((float) nearstar_b)) / (dsd - stz);
+    l_dsd = (7 * nearstar_ray * nearstar_b) / (dsd - stz);
     l_dsd -= l_dsd * eclipse;
 
     if (elight) {
@@ -4592,7 +4591,7 @@ resynctoplanet:
     if (holdtomiddle || lifter) {
         pos_x *= 0.75;
         hold_z = pos_z + 3100;
-        pos_z -= hold_z * 0.25f;
+        pos_z -= hold_z * 0.25;
     }
 
     // effetto di apertura della capsula:
@@ -4767,7 +4766,7 @@ resynctoplanet:
             break;
         }
 
-        satur = ((float) (6.4 * dsd)) / nearstar_ray;
+        satur = (6.4 * dsd) / nearstar_ray;
 
         if (satur > 44) {
             satur = 44;
