@@ -2,7 +2,6 @@
 
 extern uint16_t QUADWORDS;
 extern uint8_t *adapted;
-extern void reach_your_dir(char **argv);
 extern int16_t attendi_pressione_tasto();
 extern bool tasto_premuto();
 extern uint8_t range8088[64 * 3];
@@ -14,7 +13,7 @@ extern void tavola_colori(const uint8_t *nuova_tavolozza,
                           uint16_t colore_di_partenza, uint16_t nr_colori,
                           int8_t filtro_rosso, int8_t filtro_verde,
                           int8_t filtro_blu);
-extern int16_t mdltx, mdlty, mx, my;
+extern int16_t mdltx, mdlty, mouse_x, mouse_y;
 extern uint16_t mpul;
 extern void handle_input();
 extern void area_clear(uint8_t *dest, int16_t x, int16_t y, int16_t x2,
@@ -26,8 +25,6 @@ extern void smootharound_64(uint8_t *target, int32_t cx, int32_t cy, int32_t r,
                             int8_t diffuse);
 extern void mask_pixels(uint8_t *target, uint8_t mask);
 
-const uint16_t TEXTURE_XSIZE = 256; // Larghezza delle BMP.
-const uint16_t TEXTURE_YSIZE = 256; // Altezza delle BMP.
 extern int32_t XSIZE, YSIZE;        // calibrazione BMP.
 extern float uneg;
 extern float cam_x, cam_y, cam_z;
@@ -72,7 +69,7 @@ extern uint8_t escrescenze;
 extern void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta);
 extern int32_t _x_, _y_;
 extern int8_t get_coords(float x, float y, float z);
-extern int8_t facing(float *x, float *y, float *z);
+extern bool facing(float *x, float *y, float *z);
 
 extern const char *situation_file;
 extern const char *starmap_file;

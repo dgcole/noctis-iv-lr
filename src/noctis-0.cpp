@@ -52,52 +52,7 @@ uint8_t currpal[768];
 int8_t return_palette[768];
 int8_t surface_palette[768];
 
-int16_t lstri(const char *stri) {
-    // Measure a string and copy it to tmppal.
-    // This is a support function for reach_your_dir()
-    int16_t c;
-
-    for (c = 0; c < 768; c++) {
-        if (stri[c]) {
-            tmppal[c] = stri[c];
-        } else {
-            tmppal[c] = '\0';
-            return (c);
-        }
-    }
-
-    return (0);
-}
-
-void reach_your_dir(char **argv) {
-    /*
-        NOTE: There was a comment here saying something about this being
-        used to reach beyond the current directory.
-    */
-    int16_t c;
-    int8_t d;
-    c = lstri(argv[0]) - 1;
-
-    while (c >= 0 && tmppal[c] != '\\') {
-        c--;
-    }
-
-    if (c >= 0) {
-        if (tmppal[c - 1] != ':') {
-            tmppal[c] = 0;
-        } else {
-            tmppal[c + 1] = 0;
-        }
-    }
-
-    if (argv[0][0] >= 'a' && argv[0][0] <= 'z') {
-        d = argv[0][0] - 'a';
-    } else {
-        d = argv[0][0] - 'A';
-    }
-}
-
-std::stack<int16_t> keys;
+static std::stack<int16_t> keys;
 
 // Wait for a key?
 int16_t attendi_pressione_tasto() {
@@ -181,7 +136,7 @@ void tavola_colori(const uint8_t *new_palette, uint16_t starting_color,
 }
 
 // Variables to hold mouse readings.
-int16_t mdltx = 0, mdlty = 0, mx = 0, my = 0;
+int16_t mdltx = 0, mdlty = 0, mouse_x = 0, mouse_y = 0;
 uint16_t mpul = 0;
 
 // Handle SDL events..
@@ -201,8 +156,8 @@ void handle_input() {
             mdltx = event.motion.xrel;
             mdlty = event.motion.yrel;
 
-            mx += mdltx;
-            my += mdlty;
+            mouse_x += mdltx;
+            mouse_y += mdlty;
         } else if (event.type == SDL_MOUSEBUTTONDOWN) {
             if (event.button.button == SDL_BUTTON_LEFT)
                 ldown = true;
@@ -300,7 +255,6 @@ void handle_input() {
             case SDL_SCANCODE_SLASH:
                 keys.push('/');
             case SDL_SCANCODE_KP_COLON:
-                keys.push(':');
             case SDL_SCANCODE_SEMICOLON:
                 keys.push(':');
             default:
@@ -874,9 +828,13 @@ int16_t ranged_fast_random(int16_t range) {
     return (fast_random(0x7FFF) % range);
 }
 
-float flandom() { return ((float)brtl_random(32767) * 0.000030518); }
+float flandom() {
+    return ((float) brtl_random(32767) * 0.000030518);
+}
 
-float fast_flandom() { return ((float)fast_random(32767) * 0.000030518); }
+float fast_flandom() {
+    return ((float) fast_random(32767) * 0.000030518);
+}
 
 // Loads virtual file handles from supports.nct
 int32_t sa_open(int32_t offset_of_virtual_file) {
@@ -3355,8 +3313,8 @@ void extract_ap_target_infos() {
 
 // Extracts a whole-type pseudo-random number by converting it to f-p.
 float zrandom(int16_t range) {
-    return (brtl_random(range) - brtl_random(range));
-} // NOLINT(misc-redundant-expression)
+    return (float) (brtl_random(range) - brtl_random(range)); // NOLINT(misc-redundant-expression)
+}
 
 /*  Part of the cartography management.
  *  It has been moved here to be called by "prepare_nearstar".
@@ -4767,7 +4725,7 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
         return;
     }
 
-    type <<= 2;
+    type = ((uint16_t) type) << 2;
     r = planet_rgb_and_var[type + 0];
     g = planet_rgb_and_var[type + 1];
     b = planet_rgb_and_var[type + 2];

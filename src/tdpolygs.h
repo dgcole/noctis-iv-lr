@@ -4,15 +4,15 @@
     ----------------
     Full-3D Graphic Engine.
 
-    32-bit functions to draw 3D polygons filled with color 
-    in 320x200x256 graphics. On the Pentium is a cannon shot: 
+    32-bit functions to draw 3D polygons filled with color
+    in 320x200x256 graphics. On the Pentium is a cannon shot:
     an average of 12,000 polygons per second, from workstations, with 75MHz
 
-    - You should never use the color 255 to trace something 
-	in the work area, when using this routine, because only 
-	you use it to delimit the polygons. If you want to use another 
-	color to delimit them, you need to change all the 255 values in 
-	the "segment" and "poly3d" functions.
+    - You should never use the color 255 to trace something
+    in the work area, when using this routine, because only
+    you use it to delimit the polygons. If you want to use another
+    color to delimit them, you need to change all the 255 values in
+    the "segment" and "poly3d" functions.
 
 
     Call initscanlines() before tracing anything, otherwise things will break.
@@ -21,15 +21,15 @@
     Last revised December 21st 1997.
 
     Additions:
-    	3d-2d conversion optimization, 23.6.1997;
+        3d-2d conversion optimization, 23.6.1997;
 
-	    fast-load cycle of the vertices when they
-	    are all in front of the camera
-	    (that is almost always), 23.6.1997;
+        fast-load cycle of the vertices when they
+        are all in front of the camera
+        (that is almost always), 23.6.1997;
 
-	    intelligent clipping, October '97;
+        intelligent clipping, October '97;
 
-	    texture mapping, February '98.
+        texture mapping, February '98.
 */
 
 #include <cmath>
@@ -45,19 +45,19 @@
 
 */
 
-float uneg = 100; 
-	/* A particularly curious fact: uneg represents the minimum distance 
-	 * at which a certain point is not considered behind the observer.
-	 *
-	 * The nice thing is that the conception of this acronym (recalling u-neg) 
-	 * goes back to so long ago (we talk about the first version of Smallest, 
-	 * that is April '92, currently more than 5 years ago) that I don't remember 
-	 * at all what this acronym means (it was an acronym, but who knows 
-	 * how it came to find, perhaps from user-neg, negative to the user, 
-	 * with reference to the reversal effect of the sign given by the 
-	 * perspective functions when, precisely, a triplet of coordinates 
-	 * has the normal distance from the screen in negative, 
-	 * but I'm not sure at all. */
+float uneg = 100;
+/* A particularly curious fact: uneg represents the minimum distance
+ * at which a certain point is not considered behind the observer.
+ *
+ * The nice thing is that the conception of this acronym (recalling u-neg)
+ * goes back to so long ago (we talk about the first version of Smallest,
+ * that is April '92, currently more than 5 years ago) that I don't remember
+ * at all what this acronym means (it was an acronym, but who knows
+ * how it came to find, perhaps from user-neg, negative to the user,
+ * with reference to the reversal effect of the sign given by the
+ * perspective functions when, precisely, a triplet of coordinates
+ * has the normal distance from the screen in negative,
+ * but I'm not sure at all. */
 
 float alfa = 0, beta = 0, ngamma = 0;
 float cam_x = 0, cam_y = 0, cam_z = 0;
@@ -66,32 +66,30 @@ const double deg = M_PI / 180;
 
 // Distance from the projection plane.
 
-float dpp     = 200;
+float dpp = 200;
 
 /* Texture mapping constants and control variables.
- * H_MATRIXS and V_MATRIXS specify the repetitions of the same 
- * texture on the polygons, but in order to have the possibility 
- * of halving the texture or drawing only a quarter, they have 
- * been assumed as representing "quarters of texture". It means 
- * that to have a normal texturing, without repeitions halved, 
- * it is necessary to assign the two variables to 4, not to 1 
- * (which would represent a single quarter). And so on... 
- * if you put 8, you get the repetition of the texture twice 
- * on the corresponding axis, if you set to 12, you get three 
+ * H_MATRIXS and V_MATRIXS specify the repetitions of the same
+ * texture on the polygons, but in order to have the possibility
+ * of halving the texture or drawing only a quarter, they have
+ * been assumed as representing "quarters of texture". It means
+ * that to have a normal texturing, without repeitions halved,
+ * it is necessary to assign the two variables to 4, not to 1
+ * (which would represent a single quarter). And so on...
+ * if you put 8, you get the repetition of the texture twice
+ * on the corresponding axis, if you set to 12, you get three
  * repetitions, etc.
  * (ps, I changed the base to 16, texture sixteenths). */
 
-const uint16_t MPIY          = 199; // Maximum PIXEL on Y.
-const uint16_t TEXTURE_XSIZE = 256; // Width of the BMPs.
-const uint16_t TEXTURE_YSIZE = 256; // BMP height.
+const uint16_t MPIY = 199; // Maximum PIXEL on Y.
 
-float EMU_K       = 16;                        // Cost of FPU emulation
-int32_t H_MATRIXS = 16;                        // Number of repetitions. 16-128
-int32_t V_MATRIXS = 16;                        // Number of repetitions. 16-128
-int32_t XSIZE     = TEXTURE_XSIZE * H_MATRIXS; // Calibrate dimensions.
-int32_t YSIZE     = TEXTURE_YSIZE * V_MATRIXS; // Calibrate dimensions.
-float XCOEFF      = EMU_K / dpp;               // Coefficient of convenience.
-float YCOEFF      = EMU_K / dpp;               // Coefficient of convenience.
+float EMU_K       = 16;                         // Cost of FPU emulation
+int32_t H_MATRIXS = 16;                         // Number of repetitions. 16-128
+int32_t V_MATRIXS = 16;                         // Number of repetitions. 16-128
+int32_t XSIZE     = TEXTURE_X_SIZE * H_MATRIXS; // Calibrate dimensions.
+int32_t YSIZE     = TEXTURE_Y_SIZE * V_MATRIXS; // Calibrate dimensions.
+float XCOEFF      = EMU_K / dpp;                // Coefficient of convenience.
+float YCOEFF      = EMU_K / dpp;                // Coefficient of convenience.
 
 // Draw a segment without checking limits. Faster.
 // Trace with color 255.
@@ -154,7 +152,7 @@ void segment(int32_t xp, int32_t yp, int32_t xa, int32_t ya) {
     L++;
     xa = ((uint32_t) xa) << 16u;
 
-    uint32_t  global_x = ((uint32_t) xp) << 16u;
+    uint32_t global_x = ((uint32_t) xp) << 16u;
     uint32_t global_y = ((uint32_t) yp) << 16u;
 
     a = ((uint32_t) a) << 16u;
@@ -189,8 +187,6 @@ void segment(int32_t xp, int32_t yp, int32_t xa, int32_t ya) {
 int8_t flares = 0;
 
 int32_t mp[6 * VERTEXES_PER_POLYGON];
-
-uint16_t max_x, max_y, min_x, min_y;
 
 // Dati globali per conversioni, rototraslazioni e clipping.
 
@@ -291,8 +287,8 @@ void change_angle_of_view() {
 // Change the camera lens.
 
 void change_camera_lens() {
-    XCOEFF  = EMU_K / dpp;
-    YCOEFF  = EMU_K / dpp;
+    XCOEFF = EMU_K / dpp;
+    YCOEFF = EMU_K / dpp;
     change_angle_of_view();
 }
 
@@ -300,8 +296,8 @@ void change_camera_lens() {
 // Update the job variables for texture mapping.
 
 void change_txm_repeating_mode() {
-    XSIZE = TEXTURE_XSIZE * H_MATRIXS;
-    YSIZE = TEXTURE_YSIZE * V_MATRIXS;
+    XSIZE = TEXTURE_X_SIZE * H_MATRIXS;
+    YSIZE = TEXTURE_Y_SIZE * V_MATRIXS;
 }
 
 /*  Questa � la funzione da invocare per ogni poligono da tracciare.
@@ -315,9 +311,11 @@ void change_txm_repeating_mode() {
     Lungo e complesso, ma provate ad eseguirlo ed a monitorarne il flusso:
     vi accorgerete della sua enorme agilit�. */
 
-float uno = 1; // Always one: it is a constant of convenience. (Very cool, italy man)
+float uno =
+    1; // Always one: it is a constant of convenience. (Very cool, italy man)
 
-uint8_t entity = 1; /* check generic quantities in polygon filling with some special effects */
+uint8_t entity = 1; /* check generic quantities in polygon filling with some
+                       special effects */
 
 void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
             uint8_t colore) {
@@ -329,10 +327,14 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
     float ultima_z[2 * VERTEXES_PER_POLYGON];
 
     // 2D Matrices: Same as above.
-    float video_x0[2 * VERTEXES_PER_POLYGON], video_y0[2 * VERTEXES_PER_POLYGON];
-    float video_x1[3 * VERTEXES_PER_POLYGON], video_y1[3 * VERTEXES_PER_POLYGON];
-    float video_x2[4 * VERTEXES_PER_POLYGON], video_y2[4 * VERTEXES_PER_POLYGON];
-    float video_x3[6 * VERTEXES_PER_POLYGON], video_y3[6 * VERTEXES_PER_POLYGON];
+    float video_x0[2 * VERTEXES_PER_POLYGON],
+        video_y0[2 * VERTEXES_PER_POLYGON];
+    float video_x1[3 * VERTEXES_PER_POLYGON],
+        video_y1[3 * VERTEXES_PER_POLYGON];
+    float video_x2[4 * VERTEXES_PER_POLYGON],
+        video_y2[4 * VERTEXES_PER_POLYGON];
+    float video_x3[6 * VERTEXES_PER_POLYGON],
+        video_y3[6 * VERTEXES_PER_POLYGON];
     // Rototranslations of the vertices; the data still remains 3D.
 
     doflag = 0;
@@ -399,8 +401,10 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
                 } else {
                     zk = (uneg - rzf[pvert]) / (rzf[vr] - rzf[pvert]);
 
-                    ultima_x[fakedi / 4] = zk * (rxf[vr] - rxf[pvert]) + rxf[pvert];
-                    ultima_y[fakedi / 4] = zk * (ryf[vr] - ryf[pvert]) + ryf[pvert];
+                    ultima_x[fakedi / 4] =
+                        zk * (rxf[vr] - rxf[pvert]) + rxf[pvert];
+                    ultima_y[fakedi / 4] =
+                        zk * (ryf[vr] - ryf[pvert]) + ryf[pvert];
                 }
                 ultima_z[fakedi / 4] = uneg;
 
@@ -430,8 +434,10 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
                 } else {
                     zk = (uneg - rzf[vvert]) / (rzf[vr] - rzf[vvert]);
 
-                    ultima_x[fakedi / 4] = zk * (rxf[vr] - rxf[vvert]) + rxf[vvert];
-                    ultima_y[fakedi / 4] = zk * (ryf[vr] - ryf[vvert]) + ryf[vvert];
+                    ultima_x[fakedi / 4] =
+                        zk * (rxf[vr] - rxf[vvert]) + rxf[vvert];
+                    ultima_y[fakedi / 4] =
+                        zk * (ryf[vr] - ryf[vvert]) + ryf[vvert];
                 }
 
                 ultima_z[fakedi / 4] = uneg;
@@ -481,10 +487,10 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
             temp_min_y = mp[i * 2 + 1];
     }
 
-    max_x = temp_max_x;
-    max_y = temp_max_y;
-    min_x = temp_min_x;
-    min_y = temp_min_y;
+    uint16_t max_x = temp_max_x;
+    uint16_t max_y = temp_max_y;
+    uint16_t min_x = temp_min_x;
+    uint16_t min_y = temp_min_y;
 
     bool oob = false;
     if (temp_max_x >= ubxl) {
@@ -552,10 +558,10 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
             if (video_y0[vr] == video_y0[vvert]) {
                 video_x1[fakedi] = video_x0[vr];
             } else {
-                video_x1[fakedi] =
-                    ((lbyf - video_y0[vvert]) / (video_y0[vr] - video_y0[vvert])) *
-                        (video_x0[vr] - video_x0[vvert]) +
-                    video_x0[vvert];
+                video_x1[fakedi] = ((lbyf - video_y0[vvert]) /
+                                    (video_y0[vr] - video_y0[vvert])) *
+                                       (video_x0[vr] - video_x0[vvert]) +
+                                   video_x0[vvert];
             }
 
             video_y1[fakedi] = lbyf;
@@ -565,10 +571,10 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
             if (video_y0[vr] == video_y0[pvert]) {
                 video_x1[fakedi] = video_x0[vr];
             } else {
-                video_x1[fakedi] =
-                    (((lbyf - video_y0[pvert]) / (video_y0[vr] - video_y0[pvert])) *
-                     (video_x0[vr] - video_x0[pvert])) +
-                    video_x0[pvert];
+                video_x1[fakedi] = (((lbyf - video_y0[pvert]) /
+                                     (video_y0[vr] - video_y0[pvert])) *
+                                    (video_x0[vr] - video_x0[pvert])) +
+                                   video_x0[pvert];
             }
 
             video_y1[fakedi] = lbyf;
@@ -576,10 +582,10 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
             if (video_y0[vr] == video_y0[nvert]) {
                 video_x1[fakedi + 1] = video_x0[vr];
             } else {
-                video_x1[fakedi + 1] =
-                    ((lbyf - video_y0[nvert]) / (video_y0[vr] - video_y0[nvert])) *
-                        (video_x0[vr] - video_x0[nvert]) +
-                    video_x0[nvert];
+                video_x1[fakedi + 1] = ((lbyf - video_y0[nvert]) /
+                                        (video_y0[vr] - video_y0[nvert])) *
+                                           (video_x0[vr] - video_x0[nvert]) +
+                                       video_x0[nvert];
             }
 
             video_y1[fakedi + 1] = lbyf;
@@ -632,10 +638,10 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
             if (video_y1[vr] == video_y1[vvert]) {
                 video_x2[fakedi] = video_x1[vr];
             } else {
-                video_x2[fakedi] =
-                    ((ubyf - video_y1[vvert]) / (video_y1[vr] - video_y1[vvert])) *
-                        (video_x1[vr] - video_x1[vvert]) +
-                    video_x1[vvert];
+                video_x2[fakedi] = ((ubyf - video_y1[vvert]) /
+                                    (video_y1[vr] - video_y1[vvert])) *
+                                       (video_x1[vr] - video_x1[vvert]) +
+                                   video_x1[vvert];
             }
 
             video_y2[fakedi] = ubyf;
@@ -645,10 +651,10 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
             if (video_y1[vr] == video_y1[pvert]) {
                 video_x2[fakedi] = video_x1[vr];
             } else {
-                video_x2[fakedi] =
-                    (((ubyf - video_y1[pvert]) / (video_y1[vr] - video_y1[pvert])) *
-                     (video_x1[vr] - video_x1[pvert])) +
-                    video_x1[pvert];
+                video_x2[fakedi] = (((ubyf - video_y1[pvert]) /
+                                     (video_y1[vr] - video_y1[pvert])) *
+                                    (video_x1[vr] - video_x1[pvert])) +
+                                   video_x1[pvert];
             }
 
             video_y2[fakedi] = ubyf;
@@ -656,10 +662,10 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
             if (video_y1[vr] == video_y1[nvert]) {
                 video_x2[fakedi + 1] = video_x1[vr];
             } else {
-                video_x2[fakedi + 1] =
-                    ((ubyf - video_y1[nvert]) / (video_y1[vr] - video_y1[nvert])) *
-                        (video_x1[vr] - video_x1[nvert]) +
-                    video_x1[nvert];
+                video_x2[fakedi + 1] = ((ubyf - video_y1[nvert]) /
+                                        (video_y1[vr] - video_y1[nvert])) *
+                                           (video_x1[vr] - video_x1[nvert]) +
+                                       video_x1[nvert];
             }
 
             video_y2[fakedi + 1] = ubyf;
@@ -710,10 +716,10 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
             if (video_x2[vr] == video_x2[vvert]) {
                 video_y3[fakedi] = video_y2[vr];
             } else {
-                video_y3[fakedi] =
-                    ((lbxf - video_x2[vvert]) / (video_x2[vr] - video_x2[vvert])) *
-                        (video_y2[vr] - video_y2[vvert]) +
-                    video_y2[vvert];
+                video_y3[fakedi] = ((lbxf - video_x2[vvert]) /
+                                    (video_x2[vr] - video_x2[vvert])) *
+                                       (video_y2[vr] - video_y2[vvert]) +
+                                   video_y2[vvert];
             }
 
             video_x3[fakedi] = lbxf;
@@ -723,10 +729,10 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
             if (video_x2[vr] == video_x2[pvert]) {
                 video_y3[fakedi] = video_y2[vr];
             } else {
-                video_y3[fakedi] =
-                    (((lbxf - video_x2[pvert]) / (video_x2[vr] - video_x2[pvert])) *
-                     (video_y2[vr] - video_y2[pvert])) +
-                    video_y2[pvert];
+                video_y3[fakedi] = (((lbxf - video_x2[pvert]) /
+                                     (video_x2[vr] - video_x2[pvert])) *
+                                    (video_y2[vr] - video_y2[pvert])) +
+                                   video_y2[pvert];
             }
 
             video_x3[fakedi] = lbxf;
@@ -734,10 +740,10 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
             if (video_x2[vr] == video_x2[nvert]) {
                 video_y3[fakedi + 1] = video_y2[vr];
             } else {
-                video_y3[fakedi + 1] =
-                    ((lbxf - video_x2[nvert]) / (video_x2[vr] - video_x2[nvert])) *
-                        (video_y2[vr] - video_y2[nvert]) +
-                    video_y2[nvert];
+                video_y3[fakedi + 1] = ((lbxf - video_x2[nvert]) /
+                                        (video_x2[vr] - video_x2[nvert])) *
+                                           (video_y2[vr] - video_y2[nvert]) +
+                                       video_y2[nvert];
             }
 
             video_x3[fakedi + 1] = lbxf;
@@ -789,10 +795,10 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
             if (video_x3[vr] == video_x3[vvert]) {
                 mp[fakedi + 1] = round(video_y3[vr]);
             } else {
-                mp[fakedi + 1] = round(
-                    ((ubxf - video_x3[vvert]) / (video_x3[vr] - video_x3[vvert])) *
-                        (video_y3[vr] - video_y3[vvert]) +
-                    video_y3[vvert]);
+                mp[fakedi + 1] = round(((ubxf - video_x3[vvert]) /
+                                        (video_x3[vr] - video_x3[vvert])) *
+                                           (video_y3[vr] - video_y3[vvert]) +
+                                       video_y3[vvert]);
             }
 
             mp[fakedi] = (uint32_t) ubx & 0x0000FFFFu; // y tho
@@ -803,10 +809,10 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
             if (video_x3[vr] == video_x3[pvert]) {
                 mp[fakedi + 1] = round(video_y3[vr]);
             } else {
-                mp[fakedi + 1] = round(
-                    ((ubxf - video_x3[pvert]) / (video_x3[vr] - video_x3[pvert])) *
-                        (video_y3[vr] - video_y3[pvert]) +
-                    video_y3[pvert]);
+                mp[fakedi + 1] = round(((ubxf - video_x3[pvert]) /
+                                        (video_x3[vr] - video_x3[pvert])) *
+                                           (video_y3[vr] - video_y3[pvert]) +
+                                       video_y3[pvert]);
             }
 
             mp[fakedi] = (uint32_t) ubx & 0x0000FFFFu;
@@ -814,10 +820,10 @@ void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
             if (video_x3[vr] == video_x3[nvert]) {
                 mp[fakedi + 3] = round(video_y3[vr]);
             } else {
-                mp[fakedi + 3] = round(
-                    ((ubxf - video_x3[nvert]) / (video_x3[vr] - video_x3[nvert])) *
-                        (video_y3[vr] - video_y3[nvert]) +
-                    video_y3[nvert]);
+                mp[fakedi + 3] = round(((ubxf - video_x3[nvert]) /
+                                        (video_x3[vr] - video_x3[nvert])) *
+                                           (video_y3[vr] - video_y3[nvert]) +
+                                       video_y3[nvert]);
             }
 
             mp[fakedi + 2] = (uint32_t) ubx & 0x0000FFFFu;
@@ -1041,25 +1047,30 @@ drawb:
         // effetto flares = 3 spostato a "polymap"
     case 4:
         for (fakedi = segmptr; fakedi <= lim_y; fakedi += 320) {
-            tempBytes = bytes;
+            tempBytes  = bytes;
             tempfakedi = fakedi;
 
             if (adapted[tempfakedi] != 255) {
-                while (--tempBytes > 0 && adapted[++tempfakedi] != 255);
+                while (--tempBytes > 0 && adapted[++tempfakedi] != 255)
+                    ;
             }
 
-            if (tempBytes == 0) continue;
+            if (tempBytes == 0)
+                continue;
             loc0 = tempfakedi;
 
-            while (tempBytes-- > 0 && adapted[tempfakedi++] == 255);
+            while (tempBytes-- > 0 && adapted[tempfakedi++] == 255)
+                ;
             loc1 = tempfakedi;
 
             if (adapted[tempfakedi] != 255 && tempBytes > 0) {
-                while (--tempBytes > 0 && adapted[++tempfakedi] != 255);
+                while (--tempBytes > 0 && adapted[++tempfakedi] != 255)
+                    ;
             }
 
             if (tempBytes > 0) {
-                while (tempBytes-- > 0 && adapted[tempfakedi++] == 255);
+                while (tempBytes-- > 0 && adapted[tempfakedi++] == 255)
+                    ;
 
                 tempfakedi--;
                 memset(&adapted[loc0], colore, tempfakedi - loc0);
@@ -1069,7 +1080,7 @@ drawb:
             }
 
             dipsy = (colore & 0x3Fu) + ent;
-            po = colore & 0xC0u;
+            po    = colore & 0xC0u;
 
             if (dipsy > 0x3F) {
                 dipsy = 0x3F;
@@ -1156,24 +1167,24 @@ int8_t halfscan_needed = 0; // flag: traccia due linee per volta.
 
 uint8_t escrescenze = 0xE0; // primo colore dei bumps (escrescenze)
 
-void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
+void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
     float ultima_x[2 * VERTEXES_PER_POLYGON];
     float ultima_y[2 * VERTEXES_PER_POLYGON];
     float ultima_z[2 * VERTEXES_PER_POLYGON];
-    int16_t   fpart[MPIY];
-    int16_t   ipart[MPIY];
+    int16_t fpart[MPIY];
+    int16_t ipart[MPIY];
     float tempXsize = XSIZE;
     float tempYsize = YSIZE;
-    int8_t  _flares = flares;
-    int8_t  culling = culling_needed;
-    int8_t  halfscan = halfscan_needed;
-    int16_t   vr22;
-    int32_t  bndx;
-    int16_t   sections;
-    int32_t  i_low_lim = -10000;
-    int32_t  i_hig_lim = +10000;
-    int32_t  u, v, min_y, max_y;
-    int32_t  x1, y1, x2, y2, ity, jty, h;
+    int8_t _flares  = flares;
+    int8_t culling  = culling_needed;
+    int8_t halfscan = halfscan_needed;
+    int16_t vr22;
+    int32_t bndx;
+    int16_t sections;
+    int32_t i_low_lim = -10000;
+    int32_t i_hig_lim = +10000;
+    int32_t u, v, min_y, max_y;
+    int32_t x1, y1, x2, y2, ity, jty, h;
     float k1, k2, k3, k4;
     float hx, vx, ox, hy, vy, oy, hz, vz, oz, _x, _y, _z;
     float kx, rx, ry, rz, mx, my, mz, nx, ny, nz, xx, yy, zz, z2;
@@ -1209,7 +1220,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
             my = (yy * opt_tcosalfa) - (z2 * opt_tsinalfa);
 
             ryf[i] = (my * opt_tcosngamma) - (rxf[i] * opt_tsinngamma);
-            rxf[i] =  (rxf[i] * opt_tcosngamma) + (my * opt_tsinngamma);
+            rxf[i] = (rxf[i] * opt_tcosngamma) + (my * opt_tsinngamma);
         }
 
         if (rzf[i] < uneg) {
@@ -1220,7 +1231,8 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         }
     }
 
-    if (!doflag) return;
+    if (!doflag)
+        return;
 
     // Calculation of texture mapping tracking vectors.
     uint16_t target = 0;
@@ -1272,11 +1284,11 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
 
     ox = (ry * mx - rx * my) * EMU_K;
     oy = (ry * nx - rx * ny) * EMU_K;
-    oz =  ny * mx - nx * my;
+    oz = ny * mx - nx * my;
 
     // Fast-load for fully visible polygons.
     if (doflag == 4) {
-        vr2 = 4;
+        vr2  = 4;
         vr22 = 8;
         for (uint32_t i = 0; i < 4; i++) {
             ultima_x[i] = rxf[i];
@@ -1307,7 +1319,8 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
                 nvert = 0;
             }
 
-            if (rwf[pvert] == 0 && rwf[nvert] == 0) continue;
+            if (rwf[pvert] == 0 && rwf[nvert] == 0)
+                continue;
 
             if (rwf[pvert] + rwf[nvert] == 2) {
                 if (rzf[vr] == rzf[pvert]) {
@@ -1316,8 +1329,10 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
                 } else {
                     zk = (uneg - rzf[pvert]) / (rzf[vr] - rzf[pvert]);
 
-                    ultima_x[fakedi / 4] = zk * (rxf[vr] - rxf[pvert]) + rxf[pvert];
-                    ultima_y[fakedi / 4] = zk * (ryf[vr] - ryf[pvert]) + ryf[pvert];
+                    ultima_x[fakedi / 4] =
+                        zk * (rxf[vr] - rxf[pvert]) + rxf[pvert];
+                    ultima_y[fakedi / 4] =
+                        zk * (ryf[vr] - ryf[pvert]) + ryf[pvert];
                 }
                 ultima_z[fakedi / 4] = uneg;
 
@@ -1327,8 +1342,10 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
                 } else {
                     zk = (uneg - rzf[nvert]) / (rzf[vr] - rzf[nvert]);
 
-                    ultima_x[(fakedi / 4) + 1] = zk * (rxf[vr] - rxf[nvert]) + rxf[nvert];
-                    ultima_y[(fakedi / 4) + 1] = zk * (ryf[vr] - ryf[nvert]) + ryf[nvert];
+                    ultima_x[(fakedi / 4) + 1] =
+                        zk * (rxf[vr] - rxf[nvert]) + rxf[nvert];
+                    ultima_y[(fakedi / 4) + 1] =
+                        zk * (ryf[vr] - ryf[nvert]) + ryf[nvert];
                 }
                 ultima_z[(fakedi / 4) + 1] = uneg;
                 fakedi += 8;
@@ -1345,8 +1362,10 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
                 } else {
                     zk = (uneg - rzf[vvert]) / (rzf[vr] - rzf[vvert]);
 
-                    ultima_x[fakedi / 4] = zk * (rxf[vr] - rxf[vvert]) + rxf[vvert];
-                    ultima_y[fakedi / 4] = zk * (ryf[vr] - ryf[vvert]) + ryf[vvert];
+                    ultima_x[fakedi / 4] =
+                        zk * (rxf[vr] - rxf[vvert]) + rxf[vvert];
+                    ultima_y[fakedi / 4] =
+                        zk * (ryf[vr] - ryf[vvert]) + ryf[vvert];
                 }
 
                 ultima_z[fakedi / 4] = uneg;
@@ -1354,7 +1373,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
             }
         }
 
-        vr2 = fakedi / 4;
+        vr2  = fakedi / 4;
         vr22 = fakedi / 2;
 
         if (vr2 < 3) {
@@ -1368,13 +1387,13 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
     int32_t temp_min_y = ubyl;
     int32_t temp_max_y = lbyl;
 
-    for (int16_t i = (vr2 - 1); i >= 0 ; i--) {
+    for (int16_t i = (vr2 - 1); i >= 0; i--) {
         float base = dpp / ultima_z[i];
 
         float xtest = base * ultima_x[i] + x_centro_f;
         float ytest = base * ultima_y[i] + y_centro_f;
 
-        mp[i * 2] = round(xtest);
+        mp[i * 2]     = round(xtest);
         mp[i * 2 + 1] = round(ytest);
 
         temp_min_y = (mp[i * 2 + 1] < temp_min_y) ? mp[i * 2 + 1] : temp_min_y;
@@ -1385,13 +1404,15 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
     max_y = temp_max_y;
 
     // Possible exclusion of non-visible polygons.
-    if (min_y > uby || max_y < lby) return;
+    if (min_y > uby || max_y < lby)
+        return;
 
     // Normalization of limits.
     min_y = (min_y < lby) ? lby : min_y;
     max_y = (max_y > uby) ? uby : max_y;
 
-    if (min_y > max_y) return;
+    if (min_y > max_y)
+        return;
 
     // Initialization of optimization constants.
     k1 = vx * 16;
@@ -1411,10 +1432,10 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
     }
 
     // Calculation of horizontal borders.
-    mp[vr22] = mp[0];
+    mp[vr22]     = mp[0];
     mp[vr22 + 1] = mp[1];
 
-    for (uint32_t i = 0; i < vr22; i+= 2) {
+    for (uint32_t i = 0; i < vr22; i += 2) {
         if (mp[i + 3] < mp[i + 1]) {
             x1 = mp[i + 2];
             x2 = mp[i];
@@ -1451,8 +1472,10 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
                 for (h = ity; h <= jty; h++) {
                     bndx = tinkywinky;
 
-                    if (bndx < i_low_lim) bndx = i_low_lim;
-                    if (bndx > i_hig_lim) bndx = i_hig_lim;
+                    if (bndx < i_low_lim)
+                        bndx = i_low_lim;
+                    if (bndx > i_hig_lim)
+                        bndx = i_hig_lim;
 
                     if (bndx > fpart[h] && bndx < ubxl) {
                         fpart[h] = bndx;
@@ -1474,16 +1497,21 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
 
     // Pre-work assignments.
     int32_t tempu = 0, tempv = 0;
-    uint16_t tax = 0, tbx = 0, tdx = 0, tbp = 0, fakedi = 0, fakesi = 0, tempfakedi = 0, reallytempfakedi = 0;
-    uint8_t tcl = 0, tch = 0, tbl = 0, tbh = 0, tah = 0, tal = 0, tdh = 0, tdl = 0, tempch = 0;
+    uint16_t tax = 0, tbx = 0, tdx = 0, tbp = 0, fakedi = 0, fakesi = 0,
+             tempfakedi = 0, reallytempfakedi = 0;
+    uint8_t tcl = 0, tch = 0, tbl = 0, tbh = 0, tah = 0, tal = 0, tdh = 0,
+            tdl = 0, tempch = 0;
     adapted[0xFA00] = tinta;
     adapted[0xFA01] = escrescenze;
 
     // Tracking cycle. (NOTE: This makes no sense.)
     for (uint32_t i = min_y; i <= max_y;) {
-        _x = ox + (hx * (i - y_centro_f)) + (vx * ((float) ipart[i] - x_centro_f + 1));
-        _y = oy + (hy * (i - y_centro_f)) + (vy * ((float) ipart[i] - x_centro_f + 1));
-        _z = oz + (hz * (i - y_centro_f)) + (vz * ((float) ipart[i] - x_centro_f + 1));
+        _x = ox + (hx * (i - y_centro_f)) +
+             (vx * ((float) ipart[i] - x_centro_f + 1));
+        _y = oy + (hy * (i - y_centro_f)) +
+             (vy * ((float) ipart[i] - x_centro_f + 1));
+        _z = oz + (hz * (i - y_centro_f)) +
+             (vz * ((float) ipart[i] - x_centro_f + 1));
 
         k4 = 1.0f / _z;
 
@@ -1491,14 +1519,16 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         v = round((_y * tempYsize) * k4);
 
         sections = fpart[i] - ipart[i];
-        fakedi = 320 * i + ipart[i] - 4;//i * 320 + ipart[i] - 4; // NOTE: Fudge factor to account for loss of offset on adapted.
+        fakedi   = 320 * i + ipart[i] -
+                 4; // i * 320 + ipart[i] - 4; // NOTE: Fudge factor to account
+                    // for loss of offset on adapted.
 
         if (culling) {
             goto c_row;
         }
 
-        //  High detail scanline tracing.
-        row:
+    //  High detail scanline tracing.
+    row:
         if (sections <= 0) {
             goto row_end;
         }
@@ -1512,10 +1542,10 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
             goto unfinished;
         }
 
-        complete:
+    complete:
         tcl = 16;
 
-        unfinished:
+    unfinished:
         sections -= 16;
         if (tcl == 0) {
             goto row;
@@ -1532,10 +1562,10 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         u = round((_x * tempXsize) * k4);
         v = round((_y * tempYsize) * k4);
 
-        tax = tempu;
-        tdx = tempv;
-        fakesi = ((uint32_t) (v - tempv)) >> 4u;
-        tbp = ((uint32_t) (u - tempu)) >> 4u;
+        tax    = tempu;
+        tdx    = tempv;
+        fakesi = ((uint32_t)(v - tempv)) >> 4u;
+        tbp    = ((uint32_t)(u - tempu)) >> 4u;
 
         tch = _flares;
         if (tch & 1u) {
@@ -1550,43 +1580,46 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
             goto internal;
         }
 
-        internal:
-        tdh = ((uint16_t) (tdx >> 8u)) & 0xFFu;
-        tah = ((uint16_t) (tax >> 8u)) & 0xFFu;
+    internal:
+        tdh = ((uint16_t)(tdx >> 8u)) & 0xFFu;
+        tah = ((uint16_t)(tax >> 8u)) & 0xFFu;
 
         tbh = tdh;
         fakedi++;
         tbl = tah;
         tch = adapted[0xFA00];
         tbx = (((uint16_t) tbh) << 8u) + tbl;
-        tch += txtr[(uint16_t) (tbx - 4)]; // NOTE; Fudge factor to account for loss of offset on txtr.
+        tch += txtr[(uint16_t)(tbx - 4)]; // NOTE; Fudge factor to account for
+                                          // loss of offset on txtr.
         tax += tbp;
         adapted[fakedi + 3] = tch;
         tdx += fakesi;
         tcl--;
-        if (tcl != 0) goto internal;
+        if (tcl != 0)
+            goto internal;
         goto common;
 
-        transp:
-        tdh = ((uint16_t) (tdx >> 8u)) & 0xFFu;
-        tah = ((uint16_t) (tax >> 8u)) & 0xFFu;
+    transp:
+        tdh = ((uint16_t)(tdx >> 8u)) & 0xFFu;
+        tah = ((uint16_t)(tax >> 8u)) & 0xFFu;
 
         tbh = tdh;
         fakedi++;
         tbl = tah;
         tch = adapted[fakedi + 3];
         tbx = (((uint16_t) tbh) << 8u) + tbl;
-        tch += txtr[(uint16_t) (tbx - 4)];
+        tch += txtr[(uint16_t)(tbx - 4)];
         tax += tbp;
         adapted[fakedi + 3] = tch;
         tdx += fakesi;
         tcl--;
-        if (tcl != 0) goto transp;
+        if (tcl != 0)
+            goto transp;
         goto common;
 
-        bright: // NOTE: This is for the text rendering.
-        tdh = ((uint16_t) (tdx >> 8u)) & 0xFFu;
-        tah = ((uint16_t) (tax >> 8u)) & 0xFFu;
+    bright: // NOTE: This is for the text rendering.
+        tdh = ((uint16_t)(tdx >> 8u)) & 0xFFu;
+        tah = ((uint16_t)(tax >> 8u)) & 0xFFu;
 
         tch = adapted[fakedi + 4];
         tbh = tdh;
@@ -1595,25 +1628,27 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         tch &= 0x3Fu;
         tax += tbp;
         tbx = (((uint16_t) tbh) << 8u) + tbl;
-        /* NOTE: This frequently runs over the intended end of the txtr (40k), but
-         * we have allocated additional space to bring it up to 65k and prevent it
-         * from running over. It happens in the original source too.
+        /* NOTE: This frequently runs over the intended end of the txtr (40k),
+         * but we have allocated additional space to bring it up to 65k and
+         * prevent it from running over. It happens in the original source too.
          */
-        tch += txtr[(uint16_t) (tbx - 4)];
+        tch += txtr[(uint16_t)(tbx - 4)];
         tdx += fakesi;
-        if (tch <= 0x3E) goto antibloom;
+        if (tch <= 0x3E)
+            goto antibloom;
         tch = 0x3E;
 
-        antibloom:
+    antibloom:
         adapted[fakedi + 3] &= 0xC0u;
         adapted[fakedi + 3] |= tch;
         tcl--;
-        if (tcl != 0) goto bright;
+        if (tcl != 0)
+            goto bright;
         goto common;
 
-        merger:
-        tdh = ((uint16_t) (tdx >> 8u)) & 0xFFu;
-        tah = ((uint16_t) (tax >> 8u)) & 0xFFu;
+    merger:
+        tdh = ((uint16_t)(tdx >> 8u)) & 0xFFu;
+        tah = ((uint16_t)(tax >> 8u)) & 0xFFu;
 
         tch = adapted[fakedi + 4];
         tbh = tdh;
@@ -1622,51 +1657,54 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         tch &= 0x3Fu;
         tax += tbp;
         tbx = (((uint16_t) tbh) << 8u) + tbl;
-        tch += txtr[(uint16_t) (tbx - 4)];
+        tch += txtr[(uint16_t)(tbx - 4)];
         tch += adapted[0xFA00];
         tdx += fakesi;
         tch >>= 1u;
         adapted[fakedi + 3] &= 0xC0u;
         adapted[fakedi + 3] |= tch;
         tcl--;
-        if (tcl != 0) goto merger;
+        if (tcl != 0)
+            goto merger;
         goto common;
 
-        bumper:
-        tdh = ((uint16_t) (tdx >> 8u)) & 0xFFu;
-        tah = ((uint16_t) (tax >> 8u)) & 0xFFu;
+    bumper:
+        tdh = ((uint16_t)(tdx >> 8u)) & 0xFFu;
+        tah = ((uint16_t)(tax >> 8u)) & 0xFFu;
 
         tbh = tdh;
         fakedi++;
         tbl = tah;
         tch = adapted[0xFA00];
         tbx = (((uint16_t) tbh) << 8u) + tbl;
-        tch += txtr[(uint16_t) (tbx - 4)];
+        tch += txtr[(uint16_t)(tbx - 4)];
         tax += tbp;
         adapted[fakedi + 3] = tch;
-        tempfakedi = fakedi;
-        tempch = tch;
+        tempfakedi          = fakedi;
+        tempch              = tch;
         tch &= 0x07u;
 
-        bmpm320:
+    bmpm320:
         fakedi -= 320;
         tch--;
-        if (!(((uint8_t) (tch >> 7u))& 1u)) goto bmpm320;
+        if (!(((uint8_t)(tch >> 7u)) & 1u))
+            goto bmpm320;
         tch = tempch;
         tch -= adapted[0xFA00];
         tch += adapted[0xFA01];
-        tch += txtr[(uint16_t) (tbx - 4)];
+        tch += txtr[(uint16_t)(tbx - 4)];
         adapted[fakedi + 640 + 3] = tch;
-        fakedi = tempfakedi;
+        fakedi                    = tempfakedi;
         tdx += fakesi;
         tcl--;
-        if (tcl != 0) goto bumper;
+        if (tcl != 0)
+            goto bumper;
 
-        common:
+    common:
         goto row;
 
-        // Low detail scanline tracing.
-        c_row:
+    // Low detail scanline tracing.
+    c_row:
         if (sections <= 0) {
             goto row_end;
         }
@@ -1681,10 +1719,10 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
             goto c_unfinished;
         }
 
-        c_complete:
+    c_complete:
         tcl = 32;
 
-        c_unfinished:
+    c_unfinished:
         sections -= 32;
         if (tcl < 2) {
             goto c_row;
@@ -1704,10 +1742,10 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         u = round((_x * tempXsize) * k4);
         v = round((_y * tempYsize) * k4);
 
-        tax = tempu;
-        tdx = tempv;
-        fakesi = ((uint32_t) (v - tempv)) >> 4u;
-        tbp = ((uint32_t) (u - tempu)) >> 4u;
+        tax    = tempu;
+        tdx    = tempv;
+        fakesi = ((uint32_t)(v - tempv)) >> 4u;
+        tbp    = ((uint32_t)(u - tempu)) >> 4u;
 
         tcl >>= 1u;
         tch = _flares;
@@ -1723,45 +1761,48 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
             goto c_internal;
         }
 
-        c_internal:
-        tdh = ((uint16_t) (tdx >> 8u)) & 0xFFu;
-        tah = ((uint16_t) (tax >> 8u)) & 0xFFu;
+    c_internal:
+        tdh = ((uint16_t)(tdx >> 8u)) & 0xFFu;
+        tah = ((uint16_t)(tax >> 8u)) & 0xFFu;
 
         tbh = tdh;
         fakedi += 2;
         tbl = tah;
         tch = adapted[0xFA00];
         tbx = (((uint16_t) tbh) << 8u) + tbl;
-        tch += txtr[(uint16_t) (tbx - 4)]; // NOTE; Fudge factor to account for loss of offset on txtr.
+        tch += txtr[(uint16_t)(tbx - 4)]; // NOTE; Fudge factor to account for
+                                          // loss of offset on txtr.
         tax += tbp;
         adapted[fakedi + 2] = tch;
         adapted[fakedi + 3] = tch;
         tdx += fakesi;
         tcl--;
-        if (tcl != 0) goto c_internal;
+        if (tcl != 0)
+            goto c_internal;
         goto c_common;
 
-        c_transp:
-        tdh = ((uint16_t) (tdx >> 8u)) & 0xFFu;
-        tah = ((uint16_t) (tax >> 8u)) & 0xFFu;
+    c_transp:
+        tdh = ((uint16_t)(tdx >> 8u)) & 0xFFu;
+        tah = ((uint16_t)(tax >> 8u)) & 0xFFu;
 
         tbh = tdh;
         fakedi += 2;
         tbl = tah;
         tch = adapted[fakedi + 3];
         tbx = (((uint16_t) tbh) << 8u) + tbl;
-        tch += txtr[(uint16_t) (tbx - 4)];
+        tch += txtr[(uint16_t)(tbx - 4)];
         tax += tbp;
         adapted[fakedi + 2] = tch;
         adapted[fakedi + 3] = tch;
         tdx += fakesi;
         tcl--;
-        if (tcl != 0) goto c_transp;
+        if (tcl != 0)
+            goto c_transp;
         goto c_common;
 
-        c_bright:
-        tdh = ((uint16_t) (tdx >> 8u)) & 0xFFu;
-        tah = ((uint16_t) (tax >> 8u)) & 0xFFu;
+    c_bright:
+        tdh = ((uint16_t)(tdx >> 8u)) & 0xFFu;
+        tah = ((uint16_t)(tax >> 8u)) & 0xFFu;
 
         tch = adapted[fakedi + 4];
         tbh = tdh;
@@ -1770,23 +1811,25 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         tch &= 0x3Fu;
         tax += tbp;
         tbx = (((uint16_t) tbh) << 8u) + tbl;
-        tch += txtr[(uint16_t) (tbx - 4)];
+        tch += txtr[(uint16_t)(tbx - 4)];
         tdx += fakesi;
-        if (tch <= 0x3E) goto c_antibloom;
+        if (tch <= 0x3E)
+            goto c_antibloom;
         tch = 0x3E;
 
-        c_antibloom:
+    c_antibloom:
         adapted[fakedi + 2] &= 0xC0u;
         tch |= adapted[fakedi + 2];
         adapted[fakedi + 2] = tch;
         adapted[fakedi + 3] = tch;
         tcl--;
-        if (tcl != 0) goto c_bright;
+        if (tcl != 0)
+            goto c_bright;
         goto c_common;
 
-        c_merger:
-        tdh = ((uint16_t) (tdx >> 8u)) & 0xFFu;
-        tah = ((uint16_t) (tax >> 8u)) & 0xFFu;
+    c_merger:
+        tdh = ((uint16_t)(tdx >> 8u)) & 0xFFu;
+        tah = ((uint16_t)(tax >> 8u)) & 0xFFu;
 
         tch = adapted[fakedi + 4];
         tbh = tdh;
@@ -1795,7 +1838,7 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         tch &= 0x3Fu;
         tax += tbp;
         tbx = (((uint16_t) tbh) << 8u) + tbl;
-        tch += txtr[(uint16_t) (tbx - 4)];
+        tch += txtr[(uint16_t)(tbx - 4)];
         tch += adapted[0xFA00];
         tdx += fakesi;
         tch >>= 1u;
@@ -1804,78 +1847,82 @@ void polymap(float* x, float* y, float* z, int8_t nv, uint8_t tinta) {
         adapted[fakedi + 2] = tch;
         adapted[fakedi + 3] = tch;
         tcl--;
-        if (tcl != 0) goto c_merger;
+        if (tcl != 0)
+            goto c_merger;
         goto c_common;
 
-        c_bumper:
-        tdh = ((uint16_t) (tdx >> 8u)) & 0xFFu;
-        tah = ((uint16_t) (tax >> 8u)) & 0xFFu;
+    c_bumper:
+        tdh = ((uint16_t)(tdx >> 8u)) & 0xFFu;
+        tah = ((uint16_t)(tax >> 8u)) & 0xFFu;
 
         tbh = tdh;
         fakedi += 2;
         tbl = tah;
         tch = adapted[0xFA00];
         tbx = (((uint16_t) tbh) << 8u) + tbl;
-        tch += txtr[(uint16_t) (tbx - 4)];
+        tch += txtr[(uint16_t)(tbx - 4)];
         tax += tbp;
         adapted[fakedi + 2] = tch;
         adapted[fakedi + 3] = tch;
-        tempfakedi = fakedi;
-        tempch = tch;
+        tempfakedi          = fakedi;
+        tempch              = tch;
         tch &= 0x07u;
 
-        c_bmpm320:
+    c_bmpm320:
         fakedi -= 320;
         tch--;
-        if (!(((uint8_t) (tch >> 7u)) & 1u)) goto c_bmpm320;
+        if (!(((uint8_t)(tch >> 7u)) & 1u))
+            goto c_bmpm320;
         tch = tempch;
         tch -= adapted[0xFA00];
         tch += adapted[0xFA01];
-        tch += txtr[(uint16_t) (tbx - 4)];
+        tch += txtr[(uint16_t)(tbx - 4)];
         adapted[fakedi + 640 + 2] = tch;
         adapted[fakedi + 640 + 3] = tch;
-        fakedi = tempfakedi;
+        fakedi                    = tempfakedi;
         tdx += fakesi;
         tcl--;
-        if (tcl != 0) goto c_bumper;
+        if (tcl != 0)
+            goto c_bumper;
 
-        c_common:
+    c_common:
         fakedi = reallytempfakedi;
         fakedi += 32;
         goto c_row;
 
-        // Inter-scanline code: between one scanline and the next.
-        row_end:
-        if (!(((uint8_t) halfscan) & 0x01u)) goto do_singlescan;
+    // Inter-scanline code: between one scanline and the next.
+    row_end:
+        if (!(((uint8_t) halfscan) & 0x01u))
+            goto do_singlescan;
         i++;
-        if (i > max_y) return;
-        tdx = ipart[i - 2];
-        tax = fpart[i - 2];
+        if (i > max_y)
+            return;
+        tdx    = ipart[i - 2];
+        tax    = fpart[i - 2];
         fakedi = 320 * i;
         if (tax <= tdx) {
-            tax -= tdx;
             goto do_singlescan;
         }
         tax -= tdx;
         fakedi += tdx;
 
-        duplicate:
-        tdl = adapted[fakedi - 316];
-        adapted[fakedi + 4] = tdl;
+    duplicate:
+        tdl                   = adapted[fakedi - 316];
+        adapted[fakedi + 4]   = tdl;
         adapted[fakedi + 324] = tdl;
         fakedi++;
         tax--;
-        if (tax != 0) goto duplicate;
+        if (tax != 0)
+            goto duplicate;
 
-        do_singlescan:
+    do_singlescan:
         i++;
     }
 }
 
-void forward(float delta)
-/* Causes the observer to advance 
+/* Causes the observer to advance
  * in the direction of flight of <delta> virtual units */
-{
+void forward(float delta) {
     cam_x -= delta * opt_tsinbeta * opt_tcosalfa;
     cam_z += delta * opt_tcosbeta * opt_tcosalfa;
     cam_y += delta * opt_tsinalfa;
@@ -1883,20 +1930,19 @@ void forward(float delta)
 
 int32_t _x_, _y_;
 
-int8_t get_coords(float x, float y, float z)
-{
-	/* Calculate the coordinates on the screen of a point in space, 
-	 * using the same calculation nucleus(unit? group?) of poly3d and polymap, 
-	 * if the point re-enters the screen it returns 1, otherwise it returns 0. 
-	 * The coordinates are then transferred in the variables _x_ and _y_. 
-	 * The point should not be traced(drawn?) so it is not visible, 
-	 * because the coordinates would be, in this(that?) case, indeterminable. */
+/* Calculate the coordinates on the screen of a point in space,
+ * using the same calculation nucleus(unit? group?) of poly3d and polymap,
+ * if the point re-enters the screen it returns 1, otherwise it returns 0.
+ * The coordinates are then transferred in the variables _x_ and _y_.
+ * The point should not be traced(drawn?) so it is not visible,
+ * because the coordinates would be, in this(that?) case, indeterminable. */
+int8_t get_coords(float x, float y, float z) {
 
     float rx, ry, rz, my, xx, yy, zz, z2;
 
     zz = z - cam_x;
     xx = x - cam_x;
-    
+
     rx = (zz * opt_tsinbeta) + (xx * opt_tcosbeta);
     z2 = (zz * opt_tcosbeta) - (xx * opt_tsinbeta);
 
@@ -1905,22 +1951,19 @@ int8_t get_coords(float x, float y, float z)
     rz = (z2 * opt_tcosalfa) + (yy * opt_tsinalfa);
 
     if (ngamma != 0.0) {
-	//t_axis:
-	my = (yy * opt_tcosalfa) - (z2 * opt_tsinalfa);
-    	ry = (my * opt_tcosngamma) - (rx * opt_tsinngamma);
-    	rx = (my * opt_tsinngamma) + (rx * opt_tcosngamma);
+        my = (yy * opt_tcosalfa) - (z2 * opt_tsinalfa);
+        ry = (my * opt_tcosngamma) - (rx * opt_tsinngamma);
+        rx = (my * opt_tsinngamma) + (rx * opt_tcosngamma);
     } else {
-	//no_t_axis:
-	ry = (yy * opt_tcosalfa) - (z2 * opt_tsinalfa);
+        ry = (yy * opt_tcosalfa) - (z2 * opt_tsinalfa);
     }
 
     if (rz < uneg) {
-	    return 0;
+        return 0;
     }
 
-convert: 
-//my  = dpp / rz; (Explain this, italy man!)
-    
+    // my  = dpp / rz; (Explain this, italy man!)
+
     _x_ = ((dpp / rz) * rx) + x_centro_f;
     _y_ = ((dpp / rz) * ry) + y_centro_f;
 
@@ -1931,13 +1974,12 @@ convert:
     }
 }
 
-//TODO; Fix.
-int8_t facing(float *x, float *y, float *z)
-{
-/* Controls whether a single-sided polygon is visible or not.
- * Of course, as a procedure it is not so simple: 
- * the surface normal must be calculated, even approximately; 
- * however, always better than calculating the entire polygon. */
+// TODO; Fix.
+bool facing(float *x, float *y, float *z) {
+    /* Controls whether a single-sided polygon is visible or not.
+     * Of course, as a procedure it is not so simple:
+     * the surface normal must be calculated, even approximately;
+     * however, always better than calculating the entire polygon. */
 
     /*float x1, y1, z1, x2, y2, z2, xr, yr, zr;
 
@@ -1952,9 +1994,9 @@ int8_t facing(float *x, float *y, float *z)
     yr = (z1 * x2) - (z2 * x1);
     zr = (x1 * y2) - (x2 * y1);
 
-    if (((cam_x - x[8]) * xr) + ((cam_y - y[8]) * yr) + ((cam_z - z[8]) * zr) < 0) {
-	    return 0;
+    if (((cam_x - x[8]) * xr) + ((cam_y - y[8]) * yr) + ((cam_z - z[8]) * zr) <
+    0) { return 0;
     }*/
 
-    return 1;
+    return true;
 }

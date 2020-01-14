@@ -114,6 +114,9 @@
 #define lby ((-VIEW_HEIGHT / 2) + VIEW_Y_CENTER)
 #define uby ((VIEW_HEIGHT / 2) + VIEW_Y_CENTER)
 
+#define TEXTURE_X_SIZE 256
+#define TEXTURE_Y_SIZE 256
+
 // Four thirds of PI.
 
 #define qt_M_PI 4 * M_PI / 3

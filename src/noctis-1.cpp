@@ -870,8 +870,8 @@ inactive:
     // impostazione texture per forme di vita.
     flares = 0;
     txtr   = p_background;
-    XSIZE  = TEXTURE_XSIZE * 256;
-    YSIZE  = TEXTURE_YSIZE * T_SCALE;
+    XSIZE  = TEXTURE_X_SIZE * 256;
+    YSIZE  = TEXTURE_Y_SIZE * T_SCALE;
 
     if (ani_type[n] == BIRD) {
         // preparazione forma di base:
@@ -1308,14 +1308,14 @@ void fragment(int32_t x, int32_t z) {
             rch4 = ruinschart[h4];
 
             if (rch1 == AF1 || rch2 == AF1 || rch3 == AF1 || rch4 == AF1) {
-                XSIZE = TEXTURE_XSIZE * 2;
-                YSIZE = TEXTURE_YSIZE * 2;
+                XSIZE = TEXTURE_X_SIZE * 2;
+                YSIZE = TEXTURE_Y_SIZE * 2;
                 c1 %= 0x40;
                 c1 += 0x40;
                 flares = 0;
             } else {
-                XSIZE = TEXTURE_XSIZE * T_SCALE;
-                YSIZE = TEXTURE_YSIZE * T_SCALE;
+                XSIZE = TEXTURE_X_SIZE * T_SCALE;
+                YSIZE = TEXTURE_Y_SIZE * T_SCALE;
                 flares = groundflares;
             }
 
@@ -1418,20 +1418,20 @@ void fragment(int32_t x, int32_t z) {
             rch4 = ruinschart[h4];
 
             if (rch1 == AF1 || rch2 == AF1 || rch3 == AF1 || rch4 == AF1) {
-                XSIZE = TEXTURE_XSIZE * 2;
-                YSIZE = TEXTURE_YSIZE * 2;
+                XSIZE = TEXTURE_X_SIZE * 2;
+                YSIZE = TEXTURE_Y_SIZE * 2;
                 c1 %= 0x40;
                 c1 += 0x40;
                 flares = 0;
             } else {
                 if (hpdep < 49152L) {
                     cl = 1536 - ((int32_t)(hpdep) >> 5);
-                    cl += TEXTURE_XSIZE;
+                    cl += TEXTURE_X_SIZE;
                     XSIZE = cl;
                     YSIZE = cl;
                 } else {
-                    XSIZE = TEXTURE_XSIZE;
-                    YSIZE = TEXTURE_YSIZE;
+                    XSIZE = TEXTURE_X_SIZE;
+                    YSIZE = TEXTURE_Y_SIZE;
                 }
 
                 flares = groundflares;
@@ -1498,8 +1498,8 @@ void fragment(int32_t x, int32_t z) {
     flares = 0;
     txtr = p_background;
     cl = T_SCALE >> 2;
-    XSIZE = TEXTURE_XSIZE * cl;
-    YSIZE = TEXTURE_YSIZE * cl;
+    XSIZE = TEXTURE_X_SIZE * cl;
+    YSIZE = TEXTURE_Y_SIZE * cl;
     // ID del primo oggetto.
     id = 0;
     // calcola i vertici di riferimento della superficie.
