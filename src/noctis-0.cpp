@@ -184,6 +184,9 @@ void tavola_colori(const uint8_t *new_palette, uint16_t starting_color,
 int16_t mdltx = 0, mdlty = 0, mx = 0, my = 0;
 uint16_t mpul = 0;
 
+// Holds directions of WASD movement
+struct wasdmov key_move_dir;
+
 // Handle SDL events..
 void handle_input() {
     static bool ldown = false;
@@ -193,6 +196,11 @@ void handle_input() {
     mdlty = 0;
     mpul  = 0;
 
+    key_move_dir.forward  = false;
+    key_move_dir.backward = false;
+    key_move_dir.left     = false;
+    key_move_dir.right    = false;
+
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT) {
@@ -201,8 +209,40 @@ void handle_input() {
             mdltx = event.motion.xrel;
             mdlty = event.motion.yrel;
 
+	    //printf("mdltX: %hd; mdltY: %hd\n", mdltx, mdlty);
+
             mx += mdltx;
             my += mdlty;
+
+	    //printf("mX: %hu; mY %hu\n", mx, my);
+    	} else if (event.type == SDL_KEYDOWN) {
+	    /* WASD player/camera movement. */
+	    SDL_Scancode scancode = event.key.keysym.scancode;
+
+	    if (scancode | SDL_SCANCODE_W) {
+	    }
+	    if (scancode | SDL_SCANCODE_A) {
+	    }
+	    if (scancode | SDL_SCANCODE_S) {
+	    }
+	    if (scancode | SDL_SCANCODE_D) {
+	    }
+
+	    switch (event.key.keysym.scancode) {
+	    	case SDL_SCANCODE_W:
+			key_move_dir.forward  = true;
+			break;
+		case SDL_SCANCODE_A:
+			key_move_dir.left     = true;
+			break;
+		case SDL_SCANCODE_S:
+			key_move_dir.backward = true;
+			break;
+		case SDL_SCANCODE_D:
+			key_move_dir.right    = true;
+			break;
+		default: break;
+	    }
         } else if (event.type == SDL_MOUSEBUTTONDOWN) {
             if (event.button.button == SDL_BUTTON_LEFT)
                 ldown = true;

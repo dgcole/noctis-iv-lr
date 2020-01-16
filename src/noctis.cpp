@@ -2593,7 +2593,8 @@ int32_t ir3, ig3, ib3, ir3e = 0, ig3e = 0, ib3e = 0;
 int16_t mc = 0;
 uint8_t p_mpul = 0;
 int8_t sky_palette_ok = 0;
-int8_t mselect, lrv, right_dblclick = 0;
+int8_t mselect, lrv;
+bool right_dblclick = false;
 float right_dblclick_dir;
 double dpz, ras, rap, dasp, eclipse;
 double dxx, dyy, dzz, l_dsd, p_dsd, stz, ang;
@@ -2974,18 +2975,53 @@ void loop() {
     p_mpul = mpul;
     handle_input();
 
-    if (mpul & 2u) {
-        shift += 3 * mdltx;
+    //Dev Bryce: Mouse Currently only rotates camera
+    /*if (mpul & 2u) {
+        //shift += 3 * mdltx;
+	//shift = mdlty;
         dlt_alfa -= (float)mdlty / 8;
     } else {
-        step -= 3 * mdlty;
+        //step -= 3 * mdlty;
 
         if (abs(mdlty) > 7) {
             dlt_alfa = -user_alfa / 6;
         }
 
         dlt_beta -= (float)mdltx / 3;
+    }*/
+
+    dlt_beta -= (float)mdltx / 3;
+    dlt_alfa = (float)mdlty / 4;
+
+    //Left-right Movement
+    //shift = ;
+
+    //Left-right Camera Rotation
+    //dlt_beta;
+    
+    //Up-Down Camera Rotation (Does that make sense?)
+    //dlt_alfa
+
+    const int WASD_speed = 80;
+    //printf("=\n");
+    if (key_move_dir.left) { //If A is held down
+    	shift = -WASD_speed;
+	//printf("A held down\n");
     }
+    if (key_move_dir.right) { // D
+	shift = WASD_speed;
+	//printf("D held down\n");
+    }
+    if (key_move_dir.forward) { // W
+	step = WASD_speed;
+	//printf("W held down\n");
+    }
+    if (key_move_dir.backward) { // S
+	step = -WASD_speed;
+	//printf("S held down\n");
+    }
+
+
 
     // Mouse input for double left and right click.
     if (ontheroof) {
@@ -3003,7 +3039,7 @@ void loop() {
             right_dblclick_timing = clock();
         } else {
             if (clock() - right_dblclick_timing < DBL_CLICK_CUTOFF) {
-                right_dblclick     = 1;
+                right_dblclick     = true;
                 right_dblclick_dir = user_beta;
             } else {
                 right_dblclick_timing = clock();
@@ -3014,7 +3050,7 @@ void loop() {
     if (right_dblclick) {
         if (ap_targetting) {
             ap_targetting  = 0;
-            right_dblclick = 0;
+            right_dblclick = false;
             extract_ap_target_infos();
             fix_remote_target();
             goto nop;
@@ -3022,7 +3058,7 @@ void loop() {
 
         if (ip_targetting) {
             ip_targetting  = 0;
-            right_dblclick = 0;
+            right_dblclick = false;
 
             if (ip_targetted != -1) {
                 fix_local_target();
@@ -3051,7 +3087,7 @@ void loop() {
 
                 if (fabs(xx) < 25 && fabs(zz) < 25 && fabs(user_beta) < 1) {
                     right_dblclick_timing = 0;
-                    right_dblclick        = 0;
+                    right_dblclick        = false;
                 }
 
                 user_beta -= 90;
@@ -3063,7 +3099,7 @@ void loop() {
                 if (sys != 4) {
                     if (fabs(zz) < 25 && fabs(user_beta) < 1) {
                         right_dblclick_timing = 0;
-                        right_dblclick        = 0;
+                        right_dblclick        = false;
                     }
                 } else {
                     xx = pos_x + 1700;
@@ -3071,7 +3107,7 @@ void loop() {
 
                     if (fabs(zz) < 25 && fabs(xx) < 25 && fabs(user_beta) < 1) {
                         right_dblclick_timing = 0;
-                        right_dblclick        = 0;
+                        right_dblclick        = false;
                     }
                 }
             }
@@ -3080,6 +3116,7 @@ void loop() {
 
 //
 // Variazione angoli visivi.
+// (Visual angle variation)
 //
 nop:
     user_alfa += dlt_alfa;
@@ -4520,7 +4557,7 @@ resynctoplanet:
         landing_point  = 0;
         holdtomiddle   = 1;
         opencapdelta   = 2;
-        right_dblclick = 0;
+        right_dblclick = false;
         status("UNLOCKING", 50);
     }
 
