@@ -3858,17 +3858,17 @@ void setup_animals() {
 
             if (x == 0 && p <= bird_probability) {
                 ani_type[n] = BIRD;
-                continue;
+                break;
             }
 
             if (x == 1 && p <= reptil_probability) {
                 ani_type[n] = REPTIL;
-                continue;
+                break;
             }
 
             if (x == 2 && p <= mammal_probability) {
                 ani_type[n] = MAMMAL;
-                continue;
+                break;
             }
         }
     }
