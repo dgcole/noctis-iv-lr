@@ -2628,7 +2628,7 @@ int main(int argc, char **argv) {
 #else
     window = SDL_CreateWindow(
         "Noctis IV LR", SDL_WINDOWPOS_CENTERED, // NOLINT(hicpp-signed-bitwise)
-        SDL_WINDOWPOS_CENTERED, 640, 400,       // NOLINT(hicpp-signed-bitwise)
+        SDL_WINDOWPOS_CENTERED, 1280, 800,       // NOLINT(hicpp-signed-bitwise)
         SDL_WINDOW_RESIZABLE);
 #endif
 
