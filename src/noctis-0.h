@@ -2,7 +2,6 @@
 
 extern uint16_t QUADWORDS;
 extern uint8_t *adapted;
-extern void reach_your_dir(char **argv);
 extern int16_t attendi_pressione_tasto();
 extern bool tasto_premuto();
 extern uint8_t range8088[64 * 3];
@@ -14,21 +13,19 @@ extern void tavola_colori(const uint8_t *nuova_tavolozza,
                           uint16_t colore_di_partenza, uint16_t nr_colori,
                           int8_t filtro_rosso, int8_t filtro_verde,
                           int8_t filtro_blu);
-extern int16_t mdltx, mdlty, mx, my;
+extern int16_t mdltx, mdlty, mouse_x, mouse_y;
 extern uint16_t mpul;
 extern struct wasdmov key_move_dir;
 extern void handle_input();
-extern void areaclear(uint8_t *dest, int16_t x, int16_t y, int16_t x2, int16_t y2,
-                      int16_t l, int16_t h, uint8_t pattern);
+extern void area_clear(uint8_t *dest, int16_t x, int16_t y, int16_t x2,
+                      int16_t y2, int16_t l, int16_t h, uint8_t pattern);
 extern void psmooth_grays(uint8_t *target);
 extern void pfade(uint8_t *target, uint16_t segshift, uint8_t speed);
 extern void psmooth_64(uint8_t *target, uint16_t segshift);
-extern void smootharound_64(uint8_t *target, long cx, long cy, long r,
+extern void smootharound_64(uint8_t *target, int32_t cx, int32_t cy, int32_t r,
                             int8_t diffuse);
 extern void mask_pixels(uint8_t *target, uint8_t mask);
 
-const uint16_t TEXTURE_XSIZE = 256; // Larghezza delle BMP.
-const uint16_t TEXTURE_YSIZE = 256; // Altezza delle BMP.
 extern int32_t XSIZE, YSIZE;        // calibrazione BMP.
 extern float uneg;
 extern float cam_x, cam_y, cam_z;
@@ -36,7 +33,7 @@ extern float dpp;
 extern int32_t H_MATRIXS, V_MATRIXS;
 extern float alfa, beta, ngamma;
 extern uint16_t ptr;
-extern void Segmento();
+extern void segment(int32_t xp, int32_t yp, int32_t xa, int32_t ya);
 extern int8_t flares;
 extern int32_t lbxl;
 extern int32_t ubxl;
@@ -63,17 +60,17 @@ extern void change_txm_repeating_mode();
 extern uint8_t entity;
 extern void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
                    uint8_t colore);
-extern void Forward(float delta);
+extern void forward(float delta);
 extern float pnx, pny, pnz;
-extern void pnorm(float *x, float *y, float *z);
+extern void pnorm(const float *x, const float *y, const float *z);
 extern uint8_t *txtr;
 extern float x_antialias, y_antialias, z_antialias;
 extern int8_t culling_needed, halfscan_needed;
 extern uint8_t escrescenze;
 extern void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta);
 extern int32_t _x_, _y_;
-extern int8_t getcoords(float x, float y, float z);
-extern int8_t facing(float *x, float *y, float *z);
+extern int8_t get_coords(float x, float y, float z);
+extern bool facing(float *x, float *y, float *z);
 
 extern const char *situation_file;
 extern const char *starmap_file;
@@ -156,7 +153,6 @@ extern int16_t landing_pt_lon;
 extern int16_t landing_pt_lat;
 extern int16_t rotation;
 extern int16_t epoc;
-extern uint8_t cyclon[384];
 extern char ctb[512];
 extern int8_t _delay;
 extern int8_t stspeed;
@@ -197,7 +193,6 @@ extern int8_t class_planets[star_classes];
 extern int8_t nearstar_p_type[maxbodies];
 extern int16_t nearstar_p_owner[maxbodies];
 extern int8_t nearstar_p_moonid[maxbodies];
-extern int8_t nearstar_p_mapped[maxbodies];
 extern double nearstar_p_ring[maxbodies];
 extern double nearstar_p_tilt[maxbodies];
 extern double nearstar_p_ray[maxbodies];
@@ -234,7 +229,6 @@ extern float rainy;
 extern int16_t albedo;
 extern uint8_t sky_brightness;
 extern uint16_t m200[200];
-extern uint16_t wtl;
 extern float rwp;
 extern float iwp;
 extern float wp;
@@ -244,19 +238,7 @@ extern float wdircos;
 extern int8_t landed;
 extern int32_t atl_x, atl_z, atl_x2, atl_z2;
 extern double qid;
-extern int16_t fn;
-extern uint8_t fnv, *fcolor;
-extern float fx, *inv_fx, *fy, *fz;
-extern int16_t vhn;
-extern float vhx, *vhy, *vhz;
-extern float vhxm, *vhym, *vhzm, *vh_mdq;
-extern uint8_t vhnv, *vhcolor, *vhindex;
 extern int16_t in;
-extern float ix, *iy, *iz;
-extern uint8_t inv, *icolor;
-extern int16_t alpha_n;
-extern uint8_t alpha_nv;
-extern float alpha_x, *alpha_y, *alpha_z;
 extern int32_t flat_rnd_seed;
 extern void fast_srand(int32_t seed);
 extern int32_t fast_random(int32_t mask);
@@ -264,32 +246,27 @@ extern int16_t ranged_fast_random(int16_t range);
 extern int32_t sa_open(int32_t offset_of_virtual_file);
 extern void shade(uint8_t *palette_buffer, int16_t first_color,
                   int16_t number_of_colors, float start_r, float start_g,
-                  float start_b, float finish_r, float finish_g, float finish_b);
+                  float start_b, float finish_r, float finish_g,
+                  float finish_b);
 extern int8_t snapfilename[24];
 extern void snapshot(int16_t forcenumber, int8_t showdata);
-extern int8_t helpfile_hlp[13];
-extern int8_t *helpfile_img[13];
-extern void readline(int16_t tfh);
-extern void from_vehicle(void);
-extern void from_user(void);
+extern void from_vehicle();
+extern void from_user();
 extern void watch(double cam_x, double cam_y, double cam_z, double see_x,
                   double see_y, double see_z);
 extern int8_t xy(double cam_x, double cam_y, double cam_z, double point_x,
                  double point_y, double point_z);
-extern void p_Forward(float delta);
-extern void copia(uint8_t dest, uint8_t sorg, uint16_t x, uint16_t y, int16_t l,
-                  int16_t a);
+extern void p_forward(float delta);
 extern void setfx(int8_t fx);
 extern void chgfx(int8_t fx);
-extern void resetfx(void);
-extern void Stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya);
+extern void resetfx();
+extern void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya);
 extern int32_t fpx;
 extern int32_t fpy;
 extern float p_rx, p_ry, p_rz;
 extern float stick_uneg;
 extern void stick3d(float p_x, float p_y, float p_z, float x, float y, float z);
-extern void link3d(float x, float y, float z);
-extern void fline(long fx, long fy, long lx, long ly);
+extern void fline(int32_t fx, int32_t fy, int32_t lx, int32_t ly);
 //--------------------------------------------------------------------------//
 extern uint8_t map_color_a;
 extern uint8_t map_color_b;
@@ -299,22 +276,24 @@ extern void randomic_mapper(float x0, float y0, float z0, float x1, float y1,
                             float z1, float x2, float y2, float z2,
                             int8_t divisions);
 extern void unloadpv(int16_t handle);
-extern void unloadallpv(void);
-extern int8_t loadpv(int16_t handle, int32_t virtual_file_position, float xscale,
-                     float yscale, float zscale, float xmove, float ymove,
-                     float zmove, uint8_t base_color, int8_t depth_sort);
-extern void QuickSort(int16_t index, float mdist, int16_t start, int16_t end);
+extern void unloadallpv();
+extern int8_t loadpv(int16_t handle, int32_t virtual_file_position,
+                     float xscale, float yscale, float zscale, float xmove,
+                     float ymove, float zmove, uint8_t base_color,
+                     int8_t depth_sort);
+extern void quick_sort(int16_t *index, float *mdist, int16_t start, int16_t end);
 extern void drawpv(int16_t handle, int16_t mode, int16_t rm_iterations,
                    float center_x, float center_y, float center_z,
                    int8_t use_depth_sort);
 extern void copypv(int16_t dest_handle, int16_t src_handle);
 extern void modpv(int16_t handle, int16_t polygon_id, int16_t vertex_id,
                   float x_scale, float y_scale, float z_scale, float x_angle,
-                  float y_angle, float z_angle, struct pvlist *vertexs_to_affect);
+                  float y_angle, float z_angle,
+                  struct pvlist *vertexs_to_affect);
 //--------------------------------------------------------------------------//
 extern char *alphavalue(double value);
-extern void background(uint16_t start, uint8_t* target, uint8_t* background,
-                       uint8_t* offsetsmap, uint16_t total_map_bytes,
+extern void background(uint16_t start, uint8_t *target, uint8_t *background,
+                       uint8_t *offsetsmap, uint16_t total_map_bytes,
                        uint16_t screenshift);
 extern void sky(uint16_t limits);
 extern double laststar_x, laststar_y, laststar_z;
@@ -324,58 +303,36 @@ extern void globe(uint16_t start, uint8_t *target, const uint8_t *tapestry,
                   const uint8_t *offsetsmap, uint16_t total_map_bytes, double x,
                   double y, double z, float mag_factor, int8_t colormask,
                   int8_t globe_saturation);
-extern void glowinglobe(int16_t start, uint8_t *target, uint8_t *offsetsmap,
-                        uint16_t total_map_bytes, double x, double y, double z,
-                        float mag_factor, int16_t terminator_start,
-                        int16_t terminator_end, uint8_t color);
-extern void whiteglobe(uint8_t *target, double x, double y, double z,
+extern void glowing_globe(int16_t start, uint8_t *target,
+                        const uint8_t *offsetsmap, uint16_t total_map_bytes,
+                        double x, double y, double z, float mag_factor,
+                        int16_t terminator_start, int16_t terminator_arc,
+                        uint8_t color);
+extern void white_globe(uint8_t *target, double x, double y, double z,
                        float mag_factor, float fgm_factor);
 extern double xsun_onscreen;
-extern void whitesun(uint8_t *target, double x, double y, double z,
+extern void white_sun(uint8_t *target, double x, double y, double z,
                      float mag_factor, float fgm_factor);
 extern float lft_sin[361];
 extern float lft_cos[361];
-extern int8_t lens_flares_init(void);
-extern void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight,
-                            double ylight, double zlight, double interval,
-                            int16_t added, int8_t on_hud, int8_t condition,
-                            int16_t xshift, int16_t yshift);
+extern int8_t lens_flares_init();
+extern void lens_flares_for(double cam_x, double cam_y, double cam_z,
+                            double xlight, double ylight, double zlight,
+                            double interval, int16_t added, int8_t on_hud,
+                            int8_t condition, int16_t xshift, int16_t yshift);
 extern void single_pixel_at_ptr(uint16_t offset, uint8_t pixel_color);
 extern int8_t far_pixel_at(double xlight, double ylight, double zlight,
                            double radii, uint8_t unconditioned_color);
 extern uint32_t *digimap2;
 extern void cupola(float y_or, float brk);
 extern void polycupola(float y_or, int8_t textured);
-// extern void alogena (void);
-// extern void qsel (float *x, float *y, float *z, uint16_t n, uint8_t c);
-// extern void reflexes (void);
-// extern void squaredot (float x, float y, float size, uint8_t color);
-// extern void digit_at (int8_t digit, float x, float y, float size, uint8_t
-// color); extern void screen (void); extern void frame (float x, float y, float
-// l, float h, float borderwidth, uint8_t color); extern void pointer_cross_for
-// (double xlight, double ylight, double zlight); extern void cline (int16_t
-// line, int8_t *text); extern void other (int8_t *text); extern void control
-// (int16_t line, int8_t *text); extern void command (int16_t nr, int8_t *text);
-// extern void clear_onboard_screen (void);
-//--------------------------------------------------------------------------//
-// extern uint8_t reset_signal;
-// extern int8_t active_screen;
-// extern void build_osscreen (void);
-// extern void mslocate (int16_t screen_id, int16_t cursor_x, int16_t cursor_y);
-// extern void mswrite (int16_t screen_id, int8_t* text);
-//--------------------------------------------------------------------------//
-// extern void show_planetary_map ();
-// extern int16_t goesk_a;
-// extern int16_t goesk_e;
-// extern void vehicle (float opencapcount);
-// extern void other_vehicle_at (double ovhx, double ovhy, double ovhz);
 extern void getsecs();
 extern void extract_ap_target_infos();
 extern float zrandom(int16_t range);
 extern int16_t starnop(double star_x, double star_y, double star_z);
 extern void prepare_nearstar();
-extern void ssmooth(uint8_t* target);
-extern void lssmooth(uint8_t* target);
+extern void ssmooth(uint8_t *target);
+extern void lssmooth(uint8_t *target);
 extern int16_t gr, r, g, b, cr, cx, cy;
 extern int8_t lave, crays;
 extern float kfract;
@@ -386,7 +343,7 @@ extern void permanent_storm();
 extern void crater();
 extern void band();
 extern void wave();
-extern void fracture(uint8_t target, float max_latitude);
+extern void fracture(uint8_t *target, float max_latitude);
 extern void volcano();
 extern void contrast(float kt, float kq, float thrshld);
 extern void randoface(int16_t range, int16_t upon);
@@ -402,12 +359,10 @@ extern void surface(int16_t logical_id, int16_t type, double seedval,
                     uint8_t colorbase);
 extern int16_t nightzone, crepzone, sun_x_factor;
 extern void planets();
-extern void ring();
-extern void init_FP_segments();
+extern void ring(int16_t planet_id, double ox, double oy, double oz,
+                 int16_t start, int16_t layers);
 extern int16_t smh;
 extern double idscale;
-extern double laststar_x, laststar_y, laststar_z;
-extern int8_t isthere(double star_id);
 extern int32_t search_id_code(double id_code, int8_t type);
 extern int32_t tgt_collect_lastpos;
 extern int16_t targets;
@@ -419,7 +374,7 @@ extern double targets_table_id[50];
 extern double targets_table_px[50];
 extern double targets_table_py[50];
 extern double targets_table_pz[50];
-extern void collect_targets(void);
+extern void collect_targets();
 extern void status(const char *status_description, int16_t message_delay);
 
 extern float flandom();
@@ -430,7 +385,6 @@ extern void sync_start();
 extern void sync_stop();
 
 extern int32_t global_surface_seed;
-extern float ppos_x, ppos_y, ppos_z;
 extern double dsd;
 
 extern void load_starface();
@@ -446,4 +400,4 @@ extern float pp_temp;
 extern float pp_pressure;
 extern float pp_pulse;
 
-extern void additional_consumes(void);
+extern void additional_consumes();
