@@ -2789,8 +2789,8 @@ void swapBuffers() {
     SDL_RenderPresent(renderer);
     SDL_DestroyTexture(texture);
 
-    // Frame limiter (24 FPS)
-    static const auto goal = std::chrono::milliseconds(1000 / 24);
+    // Frame limiter (18 FPS)
+    static const auto goal = std::chrono::milliseconds(55);
     static auto last       = std::chrono::high_resolution_clock::now();
 
     auto now = std::chrono::high_resolution_clock::now();
