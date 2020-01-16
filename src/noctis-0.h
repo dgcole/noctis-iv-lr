@@ -15,6 +15,7 @@ extern void tavola_colori(const uint8_t *nuova_tavolozza,
                           int8_t filtro_blu);
 extern int16_t mdltx, mdlty, mouse_x, mouse_y;
 extern uint16_t mpul;
+extern struct wasdmov key_move_dir;
 extern void handle_input();
 extern void area_clear(uint8_t *dest, int16_t x, int16_t y, int16_t x2,
                       int16_t y2, int16_t l, int16_t h, uint8_t pattern);

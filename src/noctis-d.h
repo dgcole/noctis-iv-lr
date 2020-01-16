@@ -221,3 +221,12 @@ union REGS {
     struct WORDREGS w;
     struct BYTEREGS b;
 };
+
+// Used to indicate WASD movement direction.
+// Exists for ease of readability
+struct wasdmov {
+	bool forward;
+	bool backward;
+	bool left;
+	bool right;
+};

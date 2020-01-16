@@ -2595,7 +2595,8 @@ int32_t ir3, ig3, ib3, ir3e = 0, ig3e = 0, ib3e = 0;
 int16_t mc            = 0;
 uint8_t p_mpul        = 0;
 int8_t sky_palette_ok = 0;
-int8_t mselect, lrv, right_dblclick = 0;
+int8_t mselect, lrv;
+bool right_dblclick = false;
 float right_dblclick_dir;
 double dpz, ras, rap, dasp, eclipse;
 double dxx, dyy, dzz, l_dsd, p_dsd, stz, ang;
@@ -2627,7 +2628,7 @@ int main(int argc, char **argv) {
 #else
     window = SDL_CreateWindow(
         "Noctis IV LR", SDL_WINDOWPOS_CENTERED, // NOLINT(hicpp-signed-bitwise)
-        SDL_WINDOWPOS_CENTERED, 640, 400,       // NOLINT(hicpp-signed-bitwise)
+        SDL_WINDOWPOS_CENTERED, 1280, 800,       // NOLINT(hicpp-signed-bitwise)
         SDL_WINDOW_RESIZABLE);
 #endif
 
@@ -2789,8 +2790,8 @@ void swapBuffers() {
     SDL_RenderPresent(renderer);
     SDL_DestroyTexture(texture);
 
-    // Frame limiter (24 FPS)
-    static const auto goal = std::chrono::milliseconds(1000 / 24);
+    // Frame limiter (18 FPS)
+    static const auto goal = std::chrono::milliseconds(55);
     static auto last       = std::chrono::high_resolution_clock::now();
 
     auto now = std::chrono::high_resolution_clock::now();
@@ -2977,17 +2978,43 @@ void loop() {
     p_mpul = mpul;
     handle_input();
 
-    if (mpul & 2u) {
-        shift += 3 * mdltx;
-        dlt_alfa -= (float) mdlty / 8;
+    // Dev Bryce: Mouse Currently only rotates camera
+    /*if (mpul & 2u) {
+        //shift += 3 * mdltx;
+    //shift = mdlty;
+        dlt_alfa -= (float)mdlty / 8;
     } else {
-        step -= 3 * mdlty;
+        //step -= 3 * mdlty;
 
         if (abs(mdlty) > 7) {
             dlt_alfa = -user_alfa / 6;
         }
 
-        dlt_beta -= (float) mdltx / 3;
+        dlt_beta -= (float)mdltx / 3;
+    }*/
+
+    dlt_beta -= (float) mdltx / 3;
+    dlt_alfa = (float) mdlty / 3;
+
+    // Left-right Movement
+    // shift = ;
+
+    // Left-right Camera Rotation
+    // dlt_beta;
+
+    // Up-Down Camera Rotation (Does that make sense?)
+    // dlt_alfa
+
+    const int WASD_speed = 20;
+
+    // +X / -X Direction
+    int8_t x_dir = ((int8_t) key_move_dir.right) - ((int8_t) key_move_dir.left);
+    // +Z / -Z Direction
+    int8_t z_dir = ((int8_t) key_move_dir.forward) - ((int8_t) key_move_dir.backward);
+
+    if (x_dir || z_dir) {
+        step += z_dir * WASD_speed;
+        shift += x_dir * WASD_speed;
     }
 
     // Mouse input for double left and right click.
@@ -3006,7 +3033,7 @@ void loop() {
             right_dblclick_timing = clock();
         } else {
             if (clock() - right_dblclick_timing < DBL_CLICK_CUTOFF) {
-                right_dblclick     = 1;
+                right_dblclick     = true;
                 right_dblclick_dir = user_beta;
             } else {
                 right_dblclick_timing = clock();
@@ -3017,7 +3044,7 @@ void loop() {
     if (right_dblclick) {
         if (ap_targetting) {
             ap_targetting  = 0;
-            right_dblclick = 0;
+            right_dblclick = false;
             extract_ap_target_infos();
             fix_remote_target();
             goto nop;
@@ -3025,7 +3052,7 @@ void loop() {
 
         if (ip_targetting) {
             ip_targetting  = 0;
-            right_dblclick = 0;
+            right_dblclick = false;
 
             if (ip_targetted != -1) {
                 fix_local_target();
@@ -3054,7 +3081,7 @@ void loop() {
 
                 if (fabs(xx) < 25 && fabs(zz) < 25 && fabs(user_beta) < 1) {
                     right_dblclick_timing = 0;
-                    right_dblclick        = 0;
+                    right_dblclick        = false;
                 }
 
                 user_beta -= 90;
@@ -3066,7 +3093,7 @@ void loop() {
                 if (sys != 4) {
                     if (fabs(zz) < 25 && fabs(user_beta) < 1) {
                         right_dblclick_timing = 0;
-                        right_dblclick        = 0;
+                        right_dblclick        = false;
                     }
                 } else {
                     xx = pos_x + 1700;
@@ -3074,7 +3101,7 @@ void loop() {
 
                     if (fabs(zz) < 25 && fabs(xx) < 25 && fabs(user_beta) < 1) {
                         right_dblclick_timing = 0;
-                        right_dblclick        = 0;
+                        right_dblclick        = false;
                     }
                 }
             }
@@ -3083,6 +3110,7 @@ void loop() {
 
 //
 // Variazione angoli visivi.
+// (Visual angle variation)
 //
 nop:
     user_alfa += dlt_alfa;
@@ -4533,7 +4561,7 @@ resynctoplanet:
         landing_point  = 0;
         holdtomiddle   = 1;
         opencapdelta   = 2;
-        right_dblclick = 0;
+        right_dblclick = false;
         status("UNLOCKING", 50);
     }
 

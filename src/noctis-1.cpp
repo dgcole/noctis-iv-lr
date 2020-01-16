@@ -4076,9 +4076,8 @@ void planetary_main() {
     // Fade to black (blank frame.)
     for (w = 64; w >= 0; w -= 4) {
         tavola_colori((const uint8_t*) return_palette, 0, 256, w, w, w);
-        ll = clock();
 
-        while (ll == clock());
+        swapBuffers();
     }
 
     // regolazione della forza di gravit?.
@@ -4518,7 +4517,7 @@ void planetary_main() {
         mpul = 0;
         handle_input();
 
-        if (mpul & 2) {
+        /*if (mpul & 2) {
             shift += mdltx;
             dlt_alfa -= (float) mdlty / 8;
         } else {
@@ -4561,6 +4560,43 @@ void planetary_main() {
             }
 
             dlt_beta -= (float) mdltx / 6;
+            tiredness += fabs(step) * 0.000001;
+        }*/
+
+        dlt_beta -= (float) mdltx / 3;
+        dlt_alfa = (float) mdlty / 3;
+
+        // Left-right Movement
+        // shift = ;
+
+        // Left-right Camera Rotation
+        // dlt_beta;
+
+        // Up-Down Camera Rotation (Does that make sense?)
+        // dlt_alfa
+
+        const int WASD_speed = 10;
+
+        int8_t x_dir = ((int8_t) key_move_dir.right) - ((int8_t) key_move_dir.left);
+        int8_t z_dir = ((int8_t) key_move_dir.forward) - ((int8_t) key_move_dir.backward);
+
+        if (x_dir || z_dir) {
+            uint8_t surface_speed_multiplier = 5;
+            if (pos_y == 0) {
+                if (nearstar_p_type[ip_targetted] == 3) {
+                    if (sctype == ICY) {
+                        surface_speed_multiplier = 10;
+                    } else if (sctype != PLAINS) {
+                        if (sctype = PLAINS) {
+                            surface_speed_multiplier = 2;
+                        }
+                    }
+                }
+            }
+
+            step += surface_speed_multiplier * z_dir * WASD_speed * landed;
+            shift += surface_speed_multiplier * x_dir * WASD_speed * landed;
+
             tiredness += fabs(step) * 0.000001;
         }
 
@@ -4680,7 +4716,9 @@ void planetary_main() {
             }
 
             if (pos_y > crcy - 1200) {
-                user_alfa /= 1 + fabs(step) * 0.000064;
+                // This served to adjust the player's yaw slowly back to level
+                // as you moved.
+                //user_alfa /= 1 + fabs(step) * 0.000064;
             }
         }
 
@@ -5784,9 +5822,8 @@ void planetary_main() {
     // Fade to black (return blank frame).
     for (w = 64; w >= 0; w -= 4) {
         tavola_colori((const uint8_t*) surface_palette, 0, 256, w, w, w);
-        ll = clock();
 
-        while (ll == clock());
+        swapBuffers();
     }
 
     nodissolve:
