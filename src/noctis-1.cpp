@@ -4076,9 +4076,8 @@ void planetary_main() {
     // Fade to black (blank frame.)
     for (w = 64; w >= 0; w -= 4) {
         tavola_colori((const uint8_t*) return_palette, 0, 256, w, w, w);
-        ll = clock();
 
-        while (ll == clock());
+        swapBuffers();
     }
 
     // regolazione della forza di gravit?.
@@ -5784,9 +5783,8 @@ void planetary_main() {
     // Fade to black (return blank frame).
     for (w = 64; w >= 0; w -= 4) {
         tavola_colori((const uint8_t*) surface_palette, 0, 256, w, w, w);
-        ll = clock();
 
-        while (ll == clock());
+        swapBuffers();
     }
 
     nodissolve:
