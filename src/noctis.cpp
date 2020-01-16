@@ -2978,10 +2978,10 @@ void loop() {
     p_mpul = mpul;
     handle_input();
 
-    //Dev Bryce: Mouse Currently only rotates camera
+    // Dev Bryce: Mouse Currently only rotates camera
     /*if (mpul & 2u) {
         //shift += 3 * mdltx;
-	//shift = mdlty;
+    //shift = mdlty;
         dlt_alfa -= (float)mdlty / 8;
     } else {
         //step -= 3 * mdlty;
@@ -2993,38 +2993,29 @@ void loop() {
         dlt_beta -= (float)mdltx / 3;
     }*/
 
-    dlt_beta -= (float)mdltx / 3;
-    dlt_alfa = (float)mdlty / 4;
+    dlt_beta -= (float) mdltx / 3;
+    dlt_alfa = (float) mdlty / 3;
 
-    //Left-right Movement
-    //shift = ;
+    // Left-right Movement
+    // shift = ;
 
-    //Left-right Camera Rotation
-    //dlt_beta;
+    // Left-right Camera Rotation
+    // dlt_beta;
 
-    //Up-Down Camera Rotation (Does that make sense?)
-    //dlt_alfa
+    // Up-Down Camera Rotation (Does that make sense?)
+    // dlt_alfa
 
-    const int WASD_speed = 80;
-    //printf("=\n");
-    if (key_move_dir.left) { //If A is held down
-    	shift = -WASD_speed;
-	//printf("A held down\n");
+    const int WASD_speed = 20;
+
+    // +X / -X Direction
+    int8_t x_dir = ((int8_t) key_move_dir.right) - ((int8_t) key_move_dir.left);
+    // +Z / -Z Direction
+    int8_t z_dir = ((int8_t) key_move_dir.forward) - ((int8_t) key_move_dir.backward);
+
+    if (x_dir || z_dir) {
+        step += z_dir * WASD_speed;
+        shift += x_dir * WASD_speed;
     }
-    if (key_move_dir.right) { // D
-	shift = WASD_speed;
-	//printf("D held down\n");
-    }
-    if (key_move_dir.forward) { // W
-	step = WASD_speed;
-	//printf("W held down\n");
-    }
-    if (key_move_dir.backward) { // S
-	step = -WASD_speed;
-	//printf("S held down\n");
-    }
-
-
 
     // Mouse input for double left and right click.
     if (ontheroof) {

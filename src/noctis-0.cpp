@@ -155,8 +155,6 @@ void handle_input() {
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
             /* WASD player/camera movement. */
-            SDL_Scancode scancode = event.key.keysym.scancode;
-
             switch (event.key.keysym.scancode) {
             case SDL_SCANCODE_W:
                 key_move_dir.forward = (event.type == SDL_KEYDOWN);
