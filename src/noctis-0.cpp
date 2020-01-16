@@ -52,52 +52,7 @@ uint8_t currpal[768];
 int8_t return_palette[768];
 int8_t surface_palette[768];
 
-int16_t lstri(const char *stri) {
-    // Measure a string and copy it to tmppal.
-    // This is a support function for reach_your_dir()
-    int16_t c;
-
-    for (c = 0; c < 768; c++) {
-        if (stri[c]) {
-            tmppal[c] = stri[c];
-        } else {
-            tmppal[c] = '\0';
-            return (c);
-        }
-    }
-
-    return (0);
-}
-
-void reach_your_dir(char **argv) {
-    /*
-        NOTE: There was a comment here saying something about this being
-        used to reach beyond the current directory.
-    */
-    int16_t c;
-    int8_t d;
-    c = lstri(argv[0]) - 1;
-
-    while (c >= 0 && tmppal[c] != '\\') {
-        c--;
-    }
-
-    if (c >= 0) {
-        if (tmppal[c - 1] != ':') {
-            tmppal[c] = 0;
-        } else {
-            tmppal[c + 1] = 0;
-        }
-    }
-
-    if (argv[0][0] >= 'a' && argv[0][0] <= 'z') {
-        d = argv[0][0] - 'a';
-    } else {
-        d = argv[0][0] - 'A';
-    }
-}
-
-std::stack<int16_t> keys;
+static std::stack<int16_t> keys;
 
 // Wait for a key?
 int16_t attendi_pressione_tasto() {
@@ -181,7 +136,7 @@ void tavola_colori(const uint8_t *new_palette, uint16_t starting_color,
 }
 
 // Variables to hold mouse readings.
-int16_t mdltx = 0, mdlty = 0, mx = 0, my = 0;
+int16_t mdltx = 0, mdlty = 0, mouse_x = 0, mouse_y = 0;
 uint16_t mpul = 0;
 
 // Handle SDL events..
@@ -201,8 +156,8 @@ void handle_input() {
             mdltx = event.motion.xrel;
             mdlty = event.motion.yrel;
 
-            mx += mdltx;
-            my += mdlty;
+            mouse_x += mdltx;
+            mouse_y += mdlty;
         } else if (event.type == SDL_MOUSEBUTTONDOWN) {
             if (event.button.button == SDL_BUTTON_LEFT)
                 ldown = true;
@@ -300,7 +255,6 @@ void handle_input() {
             case SDL_SCANCODE_SLASH:
                 keys.push('/');
             case SDL_SCANCODE_KP_COLON:
-                keys.push(':');
             case SDL_SCANCODE_SEMICOLON:
                 keys.push(':');
             default:
@@ -318,7 +272,7 @@ void handle_input() {
 // Clears a rectangular region of the video memory.
 // Either x2 & y2 OR l and h must be specified.
 // This may or may not work.
-void areaclear(uint8_t *dest, int16_t x, int16_t y, int16_t x2, int16_t y2,
+void area_clear(uint8_t *dest, int16_t x, int16_t y, int16_t x2, int16_t y2,
                int16_t l, int16_t h, uint8_t pattern) {
     if (l == 0 || h == 0) {
         l = x2 - x;
@@ -874,9 +828,13 @@ int16_t ranged_fast_random(int16_t range) {
     return (fast_random(0x7FFF) % range);
 }
 
-float flandom() { return ((float)brtl_random(32767) * 0.000030518); }
+float flandom() {
+    return ((float) brtl_random(32767) * 0.000030518);
+}
 
-float fast_flandom() { return ((float)fast_random(32767) * 0.000030518); }
+float fast_flandom() {
+    return ((float) fast_random(32767) * 0.000030518);
+}
 
 // Loads virtual file handles from supports.nct
 int32_t sa_open(int32_t offset_of_virtual_file) {
@@ -1058,7 +1016,7 @@ int8_t xy(double cam_x, double cam_y, double cam_z, double point_x, double point
 }
 
 // Move the user around inside the stardrifter.
-void p_Forward(float delta) {
+void p_forward(float delta) {
     pos_x -= delta * opt_tsinbeta * opt_tcosalfa;
     pos_z += delta * opt_tcosbeta * opt_tcosalfa;
 }
@@ -1570,68 +1528,7 @@ void stick3d(float p_x, float p_y, float p_z, float x, float y, float z) {
         return; // Excludes lines consisting of a single point.
     }
 
-    stick(fpx + x_centro, fpy + y_centro, lx + x_centro, ly + y_centro);
-}
-
-/*
-    If a "stick" is a three-dimensional "stick" delimited by two ends, a "link"
-    is a "bridge" between the strating point of the last stick path and the
-    point passed to this function. It seems like an effective way to speed up 3d
-    projections, but in reality it can not always be applied: apart from the
-    fact that one of the points is always the same when this has not been
-    visible previously, not even the links will be visible. Currently, Noctis
-    uses "link3d" to show the individual blades of grass on the surface of
-    habitable planets.
-*/
-
-void link3d(float x, float y, float z) {
-    int32_t lx, ly;
-    float rx, ry, rz, z2;
-
-    if (fpx == -1) {
-        return;
-    }
-
-    if (fpy <= stk_lby || fpy >= stk_uby) {
-        return;
-    }
-
-    if (fpx <= stk_lbx || fpx >= stk_ubx) {
-        return;
-    }
-
-    x -= cam_x;
-    z -= cam_z;
-    y -= cam_y;
-
-    z2 = (z * opt_tcosbeta) - (x * opt_tsinbeta);
-    rz = (y * opt_tsinalfa) + (z2 * opt_tcosalfa);
-
-    if (rz < stick_uneg) {
-        return;
-    }
-
-    rx = x * opt_pcosbeta + z * opt_psinbeta;
-    ry = y * opt_pcosalfa - z2 * opt_psinalfa;
-
-    // Perspective.
-    lx = (int32_t) (rx / rz);
-    ly = (int32_t) (ry / rz);
-
-    // Chopping.
-    if (ly <= stk_lby || ly >= stk_uby) {
-        return;
-    }
-
-    if (lx <= stk_lbx || lx >= stk_ubx) {
-        return;
-    }
-
-    if (fpx == lx && fpy == ly) {
-        return;
-    }
-
-    stick(fpx + x_centro, fpy + y_centro, lx + x_centro, ly + y_centro);
+    stick(fpx + VIEW_X_CENTER, fpy + VIEW_Y_CENTER, lx + VIEW_X_CENTER, ly + VIEW_Y_CENTER);
 }
 
 // Tracing luminous sticks (in 2d, for the glows, generally used with the
@@ -1748,7 +1645,7 @@ void fline(int32_t fx, int32_t fy, int32_t lx, int32_t ly) {
         return;
     }
 
-    stick(fx + x_centro, fy + y_centro, lx + x_centro, ly + y_centro);
+    stick(fx + VIEW_X_CENTER, fy + VIEW_Y_CENTER, lx + VIEW_X_CENTER, ly + VIEW_Y_CENTER);
 }
 
 /*
@@ -2030,7 +1927,7 @@ int8_t loadpv(int16_t handle, int32_t virtual_file_position, float xscale,
     other sorts by distance, the planets and moons for example.
 */
 
-void QuickSort(int16_t *index, float *mdist, int16_t start, int16_t end) {
+void quick_sort(int16_t *index, float *mdist, int16_t start, int16_t end) {
     int16_t tq;
     int16_t jq = end;
     int16_t iq = start;
@@ -2055,11 +1952,11 @@ void QuickSort(int16_t *index, float *mdist, int16_t start, int16_t end) {
     }
 
     if (start < jq) {
-        QuickSort(index, mdist, start, jq);
+        quick_sort(index, mdist, start, jq);
     }
 
     if (iq < end) {
-        QuickSort(index, mdist, iq, end);
+        quick_sort(index, mdist, iq, end);
     }
 }
 
@@ -2107,8 +2004,8 @@ void drawpv(int16_t handle, int16_t mode, int16_t rm_iterations, float center_x,
         }
 
         // fase 2: ordinamento poligoni in base alla distanza.
-        QuickSort(pv_dep_i[handle], pv_mid_d[handle], 0,
-                  pvfile_npolygs[handle] - 1);
+        quick_sort(pv_dep_i[handle], pv_mid_d[handle], 0,
+                   pvfile_npolygs[handle] - 1);
 
         // fase 3: tracciamento, nell'ordine specificato sopra.
         for (p = 0; p < pvfile_npolygs[handle]; p++) {
@@ -2536,14 +2433,14 @@ void sky(uint16_t limits) {
                 inv_rz = uno / rz;
                 rx = (int32_t) round(((xx * opt_pcosbeta) + (zz * opt_psinbeta)) * inv_rz);
 
-                index = rx + x_centro;
+                index = rx + VIEW_X_CENTER;
                 if (index <= 10 || index >= 310) {
                     continue;
                 }
 
                 ry = (int32_t) round((yy * opt_pcosalfa - z2 * opt_psinalfa) * inv_rz) - 2;
 
-                uint16_t nety = ry + y_centro;
+                uint16_t nety = ry + VIEW_Y_CENTER;
                 if (nety <= 10 || nety >= 190) {
                     continue;
                 }
@@ -2769,7 +2666,7 @@ void globe(uint16_t start, uint8_t *target, const uint8_t *tapestry,
  * clear demarcation between the illuminated and dark hemisphere. Used for planets
  * at a medium distance from the stardrifter.
  */
-void glowinglobe(int16_t start, uint8_t *target, const uint8_t *offsetsmap,
+void glowing_globe(int16_t start, uint8_t *target, const uint8_t *offsetsmap,
                  uint16_t total_map_bytes, double x, double y, double z,
                  float mag_factor, int16_t terminator_start, int16_t terminator_arc,
                  uint8_t color) {
@@ -2862,7 +2759,7 @@ void glowinglobe(int16_t start, uint8_t *target, const uint8_t *offsetsmap,
     the corona. It does not need a globe map. Takes a color from between 0 and
     0x3F, b/c it should only work on the first shade for speed.
 */
-void whiteglobe(uint8_t *target, double x, double y, double z, float mag_factor,
+void white_globe(uint8_t *target, double x, double y, double z, float mag_factor,
                 float fgm_factor) {
     double center_x, center_y, mag, fgm, shade_ext, ise;
     double xx, yy, zz, z2, rx, ry, rz, xa, ya, xb, yb;
@@ -2975,7 +2872,7 @@ void whiteglobe(uint8_t *target, double x, double y, double z, float mag_factor,
 
 double xsun_onscreen;
 
-void whitesun(uint8_t *target, double x, double y, double z, float mag_factor,
+void white_sun(uint8_t *target, double x, double y, double z, float mag_factor,
               float fgm_factor) {
     double center_x, center_y, mag, fgm, shade_ext, ise;
     double xx, yy, zz, z2, rx, ry, rz, xa, ya, xb, yb;
@@ -3125,7 +3022,7 @@ void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight,
         if (xs > -150 && ys > -90 && xs < 160 && ys < 90) {
             switch (condition) {
             case 1:
-                temp = adapted[xs + x_centro + 320 * (ys + y_centro)];
+                temp = adapted[xs + VIEW_X_CENTER + 320 * (ys + VIEW_Y_CENTER)];
 
                 if (temp < 64) {
                     goto exit_local;
@@ -3134,7 +3031,7 @@ void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight,
                 break;
 
             case 2:
-                temp = adapted[xs + x_centro + 320 * (ys + y_centro)];
+                temp = adapted[xs + VIEW_X_CENTER + 320 * (ys + VIEW_Y_CENTER)];
 
                 if (temp < 64 || temp > 127) {
                     goto exit_local;
@@ -3273,9 +3170,9 @@ int8_t far_pixel_at(double xlight, double ylight, double zlight, double radii,
         }
 
         pxx /= rz;
-        pxx += x_centro;
+        pxx += VIEW_X_CENTER;
         pyy /= rz;
-        pyy += y_centro;
+        pyy += VIEW_Y_CENTER;
 
         if (pxx > 10 && pyy > 10 && pxx < 310 && pyy < 190) {
             vptr = (uint16_t) (320 * (int16_t)pyy + pxx);
@@ -3416,8 +3313,8 @@ void extract_ap_target_infos() {
 
 // Extracts a whole-type pseudo-random number by converting it to f-p.
 float zrandom(int16_t range) {
-    return (brtl_random(range) - brtl_random(range));
-} // NOLINT(misc-redundant-expression)
+    return (float) (brtl_random(range) - brtl_random(range)); // NOLINT(misc-redundant-expression)
+}
 
 /*  Part of the cartography management.
  *  It has been moved here to be called by "prepare_nearstar".
@@ -4828,7 +4725,7 @@ void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase
         return;
     }
 
-    type <<= 2;
+    type = ((uint16_t) type) << 2;
     r = planet_rgb_and_var[type + 0];
     g = planet_rgb_and_var[type + 1];
     b = planet_rgb_and_var[type + 2];
@@ -4951,7 +4848,7 @@ void ring(int16_t planet_id, double ox, double oy, double oz, int16_t start,
 /*  Visualizza appopriatamente i pianeti, come punti, barlumi di luce
     o globi ben visibili, a seconda di distanza e raggio. C'� un terzo
     modo in cui un corpo planetario pu� rendersi visibile: con una falce.
-    L'effetto falce viene realizzato da "glowinglobe". */
+    L'effetto falce viene realizzato da "glowing_globe". */
 
 void planets() {
     auto *atmosphere     = (int8_t *)objectschart;
@@ -4985,7 +4882,8 @@ void planets() {
         nearstar_p_qsortdist[n]  = sqrt(xx * xx + yy * yy + zz * zz);
     }
 
-    QuickSort(nearstar_p_qsortindex, nearstar_p_qsortdist, 0, nearstar_nob - 1);
+    quick_sort(nearstar_p_qsortindex, nearstar_p_qsortdist, 0,
+               nearstar_nob - 1);
 
     if (nearstar_nob == 1) {
         pnpcs = npcs;
@@ -5058,8 +4956,8 @@ void planets() {
             far_pixel_at(plx, ply, plz, nearstar_p_ray[n], 0);
 
             if (ip_targetting) {
-                pxx -= x_centro;
-                pyy -= y_centro;
+                pxx -= VIEW_X_CENTER;
+                pyy -= VIEW_Y_CENTER;
                 d2 = pxx * pxx + pyy * pyy;
 
                 if (d2 < md2) {
@@ -5365,8 +5263,8 @@ void planets() {
                     ts -= 360;
                 }
 
-                glowinglobe(plwp, adapted, (uint8_t *)n_globes_map, gl_bytes, plx,
-                            ply, plz, nearstar_p_ray[n], ts, 130, 127);
+                glowing_globe(plwp, adapted, (uint8_t *) n_globes_map, gl_bytes,
+                              plx, ply, plz, nearstar_p_ray[n], ts, 130, 127);
             }
         }
 
@@ -5908,24 +5806,24 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
     float pp_delta, ccom;
 
     for (lptr = 0; lptr < 04; lptr++) {
-        areaclear(adapted, 10, openhudcount + 9 - lptr, 0, 0, 300, 1,
-                  54 + surlight + 3 * lptr);
+        area_clear(adapted, 10, openhudcount + 9 - lptr, 0, 0, 300, 1,
+                   54 + surlight + 3 * lptr);
     }
 
     for (lptr = 0; lptr < 10; lptr++) {
-        areaclear(adapted, 0, 9 - lptr, 0, 0, 320, 1, 64 + surlight - lptr);
+        area_clear(adapted, 0, 9 - lptr, 0, 0, 320, 1, 64 + surlight - lptr);
     }
 
     for (lptr = 0; lptr < 10; lptr++) {
-        areaclear(adapted, 0, 190 + lptr, 0, 0, 320, 1, 64 + surlight - lptr);
+        area_clear(adapted, 0, 190 + lptr, 0, 0, 320, 1, 64 + surlight - lptr);
     }
 
     for (lptr = 0; lptr < 10; lptr++) {
-        areaclear(adapted, 9 - lptr, 10, 0, 0, 1, 180, 64 + surlight - lptr);
+        area_clear(adapted, 9 - lptr, 10, 0, 0, 1, 180, 64 + surlight - lptr);
     }
 
     for (lptr = 0; lptr < 10; lptr++) {
-        areaclear(adapted, 310 + lptr, 10, 0, 0, 1, 180, 64 + surlight - lptr);
+        area_clear(adapted, 310 + lptr, 10, 0, 0, 1, 180, 64 + surlight - lptr);
     }
 
     lptr = 64 + 3 * surlight;
@@ -5934,13 +5832,13 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
         lptr = 127;
     }
 
-    areaclear(adapted, 9, 9, 0, 0, 4, 4, lptr);
+    area_clear(adapted, 9, 9, 0, 0, 4, 4, lptr);
     smootharound_64(adapted, 9, 9, 5, 1);
-    areaclear(adapted, 308, 9, 0, 0, 4, 4, lptr);
+    area_clear(adapted, 308, 9, 0, 0, 4, 4, lptr);
     smootharound_64(adapted, 308, 9, 5, 1);
-    areaclear(adapted, 9, 188, 0, 0, 4, 4, lptr);
+    area_clear(adapted, 9, 188, 0, 0, 4, 4, lptr);
     smootharound_64(adapted, 9, 188, 5, 1);
-    areaclear(adapted, 308, 188, 0, 0, 4, 4, lptr);
+    area_clear(adapted, 308, 188, 0, 0, 4, 4, lptr);
     smootharound_64(adapted, 308, 188, 5, 1);
     // Print time on outer HUD.
     sprintf((char *)outhudbuffer, "EPOC %d & ", epoc);
@@ -5975,8 +5873,8 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
         strcat((char *)outhudbuffer, alphavalue((((int32_t)(pos_x)) >> 14u) - 100));
         strcat((char *)outhudbuffer, ".");
         strcat((char *)outhudbuffer, alphavalue((((int32_t)(pos_z)) >> 14u) - 100));
-        areaclear(adapted, 254, 1, 0, 0, 5, 7, 64 + 0);
-        areaclear(adapted, 256, 8, 0, 0, 1, 1, 64 + 63);
+        area_clear(adapted, 254, 1, 0, 0, 5, 7, 64 + 0);
+        area_clear(adapted, 256, 8, 0, 0, 1, 1, 64 + 63);
         ccom = 360 - user_beta;
 
         if (ccom > 359) {
@@ -6082,7 +5980,7 @@ void snapshot(int16_t forcenumber, int8_t showdata) {
     }
 
     if (showdata) {
-        areaclear(adapted, 2, 191, 0, 0, 316, 7, 64 + 63);
+        area_clear(adapted, 2, 191, 0, 0, 316, 7, 64 + 63);
 
         parsis_x = round(dzat_x);
         parsis_y = round(dzat_y);
@@ -6110,12 +6008,12 @@ void snapshot(int16_t forcenumber, int8_t showdata) {
         wrouthud(3, 192, 0, (char *) outhudbuffer);
 
         if (ap_targetted == 1 && star_label_pos != -1) {
-            areaclear(adapted, 14, 14, 0, 0, 102, 7, 64 + 63);
+            area_clear(adapted, 14, 14, 0, 0, 102, 7, 64 + 63);
             wrouthud(15, 15, 20, (char *) star_label);
         }
 
         if (ip_targetted != -1 && planet_label_pos != -1) {
-            areaclear(adapted, 14, 23, 0, 0, 102, 7, 64 + 63);
+            area_clear(adapted, 14, 23, 0, 0, 102, 7, 64 + 63);
             wrouthud(15, 24, 20, (char *) planet_label);
         }
     }
