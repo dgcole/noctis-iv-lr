@@ -4587,9 +4587,7 @@ void planetary_main() {
                     if (sctype == ICY) {
                         surface_speed_multiplier = 10;
                     } else if (sctype != PLAINS) {
-                        if (sctype = PLAINS) {
-                            surface_speed_multiplier = 2;
-                        }
+                        surface_speed_multiplier = 2;
                     }
                 }
             }
