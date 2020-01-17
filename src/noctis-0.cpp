@@ -55,7 +55,7 @@ int8_t surface_palette[768];
 static std::stack<int16_t> keys;
 
 // Wait for a key?
-int16_t attendi_pressione_tasto() {
+int16_t get_key() {
     if (keys.empty())
         return 0;
     int16_t top = keys.top();
@@ -64,7 +64,7 @@ int16_t attendi_pressione_tasto() {
 }
 
 // Return 1 if there is a key press to be processed.
-bool tasto_premuto() { return !keys.empty(); }
+bool is_key() { return !keys.empty(); }
 
 uint8_t range8088[64 * 3] = {
     0,  0,  0,  1,  1,  1,  2,  2,  2,  3,  3,  3,  4,  4,  4,  5,  5,  5,

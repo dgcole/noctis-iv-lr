@@ -172,7 +172,7 @@ struct pvlist {
 };
 
 // Timing-related defines
-#define DBL_CLICK_CUTOFF 250000 // 250 ms? idk...
+#define DBL_CLICK_CUTOFF 125000 // 250 ms? idk...
 
 #define FRAME_TIME_MILLIS 55 // To correspond with the 55ms clock in DOS
 

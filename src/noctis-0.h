@@ -2,8 +2,8 @@
 
 extern uint16_t QUADWORDS;
 extern uint8_t *adapted;
-extern int16_t attendi_pressione_tasto();
-extern bool tasto_premuto();
+extern int16_t get_key();
+extern bool is_key();
 extern uint8_t range8088[64 * 3];
 extern uint8_t tmppal[768];
 extern uint8_t currpal[768];
