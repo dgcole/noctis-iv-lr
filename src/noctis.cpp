@@ -3432,9 +3432,11 @@ jpr:
             pos_z > -262 * 15 && pos_x > 172 * 15) {
             if (rselect) {
                 if (active_screen == -1) {
-                    active_screen = (int8_t)((pos_z + 104 * 15) / (-54 * 15));;
+                    active_screen = (int8_t)((pos_z + 104 * 15) / (-54 * 15));
+                    status("SELECTED", 50);
                 } else {
                     active_screen = -1;
+                    status("DESELECTED", 50);
                 }
             }
         } else {
