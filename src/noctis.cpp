@@ -351,7 +351,7 @@ void clear_onboard_screen() { memset(ctb, 0, 512); }
 
 uint8_t reset_signal         = 55;     // Reset signal (=55)
 int8_t force_update          = 0;      // Force screen to refresh
-int8_t active_screen         = 0;      // Screen currently active
+int8_t active_screen         = -1;      // Screen currently active
 int16_t osscreen_cursor_x[2] = {0, 0}; // Cursor position (x)
 int16_t osscreen_cursor_y[2] = {0, 0}; // Cursor position (y)
 uint8_t osscreen[2][7 * 21 + 1];       // Array of GOES screens
@@ -552,7 +552,7 @@ void run_goesnet_module() {
     if (!adapted) {
         printf("Sorry, GOES Net crashed.\n");
         printf("System integrity compromised: any key to quit.\n\n");
-        attendi_pressione_tasto();
+        get_key();
         exit(0xFF);
     } else {
         // It reacts to the presence of data in the communication file.
@@ -873,13 +873,13 @@ void vehicle(float opencapcount) {
 
     // Key interception (priority) for GOESnet.
 
-    if (force_update || (active_screen == 0 && tasto_premuto())) {
+    if (force_update || (active_screen == 0 && is_key())) {
         if (!force_update) {
             goesk_a = -1;
-            c       = attendi_pressione_tasto();
+            c       = get_key();
 
             if (!c) {
-                c       = attendi_pressione_tasto();
+                c       = get_key();
                 goesk_e = c;
 
                 if (c == 0x47) {
@@ -946,15 +946,15 @@ void vehicle(float opencapcount) {
 
     /* Key interception (priority) for the "STARMAP TREE". */
 
-    if (force_update || (active_screen == 1 && tasto_premuto())) {
+    if (force_update || (active_screen == 1 && is_key())) {
         if (!force_update) {
         krep1:
-            c       = attendi_pressione_tasto();
+            c       = get_key();
             goesk_a = c;
 
             if (!c) {
                 goesk_a = -1;
-                c       = attendi_pressione_tasto();
+                c       = get_key();
                 goesk_e = c;
 
                 switch (c) {
@@ -1019,7 +1019,7 @@ void vehicle(float opencapcount) {
                 }
             }
 
-            if (tasto_premuto()) {
+            if (is_key()) {
                 goto krep1;
             }
         }
@@ -1037,14 +1037,14 @@ void vehicle(float opencapcount) {
 
     // Intercettazione tasti (prioritaria) per la planetary map.
 
-    if (active_screen == 2 && tasto_premuto()) {
+    if (active_screen == 2 && is_key()) {
     krep2:
-        c       = attendi_pressione_tasto();
+        c       = get_key();
         goesk_a = c;
 
         if (!c) {
             goesk_a = -1;
-            c       = attendi_pressione_tasto();
+            c       = get_key();
             goesk_e = c;
 
             if (landing_point) {
@@ -1157,7 +1157,7 @@ void vehicle(float opencapcount) {
             }
         }
 
-        if (tasto_premuto()) {
+        if (is_key()) {
             goto krep2;
         }
     }
@@ -2595,7 +2595,7 @@ int32_t ir3, ig3, ib3, ir3e = 0, ig3e = 0, ib3e = 0;
 int16_t mc            = 0;
 uint8_t p_mpul        = 0;
 int8_t sky_palette_ok = 0;
-int8_t mselect, lrv;
+int8_t lselect, rselect, lrv;
 bool right_dblclick = false;
 float right_dblclick_dir;
 double dpz, ras, rap, dasp, eclipse;
@@ -2628,7 +2628,7 @@ int main(int argc, char **argv) {
 #else
     window = SDL_CreateWindow(
         "Noctis IV LR", SDL_WINDOWPOS_CENTERED, // NOLINT(hicpp-signed-bitwise)
-        SDL_WINDOWPOS_CENTERED, 1280, 800,       // NOLINT(hicpp-signed-bitwise)
+        SDL_WINDOWPOS_CENTERED, 1280, 800,      // NOLINT(hicpp-signed-bitwise)
         SDL_WINDOW_RESIZABLE);
 #endif
 
@@ -2791,7 +2791,7 @@ void swapBuffers() {
     SDL_DestroyTexture(texture);
 
     // Frame limiter (18 FPS)
-    static const auto goal = std::chrono::milliseconds(55);
+    static const auto goal = std::chrono::milliseconds(FRAME_TIME_MILLIS);
     static auto last       = std::chrono::high_resolution_clock::now();
 
     auto now = std::chrono::high_resolution_clock::now();
@@ -3007,14 +3007,16 @@ void loop() {
 
     const int WASD_speed = 20;
 
-    // +X / -X Direction
-    int8_t x_dir = ((int8_t) key_move_dir.right) - ((int8_t) key_move_dir.left);
-    // +Z / -Z Direction
-    int8_t z_dir = ((int8_t) key_move_dir.forward) - ((int8_t) key_move_dir.backward);
+    if ((active_screen != 0) && ((labstar == 0) && (labplanet == 0))) {
+        // +X / -X Direction
+        int8_t x_dir = ((int8_t) key_move_dir.right) - ((int8_t) key_move_dir.left);
+        // +Z / -Z Direction
+        int8_t z_dir = ((int8_t) key_move_dir.forward) - ((int8_t) key_move_dir.backward);
 
-    if (x_dir || z_dir) {
-        step += z_dir * WASD_speed;
-        shift += x_dir * WASD_speed;
+        if (x_dir || z_dir) {
+            step += z_dir * WASD_speed;
+            shift += x_dir * WASD_speed;
+        }
     }
 
     // Mouse input for double left and right click.
@@ -3023,23 +3025,31 @@ void loop() {
     }
 
     if ((mpul & 1u) && !(p_mpul & 1u)) {
-        mselect = 1;
+        lselect = 1;
     } else {
-        mselect = 0;
+        lselect = 0;
     }
 
     if ((mpul & 2u) && !(p_mpul & 2u) && !right_dblclick) {
         if (!right_dblclick_timing) {
             right_dblclick_timing = clock();
+            rselect = 1;
         } else {
             if (clock() - right_dblclick_timing < DBL_CLICK_CUTOFF) {
                 right_dblclick     = true;
                 right_dblclick_dir = user_beta;
             } else {
                 right_dblclick_timing = clock();
+                rselect = 1;
             }
         }
+    } else {
+        rselect = 0;
     }
+
+    // Disable double clicking while a screen is selected to fix a few weird
+    // quirks.
+    right_dblclick = (right_dblclick && (active_screen == -1));
 
     if (right_dblclick) {
         if (ap_targetting) {
@@ -3312,7 +3322,6 @@ nop:
     */
     // Controllo gestore (indicando i comandi con lo sguardo).
     //
-    active_screen = -1;
     from_user();
     leftturn  = 0;
     rightturn = 0;
@@ -3344,7 +3353,7 @@ nop:
                     s_control = 4;
                 }
 
-                if (mselect) {
+                if (lselect) {
                     if (!ap_targetting && !ip_targetting) {
                         aso_countdown = 100;
                         sys           = s_control;
@@ -3365,7 +3374,7 @@ nop:
                         s_command = 4;
                     }
 
-                    if (mselect) {
+                    if (lselect) {
                         if (!ap_targetting && !ip_targetting) {
                             aso_countdown = 100;
                             commands();
@@ -3379,7 +3388,7 @@ nop:
         }
     }
 
-    if (mselect && pwr > 15000) {
+    if (lselect && pwr > 15000) {
         if (revcontrols) {
             if (cam_x > 2500) {
                 dlt_nav_beta += 1.5;
@@ -3421,7 +3430,17 @@ jpr:
         // Paratia destra:
         if (user_beta > -135 && user_beta < -45 && pos_z < -104 * 15 &&
             pos_z > -262 * 15 && pos_x > 172 * 15) {
-            active_screen = (int8_t)((pos_z + 104 * 15) / (-54 * 15));
+            if (rselect) {
+                if (active_screen == -1) {
+                    active_screen = (int8_t)((pos_z + 104 * 15) / (-54 * 15));
+                    status("SELECTED", 50);
+                } else {
+                    active_screen = -1;
+                    status("DESELECTED", 50);
+                }
+            }
+        } else {
+            active_screen = -1;
         }
 
         // Paratia sinistra:
@@ -4920,8 +4939,8 @@ resynctoplanet:
      * targets, attributing labels, etc.
      */
     if (ontheroof) {
-        if (tasto_premuto()) {
-            mc = attendi_pressione_tasto();
+        if (is_key()) {
+            mc = get_key();
 
             if (mc == '*') {
                 snapshot(0, 1);
@@ -4945,12 +4964,12 @@ resynctoplanet:
         goto goesk_a_reentry;
     }
 
-    if (active_screen == -1 && tasto_premuto()) {
-        while (tasto_premuto()) {
-            mc = attendi_pressione_tasto();
+    if (active_screen == -1 && is_key()) {
+        while (is_key()) {
+            mc = get_key();
 
             if (!mc) {
-                mc = attendi_pressione_tasto();
+                mc = get_key();
             goesk_e_reentry:
 
                 if (targets_in_range) {
@@ -5322,7 +5341,7 @@ resynctoplanet:
                         dev_page = 0;
                         break;
 
-                    case 'd':
+                    case 'p':
                         sys      = 3;
                         dev_page = 0;
                         break;

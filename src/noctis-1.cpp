@@ -4587,9 +4587,7 @@ void planetary_main() {
                     if (sctype == ICY) {
                         surface_speed_multiplier = 10;
                     } else if (sctype != PLAINS) {
-                        if (sctype = PLAINS) {
-                            surface_speed_multiplier = 2;
-                        }
+                        surface_speed_multiplier = 2;
                     }
                 }
             }
@@ -5649,11 +5647,11 @@ void planetary_main() {
         }
 
         // controllo tastiera.
-        while (tasto_premuto()) {
-            w = attendi_pressione_tasto();
+        while (is_key()) {
+            w = get_key();
 
             if (!w) {
-                w = attendi_pressione_tasto();
+                w = get_key();
 
                 if (w == 0x49) {
                     openhuddelta = -5;
