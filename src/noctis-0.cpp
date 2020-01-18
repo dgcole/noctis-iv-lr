@@ -5955,7 +5955,7 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
             if (sys == 4) {
                 strcat(
                     (char *) outhudbuffer,
-                    "(5\\FLIGHTCTR R\\DEVICES    D\\PREFS      X\\SCREEN OFF)");
+                    "(5\\FLIGHTCTR R\\DEVICES    P\\PREFS      X\\SCREEN OFF)");
             } else {
                 cpos                    = strlen((char *) outhudbuffer);
                 outhudbuffer[cpos + 00] = '6';

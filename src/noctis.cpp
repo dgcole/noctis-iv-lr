@@ -5341,7 +5341,7 @@ resynctoplanet:
                         dev_page = 0;
                         break;
 
-                    case 'd':
+                    case 'p':
                         sys      = 3;
                         dev_page = 0;
                         break;
