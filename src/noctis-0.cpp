@@ -2986,7 +2986,7 @@ void white_sun(uint8_t *target, double x, double y, double z, float mag_factor,
                         pix = 0x3F;
                     }
 
-                    pixptr = 320 * yy + (int16_t) xx;
+                    pixptr = ((int16_t) (((int16_t) 320) * ((int16_t) yy))) + (int16_t) xx;
                     pix += target[pixptr];
 
                     if (pix > 0x3F) {
