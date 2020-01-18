@@ -3007,7 +3007,7 @@ void loop() {
 
     const int WASD_speed = 20;
 
-    if (active_screen != 0) {
+    if ((active_screen != 0) && ((labstar == 0) && (labplanet == 0))) {
         // +X / -X Direction
         int8_t x_dir = ((int8_t) key_move_dir.right) - ((int8_t) key_move_dir.left);
         // +Z / -Z Direction
