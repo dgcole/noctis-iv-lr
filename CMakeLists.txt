@@ -1,10 +1,5 @@
 cmake_minimum_required(VERSION 3.9)
 
-if (UNIX)
-    set(CMAKE_C_COMPILER "/usr/bin/clang")
-    set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
-endif()
-
 project(nivlr)
 
 find_package(SDL2 REQUIRED)
