@@ -10,6 +10,7 @@ game, not translations of functions from Assembly to C++.
 ### Additions
 * Movement is now done with WASD
 * Mouselook
+* Mouse is captured with F1
 
 ### Changes
 * Load supports.nct directly from res/ folder

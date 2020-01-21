@@ -284,6 +284,11 @@ void handle_input() {
             case SDL_SCANCODE_KP_COLON:
             case SDL_SCANCODE_SEMICOLON:
                 keys.push(':');
+            case SDL_SCANCODE_F1: {
+                static bool captured = false;
+                captured = !captured;
+                SDL_SetRelativeMouseMode((SDL_bool) captured);
+            }
             default:
                 break;
             }
