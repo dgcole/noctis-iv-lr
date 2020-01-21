@@ -1937,23 +1937,22 @@ int32_t _x_, _y_;
  * The point should not be traced(drawn?) so it is not visible,
  * because the coordinates would be, in this(that?) case, indeterminable. */
 int8_t get_coords(float x, float y, float z) {
-
     float rx, ry, rz, my, xx, yy, zz, z2;
 
-    zz = z - cam_x;
+    zz = z - cam_z;
     xx = x - cam_x;
 
-    rx = (zz * opt_tsinbeta) + (xx * opt_tcosbeta);
+    rx = (xx * opt_tcosbeta) + (zz * opt_tsinbeta);
     z2 = (zz * opt_tcosbeta) - (xx * opt_tsinbeta);
 
     yy = y - cam_y;
 
-    rz = (z2 * opt_tcosalfa) + (yy * opt_tsinalfa);
+    rz = (yy * opt_tsinalfa) + (z2 * opt_tcosalfa);
 
-    if (ngamma != 0.0) {
+    if (ngamma != 0) {
         my = (yy * opt_tcosalfa) - (z2 * opt_tsinalfa);
         ry = (my * opt_tcosngamma) - (rx * opt_tsinngamma);
-        rx = (my * opt_tsinngamma) + (rx * opt_tcosngamma);
+        rx = (rx * opt_tcosngamma) + (my * opt_tsinngamma);
     } else {
         ry = (yy * opt_tcosalfa) - (z2 * opt_tsinalfa);
     }
@@ -1962,10 +1961,9 @@ int8_t get_coords(float x, float y, float z) {
         return 0;
     }
 
-    // my  = dpp / rz; (Explain this, italy man!)
-
-    _x_ = ((dpp / rz) * rx) + x_centro_f;
-    _y_ = ((dpp / rz) * ry) + y_centro_f;
+    my  = dpp / rz;
+    _x_ = round(my * rx + x_centro_f);
+    _y_ = round(my * ry + y_centro_f);
 
     if (_x_ > lbxl && _x_ < ubxl && _y_ > lbyl && _y_ < ubyl) {
         return 1;
