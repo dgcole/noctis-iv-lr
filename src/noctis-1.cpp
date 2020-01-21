@@ -118,7 +118,7 @@ void greenmush(float x, float y, float z, uint8_t mask_1, uint8_t mask_2,
     z += correction;
 
     if (!noseed) {
-        fast_srand (((int32_t)x >> 14) + ((int32_t)y >> 14) + ((int32_t)z >> 14));
+        fast_srand(((int32_t) x >> 14) + ((int32_t) y >> 14) + ((int32_t) z >> 14));
     }
 
     m1 = 1 + fast_random (mask_1);
@@ -337,8 +337,8 @@ void build_fractal_tree(float x, float y, float z, float scaling, float reductio
 #define FORCE_CON 22
 #define GIANT_TREE 333
 
-void albero(float x, float y, float z, int32_t depth) {
-    // disegna alberi ove richiesti.
+void tree(float x, float y, float z, int32_t depth) {
+    // Draw trees where required.
     fast_srand(x + y + z + 3);
     int16_t treetype = fast_random(511);
 
@@ -1116,7 +1116,7 @@ void srf_detail(float x, float y, float z, int32_t depth, int8_t _class_) {
         if (y > -15000) {
             cespuglio(x, y, z, depth);
         } else {
-            albero(x, y, z, depth);
+            tree(x, y, z, depth);
         }
 
         break;
