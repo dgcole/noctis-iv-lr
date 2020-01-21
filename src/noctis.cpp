@@ -2620,17 +2620,10 @@ int main(int argc, char **argv) {
     // Initialize SDL.
     sdl_surface = SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF000000, 0xFF0000,
                                        0xFF00, 0xFF);
-#if NDEBUG
-    window = SDL_CreateWindow("Noctis IV LR", SDL_WINDOWPOS_CENTERED,
-                              SDL_WINDOWPOS_CENTERED, 960, 600,
-                              SDL_WINDOW_RESIZABLE | SDL_WINDOW_INPUT_GRABBED);
-    SDL_SetRelativeMouseMode(SDL_TRUE);
-#else
     window = SDL_CreateWindow(
         "Noctis IV LR", SDL_WINDOWPOS_CENTERED, // NOLINT(hicpp-signed-bitwise)
         SDL_WINDOWPOS_CENTERED, 1280, 800,      // NOLINT(hicpp-signed-bitwise)
         SDL_WINDOW_RESIZABLE);
-#endif
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE);
 
