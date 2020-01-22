@@ -815,7 +815,7 @@ int16_t goesk_a = -1;
 int16_t goesk_e = -1;
 
 void vehicle(float opencapcount) {
-    int16_t n, c, i, j, k, screenfile;
+    int16_t n, c, i, j, k;
     int8_t short_text[11];
     uint8_t chcol;
     float backup_cam_x, backup_cam_z;
@@ -960,24 +960,24 @@ void vehicle(float opencapcount) {
                 switch (c) {
                 case 0x4F:
                 case 0x76:
-                case 0x91:
-                    screenfile = open(goesoutputfile, 0);
+                case 0x91: {
+                    FILE *screenfile = fopen(goesoutputfile, "r");
 
-                    if (screenfile > -1) {
-                        uint32_t len = lseek(screenfile, 0, SEEK_END);
-                        lseek(screenfile, 0, SEEK_SET);
+                    if (screenfile != nullptr) {
+                        uint32_t len = fseek(screenfile, 0, SEEK_END);
+                        fseek(screenfile, 0, SEEK_SET);
                         goesfile_pos = len - 7 * 21;
 
                         if (goesfile_pos < 0) {
                             goesfile_pos = 0;
                         }
 
-                        close(screenfile);
+                        fclose(screenfile);
                     }
 
                     goesk_e = -1;
                     break;
-
+                }
                 case 0x47:
                 case 0x84:
                 case 0x8D:
@@ -1025,13 +1025,13 @@ void vehicle(float opencapcount) {
         }
 
         memset(osscreen[1], 0, 21 * 7);
-        screenfile = open(goesoutputfile, 0);
+        FILE* screenfile = fopen(goesoutputfile, "r");
 
-        if (screenfile > -1) {
-            lseek(screenfile, goesfile_pos, SEEK_SET);
-            n              = read(screenfile, osscreen[1], 7 * 21);
+        if (screenfile != nullptr) {
+            fseek(screenfile, goesfile_pos, SEEK_SET);
+            n = fread(osscreen[1], 7 * 21, 1, screenfile);
             osscreen[1][n] = 0;
-            close(screenfile);
+            fclose(screenfile);
         }
     }
 
@@ -1441,11 +1441,11 @@ void update_star_label() {
             star_label_pos   = search_id_code(ap_target_id, 'S');
 
             if (star_label_pos != -1) {
-                smh = open(starmap_file, 0);
-                lseek(smh, star_label_pos, SEEK_SET);
-                read(smh, &star_id, 8);
-                read(smh, &star_label, 24);
-                close(smh);
+                FILE* smh = fopen(starmap_file, "r");
+                fseek(smh, star_label_pos, SEEK_SET);
+                fread(&star_id, 8, 1, smh);
+                fread(&star_label, 24, 1, smh);
+                fclose(smh);
             } else {
                 memcpy(star_label, star_no_label, 24);
             }
@@ -1465,11 +1465,11 @@ void update_planet_label() {
         planet_label_pos = search_id_code(current_planet_id, 'P');
 
         if (planet_label_pos != -1) {
-            smh = open(starmap_file, 0);
-            lseek(smh, planet_label_pos, SEEK_SET);
-            read(smh, &planet_id, 8);
-            read(smh, &planet_label, 24);
-            close(smh);
+            FILE* smh = fopen(starmap_file, "r");
+            fseek(smh, planet_label_pos, SEEK_SET);
+            fread(&planet_id, 8, 1, smh);
+            fread(&planet_label, 24, 1, smh);
+            fclose(smh);
         } else {
             if (nearstar_p_owner[ip_targetted] == -1) {
                 memcpy(planet_label, planet_no_label, 24);
@@ -2058,12 +2058,12 @@ void dev_commands() {
                         labstar = 0;
 
                         if (star_label_pos >= sm_consolidated) {
-                            smh = open(starmap_file, 4);
+                            FILE* smh = fopen(starmap_file, "w");
 
-                            if (smh > -1) {
-                                lseek(smh, star_label_pos, SEEK_SET);
-                                write(smh, &dummy_identity[0], 8);
-                                close(smh);
+                            if (smh != nullptr) {
+                                fseek(smh, star_label_pos, SEEK_SET);
+                                fwrite(&dummy_identity[0], 8, 1, smh);
+                                fclose(smh);
                                 ap_target_previd = 12345;
                                 status("REMOVED", 50);
                                 star_label_pos = -1;
@@ -2084,33 +2084,32 @@ void dev_commands() {
                         }
                     }
                 } else {
-                    smh = open(starmap_file, 4);
+                    FILE* smh = fopen(starmap_file, "r+");
 
-                    if (smh == -1) {
-                        smh             = creat(starmap_file, 0);
+                    if (smh == nullptr) {
+                        smh             = fopen(starmap_file, "w+");
                         sm_consolidated = 4;
-                        write(smh, &sm_consolidated, 4);
+                        fwrite(&sm_consolidated, 4, 1, smh);
                     }
 
-                    if (smh > -1) {
-                        lseek(smh, 4, SEEK_SET);
-
-                        while (read(smh, comp_data, 32) == 32)
+                    if (smh != nullptr) {
+                        fseek(smh, 4, SEEK_SET);
+                        while (fread(comp_data, 1, 32, smh) == 32)
                             if (memcmp(comp_data, dummy_identity, 8)) {
                                 if (!strcasecmp((char *) (comp_data + 8),
                                                 (char *) star_label)) {
                                     status("EXTANT", 50);
                                     ap_target_previd = 12345;
                                     star_label_pos   = -1;
-                                    close(smh);
+                                    fclose(smh);
                                     return;
                                 }
                             }
 
-                        lseek(smh, 0, SEEK_END);
-                        star_label_pos = lseek(smh, 0, SEEK_CUR);
-                        write(smh, &star_id, 32);
-                        close(smh);
+                        fseek(smh, 0, SEEK_END);
+                        star_label_pos = fseek(smh, 0, SEEK_CUR);
+                        fwrite(&star_id, 1, 32, smh);
+                        fclose(smh);
                         status("ASSIGNED", 50);
                         nearstar_labeled++;
                     } else {
@@ -2132,12 +2131,12 @@ void dev_commands() {
                         labplanet = 0;
 
                         if (planet_label_pos >= sm_consolidated) {
-                            smh = open(starmap_file, 4);
+                            FILE* smh = fopen(starmap_file, "w");
 
-                            if (smh > -1) {
-                                lseek(smh, planet_label_pos, SEEK_SET);
-                                write(smh, &dummy_identity[0], 8);
-                                close(smh);
+                            if (smh != nullptr) {
+                                fseek(smh, planet_label_pos, SEEK_SET);
+                                fwrite(&dummy_identity[0], 1, 8, smh);
+                                fclose(smh);
                                 prev_planet_id = 12345;
                                 status("REMOVED", 50);
                                 planet_label_pos = -1;
@@ -2158,33 +2157,33 @@ void dev_commands() {
                         }
                     }
                 } else {
-                    smh = open(starmap_file, 4);
+                    FILE* smh = fopen(starmap_file, "r+");
 
-                    if (smh == -1) {
-                        smh             = creat(starmap_file, 0);
+                    if (smh == nullptr) {
+                        smh             = fopen(starmap_file, "w+");
                         sm_consolidated = 4;
-                        write(smh, &sm_consolidated, 4);
+                        fwrite(&sm_consolidated, 4, 1, smh);
                     }
 
-                    if (smh > -1) {
-                        lseek(smh, 4, SEEK_SET);
+                    if (smh != nullptr) {
+                        fseek(smh, 4, SEEK_SET);
 
-                        while (read(smh, comp_data, 32) == 32)
+                        while (fread(comp_data, 1, 32, smh) == 32)
                             if (memcmp(comp_data, dummy_identity, 8)) {
                                 if (!strcasecmp((char *) (comp_data + 8),
                                                 (char *) planet_label)) {
                                     status("EXTANT", 50);
                                     prev_planet_id   = 12345;
                                     planet_label_pos = -1;
-                                    close(smh);
+                                    fclose(smh);
                                     return;
                                 }
                             }
 
-                        lseek(smh, 0, SEEK_END);
-                        planet_label_pos = lseek(smh, 0, SEEK_CUR);
-                        write(smh, &planet_id, 32);
-                        close(smh);
+                        fseek(smh, 0, SEEK_END);
+                        planet_label_pos = fseek(smh, 0, SEEK_CUR);
+                        fwrite(&planet_id, 1, 32, smh);
+                        fclose(smh);
                         status("ASSIGNED", 50);
                         nearstar_labeled++;
                     } else {
@@ -2382,29 +2381,26 @@ void commands() {
  *  This loads the situation saved by freeze() */
 
 void unfreeze() {
-    FILE *fh; // TBH, I hate fh. fp is better.
     double elapsed, dpwr;
     // Reading the consolidated starmap.
-    smh = open(starmap_file, 4);
+    FILE* smh = fopen(starmap_file, "r+");
 
-    /* TODO: Use fopen, fwrite, etc. for smh I/O
-     * (Check if anywhere else uses this variable, too!) */
-    if (smh > -1) {
-        read(smh, &sm_consolidated, 4);
+    if (smh != nullptr) {
+        fread(&sm_consolidated, 4, 1, smh);
 
         if (!sm_consolidated) {
-            sm_consolidated = lseek(smh, 0, SEEK_END);
-            lseek(smh, 0, SEEK_SET);
-            write(smh, &sm_consolidated, 4);
+            sm_consolidated = fseek(smh, 0, SEEK_END);
+            fseek(smh, 0, SEEK_SET);
+            fwrite(&sm_consolidated, 4, 1, smh);
         }
 
-        close(smh);
+        fclose(smh);
     } else {
         sm_consolidated = 0;
     }
 
     /* Reading the previous situation */
-    fh = fopen(situation_file, "r");
+    FILE *fh = fopen(situation_file, "r");
 
     if (fh == nullptr) {
         return;
@@ -2690,13 +2686,13 @@ int main(int argc, char **argv) {
     // di output della GOES command net
     force_update = 1;
     // recupero della situazione di superficie
-    sfh = open(surface_file, 0);
+    FILE* sfh = fopen(surface_file, "r");
 
-    if (sfh > -1) {
+    if (sfh != NULL) {
         // lettura precedenti coordinate di sbarco
-        read(sfh, &landing_pt_lon, 2);
-        read(sfh, &landing_pt_lat, 2);
-        close(sfh);
+        fread(&landing_pt_lon, 2, 1, sfh);
+        fread(&landing_pt_lat, 2, 1, sfh);
+        fclose(sfh);
         // recupero labels del pianeta e della stella-bersaglio
         update_star_label();
         update_planet_label();
@@ -3776,12 +3772,12 @@ nohud_1:
                 tgt_label_pos = search_id_code(targets_table_id[mc], 'S');
 
                 if (tgt_label_pos > -1) {
-                    smh = open(starmap_file, 0);
+                    FILE* smh = fopen(starmap_file, "r");
 
-                    if (smh > -1) {
-                        lseek(smh, tgt_label_pos + 8, SEEK_SET);
-                        read(smh, &target_name[tgts_in_show], 24);
-                        close(smh);
+                    if (smh != nullptr) {
+                        fseek(smh, tgt_label_pos + 8, SEEK_SET);
+                        fread(&target_name[tgts_in_show], 1, 24, smh);
+                        fclose(smh);
                         tgts_in_show++;
                     }
                 }

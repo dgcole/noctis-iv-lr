@@ -4432,31 +4432,30 @@ void planetary_main() {
     int16_t bounces = 0;
     int16_t resolve = 1;
     float   fixed_step = 0;
-    int16_t ih, oh, i9997, i9998, i9999;
     int8_t    t[54];
     int16_t prog;
     int32_t    line;
     exitflag = 0;
 
     if (entryflag) {
-        sfh = open(surface_file, 0);
+        FILE* sfh = fopen(surface_file, "r");
 
-        if (sfh != -1) {
-            read (sfh, &landing_pt_lon, 2);
-            read (sfh, &landing_pt_lat, 2);
-            read (sfh, &atl_x, 4);
-            read (sfh, &atl_z, 4);
-            read (sfh, &atl_x2, 4);
-            read (sfh, &atl_z2, 4);
-            read (sfh, &pos_x, 4);
-            read (sfh, &pos_y, 4);
-            read (sfh, &pos_z, 4);
-            read (sfh, &user_alfa, 4);
-            read (sfh, &user_beta, 4);
-            read (sfh, &openhuddelta, 2);
-            read (sfh, &openhudcount, 2);
-            read (sfh, &hud_rtl_closed, 1);
-            close (sfh);
+        if (sfh != nullptr) {
+            fread(&landing_pt_lon, 2, 1, sfh);
+            fread(&landing_pt_lat, 2, 1, sfh);
+            fread(&atl_x, 4, 1, sfh);
+            fread(&atl_z, 4, 1, sfh);
+            fread(&atl_x2, 4, 1, sfh);
+            fread(&atl_z2, 4, 1, sfh);
+            fread(&pos_x, 4, 1, sfh);
+            fread(&pos_y, 4, 1, sfh);
+            fread(&pos_z, 4, 1, sfh);
+            fread(&user_alfa, 4, 1, sfh);
+            fread(&user_beta, 4, 1, sfh);
+            fread(&openhuddelta, 2, 1, sfh);
+            fread(&openhudcount, 2, 1, sfh);
+            fread(&hud_rtl_closed, 1, 1, sfh);
+            fclose(sfh);
             landed = 1;
             opencapdelta = 0;
             opencapcount = 0;
@@ -5545,19 +5544,19 @@ void planetary_main() {
             widesnapping++;
 
             if (widesnapping == 3) {
+                FILE* i9997, *i9998, *i9999, *tfh, *oh;
                 widesnapping = 0;
                 user_beta += widesnappingangle;
                 //
-                ih = sa_open (header_bmp);
+                FILE* ih = sa_open (header_bmp);
 
-                if (ih == -1) {
+                if (ih == nullptr) {
                     goto wserror;
                 }
-
-                read (ih, t, 54);
+                fread(t, 1, 54, ih);
                 t[18] = 0x94;
                 t[19] = 0x03;
-                close (ih);
+                fclose (ih);
                 //
                 prog = -1;
 
@@ -5569,75 +5568,75 @@ void planetary_main() {
                     }
 
                     sprintf((char*) snapfilename, "..\\GALLERY\\SNAP%04d.BMP", prog);
-                    ih = open((char*) snapfilename, 0);
+                    tfh = fopen((char*) snapfilename, "r");
 
-                    if (ih != -1) {
-                        close (ih);
+                    if (tfh != nullptr) {
+                        fclose(tfh);
                     }
-                } while (ih != -1);
+                } while (tfh != nullptr);
 
                 //
-                i9997 = open ("..\\GALLERY\\SNAP9997.BMP", 0);
-                i9998 = open ("..\\GALLERY\\SNAP9998.BMP", 0);
-                i9999 = open ("..\\GALLERY\\SNAP9999.BMP", 0);
+                i9997 = fopen ("..\\GALLERY\\SNAP9997.BMP", "w+");
+                i9998 = fopen ("..\\GALLERY\\SNAP9998.BMP", "w+");
+                i9999 = fopen ("..\\GALLERY\\SNAP9999.BMP", "w+");
 
-                if (i9997 == -1 || i9998 == -1 || i9999 == -1) {
-                    if (i9997 != -1) {
-                        close (i9997);
+                if (i9997 == nullptr || i9998 == nullptr || i9999 == nullptr) {
+                    if (i9997 != nullptr) {
+                        fclose (i9997);
                     }
 
-                    if (i9998 != -1) {
-                        close (i9998);
+                    if (i9998 != nullptr) {
+                        fclose (i9998);
                     }
 
-                    if (i9999 != -1) {
-                        close (i9999);
+                    if (i9999 != nullptr) {
+                        fclose (i9999);
                     }
 
                     goto wserror;
                 }
 
                 //
-                oh = creat((char*) snapfilename, 0);
+                oh = fopen((char*) snapfilename, "w+");
 
-                if (oh == -1) {
+                if (oh == nullptr) {
                     goto wserror;
                 }
 
-                write (oh, t, 54);
+                fwrite(t, 1, 54, oh);
                 //
-                lseek (i9997, 54L, SEEK_SET);
-                read (i9997, adapted, 1024);
-                write (oh, adapted, 1024);
+                fseek (i9997, 54L, SEEK_SET);
+                fread(adapted, 1, 1024, i9997);
+                fwrite(adapted, 1, 1024, oh);
                 //
-                lseek (i9997, 1078L, SEEK_SET);
+                fseek (i9997, 1078L, SEEK_SET);
 
                 for (line = 0; line < 200; line++) {
-                    read (i9997, adapted, 320);
-                    lseek (oh, line * 916L + 1078L + 309L, SEEK_SET);
-                    write (oh, adapted + 10, 299);
+                    fread(adapted, 1, 320, i9997);
+                    fseek (oh, line * 916L + 1078L + 309L, SEEK_SET);
+                    fwrite(adapted + 10, 1, 299, oh);
                 }
 
                 //
-                lseek (i9998, 1078L, SEEK_SET);
+                fseek (i9998, 1078L, SEEK_SET);
 
                 for (line = 0; line < 200; line++) {
-                    read (i9998, adapted, 320);
-                    lseek (oh, line * 916L + 1078L, SEEK_SET);
-                    write (oh, adapted, 309);
+                    fread(adapted, 1, 320, i9998);
+                    fseek (oh, line * 916L + 1078L, SEEK_SET);
+                    fwrite(adapted, 1, 309, oh);
                 }
 
                 //
-                lseek (i9999, 1078L, SEEK_SET);
+                fseek (i9999, 1078L, SEEK_SET);
 
                 for (line = 0; line < 200; line++) {
-                    read (i9999, adapted, 320);
-                    lseek (oh, line * 916L + 1078L + 608L, SEEK_SET);
-                    write (oh, adapted + 10, 308);
+                    fread(adapted, 1, 320, i9999);
+                    fseek (oh, line * 916L + 1078L + 608L, SEEK_SET);
+                    fwrite(adapted + 10, 1, 308, oh);
                 }
 
                 //
-                close (oh);
+                fclose (oh);
                 //
                 wserror:
                 remove ("..\\GALLERY\\SNAP9997.BMP");
@@ -5789,24 +5788,24 @@ void planetary_main() {
                 }
 
                 if (w == 27 && landed) {
-                    sfh = creat (surface_file, 0);
+                    FILE* sfh = fopen(surface_file, "w+");
 
-                    if (sfh != -1) {
-                        write (sfh, &landing_pt_lon, 2);
-                        write (sfh, &landing_pt_lat, 2);
-                        write (sfh, &atl_x, 4);
-                        write (sfh, &atl_z, 4);
-                        write (sfh, &atl_x2, 4);
-                        write (sfh, &atl_z2, 4);
-                        write (sfh, &pos_x, 4);
-                        write (sfh, &pos_y, 4);
-                        write (sfh, &pos_z, 4);
-                        write (sfh, &user_alfa, 4);
-                        write (sfh, &user_beta, 4);
-                        write (sfh, &openhuddelta, 2);
-                        write (sfh, &openhudcount, 2);
-                        write (sfh, &hud_rtl_closed, 1);
-                        close (sfh);
+                    if (sfh != nullptr) {
+                        fwrite(&landing_pt_lon, 2, 1, sfh);
+                        fwrite(&landing_pt_lat, 2, 1, sfh);
+                        fwrite(&atl_x, 4, 1, sfh);
+                        fwrite(&atl_z, 4, 1, sfh);
+                        fwrite(&atl_x2, 4, 1, sfh);
+                        fwrite(&atl_z2, 4, 1, sfh);
+                        fwrite(&pos_x, 4, 1, sfh);
+                        fwrite(&pos_y, 4, 1, sfh);
+                        fwrite(&pos_z, 4, 1, sfh);
+                        fwrite(&user_alfa, 4, 1, sfh);
+                        fwrite(&user_beta, 4, 1, sfh);
+                        fwrite(&openhuddelta, 2, 1, sfh);
+                        fwrite(&openhudcount, 2, 1, sfh);
+                        fwrite(&hud_rtl_closed, 1, 1, sfh);
+                        fclose(sfh);
                         exitflag = 1;
                         goto nodissolve;
                     }

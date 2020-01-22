@@ -866,19 +866,18 @@ float flandom() { return ((float) brtl_random(32767) * 0.000030518); }
 float fast_flandom() { return ((float) fast_random(32767) * 0.000030518); }
 
 // Loads virtual file handles from supports.nct
-int32_t sa_open(int32_t offset_of_virtual_file) {
-    int32_t fh;
-    fh = open("res/supports.nct", 0);
+FILE *sa_open(int32_t offset_of_virtual_file) {
+    FILE* fh = fopen("res/supports.nct", "r");
 
-    if (fh == -1) {
-        return (-1);
+    if (fh == nullptr) {
+        return nullptr;
     }
 
-    if (lseek(fh, offset_of_virtual_file, SEEK_END) > -1) {
-        return (fh);
+    if (fseek(fh, offset_of_virtual_file, SEEK_END) > -1) {
+        return fh;
     } else {
-        close(fh);
-        return (-1);
+        fclose(fh);
+        return nullptr;
     }
 }
 
@@ -1832,17 +1831,17 @@ void unloadallpv() {
 int8_t loadpv(int16_t handle, int32_t virtual_file_position, float xscale,
               float yscale, float zscale, float xmove, float ymove, float zmove,
               uint8_t base_color, int8_t depth_sort) {
-    int16_t fh, c, p;
+    int16_t c, p;
 
     // Check availability of the file and the handle.
     if (handle >= handles) {
         return (0);
     }
 
-    fh = sa_open(virtual_file_position);
+    FILE* fh = sa_open(virtual_file_position);
 
-    if (fh == -1) {
-        return (-1);
+    if (fh == nullptr) {
+        return -1;
     }
 
     // Free the handle if it is currently occupied.
@@ -1854,7 +1853,7 @@ int8_t loadpv(int16_t handle, int32_t virtual_file_position, float xscale,
     pvfile_datalen[handle] = 0;
     pvfile_dataptr[handle] = pvfile_datatop;
     // Reading polygon numbers.
-    read(fh, &pvfile_npolygs[handle], 2);
+    fread(&pvfile_npolygs[handle], 2, 1, fh);
     // Pointer preparation.
     pv_n_vtx[handle] = (int8_t *) (pvfile + pvfile_datatop);
     pvfile_datatop += 1 * pvfile_npolygs[handle];
@@ -1876,15 +1875,14 @@ int8_t loadpv(int16_t handle, int32_t virtual_file_position, float xscale,
     // Check availabity before reading the data.
     if (pvfile_datatop > pv_bytes) {
         pvfile_datatop = pvfile_dataptr[handle];
-        close(fh);
+        fclose(fh);
         return (0);
     }
 
     // Reading all the data on the polygons, in a single block.
-    read(fh, pvfile + pvfile_dataptr[handle],
-         pvfile_datatop - pvfile_dataptr[handle]);
+    fread(pvfile + pvfile_dataptr[handle], pvfile_datatop - pvfile_dataptr[handle], 1, fh);
     // dopodich� si pu� anche richiudere il file...
-    close(fh);
+    fclose(fh);
 
     // Resetting unused vertex data (for triangles).
     for (p = 0; p < pvfile_npolygs[handle]; p++)
@@ -3371,7 +3369,6 @@ float zrandom(int16_t range) {
  * planet that corresponds to that code. Type can be: 'P' = Planet, 'S' = Star.
  */
 
-int16_t smh;
 double idscale = 0.00001;
 
 int32_t search_id_code(double id_code, int8_t type) {
@@ -3380,16 +3377,16 @@ int32_t search_id_code(double id_code, int8_t type) {
     uint16_t n, curr_pos, index;
     double id_low  = id_code - idscale;
     double id_high = id_code + idscale;
-    smh            = open(starmap_file, 0);
+    FILE *smh      = fopen(starmap_file, "r");
 
-    if (smh > -1) {
+    if (smh != nullptr) {
         auto buffer = (int8_t *) malloc(ps_bytes);
 
         auto buffer_ascii  = (int8_t *) buffer;
         auto buffer_double = (double *) buffer;
-        lseek(smh, 4, SEEK_SET);
+        fseek(smh, 4, SEEK_SET);
 
-        while ((n = read(smh, buffer_ascii, ps_bytes)) > 0) {
+        while ((n = fread(buffer_ascii, 1, ps_bytes, smh)) > 0) {
             curr_pos = 0;
             index    = 0;
 
@@ -3409,7 +3406,7 @@ int32_t search_id_code(double id_code, int8_t type) {
         }
 
     stop:
-        close(smh);
+        fclose(smh);
         free(buffer);
     }
 
@@ -5464,18 +5461,17 @@ double targets_table_py[50];
 double targets_table_pz[50];
 
 void collect_targets() {
-    int16_t local_smh;
     uint16_t n, ptr, index, toread;
     int8_t *buffer_ascii  = (int8_t *) p_surfacemap;
     double *buffer_double = (double *) p_surfacemap;
-    local_smh             = open(starmap_file, 0);
+    FILE* local_smh             = fopen(starmap_file, "r");
 
-    if (local_smh > -1) {
+    if (local_smh != nullptr) {
         toread = tgt_bytes_per_scan;
 
         while (toread) {
-            lseek(local_smh, tgt_collect_lastpos, SEEK_SET);
-            n = read(local_smh, buffer_ascii, toread);
+            fseek(local_smh, tgt_collect_lastpos, SEEK_SET);
+            n = fread(buffer_ascii, 1, toread, local_smh);
 
             if (!n) {
                 collecting_targets = 0;
@@ -5523,7 +5519,7 @@ void collect_targets() {
         }
 
     stop:
-        close(local_smh);
+        fclose(local_smh);
     }
 }
 
@@ -5796,29 +5792,27 @@ void load_starface() {
 }
 
 void load_QVRmaps() {
-    int32_t fh;
-    fh = sa_open(offsets_map);
+    FILE* fh = sa_open(offsets_map);
 
-    if (fh > -1) {
-        read(fh, n_offsets_map, om_bytes);
-        close(fh);
+    if (fh != nullptr) {
+        fread(n_offsets_map, 1, om_bytes, fh);
+        fclose(fh);
     }
 
     fh = sa_open(globes_map);
 
-    if (fh > -1) {
-        read(fh, n_globes_map, gl_bytes);
-        close(fh);
+    if (fh != nullptr) {
+        fread(n_globes_map, 1, gl_bytes, fh);
+        fclose(fh);
     }
 }
 
 void load_digimap2() {
-    int32_t fh;
-    fh = sa_open(off_digimap2);
+    FILE* fh = sa_open(off_digimap2);
 
-    if (fh > -1) {
-        read(fh, digimap2, dm2_bytes);
-        close(fh);
+    if (fh != nullptr) {
+        fread(digimap2, 1, dm2_bytes, fh);
+        fclose(fh);
     }
 }
 
@@ -6020,14 +6014,14 @@ void snapshot(int16_t forcenumber, int8_t showdata) {
     double parsis_x, parsis_y, parsis_z;
     uint16_t ptr, c;
     int8_t a, b, t[54];
-    int16_t ih = sa_open(header_bmp);
+    FILE* ih = sa_open(header_bmp);
 
-    if (ih == -1) {
+    if (ih == nullptr) {
         return;
     }
 
-    read(ih, t, 54);
-    close(ih);
+    fread(t, 1, 54, ih);
+    fclose(ih);
 
     if (!forcenumber) {
         prog = -1;
@@ -6040,12 +6034,12 @@ void snapshot(int16_t forcenumber, int8_t showdata) {
             }
 
             sprintf((char *) snapfilename, "gallery/SNAP%04d.BMP", prog);
-            ih = open((char *) snapfilename, 0);
+            ih = fopen((char *) snapfilename, "r");
 
-            if (ih != -1) {
-                close(ih);
+            if (ih != nullptr) {
+                fclose(ih);
             }
-        } while (ih != -1);
+        } while (ih != nullptr);
     } else {
         sprintf((char *) snapfilename, "gallery/SNAP%04d.BMP", forcenumber);
     }
@@ -6091,27 +6085,27 @@ void snapshot(int16_t forcenumber, int8_t showdata) {
         }
     }
 
-    ih = creat((char *) snapfilename, S_IRUSR | S_IWUSR);
+    ih = fopen((char*) snapfilename, "w+");
 
-    if (ih > -1) {
+    if (ih != nullptr) {
         a = 0;
-        write(ih, t, 54);
+        fwrite(t, 1, 54, ih);
 
         for (c = 0; c < 768; c += 3) {
             b = tmppal[c + 2] * 4;
-            write(ih, &b, 1);
+            fwrite(&b, 1, 1, ih);
             b = tmppal[c + 1] * 4;
-            write(ih, &b, 1);
+            fwrite(&b, 1, 1, ih);
             b = tmppal[c + 0] * 4;
-            write(ih, &b, 1);
-            write(ih, &a, 1);
+            fwrite(&b, 1, 1, ih);
+            fwrite(&a, 1, 1, ih);
         }
 
         for (ptr = 63680; ptr < 64000; ptr -= 320) {
-            write(ih, adapted + ptr, 320);
+            fwrite(adapted + ptr, 1, 320, ih);
         }
 
-        close(ih);
+        fclose(ih);
     }
 }
 
