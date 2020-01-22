@@ -10,7 +10,6 @@
 #include <cstring>
 #include <ctime>
 
-#include <fcntl.h>
 #include <memory.h>
 #include <sys/stat.h>
 #include <unistd.h>

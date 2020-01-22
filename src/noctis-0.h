@@ -76,7 +76,6 @@ extern const char *situation_file;
 extern const char *starmap_file;
 extern const char *goesoutputfile;
 extern const char *surface_file;
-extern int16_t sfh;
 
 extern int8_t nsync;
 extern int8_t anti_rad;
@@ -243,7 +242,7 @@ extern int32_t flat_rnd_seed;
 extern void fast_srand(int32_t seed);
 extern int32_t fast_random(int32_t mask);
 extern int16_t ranged_fast_random(int16_t range);
-extern int32_t sa_open(int32_t offset_of_virtual_file);
+extern FILE *sa_open(int32_t offset_of_virtual_file);
 extern void shade(uint8_t *palette_buffer, int16_t first_color,
                   int16_t number_of_colors, float start_r, float start_g,
                   float start_b, float finish_r, float finish_g,
@@ -361,7 +360,6 @@ extern int16_t nightzone, crepzone, sun_x_factor;
 extern void planets();
 extern void ring(int16_t planet_id, double ox, double oy, double oz,
                  int16_t start, int16_t layers);
-extern int16_t smh;
 extern double idscale;
 extern int32_t search_id_code(double id_code, int8_t type);
 extern int32_t tgt_collect_lastpos;
