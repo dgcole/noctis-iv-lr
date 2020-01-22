@@ -1,7 +1,7 @@
-#include "noctis.h"
+#include "brtl.h"
 #include "noctis-0.h"
 #include "noctis-d.h"
-#include "brtl.h"
+#include "noctis.h"
 
 const double deg = M_PI / 180;
 
@@ -5544,15 +5544,16 @@ void planetary_main() {
             widesnapping++;
 
             if (widesnapping == 3) {
-                FILE* i9997, *i9998, *i9999, *tfh, *oh;
                 widesnapping = 0;
                 user_beta += widesnappingangle;
                 //
+                FILE* oh, *i9997, *i9998, *i9999;
                 FILE* ih = sa_open (header_bmp);
 
                 if (ih == nullptr) {
                     goto wserror;
                 }
+
                 fread(t, 1, 54, ih);
                 t[18] = 0x94;
                 t[19] = 0x03;
@@ -5567,18 +5568,18 @@ void planetary_main() {
                         goto wserror;
                     }
 
-                    sprintf((char*) snapfilename, "..\\GALLERY\\SNAP%04d.BMP", prog);
-                    tfh = fopen((char*) snapfilename, "r");
+                    sprintf((char*) snapfilename, "gallery/SNAP%04d.BMP", prog);
+                    ih = fopen((char*) snapfilename, "r");
 
-                    if (tfh != nullptr) {
-                        fclose(tfh);
+                    if (ih != nullptr) {
+                        fclose (ih);
                     }
-                } while (tfh != nullptr);
+                } while (ih != nullptr);
 
                 //
-                i9997 = fopen ("..\\GALLERY\\SNAP9997.BMP", "w+");
-                i9998 = fopen ("..\\GALLERY\\SNAP9998.BMP", "w+");
-                i9999 = fopen ("..\\GALLERY\\SNAP9999.BMP", "w+");
+                i9997 = fopen ("gallery/SNAP9997.BMP", "r");
+                i9998 = fopen ("gallery/SNAP9998.BMP", "r");
+                i9999 = fopen ("gallery/SNAP9999.BMP", "r");
 
                 if (i9997 == nullptr || i9998 == nullptr || i9999 == nullptr) {
                     if (i9997 != nullptr) {
@@ -5639,9 +5640,9 @@ void planetary_main() {
                 fclose (oh);
                 //
                 wserror:
-                remove ("..\\GALLERY\\SNAP9997.BMP");
-                remove ("..\\GALLERY\\SNAP9998.BMP");
-                remove ("..\\GALLERY\\SNAP9999.BMP");
+                remove ("gallery/SNAP9997.BMP");
+                remove ("gallery/SNAP9998.BMP");
+                remove ("gallery/SNAP9999.BMP");
             }
         }
 
