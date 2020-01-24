@@ -1,5 +1,10 @@
 # Build Files
 cmake-build-debug/
+CMakeFiles/
+Makefile
+cmake_install.cmake
+CMakeCache.txt
+nivlr.cbp
 
 # CLion Files
 .idea/
@@ -9,6 +14,10 @@ cmake-build-debug/
 
 # Save Data
 data/current.bin
+data/GOESfile.txt
+
+# Executable
+nivlr
 
 # Manual Build Dir
 build/

@@ -179,12 +179,8 @@ void handle_input() {
             mdltx = event.motion.xrel;
             mdlty = event.motion.yrel;
 
-            // printf("mdltX: %hd; mdltY: %hd\n", mdltx, mdlty);
-
             mouse_x += mdltx;
             mouse_y += mdlty;
-
-            // printf("mX: %hu; mY %hu\n", mx, my);
         } else if (event.type == SDL_MOUSEBUTTONDOWN) {
             if (event.button.button == SDL_BUTTON_LEFT)
                 ldown = true;
@@ -281,6 +277,7 @@ void handle_input() {
                 break;
             case SDL_SCANCODE_SLASH:
                 keys.push('/');
+                break;
             case SDL_SCANCODE_KP_COLON:
             case SDL_SCANCODE_SEMICOLON:
                 keys.push(':');

@@ -3,10 +3,13 @@
     Supervision functions for the base module.
 */
 
+#include "scripting.h"
 #include "brtl.h"
 #include "noctis-0.h"
 #include "noctis-d.h"
 #include <chrono>
+#include <fstream>
+#include <iostream>
 #include <thread>
 
 #ifdef __EMSCRIPTEN__
@@ -66,7 +69,8 @@ void fix_local_target() {
     reaction_time                  = 0.01;
 }
 
-/* Lampada alogena (ovvero il laser a diffusione interno alle zattere). */
+/* Lampada alogena (ovvero il laser a diffusione interno alle zattere).
+ * Halogen lamp (i.e. the diffusion laser inside the rafts). */
 
 void alogena() {
     float x[3], y[3], z[3];
@@ -233,11 +237,13 @@ noevid:
     setfx(0);
 }
 
-/* Schemi aggiuntivi per lo schermo del computer. */
+/* Schemi aggiuntivi per lo schermo del computer.
+ * Additional schemes(layouts? borders?) for the computer screen. */
 
 void frame(float x, float y, float l, float h, float borderwidth,
            uint8_t color) {
     // disegna una cornice rettangolare.
+    // draw a rectangular frame.
     float vx[4], vy[4], vz[4] = {0, 0, 0, 0};
     float x0 = cam_x;
     float y0 = cam_y;
@@ -354,16 +360,18 @@ int8_t force_update          = 0;      // Force screen to refresh
 int8_t active_screen         = -1;      // Screen currently active
 int16_t osscreen_cursor_x[2] = {0, 0}; // Cursor position (x)
 int16_t osscreen_cursor_y[2] = {0, 0}; // Cursor position (y)
-uint8_t osscreen[2][7 * 21 + 1];       // Array of GOES screens
+char osscreen[2][7 * 21 + 1];       // Array of GOES screens
 
 void mslocate(int16_t screen_id, int16_t cursor_x, int16_t cursor_y) {
     // Rilocazione cursore (multischermo).
+    // Cursor relocation (multi-screen).
     osscreen_cursor_x[screen_id] = cursor_x;
     osscreen_cursor_y[screen_id] = cursor_y;
 }
 
 void mswrite(int16_t screen_id, const char *text) {
     // Scrittura caratteri (multischermo).
+    // Character writing (multi-screen).
     int16_t i, j = 0;
     int8_t symbol;
 
@@ -506,15 +514,39 @@ char *get_exe_dir() {
 
 // Execution of an executable module of the GOES Net.
 void run_goesnet_module() {
-    FILE *ch;
+    as::script_output.clear();
 
-    /* Allows for prepending './' to the command,
+    try {
+        // Remove '_' from the command
+        goesnet_command[gnc_pos] = 0;
+
+        printf("Loading script...\n");
+        as::load_script(goesnet_command);
+
+        printf("Grabbing module...\n");
+        asIScriptModule *module = as::engine->GetModule(goesnet_command, asGM_ONLY_IF_EXISTS);
+
+        printf("Creating context...\n");
+        asIScriptContext *context = as::get_main_context(module);
+
+        printf("Executing...\n");
+        context->Execute();
+
+        context->Release();
+    }
+    catch (std::exception e) {
+        printf("%s\n", e.what());
+    }
+
+    /* FILE *ch;
+
+     * Allows for prepending './' to the command,
      * 	so that a bash shell can run the proper module file.
      * TODO: Find a better solution that doesn't involve
-     * 	this wasteful malloc call. */
+     * 	this wasteful malloc call. *
     char *command_prepended = (char *) malloc(200);
 
-    /* Reading the path to the Noctis binary */
+    // Reading the path to the Noctis binary
     char *dir = get_exe_dir();
 
     // Save the situation because some modules need it.
@@ -529,9 +561,9 @@ void run_goesnet_module() {
             fclose(ch);
         }
 
-        /* Delete the last character (which is the '_' cursor) from the command
+         * Delete the last character (which is the '_' cursor) from the command
          * line, then add the redirection to the "goesfile.txt" file.
-         */
+         *
         goesnet_command[gnc_pos] = 0;
         strcat(goesnet_command, " >");
         strcat(goesnet_command, goesoutputfile);
@@ -546,9 +578,10 @@ void run_goesnet_module() {
     // Free space allocated for command.
     free(command_prepended);
 
-    /* Free space allocated for exe path */
-    free(dir);
+    // Free space allocated for exe path
+    free(dir); */
 
+    /*
     if (!adapted) {
         printf("Sorry, GOES Net crashed.\n");
         printf("System integrity compromised: any key to quit.\n\n");
@@ -601,7 +634,7 @@ void run_goesnet_module() {
             fclose(ch);
             remove(comm);
         }
-    }
+    } */
 
     force_update = 1;
     goesfile_pos = 0;
@@ -811,6 +844,7 @@ void show_planetary_map() {
 /*  Draw the stardrifter. (The one you are using, seen from the inside.)
     It also assumes the task of deciphering keyboard commands for GOESnet. */
 
+// What do these variables do?
 int16_t goesk_a = -1;
 int16_t goesk_e = -1;
 
@@ -945,94 +979,93 @@ void vehicle(float opencapcount) {
     }
 
     /* Key interception (priority) for the "STARMAP TREE". */
-
+    // Starmap Tree???
     if (force_update || (active_screen == 1 && is_key())) {
         if (!force_update) {
-        krep1:
-            c       = get_key();
-            goesk_a = c;
-
-            if (!c) {
-                goesk_a = -1;
+            while (is_key()) {
                 c       = get_key();
-                goesk_e = c;
+                goesk_a = c;
 
-                switch (c) {
-                case 0x4F:
-                case 0x76:
-                case 0x91: {
-                    FILE *screenfile = fopen(goesoutputfile, "r");
+                if (!c) {
+                    goesk_a = -1;
+                    c       = get_key();
+                    goesk_e = c;
 
-                    if (screenfile != nullptr) {
-                        uint32_t len = fseek(screenfile, 0, SEEK_END);
-                        fseek(screenfile, 0, SEEK_SET);
-                        goesfile_pos = len - 7 * 21;
+                    //TODO: Replace DOS hex keycodes with SDL2 scancodes
+                    switch (c) {
+                    case 0x4F: // End key
+                    case 0x76: // Pg-Down
+                    case 0x91: { // CTRL-Down
+                        FILE *screenfile = fopen(goesoutputfile, "r");
+
+                        if (screenfile != nullptr) {
+                            uint32_t len = fseek(screenfile, 0, SEEK_END);
+                            fseek(screenfile, 0, SEEK_SET);
+                            goesfile_pos = len - 7 * 21;
+
+                            if (goesfile_pos < 0) {
+                                goesfile_pos = 0;
+                            }
+
+                            fclose(screenfile);
+                        }
+
+                        goesk_e = -1;
+                        break;
+                    }
+                    case 0x47: // Home Button
+                    case 0x84: // CTRL-PgUp
+                    case 0x8D: // CTRL-Up
+                        goesfile_pos = 0;
+                        goesk_e      = -1;
+                        break;
+
+                    case 80: // Down arrow key
+                        goesfile_pos += 21;
+                        goesk_e = -1;
+                        break;
+
+                    case 72: // Up arrow key
+                        goesfile_pos -= 21;
 
                         if (goesfile_pos < 0) {
                             goesfile_pos = 0;
                         }
 
-                        fclose(screenfile);
-                    }
+                        goesk_e = -1;
+                        break;
 
-                    goesk_e = -1;
-                    break;
+                    case 0x51: // Page Down
+                        goesfile_pos += 21 * 7;
+                        goesk_e = -1;
+                        break;
+
+                    case 0x49: // Page Up
+                        goesfile_pos -= 21 * 7;
+
+                        if (goesfile_pos < 0) {
+                            goesfile_pos = 0;
+                        }
+
+                        goesk_e = -1;
+                        break;
+                    default:
+                        break;
+                    }
                 }
-                case 0x47:
-                case 0x84:
-                case 0x8D:
-                    goesfile_pos = 0;
-                    goesk_e      = -1;
-                    break;
-
-                case 80:
-                    goesfile_pos += 21;
-                    goesk_e = -1;
-                    break;
-
-                case 72:
-                    goesfile_pos -= 21;
-
-                    if (goesfile_pos < 0) {
-                        goesfile_pos = 0;
-                    }
-
-                    goesk_e = -1;
-                    break;
-
-                case 0x51:
-                    goesfile_pos += 21 * 7;
-                    goesk_e = -1;
-                    break;
-
-                case 0x49:
-                    goesfile_pos -= 21 * 7;
-
-                    if (goesfile_pos < 0) {
-                        goesfile_pos = 0;
-                    }
-
-                    goesk_e = -1;
-                    break;
-                default:
-                    break;
-                }
-            }
-
-            if (is_key()) {
-                goto krep1;
             }
         }
 
         memset(osscreen[1], 0, 21 * 7);
-        FILE* screenfile = fopen(goesoutputfile, "r");
 
-        if (screenfile != nullptr) {
-            fseek(screenfile, goesfile_pos, SEEK_SET);
-            n = fread(osscreen[1], 7 * 21, 1, screenfile);
-            osscreen[1][n] = 0;
-            fclose(screenfile);
+        //Convert all character to uppercase,
+        // since only uppercase chars can be displayed.
+        for (auto ich = as::script_output.begin(); ich < as::script_output.end(); ++ich) {
+            *ich = toupper(*ich);
         }
+
+        // TODO: Length checking so we don't overflow the screen buffer
+        memcpy(osscreen[1], as::script_output.c_str(), as::script_output.size());
     }
 
     // Intercettazione tasti (prioritaria) per la planetary map.
@@ -1164,6 +1197,8 @@ void vehicle(float opencapcount) {
 
     // Tracciamento degli schermi di GOESNet.
     // Si tratta dei primi due schermi sulla paratia destra.
+    // Tracking GOESNet screens.
+    // These are the first two screens on the right bulkhead.
     H_MATRIXS = 6;
     V_MATRIXS = 3;
     change_txm_repeating_mode();
@@ -2613,6 +2648,34 @@ int16_t resolve = 64;
 void loop();
 
 int main(int argc, char **argv) {
+    // Set up AngelScript
+    as::init();
+    as::register_functions();
+
+    //This doesn't get check, but callback still exists for errors
+    /*as_errorcode = testmod->Build();
+
+    asIScriptFunction *as_func = testmod->GetFunctionByDecl("void main()");
+
+    if (as_func == 0) {
+        printf("The script is missing void main()\n");
+
+        return 0;
+    }
+
+    asIScriptContext *as_context = as_engine->CreateContext();
+    as_context->Prepare(as_func);
+
+    as_errorcode = as_context->Execute();
+    if (as_errorcode != asEXECUTION_FINISHED) {
+        // The execution didn't complete as expected. Determine what happened.
+        if(as_errorcode == asEXECUTION_EXCEPTION)
+        {
+            // An exception occurred, let the script writer know what happened so it can be corrected.
+            printf("An AngelScript exception '%s' occurred. Please correct the code and try again.\n", as_context->GetExceptionString());
+        }
+    }*/
+
     // Initialize SDL.
     sdl_surface = SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF000000, 0xFF0000,
                                        0xFF00, 0xFF);
@@ -2623,6 +2686,7 @@ int main(int argc, char **argv) {
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE);
 
+    // What does this do?
     for (ir = 0; ir < 200; ir++) {
         m200[ir] = ir * 200;
     }
@@ -2666,6 +2730,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+
     unfreeze();
     memset(adapted, 0, QUADWORDS * 4);
     QUADWORDS -= 1440;
@@ -2684,8 +2749,11 @@ int main(int argc, char **argv) {
     tavola_colori(tmppal, 0, 256, 64, 64, 64);
     // causa il recupero dell'eventuale contenuto dello schermo
     // di output della GOES command net
+    // causes the recovery of any screen content
+    // GOES command net output
     force_update = 1;
     // recupero della situazione di superficie
+    // recovery of the surface situation
     FILE* sfh = fopen(surface_file, "r");
 
     if (sfh != NULL) {
@@ -2725,6 +2793,7 @@ int main(int argc, char **argv) {
         QUADWORDS = pqw;
 
         if (exitflag) {
+            as::engine->ShutDownAndRelease();
             freeze();
         }
     }
@@ -2739,6 +2808,7 @@ int main(int argc, char **argv) {
     remove(surface_file);
 
     freeze();
+    as::engine->ShutDownAndRelease();
 }
 
 void swapBuffers() {

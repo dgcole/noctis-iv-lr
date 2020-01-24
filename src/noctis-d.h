@@ -19,6 +19,8 @@
 #endif
 #include <SDL2/SDL.h>
 
+#include <angelscript.h>
+
 /*
 
     Definitions for Noctis.
