@@ -2297,8 +2297,8 @@ void modpv(int16_t handle, int16_t polygon_id, int16_t vertex_id, float x_scale,
 }
 
 // Returns the alphabetic correspondent of integers and / or real numbers.
-
 char *alphavalue(double value) {
+    // Please Note: Different behavior on Windows & Linux. TODO; Fix
     gcvt(value, 15, dec);
     return (dec);
 }
@@ -5909,21 +5909,24 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
     if (sinisters < 100) {
         strcat((char *) outhudbuffer, "0");
     }
-    strcat((char *) outhudbuffer, alphavalue(sinisters));
+    snprintf(dec, 4, "%hu", sinisters);
+    strcat((char*) outhudbuffer, dec);
     strcat((char *) outhudbuffer, ".");
 
     auto medii = (uint16_t)(fmod(secs, 1e6) / 1e3);
     if (medii < 100) {
         strcat((char *) outhudbuffer, "0");
     }
-    strcat((char *) outhudbuffer, alphavalue(medii));
+    snprintf(dec, 4, "%hu", medii);
+    strcat((char *) outhudbuffer, dec);
     strcat((char *) outhudbuffer, ".");
 
     auto dexters = (uint16_t)(fmod(secs, 1e3));
     if (dexters < 100) {
         strcat((char *) outhudbuffer, "0");
     }
-    strcat((char *) outhudbuffer, alphavalue(dexters));
+    snprintf(dec, 4, "%hu", dexters);
+    strcat((char *) outhudbuffer, dec);
 
     if (compass_on) {
         strcat((char *) outhudbuffer, " & SQC ");
