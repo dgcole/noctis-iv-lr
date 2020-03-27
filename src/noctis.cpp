@@ -404,7 +404,7 @@ const char *comm = "data/comm.bin"; // File di comunicazione dei moduli.
 /* Freezes the situation (when exiting the program or running a module). */
 
 void freeze() {
-    FILE *fh = fopen(situation_file, "w");
+    FILE *fh = fopen(situation_file, "wb");
 
     if (fh == nullptr) {
         return;
@@ -522,7 +522,7 @@ void run_goesnet_module() {
 
     // Check resident commands.
     if (memcmp(goesnet_command, "CLR", 3) != 0) {
-        ch = fopen(goesoutputfile, "w");
+        ch = fopen(goesoutputfile, "wb");
 
         if (ch != nullptr) {
             fwrite("(UNKNOWN MODULE)", 1, 16, ch);
@@ -556,7 +556,7 @@ void run_goesnet_module() {
         exit(0xFF);
     } else {
         // It reacts to the presence of data in the communication file.
-        ch = fopen(comm, "w");
+        ch = fopen(comm, "wb");
 
         if (ch != nullptr) {
             uint32_t len = fseek(ch, 0, SEEK_END);
@@ -961,7 +961,7 @@ void vehicle(float opencapcount) {
                 case 0x4F:
                 case 0x76:
                 case 0x91: {
-                    FILE *screenfile = fopen(goesoutputfile, "r");
+                    FILE *screenfile = fopen(goesoutputfile, "rb");
 
                     if (screenfile != nullptr) {
                         uint32_t len = fseek(screenfile, 0, SEEK_END);
@@ -1025,7 +1025,7 @@ void vehicle(float opencapcount) {
         }
 
         memset(osscreen[1], 0, 21 * 7);
-        FILE* screenfile = fopen(goesoutputfile, "r");
+        FILE* screenfile = fopen(goesoutputfile, "rb");
 
         if (screenfile != nullptr) {
             fseek(screenfile, goesfile_pos, SEEK_SET);
@@ -1441,7 +1441,7 @@ void update_star_label() {
             star_label_pos   = search_id_code(ap_target_id, 'S');
 
             if (star_label_pos != -1) {
-                FILE* smh = fopen(starmap_file, "r");
+                FILE* smh = fopen(starmap_file, "rb");
                 fseek(smh, star_label_pos, SEEK_SET);
                 fread(&star_id, 8, 1, smh);
                 fread(&star_label, 24, 1, smh);
@@ -1465,7 +1465,7 @@ void update_planet_label() {
         planet_label_pos = search_id_code(current_planet_id, 'P');
 
         if (planet_label_pos != -1) {
-            FILE* smh = fopen(starmap_file, "r");
+            FILE* smh = fopen(starmap_file, "rb");
             fseek(smh, planet_label_pos, SEEK_SET);
             fread(&planet_id, 8, 1, smh);
             fread(&planet_label, 24, 1, smh);
@@ -2058,7 +2058,7 @@ void dev_commands() {
                         labstar = 0;
 
                         if (star_label_pos >= sm_consolidated) {
-                            FILE* smh = fopen(starmap_file, "w");
+                            FILE* smh = fopen(starmap_file, "wb");
 
                             if (smh != nullptr) {
                                 fseek(smh, star_label_pos, SEEK_SET);
@@ -2084,10 +2084,10 @@ void dev_commands() {
                         }
                     }
                 } else {
-                    FILE* smh = fopen(starmap_file, "r+");
+                    FILE* smh = fopen(starmap_file, "rb+");
 
                     if (smh == nullptr) {
-                        smh             = fopen(starmap_file, "w+");
+                        smh             = fopen(starmap_file, "wb+");
                         sm_consolidated = 4;
                         fwrite(&sm_consolidated, 4, 1, smh);
                     }
@@ -2131,7 +2131,7 @@ void dev_commands() {
                         labplanet = 0;
 
                         if (planet_label_pos >= sm_consolidated) {
-                            FILE* smh = fopen(starmap_file, "w");
+                            FILE* smh = fopen(starmap_file, "wb");
 
                             if (smh != nullptr) {
                                 fseek(smh, planet_label_pos, SEEK_SET);
@@ -2157,10 +2157,10 @@ void dev_commands() {
                         }
                     }
                 } else {
-                    FILE* smh = fopen(starmap_file, "r+");
+                    FILE* smh = fopen(starmap_file, "rb+");
 
                     if (smh == nullptr) {
-                        smh             = fopen(starmap_file, "w+");
+                        smh             = fopen(starmap_file, "wb+");
                         sm_consolidated = 4;
                         fwrite(&sm_consolidated, 4, 1, smh);
                     }
@@ -2383,7 +2383,7 @@ void commands() {
 void unfreeze() {
     double elapsed, dpwr;
     // Reading the consolidated starmap.
-    FILE* smh = fopen(starmap_file, "r+");
+    FILE* smh = fopen(starmap_file, "rb+");
 
     if (smh != nullptr) {
         fread(&sm_consolidated, 4, 1, smh);
@@ -2400,7 +2400,7 @@ void unfreeze() {
     }
 
     /* Reading the previous situation */
-    FILE *fh = fopen(situation_file, "r");
+    FILE *fh = fopen(situation_file, "rb");
 
     if (fh == nullptr) {
         return;
@@ -2686,7 +2686,7 @@ int main(int argc, char **argv) {
     // di output della GOES command net
     force_update = 1;
     // recupero della situazione di superficie
-    FILE* sfh = fopen(surface_file, "r");
+    FILE* sfh = fopen(surface_file, "rb");
 
     if (sfh != NULL) {
         // lettura precedenti coordinate di sbarco
@@ -3772,7 +3772,7 @@ nohud_1:
                 tgt_label_pos = search_id_code(targets_table_id[mc], 'S');
 
                 if (tgt_label_pos > -1) {
-                    FILE* smh = fopen(starmap_file, "r");
+                    FILE* smh = fopen(starmap_file, "rb");
 
                     if (smh != nullptr) {
                         fseek(smh, tgt_label_pos + 8, SEEK_SET);

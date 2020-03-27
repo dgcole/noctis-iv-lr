@@ -867,7 +867,7 @@ float fast_flandom() { return ((float) fast_random(32767) * 0.000030518); }
 
 // Loads virtual file handles from supports.nct
 FILE *sa_open(int32_t offset_of_virtual_file) {
-    FILE* fh = fopen("res/supports.nct", "r");
+    FILE* fh = fopen("res/supports.nct", "rb");
 
     if (fh == nullptr) {
         return nullptr;
@@ -3377,7 +3377,7 @@ int32_t search_id_code(double id_code, int8_t type) {
     uint16_t n, curr_pos, index;
     double id_low  = id_code - idscale;
     double id_high = id_code + idscale;
-    FILE *smh      = fopen(starmap_file, "r");
+    FILE *smh      = fopen(starmap_file, "rb");
 
     if (smh != nullptr) {
         auto buffer = (int8_t *) malloc(ps_bytes);
@@ -5464,7 +5464,7 @@ void collect_targets() {
     uint16_t n, ptr, index, toread;
     int8_t *buffer_ascii  = (int8_t *) p_surfacemap;
     double *buffer_double = (double *) p_surfacemap;
-    FILE* local_smh             = fopen(starmap_file, "r");
+    FILE* local_smh             = fopen(starmap_file, "rb");
 
     if (local_smh != nullptr) {
         toread = tgt_bytes_per_scan;
@@ -6034,7 +6034,7 @@ void snapshot(int16_t forcenumber, int8_t showdata) {
             }
 
             sprintf((char *) snapfilename, "gallery/SNAP%04d.BMP", prog);
-            ih = fopen((char *) snapfilename, "r");
+            ih = fopen((char *) snapfilename, "rb");
 
             if (ih != nullptr) {
                 fclose(ih);
@@ -6085,7 +6085,7 @@ void snapshot(int16_t forcenumber, int8_t showdata) {
         }
     }
 
-    ih = fopen((char*) snapfilename, "w+");
+    ih = fopen((char*) snapfilename, "wb+");
 
     if (ih != nullptr) {
         a = 0;
