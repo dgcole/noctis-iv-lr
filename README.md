@@ -8,7 +8,7 @@
 
 ![Image of Star](doc/img/rings.png)
 
-**PLEASE NOTE: This project is a heavy WIP. It is unstable and unfinished. Additionally, I recommend not reading any part of this codebase. It will probably cause permanent harm to both your eyeballs and eliminate your faith in humanity**
+**PLEASE NOTE: This project is a heavy WIP. It is unstable and unfinished. Additionally, I recommend not reading any part of this codebase. It will probably cause permanent harm to both of your eyeballs and eliminate your faith in humanity**
 
 Noctis IV LR aims to eventually port Noctis IV to run on Linux and Modern Windows. The starting point was the base Noctis IV source code. Neither NIV+ nor NICE were used because the added layer of cruft on top of both would have made the work of porting it more difficult. The bugs fixed by NIV+, however, will all also be fixed in Noctis IV LR before a stable release.
 
