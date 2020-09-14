@@ -8,6 +8,7 @@
 #include "noctis-d.h"
 #include <chrono>
 #include <thread>
+#include <string>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -1910,6 +1911,16 @@ void devices() {
     }
 }
 
+int compare_strings_case_insensitive(std::string string1, std::string string2) {
+    for (auto it1 = string1.begin(), it2 = string2.begin(); it1 != string1.end() && it2 != string2.end(); it1++, it2++) {
+        if ((*it1) != (*it2)) {
+            return (*it1) - (*it2);
+        }
+    }
+
+    return 0;
+}
+
 /* On-board device controls. */
 
 int8_t dummy_identity[9] = "Removed:";
@@ -2096,7 +2107,7 @@ void dev_commands() {
                         fseek(smh, 4, SEEK_SET);
                         while (fread(comp_data, 1, 32, smh) == 32)
                             if (memcmp(comp_data, dummy_identity, 8)) {
-                                if (!strcasecmp((char *) (comp_data + 8),
+                                if (!compare_strings_case_insensitive((char *) (comp_data + 8),
                                                 (char *) star_label)) {
                                     status("EXTANT", 50);
                                     ap_target_previd = 12345;
@@ -2170,7 +2181,7 @@ void dev_commands() {
 
                         while (fread(comp_data, 1, 32, smh) == 32)
                             if (memcmp(comp_data, dummy_identity, 8)) {
-                                if (!strcasecmp((char *) (comp_data + 8),
+                                if (!compare_strings_case_insensitive((char *) (comp_data + 8),
                                                 (char *) planet_label)) {
                                     status("EXTANT", 50);
                                     prev_planet_id   = 12345;
@@ -2651,7 +2662,7 @@ int main(int argc, char **argv) {
         lrv = loadpv(vehicle_handle, vehicle_ncc, 15, 15, 15, 0, 0, 0, 0, 1);
 
         if (lrv < 1) {
-            printf("\nLoad error.\n");
+            fprintf(stderr, "\nLoad error.\n"); //TODO: Better error
             return 1;
         }
 
@@ -2858,6 +2869,16 @@ void loop() {
     // Impostanto reset_signal a 150 si resetta tutto il sistema.
     // Impostanto reset_signal a 60 si resetta la rete GOES.
     //
+    /* !-TRANSLATION OF ABOVE USING GOOGLE TRANSLATE-!
+     *
+     * Response to on-board operating system reset.
+     * The "reset_signal" variable controls the reset
+     * procedure, which resets all operating parameters
+     * to their original state.
+     *
+     * Setting reset_signal to 150 resets the whole system.
+     * Setting reset_signal to 60 resets the GOES network.
+     */
     if (reset_signal) {
         switch (reset_signal) {
         case 150:

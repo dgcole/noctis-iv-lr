@@ -3,6 +3,7 @@
 // C Standard Library includes
 
 #include <cassert>
+#define _USE_MATH_DEFINES
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -12,7 +13,9 @@
 
 #include <memory.h>
 #include <sys/stat.h>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 
 #ifdef _WIN32
 #define SDL_MAIN_HANDLED

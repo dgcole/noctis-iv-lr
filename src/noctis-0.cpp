@@ -610,7 +610,7 @@ double ip_target_initial_d            = 1E8;       // 151
 double requested_approach_coefficient = 1;         // 159
 double current_approach_coefficient   = 1;         // 167
 double reaction_time                  = 0.01;      // 175
-int8_t fcs_status[11]                 = "STANDBY"; // 183
+char fcs_status[11]                   = "STANDBY"; // 183
 int16_t fcs_status_delay              = 0;         // 194
 int16_t psys                          = 4;         // 196
 double ap_target_initial_d            = 1E8;       // 198
@@ -639,7 +639,7 @@ int16_t sun_x_factor;
 // Global data that isn't saved.
 int16_t epoc = 6011;
 
-int8_t ctb[512];
+char ctb[512];
 char dec[20];
 
 int8_t _delay     = 12;
@@ -867,7 +867,8 @@ float fast_flandom() { return ((float) fast_random(32767) * 0.000030518); }
 
 // Loads virtual file handles from supports.nct
 FILE *sa_open(int32_t offset_of_virtual_file) {
-    FILE* fh = fopen("res/supports.nct", "rb");
+    // TODO: Better file placement
+    FILE *fh = fopen("res/supports.nct", "rb");
 
     if (fh == nullptr) {
         return nullptr;
@@ -1838,7 +1839,7 @@ int8_t loadpv(int16_t handle, int32_t virtual_file_position, float xscale,
         return (0);
     }
 
-    FILE* fh = sa_open(virtual_file_position);
+    FILE *fh = sa_open(virtual_file_position);
 
     if (fh == nullptr) {
         return -1;
@@ -1880,7 +1881,8 @@ int8_t loadpv(int16_t handle, int32_t virtual_file_position, float xscale,
     }
 
     // Reading all the data on the polygons, in a single block.
-    fread(pvfile + pvfile_dataptr[handle], pvfile_datatop - pvfile_dataptr[handle], 1, fh);
+    fread(pvfile + pvfile_dataptr[handle],
+          pvfile_datatop - pvfile_dataptr[handle], 1, fh);
     // dopodich� si pu� anche richiudere il file...
     fclose(fh);
 
@@ -2989,7 +2991,8 @@ void white_sun(uint8_t *target, double x, double y, double z, float mag_factor,
                         pix = 0x3F;
                     }
 
-                    pixptr = ((int16_t) (((int16_t) 320) * ((int16_t) yy))) + (int16_t) xx;
+                    pixptr = ((int16_t)(((int16_t) 320) * ((int16_t) yy))) +
+                             (int16_t) xx;
                     pix += target[pixptr];
 
                     if (pix > 0x3F) {
@@ -5464,7 +5467,7 @@ void collect_targets() {
     uint16_t n, ptr, index, toread;
     int8_t *buffer_ascii  = (int8_t *) p_surfacemap;
     double *buffer_double = (double *) p_surfacemap;
-    FILE* local_smh             = fopen(starmap_file, "rb");
+    FILE *local_smh       = fopen(starmap_file, "rb");
 
     if (local_smh != nullptr) {
         toread = tgt_bytes_per_scan;
@@ -5792,7 +5795,7 @@ void load_starface() {
 }
 
 void load_QVRmaps() {
-    FILE* fh = sa_open(offsets_map);
+    FILE *fh = sa_open(offsets_map);
 
     if (fh != nullptr) {
         fread(n_offsets_map, 1, om_bytes, fh);
@@ -5808,7 +5811,7 @@ void load_QVRmaps() {
 }
 
 void load_digimap2() {
-    FILE* fh = sa_open(off_digimap2);
+    FILE *fh = sa_open(off_digimap2);
 
     if (fh != nullptr) {
         fread(digimap2, 1, dm2_bytes, fh);
@@ -5910,7 +5913,7 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
         strcat((char *) outhudbuffer, "0");
     }
     snprintf(dec, 4, "%hu", sinisters);
-    strcat((char*) outhudbuffer, dec);
+    strcat((char *) outhudbuffer, dec);
     strcat((char *) outhudbuffer, ".");
 
     auto medii = (uint16_t)(fmod(secs, 1e6) / 1e3);
@@ -6017,7 +6020,7 @@ void snapshot(int16_t forcenumber, int8_t showdata) {
     double parsis_x, parsis_y, parsis_z;
     uint16_t ptr, c;
     int8_t a, b, t[54];
-    FILE* ih = sa_open(header_bmp);
+    FILE *ih = sa_open(header_bmp);
 
     if (ih == nullptr) {
         return;
@@ -6088,7 +6091,7 @@ void snapshot(int16_t forcenumber, int8_t showdata) {
         }
     }
 
-    ih = fopen((char*) snapfilename, "wb+");
+    ih = fopen((char *) snapfilename, "wb+");
 
     if (ih != nullptr) {
         a = 0;

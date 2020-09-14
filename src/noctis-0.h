@@ -183,8 +183,8 @@ extern int8_t ontheroof;
 extern int16_t datasheetscroll;
 extern int16_t datasheetdelta;
 
-extern int8_t *ord[21];
-extern int8_t *star_description[12];
+extern const char *ord[21];
+extern const char *star_description[12];
 extern int8_t class_rgb[3 * star_classes];
 extern int16_t class_ray[star_classes];
 extern int16_t class_rayvar[star_classes];
@@ -205,7 +205,7 @@ extern int16_t nearstar_p_term_start[maxbodies];
 extern int16_t nearstar_p_term_end[maxbodies];
 extern int16_t nearstar_p_qsortindex[maxbodies];
 extern float nearstar_p_qsortdist[maxbodies];
-extern int8_t *planet_description[10];
+extern const char *planet_description[10];
 extern uint8_t planet_rgb_and_var[40];
 extern int16_t planet_possiblemoons[10];
 extern float mindiff;
@@ -297,7 +297,7 @@ extern void background(uint16_t start, uint8_t *target, uint8_t *background,
 extern void sky(uint16_t limits);
 extern double laststar_x, laststar_y, laststar_z;
 extern int8_t isthere(double star_id);
-extern int8_t glass_bubble;
+extern uint8_t glass_bubble;
 extern void globe(uint16_t start, uint8_t *target, const uint8_t *tapestry,
                   const uint8_t *offsetsmap, uint16_t total_map_bytes, double x,
                   double y, double z, float mag_factor, int8_t colormask,
