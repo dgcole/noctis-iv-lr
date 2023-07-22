@@ -2,6 +2,8 @@
 
 extern uint16_t QUADWORDS;
 extern uint8_t *adapted;
+extern uint16_t adapted_width;
+extern uint16_t adapted_height;
 extern int16_t get_key();
 extern bool is_key();
 extern uint8_t range8088[64 * 3];
@@ -9,31 +11,28 @@ extern uint8_t tmppal[768];
 extern uint8_t currpal[768];
 extern int8_t return_palette[768];
 extern int8_t surface_palette[768];
-extern void tavola_colori(const uint8_t *nuova_tavolozza,
-                          uint16_t colore_di_partenza, uint16_t nr_colori,
-                          int8_t filtro_rosso, int8_t filtro_verde,
-                          int8_t filtro_blu);
+extern void tavola_colori(const uint8_t *nuova_tavolozza, uint16_t colore_di_partenza, uint16_t nr_colori,
+                          int8_t filtro_rosso, int8_t filtro_verde, int8_t filtro_blu);
 extern int16_t mdltx, mdlty, mouse_x, mouse_y;
 extern uint16_t mpul;
 extern struct wasdmov key_move_dir;
 extern void handle_input();
-extern void area_clear(uint8_t *dest, int16_t x, int16_t y, int16_t x2,
-                      int16_t y2, int16_t l, int16_t h, uint8_t pattern);
+extern void area_clear(uint8_t *dest, int16_t x, int16_t y, int16_t x2, int16_t y2, int16_t l, int16_t h,
+                       uint8_t pattern);
 extern void psmooth_grays(uint8_t *target);
 extern void pfade(uint8_t *target, uint16_t segshift, uint8_t speed);
 extern void psmooth_64(uint8_t *target, uint16_t segshift);
-extern void smootharound_64(uint8_t *target, int32_t cx, int32_t cy, int32_t r,
-                            int8_t diffuse);
+extern void smootharound_64(uint8_t *target, int32_t cx, int32_t cy, int32_t r, int8_t diffuse);
 extern void mask_pixels(uint8_t *target, uint8_t mask);
 
-extern int32_t XSIZE, YSIZE;        // calibrazione BMP.
+extern int32_t XSIZE, YSIZE; // calibrazione BMP.
 extern float uneg;
 extern float cam_x, cam_y, cam_z;
 extern float dpp;
 extern int32_t H_MATRIXS, V_MATRIXS;
 extern float alfa, beta, ngamma;
 extern uint16_t ptr;
-extern void segment(int32_t xp, int32_t yp, int32_t xa, int32_t ya);
+extern void draw_line_2d(int32_t xp, int32_t yp, int32_t xa, int32_t ya);
 extern int8_t flares;
 extern int32_t lbxl;
 extern int32_t ubxl;
@@ -58,8 +57,7 @@ extern void change_angle_of_view();
 extern void change_camera_lens();
 extern void change_txm_repeating_mode();
 extern uint8_t entity;
-extern void poly3d(const float *x, const float *y, const float *z, uint16_t nrv,
-                   uint8_t colore);
+extern void poly3d(const float *x, const float *y, const float *z, uint16_t nrv, uint8_t colore);
 extern void forward(float delta);
 extern float pnx, pny, pnz;
 extern void pnorm(const float *x, const float *y, const float *z);
@@ -243,18 +241,14 @@ extern void fast_srand(int32_t seed);
 extern int32_t fast_random(int32_t mask);
 extern int16_t ranged_fast_random(int16_t range);
 extern FILE *sa_open(int32_t offset_of_virtual_file);
-extern void shade(uint8_t *palette_buffer, int16_t first_color,
-                  int16_t number_of_colors, float start_r, float start_g,
-                  float start_b, float finish_r, float finish_g,
-                  float finish_b);
+extern void shade(uint8_t *palette_buffer, int16_t first_color, int16_t number_of_colors, float start_r, float start_g,
+                  float start_b, float finish_r, float finish_g, float finish_b);
 extern int8_t snapfilename[24];
 extern void snapshot(int16_t forcenumber, int8_t showdata);
-extern void from_vehicle();
-extern void from_user();
-extern void watch(double cam_x, double cam_y, double cam_z, double see_x,
-                  double see_y, double see_z);
-extern int8_t xy(double cam_x, double cam_y, double cam_z, double point_x,
-                 double point_y, double point_z);
+extern void proj_from_vehicle();
+extern void proj_from_user();
+extern void watch(double cam_x, double cam_y, double cam_z, double see_x, double see_y, double see_z);
+extern int8_t xy(double cam_x, double cam_y, double cam_z, double point_x, double point_y, double point_z);
 extern void p_forward(float delta);
 extern void setfx(int8_t fx);
 extern void chgfx(int8_t fx);
@@ -271,57 +265,43 @@ extern uint8_t map_color_a;
 extern uint8_t map_color_b;
 extern uint8_t map_color_c;
 extern uint8_t map_color_d;
-extern void randomic_mapper(float x0, float y0, float z0, float x1, float y1,
-                            float z1, float x2, float y2, float z2,
+extern void randomic_mapper(float x0, float y0, float z0, float x1, float y1, float z1, float x2, float y2, float z2,
                             int8_t divisions);
 extern void unloadpv(int16_t handle);
 extern void unloadallpv();
-extern int8_t loadpv(int16_t handle, int32_t virtual_file_position,
-                     float xscale, float yscale, float zscale, float xmove,
-                     float ymove, float zmove, uint8_t base_color,
-                     int8_t depth_sort);
+extern int8_t loadpv(int16_t handle, int32_t virtual_file_position, float xscale, float yscale, float zscale,
+                     float xmove, float ymove, float zmove, uint8_t base_color, int8_t depth_sort);
 extern void quick_sort(int16_t *index, float *mdist, int16_t start, int16_t end);
-extern void drawpv(int16_t handle, int16_t mode, int16_t rm_iterations,
-                   float center_x, float center_y, float center_z,
+extern void drawpv(int16_t handle, int16_t mode, int16_t rm_iterations, float center_x, float center_y, float center_z,
                    int8_t use_depth_sort);
 extern void copypv(int16_t dest_handle, int16_t src_handle);
-extern void modpv(int16_t handle, int16_t polygon_id, int16_t vertex_id,
-                  float x_scale, float y_scale, float z_scale, float x_angle,
-                  float y_angle, float z_angle,
-                  struct pvlist *vertexs_to_affect);
+extern void modpv(int16_t handle, int16_t polygon_id, int16_t vertex_id, float x_scale, float y_scale, float z_scale,
+                  float x_angle, float y_angle, float z_angle, struct pvlist *vertexs_to_affect);
 //--------------------------------------------------------------------------//
 extern char *alphavalue(double value);
-extern void background(uint16_t start, uint8_t *target, uint8_t *background,
-                       uint8_t *offsetsmap, uint16_t total_map_bytes,
-                       uint16_t screenshift);
+extern void background(uint16_t start, uint8_t *target, uint8_t *background, uint8_t *offsetsmap,
+                       uint16_t total_map_bytes, uint16_t screenshift);
 extern void sky(uint16_t limits);
 extern double laststar_x, laststar_y, laststar_z;
 extern int8_t isthere(double star_id);
 extern uint8_t glass_bubble;
-extern void globe(uint16_t start, uint8_t *target, const uint8_t *tapestry,
-                  const uint8_t *offsetsmap, uint16_t total_map_bytes, double x,
-                  double y, double z, float mag_factor, int8_t colormask,
+extern void globe(uint16_t start, uint8_t *target, const uint8_t *tapestry, const uint8_t *offsetsmap,
+                  uint16_t total_map_bytes, double x, double y, double z, float mag_factor, int8_t colormask,
                   int8_t globe_saturation);
-extern void glowing_globe(int16_t start, uint8_t *target,
-                        const uint8_t *offsetsmap, uint16_t total_map_bytes,
-                        double x, double y, double z, float mag_factor,
-                        int16_t terminator_start, int16_t terminator_arc,
-                        uint8_t color);
-extern void white_globe(uint8_t *target, double x, double y, double z,
-                       float mag_factor, float fgm_factor);
+extern void glowing_globe(int16_t start, uint8_t *target, const uint8_t *offsetsmap, uint16_t total_map_bytes, double x,
+                          double y, double z, float mag_factor, int16_t terminator_start, int16_t terminator_arc,
+                          uint8_t color);
+extern void white_globe(uint8_t *target, double x, double y, double z, float mag_factor, float fgm_factor);
 extern double xsun_onscreen;
-extern void white_sun(uint8_t *target, double x, double y, double z,
-                     float mag_factor, float fgm_factor);
+extern void white_sun(uint8_t *target, double x, double y, double z, float mag_factor, float fgm_factor);
 extern float lft_sin[361];
 extern float lft_cos[361];
 extern int8_t lens_flares_init();
-extern void lens_flares_for(double cam_x, double cam_y, double cam_z,
-                            double xlight, double ylight, double zlight,
-                            double interval, int16_t added, int8_t on_hud,
-                            int8_t condition, int16_t xshift, int16_t yshift);
+extern void lens_flares_for(double cam_x, double cam_y, double cam_z, double xlight, double ylight, double zlight,
+                            double interval, int16_t added, int8_t on_hud, int8_t condition, int16_t xshift,
+                            int16_t yshift);
 extern void single_pixel_at_ptr(uint16_t offset, uint8_t pixel_color);
-extern int8_t far_pixel_at(double xlight, double ylight, double zlight,
-                           double radii, uint8_t unconditioned_color);
+extern int8_t far_pixel_at(double xlight, double ylight, double zlight, double radii, uint8_t unconditioned_color);
 extern uint32_t *digimap2;
 extern void cupola(float y_or, float brk);
 extern void polycupola(float y_or, int8_t textured);
@@ -354,12 +334,10 @@ extern void storm();
 extern void planet_xyz(int16_t n);
 extern float rtp(int16_t n);
 extern int16_t planet_viewpoint(double obs_x, double obs_z);
-extern void surface(int16_t logical_id, int16_t type, double seedval,
-                    uint8_t colorbase);
+extern void surface(int16_t logical_id, int16_t type, double seedval, uint8_t colorbase);
 extern int16_t nightzone, crepzone, sun_x_factor;
-extern void planets();
-extern void ring(int16_t planet_id, double ox, double oy, double oz,
-                 int16_t start, int16_t layers);
+extern void draw_planets();
+extern void ring(int16_t planet_id, double ox, double oy, double oz, int16_t start, int16_t layers);
 extern double idscale;
 extern int32_t search_id_code(double id_code, int8_t type);
 extern int32_t tgt_collect_lastpos;
