@@ -19,6 +19,4 @@ int16_t brtl_rand() {
     return (int16_t) (brtl_seed >> 16) & 0x7FFF;
 }
 
-int16_t brtl_random(int16_t num) {
-    return (int16_t)(((int32_t) brtl_rand() * num) / (((uint16_t) 0x7FFF) + 1));
-}
+int16_t brtl_random(int16_t num) { return (int16_t) (((int32_t) brtl_rand() * num) / (((uint16_t) 0x7FFF) + 1)); }

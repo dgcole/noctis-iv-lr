@@ -49,7 +49,7 @@
 //           screen update buffer.
 #define oc_bytes 40000 //   objectschart    map objects on the surface;
 //           atmospheric overlay.
-#define sc_bytes 65540 //   adapted         the hidden video page?�
+#define sc_bytes (640 * 480) //   adapted         the hidden video page?�
 //          2 bytes (support for polymap)
 //           would give 64002. But I extended
 //          it to 64Kb + 4 bytes to avoid it
@@ -175,12 +175,11 @@ struct pvlist {
 
 #define FRAME_TIME_MILLIS 55 // To correspond with the 55ms clock in DOS
 
-
 // Used to indicate WASD movement direction.
 // Exists for ease of readability
 struct wasdmov {
-	bool forward;
-	bool backward;
-	bool left;
-	bool right;
+    bool forward;
+    bool backward;
+    bool left;
+    bool right;
 };

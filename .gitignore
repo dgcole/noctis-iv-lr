@@ -1,11 +1,15 @@
 # Build Files
 cmake-build-debug/
+cmake-build-release/
 
 # CLion Files
 .idea/
 *.iml
 *.ipr
 *.iws
+
+# ClangD Files
+.cache/
 
 # Save Data
 data/current.bin
