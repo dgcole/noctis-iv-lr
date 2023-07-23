@@ -929,8 +929,8 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         v = round((_y * tempYsize) * k4);
 
         sections = fpart[i] - ipart[i];
-        fakedi   = 320 * i + ipart[i] - 4; // i * 320 + ipart[i] - 4; // NOTE: Fudge factor to account
-                                           // for loss of offset on adapted.
+        fakedi   = adapted_width * i + ipart[i] - 4; // i * 320 + ipart[i] - 4; // NOTE: Fudge factor to account
+                                                     // for loss of offset on adapted.
 
         if (culling) {
             goto c_row;
@@ -1094,7 +1094,7 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         tch &= 0x07u;
 
     bmpm320:
-        fakedi -= 320;
+        fakedi -= adapted_width;
         tch--;
         if (!(((uint8_t) (tch >> 7u)) & 1u))
             goto bmpm320;
@@ -1102,8 +1102,8 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         tch -= adapted[0xFA00];
         tch += adapted[0xFA01];
         tch += txtr[(uint16_t) (tbx - 4)];
-        adapted[fakedi + 640 + 3] = tch;
-        fakedi                    = tempfakedi;
+        adapted[fakedi + (adapted_width * 2) + 3] = tch;
+        fakedi                                    = tempfakedi;
         tdx += fakesi;
         tcl--;
         if (tcl != 0)
@@ -1278,7 +1278,7 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
         tch &= 0x07u;
 
     c_bmpm320:
-        fakedi -= 320;
+        fakedi -= adapted_width;
         tch--;
         if (!(((uint8_t) (tch >> 7u)) & 1u))
             goto c_bmpm320;
@@ -1308,7 +1308,7 @@ void polymap(float *x, float *y, float *z, int8_t nv, uint8_t tinta) {
             return;
         tdx    = ipart[i - 2];
         tax    = fpart[i - 2];
-        fakedi = 320 * i;
+        fakedi = adapted_width * i;
         if (tax <= tdx) {
             goto do_singlescan;
         }
