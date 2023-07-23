@@ -2,17 +2,16 @@
 cmake-build-debug/
 cmake-build-release/
 
-# CLion Files
+# IDE Files
 .idea/
 *.iml
 *.ipr
 *.iws
-
-# ClangD Files
 .cache/
+.vscode/
 
-# Save Data
-data/current.bin
+# Runtime Data
+data/
 
 # Manual Build Dir
 build/

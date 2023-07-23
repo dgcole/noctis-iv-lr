@@ -301,15 +301,15 @@ void handle_input() {
 // Clears a rectangular region of the video memory.
 // Either x2 & y2 OR l and h must be specified.
 // This may or may not work.
-void area_clear(uint8_t *dest, int16_t x, int16_t y, int16_t x2, int16_t y2, int16_t l, int16_t h, uint8_t pattern) {
+void area_clear(uint8_t *dest, int32_t x, int32_t y, int32_t x2, int32_t y2, int32_t l, int32_t h, uint8_t pattern) {
     if (l == 0 || h == 0) {
         l = x2 - x;
         h = y2 - y;
     }
 
-    for (int16_t xPos = x; xPos < x + l; xPos++) {
-        for (int16_t yPos = y; yPos < y + h; yPos++) {
-            uint16_t netIndex = (yPos * 320) + xPos;
+    for (int32_t xPos = x; xPos < x + l; xPos++) {
+        for (int32_t yPos = y; yPos < y + h; yPos++) {
+            uint32_t netIndex = (yPos * adapted_width) + xPos;
             dest[netIndex]    = pattern;
         }
     }
@@ -412,9 +412,9 @@ void smootharound_64(uint8_t *target, int32_t cx, int32_t cy, int32_t r, int8_t 
     int32_t x1 = cx - r, y1 = cy - r;
     int32_t x2 = cx + r, y2 = cy + r;
     int32_t px, py, rs = r * r;
-    uint16_t cp;
+    uint32_t cp;
 
-    if (r <= 0 || x1 > 318 || y1 > 198 || x2 < 0 || y2 < 0) {
+    if (r <= 0 || x1 > adapted_width - 2 || y1 > adapted_height - 2 || x2 < 0 || y2 < 0) {
         return;
     }
 
@@ -422,12 +422,12 @@ void smootharound_64(uint8_t *target, int32_t cx, int32_t cy, int32_t r, int8_t 
         y1 = 0;
     }
 
-    if (x2 > 318) {
-        x2 = 318;
+    if (x2 > adapted_width - 2) {
+        x2 = adapted_width - 2;
     }
 
-    if (y2 > 198) {
-        y2 = 198;
+    if (y2 > adapted_height - 2) {
+        y2 = adapted_height - 2;
     }
 
     py = -r;
@@ -441,7 +441,7 @@ void smootharound_64(uint8_t *target, int32_t cx, int32_t cy, int32_t r, int8_t 
             x1 = 0;
         }
 
-        cp = (320 * y1) + x1;
+        cp = (adapted_width * y1) + x1;
 
         if (diffuse) {
             while (x1 <= x2) {
@@ -450,8 +450,8 @@ void smootharound_64(uint8_t *target, int32_t cx, int32_t cy, int32_t r, int8_t 
 
                     colors[0] = target[cp];
                     colors[1] = target[cp + 1];
-                    colors[2] = target[cp + 320];
-                    colors[3] = target[cp + 321];
+                    colors[2] = target[cp + adapted_width];
+                    colors[3] = target[cp + adapted_width + 1];
 
                     memcpy(colormasks, colors, 4 * sizeof(uint8_t));
                     for (unsigned char &colormask : colormasks) {
@@ -476,10 +476,10 @@ void smootharound_64(uint8_t *target, int32_t cx, int32_t cy, int32_t r, int8_t 
                         colors[i] |= colormasks[i];
                     }
 
-                    target[cp]       = colors[0];
-                    target[cp + 1]   = colors[1];
-                    target[cp + 320] = colors[2];
-                    target[cp + 321] = colors[3];
+                    target[cp]                     = colors[0];
+                    target[cp + 1]                 = colors[1];
+                    target[cp + adapted_width]     = colors[2];
+                    target[cp + adapted_width + 1] = colors[3];
                 }
                 cp++;
                 px++;
@@ -492,8 +492,8 @@ void smootharound_64(uint8_t *target, int32_t cx, int32_t cy, int32_t r, int8_t 
 
                     colors[0] = target[cp];
                     colors[1] = target[cp + 1];
-                    colors[2] = target[cp + 320];
-                    colors[3] = target[cp + 321];
+                    colors[2] = target[cp + adapted_width];
+                    colors[3] = target[cp + adapted_width + 1];
 
                     uint8_t temp = colors[0];
                     temp &= 0xC0u;
@@ -5744,23 +5744,23 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
     float pp_delta, ccom;
 
     for (lptr = 0; lptr < 04; lptr++) {
-        area_clear(adapted, 10, openhudcount + 9 - lptr, 0, 0, 300, 1, 54 + surlight + 3 * lptr);
+        area_clear(adapted, 10, openhudcount + 9 - lptr, 0, 0, adapted_width - 20, 1, 54 + surlight + 3 * lptr);
     }
 
     for (lptr = 0; lptr < 10; lptr++) {
-        area_clear(adapted, 0, 9 - lptr, 0, 0, 320, 1, 64 + surlight - lptr);
+        area_clear(adapted, 0, 9 - lptr, 0, 0, adapted_width, 1, 64 + surlight - lptr);
     }
 
     for (lptr = 0; lptr < 10; lptr++) {
-        area_clear(adapted, 0, 190 + lptr, 0, 0, 320, 1, 64 + surlight - lptr);
+        area_clear(adapted, 0, (adapted_height - 10) + lptr, 0, 0, adapted_width, 1, 64 + surlight - lptr);
     }
 
     for (lptr = 0; lptr < 10; lptr++) {
-        area_clear(adapted, 9 - lptr, 10, 0, 0, 1, 180, 64 + surlight - lptr);
+        area_clear(adapted, 9 - lptr, 10, 0, 0, 1, adapted_height - 20, 64 + surlight - lptr);
     }
 
     for (lptr = 0; lptr < 10; lptr++) {
-        area_clear(adapted, 310 + lptr, 10, 0, 0, 1, 180, 64 + surlight - lptr);
+        area_clear(adapted, (adapted_width - 10) + lptr, 10, 0, 0, 1, adapted_height, 64 + surlight - lptr);
     }
 
     lptr = 64 + 3 * surlight;
@@ -5771,12 +5771,12 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
 
     area_clear(adapted, 9, 9, 0, 0, 4, 4, lptr);
     smootharound_64(adapted, 9, 9, 5, 1);
-    area_clear(adapted, 308, 9, 0, 0, 4, 4, lptr);
-    smootharound_64(adapted, 308, 9, 5, 1);
-    area_clear(adapted, 9, 188, 0, 0, 4, 4, lptr);
-    smootharound_64(adapted, 9, 188, 5, 1);
-    area_clear(adapted, 308, 188, 0, 0, 4, 4, lptr);
-    smootharound_64(adapted, 308, 188, 5, 1);
+    area_clear(adapted, adapted_width - 12, 9, 0, 0, 4, 4, lptr);
+    smootharound_64(adapted, adapted_width - 12, 9, 5, 1);
+    area_clear(adapted, 9, adapted_height - 12, 0, 0, 4, 4, lptr);
+    smootharound_64(adapted, 9, adapted_height - 12, 5, 1);
+    area_clear(adapted, adapted_width - 12, adapted_height - 12, 0, 0, 4, 4, lptr);
+    smootharound_64(adapted, adapted_width - 12, adapted_height - 12, 5, 1);
     // Print time on outer HUD.
     sprintf((char *) outhudbuffer, "EPOC %d & ", epoc);
 

@@ -17,7 +17,7 @@ extern int16_t mdltx, mdlty, mouse_x, mouse_y;
 extern uint16_t mpul;
 extern struct wasdmov key_move_dir;
 extern void handle_input();
-extern void area_clear(uint8_t *dest, int16_t x, int16_t y, int16_t x2, int16_t y2, int16_t l, int16_t h,
+extern void area_clear(uint8_t *dest, int32_t x, int32_t y, int32_t x2, int32_t y2, int32_t l, int32_t h,
                        uint8_t pattern);
 extern void psmooth_grays(uint8_t *target);
 extern void pfade(uint8_t *target, uint16_t segshift, uint8_t speed);
