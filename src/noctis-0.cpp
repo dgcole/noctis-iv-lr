@@ -34,6 +34,7 @@
 */
 
 #include <iostream>
+#include <raylib.h>
 #include <stack>
 
 #include "brtl.h"
@@ -46,8 +47,8 @@ uint16_t QUADWORDS = 16000;
 // Video memory. Because Noctis was originally written to use Mode 0x13, this
 // represents a sequence of 64,000 color indices.
 uint8_t *adapted;
-uint16_t adapted_width  = 320;
-uint16_t adapted_height = 200;
+uint16_t adapted_width  = 640;
+uint16_t adapted_height = 400;
 
 uint8_t tmppal[768];
 uint8_t currpal[768];
@@ -139,7 +140,7 @@ uint16_t mpul = 0;
 // Holds directions of WASD movement
 struct wasdmov key_move_dir;
 
-// Handle SDL events..
+// Handle input events
 void handle_input() {
     static bool ldown = false;
     static bool rdown = false;
@@ -148,147 +149,98 @@ void handle_input() {
     mdlty = 0;
     mpul  = 0;
 
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
-            /* WASD player/camera movement. */
-            switch (event.key.keysym.scancode) {
-            case SDL_SCANCODE_W:
-                key_move_dir.forward = (event.type == SDL_KEYDOWN);
-                break;
-            case SDL_SCANCODE_A:
-                key_move_dir.left = (event.type == SDL_KEYDOWN);
-                break;
-            case SDL_SCANCODE_S:
-                key_move_dir.backward = (event.type == SDL_KEYDOWN);
-                break;
-            case SDL_SCANCODE_D:
-                key_move_dir.right = (event.type == SDL_KEYDOWN);
-                break;
-            default:
-                break;
-            }
+    key_move_dir.forward  = IsKeyDown(KEY_W);
+    key_move_dir.left     = IsKeyDown(KEY_A);
+    key_move_dir.backward = IsKeyDown(KEY_S);
+    key_move_dir.right    = IsKeyDown(KEY_D);
+
+    if (IsKeyDown(KEY_ESCAPE)) {
+        keys.push(27);
+    }
+
+    ldown = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+    rdown = IsMouseButtonDown(MOUSE_BUTTON_RIGHT);
+
+    mdltx = GetMouseDelta().x / 5.0;
+    mdlty = GetMouseDelta().y / 5.0;
+
+    mouse_x += mdltx;
+    mouse_y += mdlty;
+
+    int32_t key;
+    while ((key = GetCharPressed()) != 0) {
+        char key_char = (char) key;
+        if (key >= '0' && key <= '9') {
+            keys.push(key_char);
         }
+        if (key >= 'a' && key <= 'z') {
+            keys.push(key_char);
+        }
+    }
 
-        if (event.type == SDL_QUIT) {
-            exit(0);
-        } else if (event.type == SDL_MOUSEMOTION) {
-            mdltx = event.motion.xrel;
-            mdlty = event.motion.yrel;
+    if (IsKeyPressed(KEY_UP)) {
+        keys.push(72);
+        keys.push(0);
+    }
 
-            // printf("mdltX: %hd; mdltY: %hd\n", mdltx, mdlty);
+    if (IsKeyPressed(KEY_DOWN)) {
+        keys.push(80);
+        keys.push(0);
+    }
 
-            mouse_x += mdltx;
-            mouse_y += mdlty;
+    if (IsKeyPressed(KEY_LEFT)) {
+        keys.push(75);
+        keys.push(0);
+    }
 
-            // printf("mX: %hu; mY %hu\n", mx, my);
-        } else if (event.type == SDL_MOUSEBUTTONDOWN) {
-            if (event.button.button == SDL_BUTTON_LEFT)
-                ldown = true;
-            if (event.button.button == SDL_BUTTON_RIGHT)
-                rdown = true;
-        } else if (event.type == SDL_MOUSEBUTTONUP) {
-            if (event.button.button == SDL_BUTTON_LEFT)
-                ldown = false;
-            if (event.button.button == SDL_BUTTON_RIGHT)
-                rdown = false;
-        } else if (event.type == SDL_KEYUP) {
-            switch (event.key.keysym.scancode) {
-            case SDL_SCANCODE_1:
-            case SDL_SCANCODE_2:
-            case SDL_SCANCODE_3:
-            case SDL_SCANCODE_4:
-            case SDL_SCANCODE_5:
-            case SDL_SCANCODE_6:
-            case SDL_SCANCODE_7:
-            case SDL_SCANCODE_8:
-            case SDL_SCANCODE_9:
-                keys.push(event.key.keysym.scancode + ('1' - SDL_SCANCODE_1));
-                break;
-            case SDL_SCANCODE_0:
-                keys.push('0');
-                break;
-            case SDL_SCANCODE_A:
-            case SDL_SCANCODE_B:
-            case SDL_SCANCODE_C:
-            case SDL_SCANCODE_D:
-            case SDL_SCANCODE_E:
-            case SDL_SCANCODE_F:
-            case SDL_SCANCODE_G:
-            case SDL_SCANCODE_H:
-            case SDL_SCANCODE_I:
-            case SDL_SCANCODE_J:
-            case SDL_SCANCODE_K:
-            case SDL_SCANCODE_L:
-            case SDL_SCANCODE_M:
-            case SDL_SCANCODE_N:
-            case SDL_SCANCODE_O:
-            case SDL_SCANCODE_P:
-            case SDL_SCANCODE_Q:
-            case SDL_SCANCODE_R:
-            case SDL_SCANCODE_S:
-            case SDL_SCANCODE_T:
-            case SDL_SCANCODE_U:
-            case SDL_SCANCODE_V:
-            case SDL_SCANCODE_W:
-            case SDL_SCANCODE_X:
-            case SDL_SCANCODE_Y:
-            case SDL_SCANCODE_Z:
-                keys.push(event.key.keysym.scancode + ('a' - SDL_SCANCODE_A));
-                break;
-            case SDL_SCANCODE_UP:
-                keys.push(72);
-                keys.push(0);
-                break;
-            case SDL_SCANCODE_DOWN:
-                keys.push(80);
-                keys.push(0);
-                break;
-            case SDL_SCANCODE_LEFT:
-                keys.push(75);
-                keys.push(0);
-                break;
-            case SDL_SCANCODE_RIGHT:
-                keys.push(77);
-                keys.push(0);
-                break;
-            case SDL_SCANCODE_BACKSPACE:
-                keys.push(8);
-                break;
-            case SDL_SCANCODE_RETURN:
-                keys.push(13);
-                break;
-            case SDL_SCANCODE_ESCAPE:
-                keys.push(27);
-                break;
-            case SDL_SCANCODE_APOSTROPHE:
-                keys.push(39);
-                break;
-            case SDL_SCANCODE_SPACE:
-                keys.push(' ');
-                break;
-            case SDL_SCANCODE_DELETE:
-                keys.push('*');
-                break;
-            case SDL_SCANCODE_MINUS:
-                keys.push('-');
-                break;
-            case SDL_SCANCODE_COMMA:
-                keys.push(',');
-                break;
-            case SDL_SCANCODE_SLASH:
-                keys.push('/');
-            case SDL_SCANCODE_KP_COLON:
-            case SDL_SCANCODE_SEMICOLON:
-                keys.push(':');
-            case SDL_SCANCODE_F1: {
-                static bool captured = false;
-                captured             = !captured;
-                SDL_SetRelativeMouseMode((SDL_bool) captured);
-            }
-            default:
-                break;
-            }
+    if (IsKeyPressed(KEY_RIGHT)) {
+        keys.push(77);
+        keys.push(0);
+    }
+
+    if (IsKeyPressed(KEY_BACKSPACE)) {
+        keys.push(8);
+    }
+
+    if (IsKeyPressed(KEY_ENTER)) {
+        keys.push(13);
+    }
+
+    if (IsKeyPressed(KEY_APOSTROPHE)) {
+        keys.push(39);
+    }
+
+    if (IsKeyPressed(KEY_SPACE)) {
+        keys.push(' ');
+    }
+
+    if (IsKeyPressed(KEY_DELETE)) {
+        keys.push('*');
+    }
+
+    if (IsKeyPressed(KEY_MINUS)) {
+        keys.push('-');
+    }
+
+    if (IsKeyPressed(KEY_COMMA)) {
+        keys.push(',');
+    }
+
+    if (IsKeyPressed(KEY_SLASH)) {
+        keys.push('/');
+    }
+
+    if (IsKeyPressed(KEY_SEMICOLON)) {
+        keys.push(':');
+    }
+
+    if (IsKeyPressed(KEY_F1)) {
+        static bool captured = false;
+        captured             = !captured;
+        if (captured) {
+            DisableCursor();
+        } else {
+            EnableCursor();
         }
     }
 
@@ -396,10 +348,10 @@ void psmooth_64(uint8_t *target, uint16_t segshift) {
     uint8_t *shifted = (target + (segshift * 16));
 
     uint8_t avg, orig;
-    for (uint16_t i = 0; i < count; i++) {
-        orig = shifted[i + 320] & 0xC0u;
-        avg  = (((shifted[i + 320] & 0x3Fu) + (shifted[i + 640] & 0x3Fu)) +
-               ((shifted[i + 321] & 0x3Fu) + (shifted[i + 641] & 0x3Fu))) /
+    for (uint32_t i = 0; i < count; i++) {
+        orig = shifted[i + adapted_width] & 0xC0u;
+        avg  = (((shifted[i + adapted_width] & 0x3Fu) + (shifted[i + adapted_width * 2] & 0x3Fu)) +
+               ((shifted[i + adapted_width + 1] & 0x3Fu) + (shifted[i + adapted_width * 2 + 1] & 0x3Fu))) /
               4;
 
         shifted[i] = avg | orig;
@@ -846,7 +798,7 @@ float fast_flandom() { return ((float) fast_random(32767) * 0.000030518); }
 
 // Loads virtual file handles from supports.nct
 FILE *sa_open(int32_t offset_of_virtual_file) {
-    FILE* fh = fopen("res/supports.nct", "rb");
+    FILE *fh = fopen("res/supports.nct", "rb");
 
     if (fh == nullptr) {
         return nullptr;
@@ -1810,7 +1762,7 @@ int8_t loadpv(int16_t handle, int32_t virtual_file_position, float xscale, float
         return (0);
     }
 
-    FILE* fh = sa_open(virtual_file_position);
+    FILE *fh = sa_open(virtual_file_position);
 
     if (fh == nullptr) {
         return -1;
@@ -2426,18 +2378,18 @@ void sky(uint16_t limits) {
                 rx     = (int32_t) round(((xx * opt_pcosbeta) + (zz * opt_psinbeta)) * inv_rz);
 
                 index = rx + VIEW_X_CENTER;
-                if (index <= 10 || index >= 310) {
+                if (index <= 10 || index >= adapted_width - 10) {
                     continue;
                 }
 
                 ry = (int32_t) round((yy * opt_pcosalfa - z2 * opt_psinalfa) * inv_rz) - 2;
 
-                uint16_t nety = ry + VIEW_Y_CENTER;
-                if (nety <= 10 || nety >= 190) {
+                uint32_t nety = ry + VIEW_Y_CENTER;
+                if (nety <= 10 || nety >= adapted_height - 10) {
                     continue;
                 }
 
-                index += (uint16_t) (320 * nety);
+                index += (uint32_t) (320 * nety);
 
                 if (ap_targetting != 1) {
                     uint8_t color = adapted[index];
@@ -5343,7 +5295,7 @@ void collect_targets() {
     uint16_t n, ptr, index, toread;
     int8_t *buffer_ascii  = (int8_t *) p_surfacemap;
     double *buffer_double = (double *) p_surfacemap;
-    FILE* local_smh             = fopen(starmap_file, "rb");
+    FILE *local_smh       = fopen(starmap_file, "rb");
 
     if (local_smh != nullptr) {
         toread = tgt_bytes_per_scan;
@@ -5669,7 +5621,7 @@ void load_starface() {
 }
 
 void load_QVRmaps() {
-    FILE* fh = sa_open(offsets_map);
+    FILE *fh = sa_open(offsets_map);
 
     if (fh != nullptr) {
         fread(n_offsets_map, 1, om_bytes, fh);
@@ -5685,7 +5637,7 @@ void load_QVRmaps() {
 }
 
 void load_digimap2() {
-    FILE* fh = sa_open(off_digimap2);
+    FILE *fh = sa_open(off_digimap2);
 
     if (fh != nullptr) {
         fread(digimap2, 1, dm2_bytes, fh);
@@ -5702,15 +5654,15 @@ float tp_pressure = 1, pp_pressure = 1;
 float tp_pulse = 118, pp_pulse = 118;
 
 void wrouthud(uint16_t x, uint16_t y, uint16_t l, const char *text) {
-    int16_t j, i, n;
-    uint16_t spot;
+    int32_t j, i, n;
+    uint32_t spot;
     n = 0;
 
     if (!l) {
         l = 32767;
     }
 
-    spot = y * 320 + x;
+    spot = y * adapted_width + x;
 
     while (text[n] && n < l) {
         j = (text[n] - 32) * 5;
@@ -5728,10 +5680,10 @@ void wrouthud(uint16_t x, uint16_t y, uint16_t l, const char *text) {
                 adapted[spot + 2] = 191 - adapted[spot + 2];
             }
 
-            spot += 320;
+            spot += adapted_width;
         }
 
-        spot -= 320 * 5;
+        spot -= adapted_width * 5;
         spot += 4;
         n++;
     }
@@ -5785,7 +5737,7 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
         strcat((char *) outhudbuffer, "0");
     }
     snprintf(dec, 4, "%hu", sinisters);
-    strcat((char*) outhudbuffer, dec);
+    strcat((char *) outhudbuffer, dec);
     strcat((char *) outhudbuffer, ".");
 
     auto medii = (uint16_t) (fmod(secs, 1e6) / 1e3);
@@ -5869,7 +5821,7 @@ void surrounding(int8_t compass_on, int16_t openhudcount) {
             "GRAVITY %2.3f FG & TEMPERATURE %+3.1f@C & PRESSURE %2.3f ATM & PULSE "
             "%3.0f PPS",
             tp_gravity, tp_temp, tp_pressure, tp_pulse);
-    wrouthud(2, 192, 0, (char *) outhudbuffer);
+    wrouthud(2, adapted_height - 8, 0, (char *) outhudbuffer);
 }
 
 extern int32_t star_label_pos;
@@ -5887,7 +5839,7 @@ void snapshot(int16_t forcenumber, int8_t showdata) {
     double parsis_x, parsis_y, parsis_z;
     uint16_t ptr, c;
     int8_t a, b, t[54];
-    FILE* ih = sa_open(header_bmp);
+    FILE *ih = sa_open(header_bmp);
 
     if (ih == nullptr) {
         return;
@@ -5956,7 +5908,7 @@ void snapshot(int16_t forcenumber, int8_t showdata) {
         }
     }
 
-    ih = fopen((char*) snapfilename, "wb+");
+    ih = fopen((char *) snapfilename, "wb+");
 
     if (ih != nullptr) {
         a = 0;

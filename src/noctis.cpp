@@ -7,6 +7,7 @@
 #include "noctis-0.h"
 #include "noctis-d.h"
 #include <chrono>
+#include <raylib.h>
 #include <thread>
 
 #ifdef __EMSCRIPTEN__
@@ -2548,9 +2549,7 @@ float starmass_correction[star_classes] = {
     15000.00 // Class 11
 };
 
-SDL_Surface *sdl_surface;
-SDL_Window *window;
-SDL_Renderer *renderer;
+Texture2D screen_texture;
 
 // Actual noctis stuff starts here.
 float satur, DfCoS;
@@ -2584,13 +2583,9 @@ int16_t resolve = 64;
 void loop();
 
 int main(int argc, char **argv) {
-    // Initialize SDL.
-    sdl_surface = SDL_CreateRGBSurface(0, adapted_width, adapted_height, 32, 0xFF000000, 0xFF0000, 0xFF00, 0xFF);
-    window      = SDL_CreateWindow("Noctis IV LR", SDL_WINDOWPOS_CENTERED, // NOLINT(hicpp-signed-bitwise)
-                                   SDL_WINDOWPOS_CENTERED, 1280, 800,      // NOLINT(hicpp-signed-bitwise)
-                                   SDL_WINDOW_RESIZABLE);
-
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE);
+    InitWindow(1280, 720, "Noctis IV LR");
+    auto image     = GenImageColor(adapted_width, adapted_height, {});
+    screen_texture = LoadTextureFromImage(image);
 
     for (ir = 0; ir < 200; ir++) {
         m200[ir] = ir * 200;
@@ -2709,22 +2704,25 @@ int main(int argc, char **argv) {
 }
 
 void swapBuffers() {
-    SDL_RenderClear(renderer);
-    auto dest = static_cast<uint32_t *>(sdl_surface->pixels);
+    BeginDrawing();
+    ClearBackground(BLACK);
+
+    uint32_t *pixels = (uint32_t *) malloc(adapted_width * adapted_height * sizeof(uint32_t));
     for (int i = 0; i < (adapted_width * adapted_height); i++) {
         uint8_t color_index = adapted[i];
         uint32_t color_r    = currpal[color_index * 3] * 4;
         uint32_t color_g    = currpal[color_index * 3 + 1] * 4;
         uint32_t color_b    = currpal[color_index * 3 + 2] * 4;
 
-        uint32_t color = (color_r << 24u) + (color_g << 16u) + (color_b << 8u) + 255;
-        dest[i]        = color;
+        uint32_t color = (255 << 24u) + (color_b << 16u) + (color_g << 8u) + color_r;
+        pixels[i]      = color;
     }
 
-    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, sdl_surface);
-    SDL_RenderCopy(renderer, texture, nullptr, nullptr);
-    SDL_RenderPresent(renderer);
-    SDL_DestroyTexture(texture);
+    UpdateTexture(screen_texture, pixels);
+    DrawTextureNPatch(screen_texture,
+                      {.source = {.x = 0, .y = 0, .width = (float) adapted_width, .height = (float) adapted_height}},
+                      {.x = 0, .y = 0, .width = 1280, .height = 720}, {}, 0.0f, WHITE);
+    free(pixels);
 
     // Frame limiter (18 FPS)
     static const auto goal = std::chrono::milliseconds(FRAME_TIME_MILLIS);
@@ -2737,6 +2735,7 @@ void swapBuffers() {
     }
 
     last = now;
+    EndDrawing();
 }
 
 void loop() {

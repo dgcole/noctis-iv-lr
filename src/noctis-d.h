@@ -14,11 +14,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#ifdef _WIN32
-#define SDL_MAIN_HANDLED
-#endif
-#include <SDL2/SDL.h>
-
 /*
 
     Definitions for Noctis.
