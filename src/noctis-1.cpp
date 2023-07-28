@@ -4353,20 +4353,20 @@ nosecondarysun:
     /* generazione del cielo (in sfondo). */
     memset(s_background, sky_brightness, st_bytes);
     create_sky(atmosphere);
-    vptr = 0;
+    uint16_t temp_vptr = 0;
 
     for (cpos = 0; cpos < bk_lines_to_horizon; cpos++) {
         for (mpul = 0; mpul < 360; mpul++) {
-            crcy = (float) s_background[vptr] * cpos;
+            crcy = (float) s_background[temp_vptr] * cpos;
             crcy /= bk_lines_to_horizon;
 
             if (nightzone) {
-                s_background[vptr] = crcy / 2;
+                s_background[temp_vptr] = crcy / 2;
             } else {
-                s_background[vptr] = crcy;
+                s_background[temp_vptr] = crcy;
             }
 
-            vptr++;
+            temp_vptr++;
         }
     }
 
@@ -4781,7 +4781,7 @@ nosecondarysun:
         }
 
         // il cielo ha come colore di base 64.
-        mask_pixels(adapted + 2880, 64);
+        mask_pixels(adapted, 64);
         // inizializzazione superficie dell'orizzonte.
         QUADWORDS = 256;
 

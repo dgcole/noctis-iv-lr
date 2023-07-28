@@ -87,21 +87,24 @@
 #define offsets_map -29926
 #define globes_map -22586
 
+#define adapted_width 320
+#define adapted_height 200
+
 // Limits, relative to the center of the screen, for 3D sticks.
 
-#define stk_lbx -150
-#define stk_lby -90
-#define stk_ubx 160
-#define stk_uby 90
+#define stk_lbx -(adapted_width / 2 - 10)
+#define stk_lby -(adapted_height / 2 - 10)
+#define stk_ubx (adapted_width / 2)
+#define stk_uby (adapted_height / 2 - 10)
 
 // Working parameters for "tdpolygs.h", the polygonal 3D library.
 
 #define VERTEXES_PER_POLYGON 4
 
-#define VIEW_WIDTH 306
-#define VIEW_HEIGHT 180
-#define VIEW_X_CENTER 158
-#define VIEW_Y_CENTER 100
+#define VIEW_WIDTH (adapted_width - 14)
+#define VIEW_HEIGHT (adapted_height - 20)
+#define VIEW_X_CENTER (adapted_width / 2 - 2)
+#define VIEW_Y_CENTER (adapted_height / 2)
 
 #define lbx ((-VIEW_WIDTH / 2) + VIEW_X_CENTER)
 #define ubx ((VIEW_WIDTH / 2) + VIEW_X_CENTER)

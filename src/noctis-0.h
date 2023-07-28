@@ -2,8 +2,6 @@
 
 extern uint16_t QUADWORDS;
 extern uint8_t *adapted;
-extern uint16_t adapted_width;
-extern uint16_t adapted_height;
 extern int16_t get_key();
 extern bool is_key();
 extern uint8_t range8088[64 * 3];
@@ -20,10 +18,13 @@ extern void handle_input();
 extern void area_clear(uint8_t *dest, int32_t x, int32_t y, int32_t x2, int32_t y2, int32_t l, int32_t h,
                        uint8_t pattern);
 extern void psmooth_grays(uint8_t *target);
+extern void psmooth_grays_ex(uint8_t *target);
 extern void pfade(uint8_t *target, uint16_t segshift, uint8_t speed);
 extern void psmooth_64(uint8_t *target, uint16_t segshift);
+extern void psmooth_64_ex(uint8_t *target, uint16_t segshift);
 extern void smootharound_64(uint8_t *target, int32_t cx, int32_t cy, int32_t r, int8_t diffuse);
 extern void mask_pixels(uint8_t *target, uint8_t mask);
+extern void mask_pixels_ex(uint8_t *target, uint32_t offset, uint8_t mask);
 
 extern int32_t XSIZE, YSIZE; // calibrazione BMP.
 extern float uneg;
@@ -156,7 +157,7 @@ extern int8_t stspeed;
 extern int8_t elight;
 extern uint16_t gl_start;
 extern uint16_t point;
-extern uint16_t vptr;
+extern uint32_t vptr;
 extern int16_t infoarea;
 extern int16_t s_control;
 extern int16_t s_command;

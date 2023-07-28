@@ -3173,10 +3173,10 @@ nop:
             }
         }
 
-        psmooth_grays(adapted + 2880);
+        psmooth_grays_ex(adapted + 2880);
     }
 
-    mask_pixels(adapted + 2880, 64);
+    mask_pixels_ex(adapted, 2880, 64);
 
     if (l_dsd < 8 * nearstar_ray) {
         if (farstar) {
@@ -3747,8 +3747,8 @@ ext_1: //
     // � poco risolutivo, sia fisicamente che cromaticamente.
     //
     QUADWORDS -= 240;
-    psmooth_64(adapted, 200);
-    psmooth_64(adapted, 200);
+    psmooth_64_ex(adapted, 200);
+    psmooth_64_ex(adapted, 200);
     QUADWORDS += 240;
     //
     // Tracking of all visible stars.
@@ -4523,7 +4523,7 @@ resynctoplanet:
     // disegna i bordi dello scafandro, illuminati in relazione
     // all'ambiente circostante.
     //
-    surrounding(0, 180);
+    surrounding(0, adapted_height - 20);
     // riduzione stanchezza (continua, eventualmente
     // dall'ultima volta che si � scesi in superficie)
     // e variazioni nelle pulsazioni, pi� verosimili...

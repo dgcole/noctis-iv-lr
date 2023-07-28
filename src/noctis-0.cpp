@@ -47,8 +47,6 @@ uint16_t QUADWORDS = 16000;
 // Video memory. Because Noctis was originally written to use Mode 0x13, this
 // represents a sequence of 64,000 color indices.
 uint8_t *adapted;
-uint16_t adapted_width  = 640;
-uint16_t adapted_height = 400;
 
 uint8_t tmppal[768];
 uint8_t currpal[768];
@@ -287,7 +285,7 @@ void area_clear(uint8_t *dest, int32_t x, int32_t y, int32_t x2, int32_t y2, int
 
 void psmooth_grays(uint8_t *target) {
     uint16_t count = (QUADWORDS << 2u) - (320u << 2u);
-    int index      = 0;
+    uint32_t index = 0;
     for (uint16_t i = 0; i < count; i++, index++) {
         uint8_t smoothed;
         uint32_t temp;
@@ -314,7 +312,40 @@ void psmooth_grays(uint8_t *target) {
         smoothed += temp & 0xFFu;
         smoothed += temp & 0xFF00u;
         smoothed >>= 2u;
-        target[320] = smoothed;
+        target[index + 320] = smoothed;
+    }
+}
+
+void psmooth_grays_ex(uint8_t *target) {
+    uint32_t count = (QUADWORDS << 2u) - ((adapted_width) << 2u);
+    uint32_t index = 0;
+    for (uint32_t i = 0; i < count; i++, index++) {
+        uint8_t smoothed;
+        uint32_t temp;
+
+        temp = (target[index + 3] << 24u) + (target[index + 2] << 16u) + (target[index + 1] << 8u) + target[index];
+
+        temp += (target[index + adapted_width + 3] << 24u) + (target[index + adapted_width + 2] << 16u) +
+                (target[index + adapted_width + 1] << 8u) + target[index + adapted_width];
+
+        temp += (target[index + (adapted_width * 2) + 3] << 24u) + (target[index + (adapted_width * 2) + 2] << 16u) +
+                (target[index + (adapted_width * 2) + 1] << 8u) + target[index + adapted_width * 2];
+
+        temp += (target[index + (adapted_width * 3) + 3] << 24u) + (target[index + (adapted_width * 3) + 2] << 16u) +
+                (target[index + (adapted_width * 3) + 1] << 8u) + target[index + (adapted_width * 3)];
+
+        temp &= 0xFCFCFCFC;
+        temp >>= 2u;
+
+        smoothed = temp & 0xFFu;
+        smoothed += temp & 0xFF00u;
+
+        temp >>= 16u;
+
+        smoothed += temp & 0xFFu;
+        smoothed += temp & 0xFF00u;
+        smoothed >>= 2u;
+        target[index + adapted_width] = smoothed;
     }
 }
 
@@ -345,6 +376,23 @@ void psmooth_64(uint8_t *target, uint16_t segshift) {
     uint16_t count = (QUADWORDS - 80u) << 2u;
     // We might need to align the shifted pointer to a 16 byte interval to match
     // the former offset clearing. Sketchy.
+    uint8_t *shifted = (target + (segshift * 16));
+
+    uint8_t avg, orig;
+    for (uint32_t i = 0; i < count; i++) {
+        orig = shifted[i + 320] & 0xC0u;
+        avg  = (((shifted[i + 320] & 0x3Fu) + (shifted[i + 640] & 0x3Fu)) +
+               ((shifted[i + 321] & 0x3Fu) + (shifted[i + 641] & 0x3Fu))) /
+              4;
+
+        shifted[i] = avg | orig;
+    }
+}
+
+void psmooth_64_ex(uint8_t *target, uint16_t segshift) {
+    // Who knows why this is offset as it is... Definitely not me.
+    uint32_t count = (adapted_width * adapted_height) - (80 * 4);
+
     uint8_t *shifted = (target + (segshift * 16));
 
     uint8_t avg, orig;
@@ -488,6 +536,18 @@ void mask_pixels(uint8_t *target, uint8_t mask) {
     }
 }
 
+// Extended resolution version of mask_pixels()
+void mask_pixels_ex(uint8_t *target, uint32_t offset, uint8_t mask) {
+    uint8_t cap = 0x3F;
+
+    for (uint32_t i = offset; i < adapted_width * adapted_height; i++) {
+        uint8_t color = target[i];
+        color &= cap;
+        color += mask;
+        target[i] = color;
+    }
+}
+
 // HSP Inclusions.
 
 #include "tdpolygs.h" // 3D Engine.
@@ -593,7 +653,7 @@ int8_t stspeed    = 0;
 int8_t elight     = 0;
 uint16_t gl_start = 0;
 uint16_t point;
-uint16_t vptr;
+uint32_t vptr;
 int16_t infoarea  = 0;
 int16_t s_control = 1;
 int16_t s_command = 0;
@@ -1113,16 +1173,16 @@ void resetfx() { flares = previous_flares_value; }
 // Tracing sticks (2D).
 void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
     int32_t a, b, L;
-    uint16_t pi, pf;
-    uint16_t offset = 0;
+    uint32_t pi, pf;
+    uint32_t offset = 0;
 
     if (xp == xa) {
         if (ya >= yp) {
-            pi = 320 * yp + xp;
-            pf = 320 * (ya + 1);
+            pi = adapted_width * yp + xp;
+            pf = adapted_width * (ya + 1);
         } else {
-            pi = 320 * ya + xp;
-            pf = 320 * (yp + 1);
+            pi = adapted_width * ya + xp;
+            pf = adapted_width * (yp + 1);
         }
 
         pi += offset;
@@ -1136,7 +1196,7 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
                 adapted[offset]     = 0x3E;
                 adapted[offset + 1] = 0x00;
 
-                offset += 320;
+                offset += adapted_width;
             }
             break;
         case 1:
@@ -1152,7 +1212,7 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
                 }
 
                 adapted[offset] += mask;
-                offset += 320;
+                offset += adapted_width;
             }
             break;
         case 2:
@@ -1164,7 +1224,7 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
                 adapted[offset] &= 0xC0u;
 
                 adapted[offset] += mask;
-                offset += 320;
+                offset += adapted_width;
             }
             break;
         case 3:
@@ -1173,7 +1233,7 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
                 adapted[offset + 1] = 0x1E;
                 adapted[offset + 2] = 0x13;
                 adapted[offset + 3] = 0x0E;
-                offset += 320;
+                offset += adapted_width;
             }
             break;
         default:
@@ -1182,49 +1242,42 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
         return;
     }
 
-    uint32_t xaTemp = xa - xp;
+    uint32_t xDist = xa - xp;
     if (xa < xp) {
-        uint32_t swap;
+        std::swap(xp, xa);
+        std::swap(yp, ya);
 
-        swap = xp;
-        xp   = xa;
-        xa   = swap;
-
-        swap = yp;
-        yp   = ya;
-        ya   = swap;
-
-        xaTemp = ~xaTemp + 1;
+        xDist = -xDist;
     }
-    a = xaTemp;
-    L = xaTemp;
+    a = xDist;
+    L = xDist;
 
-    uint32_t yaTemp = ya - yp;
-    bool negateB    = false;
+    uint32_t yDist = ya - yp;
+    bool negateB   = false;
     if (ya < yp) {
         negateB = true;
-        yaTemp  = ~yaTemp + 1;
+        yDist   = -yDist;
     }
 
-    b = yaTemp;
+    b = yDist;
 
-    if (yaTemp > (uint32_t) L) {
-        L = yaTemp;
+    if (yDist > (uint32_t) L) {
+        L = yDist;
     }
     L++;
 
-    xa <<= 16u;
+    xa *= 1000;
 
-    uint32_t global_x = xp << 16u;
-    uint32_t global_y = yp << 16u;
+    uint32_t global_x = xp * 1000;
+    uint32_t global_y = yp * 1000;
 
-    a <<= 16;
+    a *= 1000;
     a /= L;
-    a &= 0xFFFF;
+    a %= 1000;
 
-    b <<= 16;
+    b *= 1000;
     b /= L;
-    b &= 0xFFFF;
+    b %= 1000;
 
     if (negateB) {
         b = -b;
@@ -1233,13 +1286,13 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
     switch (flares) {
     case 0: // Solid sticks that "reflect" light;
         while (global_x < xa) {
-            uint16_t tempB = (global_y >> 16u);
-            uint32_t index = global_x >> 16u;
+            uint32_t tempB = (global_y / 1000);
+            uint32_t index = global_x / 1000;
 
             global_x += a;
             global_y += b;
 
-            index += 320 * tempB;
+            index += adapted_width * tempB;
 
             adapted[index]     = 0x00;
             adapted[index + 1] = 0x3E;
@@ -1247,13 +1300,13 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
         break;
     case 1: // Intrinsically luminous sticks.
         while (global_x < xa) {
-            uint16_t tempB = (global_y >> 16u);
-            uint32_t index = global_x >> 16u;
+            uint32_t tempB = (global_y / 1000);
+            uint32_t index = global_x / 1000;
 
             global_x += a * 2;
             global_y += b * 2;
 
-            index += 320 * tempB;
+            index += adapted_width * tempB;
 
             uint16_t color = adapted[index] << 2u;
 
@@ -1268,13 +1321,13 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
         break;
     case 2: // Sticks that absorb light ("smoked")
         while (global_x < xa) {
-            uint16_t tempB = (global_y >> 16u);
-            uint32_t index = global_x >> 16u;
+            uint32_t tempB = (global_y / 1000);
+            uint32_t index = global_x / 1000;
 
             global_x += a;
             global_y += b;
 
-            index += 320 * tempB;
+            index += adapted_width * tempB;
 
             uint16_t color = adapted[index];
 
@@ -1289,13 +1342,13 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
 
     case 3: // Same as type 0, but wider.
         while (global_x < xa) {
-            uint16_t tempB = (global_y >> 16u);
-            uint32_t index = global_x >> 16u;
+            uint32_t tempB = (global_y / 1000);
+            uint32_t index = global_x / 1000;
 
             global_x += a;
             global_y += b;
 
-            index += 320 * tempB;
+            index += adapted_width * tempB;
 
             adapted[index]     = 0xCE;
             adapted[index + 1] = 0xD3;
@@ -2389,7 +2442,7 @@ void sky(uint16_t limits) {
                     continue;
                 }
 
-                index += (uint32_t) (320 * nety);
+                index += (uint32_t) (adapted_width * nety);
 
                 if (ap_targetting != 1) {
                     uint8_t color = adapted[index];
@@ -3108,8 +3161,8 @@ int8_t far_pixel_at(double xlight, double ylight, double zlight, double radii, u
         pyy /= rz;
         pyy += VIEW_Y_CENTER;
 
-        if (pxx > 10 && pyy > 10 && pxx < 310 && pyy < 190) {
-            vptr = (uint16_t) (320 * (int16_t) pyy + pxx);
+        if (pxx > 10 && pyy > 10 && pxx < (adapted_width - 10) && pyy < (adapted_height - 10)) {
+            vptr = (uint32_t) (adapted_width * (int32_t) pyy + pxx);
 
             if (pixel_spreads) {
                 edge_color_1 = pixel_color >> 1u;
@@ -3118,35 +3171,35 @@ int8_t far_pixel_at(double xlight, double ylight, double zlight, double radii, u
                 edge_color_4 = pixel_color >> 4u;
 
                 if (edge_color_1 > 7) {
-                    single_pixel_at_ptr(vptr - 320, edge_color_1);
-                    single_pixel_at_ptr(vptr + 320, edge_color_1);
+                    single_pixel_at_ptr(vptr - adapted_width, edge_color_1);
+                    single_pixel_at_ptr(vptr + adapted_width, edge_color_1);
                     single_pixel_at_ptr(vptr - 1, edge_color_1);
                     single_pixel_at_ptr(vptr + 1, edge_color_1);
                 }
 
                 if (edge_color_2 > 7) {
-                    single_pixel_at_ptr(vptr - 321, edge_color_2);
-                    single_pixel_at_ptr(vptr - 319, edge_color_2);
-                    single_pixel_at_ptr(vptr + 321, edge_color_2);
-                    single_pixel_at_ptr(vptr + 319, edge_color_2);
+                    single_pixel_at_ptr(vptr - (adapted_width + 1), edge_color_2);
+                    single_pixel_at_ptr(vptr - (adapted_width - 1), edge_color_2);
+                    single_pixel_at_ptr(vptr + (adapted_width + 1), edge_color_2);
+                    single_pixel_at_ptr(vptr + (adapted_width - 1), edge_color_2);
                 }
 
                 if (edge_color_3 > 7) {
-                    single_pixel_at_ptr(vptr - 640, edge_color_3);
-                    single_pixel_at_ptr(vptr + 640, edge_color_3);
+                    single_pixel_at_ptr(vptr - (adapted_width * 2), edge_color_3);
+                    single_pixel_at_ptr(vptr + (adapted_width * 2), edge_color_3);
                     single_pixel_at_ptr(vptr - 2, edge_color_3);
                     single_pixel_at_ptr(vptr + 2, edge_color_3);
                 }
 
                 if (edge_color_4 > 7) {
-                    single_pixel_at_ptr(vptr - 641, edge_color_4);
-                    single_pixel_at_ptr(vptr - 639, edge_color_4);
-                    single_pixel_at_ptr(vptr + 641, edge_color_4);
-                    single_pixel_at_ptr(vptr + 639, edge_color_4);
-                    single_pixel_at_ptr(vptr - 322, edge_color_4);
-                    single_pixel_at_ptr(vptr - 318, edge_color_4);
-                    single_pixel_at_ptr(vptr + 322, edge_color_4);
-                    single_pixel_at_ptr(vptr + 318, edge_color_4);
+                    single_pixel_at_ptr(vptr - (adapted_width * 2 + 1), edge_color_4);
+                    single_pixel_at_ptr(vptr - (adapted_width * 2 - 1), edge_color_4);
+                    single_pixel_at_ptr(vptr + (adapted_width * 2 + 1), edge_color_4);
+                    single_pixel_at_ptr(vptr + (adapted_width * 2 - 1), edge_color_4);
+                    single_pixel_at_ptr(vptr - (adapted_width + 2), edge_color_4);
+                    single_pixel_at_ptr(vptr - (adapted_width - 2), edge_color_4);
+                    single_pixel_at_ptr(vptr + (adapted_width + 2), edge_color_4);
+                    single_pixel_at_ptr(vptr + (adapted_width - 2), edge_color_4);
                 }
 
                 if (pixel_color > 7) {
@@ -3843,38 +3896,40 @@ void permanent_storm() {
 
 // A crater.
 void crater() {
+    uint16_t temp_vptr = 0;
+
     for (a = 0; a < 2 * M_PI; a += 4 * deg) {
         for (gr = 0; gr < cr; gr++) {
-            px   = cx + cos((double) a) * gr;
-            py   = cy + sin((double) a) * gr;
-            vptr = px + 360 * py;
+            px        = cx + cos((double) a) * gr;
+            py        = cy + sin((double) a) * gr;
+            temp_vptr = px + 360 * py;
 
-            uint8_t color       = p_background[vptr];
+            uint8_t color       = p_background[temp_vptr];
             uint8_t colorOffset = gr >> lave;
             if (color >= colorOffset) {
-                p_background[vptr] = color - colorOffset;
+                p_background[temp_vptr] = color - colorOffset;
             } else {
-                p_background[vptr] = 0;
+                p_background[temp_vptr] = 0;
             }
         }
 
-        p_background[vptr]     = 0x3E;
-        p_background[vptr + 1] = 0x01;
+        p_background[temp_vptr]     = 0x3E;
+        p_background[temp_vptr + 1] = 0x01;
 
         if (crays && !brtl_random(crays)) {
             b = (2 + brtl_random(2)) * cr;
 
             if (cy - b > 0 && cy + b < 179) {
                 for (gr = cr + 1; gr < b; gr++) {
-                    px   = cx + cos((double) a) * gr;
-                    py   = cy + sin((double) a) * gr;
-                    vptr = px + 360 * py;
+                    px        = cx + cos((double) a) * gr;
+                    py        = cy + sin((double) a) * gr;
+                    temp_vptr = px + 360 * py;
 
-                    uint8_t color = p_background[vptr] + ((uint8_t) cr);
+                    uint8_t color = p_background[temp_vptr] + ((uint8_t) cr);
                     if (color > 0x3E) {
                         color = 0x3E;
                     }
-                    p_background[vptr] = color;
+                    p_background[temp_vptr] = color;
                 }
             }
         }
@@ -3936,8 +3991,8 @@ void fracture(uint8_t *target, float max_latitude) {
             py += max_latitude;
         }
 
-        vptr = px + (float) (360 * (uint16_t) py);
-        target[vptr] >>= (uint8_t) b;
+        uint16_t temp_vptr = px + (float) (360 * (uint16_t) py);
+        target[temp_vptr] >>= (uint8_t) b;
         gr--;
     } while (gr);
 }
