@@ -233,7 +233,7 @@ noevid:
     setfx(0);
 }
 
-/* Schemi aggiuntivi per lo schermo del computer. */
+/* Additional schemes for the computer screen */
 
 void frame(float x, float y, float l, float h, float borderwidth, uint8_t color) {
     // disegna una cornice rettangolare.

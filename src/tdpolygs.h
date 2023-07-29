@@ -107,6 +107,13 @@ float YCOEFF      = EMU_K / dpp;                // Coefficient of convenience.
 // The one doing the checks is in the waveline function of
 // Liquid Player, and it is safe at 1000 per thousand.
 
+int8_t flares = 0;
+
+float uno = 1; // Always one: it is a constant of convenience. (Very cool, italy man)
+
+uint8_t entity = 1; /* check generic quantities in polygon filling with some
+                       special effects */
+
 uint16_t ptr;
 
 void draw_line_2d(int32_t x0, int32_t y0, int32_t x1, int32_t y1) {
@@ -168,13 +175,34 @@ void draw_triangle_2d(glm::ivec2 p0, glm::ivec2 p1, glm::ivec2 p2, uint8_t color
         bboxmax.x = std::min(clamp.x, std::max(bboxmax.x, pts[i].x));
         bboxmax.y = std::min(clamp.y, std::max(bboxmax.y, pts[i].y));
     }
-    glm::ivec2 P;
-    for (P.x = bboxmin.x; P.x <= bboxmax.x; P.x++) {
-        for (P.y = bboxmin.y; P.y <= bboxmax.y; P.y++) {
-            glm::vec3 bc_screen = barycentric(pts, P);
+
+    glm::ivec2 curr;
+
+    for (curr.x = bboxmin.x; curr.x <= bboxmax.x; curr.x++) {
+        for (curr.y = bboxmin.y; curr.y <= bboxmax.y; curr.y++) {
+            glm::vec3 bc_screen = barycentric(pts, curr);
             if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0)
                 continue;
-            adapted[adapted_width * P.y + P.x] = color;
+
+            uint32_t idx = adapted_width * curr.y + curr.x;
+            switch (flares) {
+            case 0:
+                adapted[idx] = color;
+                break;
+            case 1:
+                adapted[idx] = std::min(adapted[idx] & 0x3Fu + color, 62u);
+                break;
+            case 2:
+                adapted[idx] = std::min(0x40u + (bboxmax.x - curr.x), 127u);
+                break;
+            case 4:
+                // TODO; Something about this is incorrect.
+                adapted[idx] =
+                    (((entity & 0x80u) == 0x80u) ? 0 : (std::min((color & 0x3Fu) + entity, 0x3Fu)) | (color & 0xC0u));
+                break;
+            default:
+                break;
+            }
         }
     }
 }
@@ -187,8 +215,6 @@ void draw_triangle_2d(glm::ivec2 p0, glm::ivec2 p1, glm::ivec2 p2, uint8_t color
 // cui si va a tracciare.
 // Per default, � la seguente, posta a nulla perch� tdpolygs non si
 // prepara subito a questa particolare funzione.
-
-int8_t flares = 0;
 
 int32_t mp[6 * VERTEXES_PER_POLYGON];
 
@@ -314,11 +340,6 @@ void change_txm_repeating_mode() {
     Chiunque tenter� di capirci qualcosa rimarr� molto scoraggiato.
     Lungo e complesso, ma provate ad eseguirlo ed a monitorarne il flusso:
     vi accorgerete della sua enorme agilit�. */
-
-float uno = 1; // Always one: it is a constant of convenience. (Very cool, italy man)
-
-uint8_t entity = 1; /* check generic quantities in polygon filling with some
-                       special effects */
 
 void poly3d(const float *x, const float *y, const float *z, uint16_t nrv, uint8_t colore) {
     uint16_t _8n;

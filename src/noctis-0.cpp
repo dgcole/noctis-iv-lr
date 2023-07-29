@@ -1293,6 +1293,8 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
             global_y += b;
 
             index += adapted_width * tempB;
+            // TODO; Figure out why this is over-running and actually fix it.
+            index = std::min(index, (uint32_t) (adapted_width * adapted_height - 1));
 
             adapted[index]     = 0x00;
             adapted[index + 1] = 0x3E;
@@ -1307,6 +1309,7 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
             global_y += b * 2;
 
             index += adapted_width * tempB;
+            index = std::min(index, (uint32_t) (adapted_width * adapted_height - 1));
 
             uint16_t color = adapted[index] << 2u;
 
@@ -1328,6 +1331,7 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
             global_y += b;
 
             index += adapted_width * tempB;
+            index = std::min(index, (uint32_t) (adapted_width * adapted_height - 1));
 
             uint16_t color = adapted[index];
 
@@ -1349,6 +1353,7 @@ void stick(uint32_t xp, uint32_t yp, uint32_t xa, uint32_t ya) {
             global_y += b;
 
             index += adapted_width * tempB;
+            index = std::min(index, (uint32_t) (adapted_width * adapted_height - 1));
 
             adapted[index]     = 0xCE;
             adapted[index + 1] = 0xD3;
@@ -2540,8 +2545,9 @@ void globe(uint16_t start, uint8_t *target, const uint8_t *tapestry, const uint8
         gman = 4;
     }
 
-    if (mag_factor > 1.32) {
-        mag_factor = 1.32;
+    double max_mag_factor = 1.32;
+    if (mag_factor > max_mag_factor) {
+        mag_factor = max_mag_factor;
     }
 
     rx /= rz;
@@ -2550,11 +2556,11 @@ void globe(uint16_t start, uint8_t *target, const uint8_t *tapestry, const uint8
     // 320 = Screen width, 100 = Max x/y pixels of the map,
     // 1.32 = Maximum magnification factor with points of 4 pixels.
 
-    if (rx < -292 || rx > 292) {
+    if (rx < -((adapted_width / 2) + (100 * max_mag_factor)) || rx > ((adapted_width / 2) + (100 * max_mag_factor))) {
         return; // 292 = (320 / 2) + (100 * 1.32)
     }
 
-    if (ry < -232 || ry > 232) {
+    if (ry < -((adapted_height / 2) + (100 * max_mag_factor)) || ry > ((adapted_height / 2) + (100 * max_mag_factor))) {
         return; // 232 = (200 / 2) + (100 * 1.32)
     }
 
@@ -2568,16 +2574,16 @@ void globe(uint16_t start, uint8_t *target, const uint8_t *tapestry, const uint8
             int16_t offset = (int8_t) offsetsmap[j];
             temp           = offset;
             temp           = (int16_t) round(((int16_t) temp) * mag_factor);
-            uint16_t pos   = temp + center_y;
+            uint32_t pos   = temp + center_y;
 
-            if (pos > 6 && pos < 191) {
+            if (pos > 6 && pos < (adapted_height - 9)) {
                 offset = (int8_t) offsetsmap[j + 1];
-                pos    = 320 * pos;
+                pos    = adapted_width * pos;
                 temp   = offset;
                 temp   = (int16_t) round(((int16_t) temp) * mag_factor);
                 offset = temp + center_x;
 
-                if (offset > 6 && offset < 311) {
+                if (offset > 6 && offset < (adapted_width - 9)) {
                     pos += offset;
                     color = tapestry[curr];
                     if (color < globe_saturation) {
@@ -2591,40 +2597,40 @@ void globe(uint16_t start, uint8_t *target, const uint8_t *tapestry, const uint8
                         target[pos]     = color;
                         target[pos + 1] = color;
 
-                        target[pos + 320] = color;
-                        target[pos + 321] = color;
+                        target[pos + adapted_width]     = color;
+                        target[pos + adapted_width + 1] = color;
                     } else if (gman == 3) {
                         target[pos]     = color;
                         target[pos + 1] = color;
                         target[pos + 2] = color;
 
-                        target[pos + 320] = color;
-                        target[pos + 321] = color;
-                        target[pos + 322] = color;
+                        target[pos + adapted_width]     = color;
+                        target[pos + adapted_width + 1] = color;
+                        target[pos + adapted_width + 2] = color;
 
-                        target[pos + 640] = color;
-                        target[pos + 641] = color;
-                        target[pos + 642] = color;
+                        target[pos + adapted_width * 2]     = color;
+                        target[pos + adapted_width * 2 + 1] = color;
+                        target[pos + adapted_width * 2 + 2] = color;
                     } else if (gman == 4) {
                         target[pos]     = color;
                         target[pos + 1] = color;
                         target[pos + 2] = color;
                         target[pos + 3] = color;
 
-                        target[pos + 320] = color;
-                        target[pos + 321] = color;
-                        target[pos + 322] = color;
-                        target[pos + 323] = color;
+                        target[pos + adapted_width]     = color;
+                        target[pos + adapted_width + 1] = color;
+                        target[pos + adapted_width + 2] = color;
+                        target[pos + adapted_width + 3] = color;
 
-                        target[pos + 640] = color;
-                        target[pos + 641] = color;
-                        target[pos + 642] = color;
-                        target[pos + 643] = color;
+                        target[pos + adapted_width * 2]     = color;
+                        target[pos + adapted_width * 2 + 1] = color;
+                        target[pos + adapted_width * 2 + 2] = color;
+                        target[pos + adapted_width * 2 + 3] = color;
 
-                        target[pos + 960] = color;
-                        target[pos + 961] = color;
-                        target[pos + 962] = color;
-                        target[pos + 963] = color;
+                        target[pos + adapted_width * 3]     = color;
+                        target[pos + adapted_width * 3 + 1] = color;
+                        target[pos + adapted_width * 3 + 2] = color;
+                        target[pos + adapted_width * 3 + 3] = color;
                     }
                 }
             }
