@@ -2584,6 +2584,7 @@ void loop();
 
 int main(int argc, char **argv) {
     InitWindow(1280, 720, "Noctis IV LR");
+    DisableCursor();
     auto image     = GenImageColor(adapted_width, adapted_height, {});
     screen_texture = LoadTextureFromImage(image);
 

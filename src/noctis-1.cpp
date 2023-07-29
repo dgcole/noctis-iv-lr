@@ -107,8 +107,8 @@ int16_t detail_seed = 12345;
 
 void greenmush(float x, float y, float z, uint8_t mask_1, uint8_t mask_2, int32_t scaling, uint8_t colorgrade,
                uint8_t colormask, int8_t noseed) {
-    // produce una serie di gruppi di minuscole sagome verdi, studiate per
-    // fornire l'impressione delle fronde degli alberi pi? distanti.
+    // Produces a series of groups of tiny green shapes, designed to give the impression
+    // of distant tree fronds.
     int32_t correction;
     int16_t n1, m1, n2, m2;
     correction = scaling >> 1;
@@ -5767,7 +5767,7 @@ nosecondarysun:
     }
 
 nodissolve:
-    memset(adapted, 0, QUADWORDS * 4);
+    memset(adapted, 0, adapted_width * adapted_height);
     dzat_x             = backup_dzat_x;
     dzat_y             = backup_dzat_y;
     dzat_z             = backup_dzat_z;

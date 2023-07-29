@@ -1,3 +1,3 @@
 #!/bin/bash
-cd cmake-build-debug
+cd build
 ln -sf ../res res
