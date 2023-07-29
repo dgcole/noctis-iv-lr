@@ -17,7 +17,7 @@ The goal for Noctis IV LR is to maintain compabitility with the original Noctis 
 Noctis IV LR runs on both Linux and Windows.
 
 ## Demo
-There is a semi-functional [web demo](http://users.wpi.edu/~dcole/noctis/). This demo is not necessarily up to date, and should not be taken as representative of the stability of this port. A web version is not an end goal, and it is only around to quickly demonstrate things.
+There is a semi-functional [web demo](https://dgcole.github.io/noctis-iv-lr/web/nivlr.html). This demo is not necessarily up to date, and should not be taken as representative of the stability of this port. A web version is not an end goal, and it is only around to quickly demonstrate things.
 
 ## Compiling
 The only strict dependency of Noctis IV LR is SDL2.
