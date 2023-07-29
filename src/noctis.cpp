@@ -520,7 +520,11 @@ void run_goesnet_module() {
     freeze();
 
     // Check resident commands.
-    if (memcmp(goesnet_command, "CLR", 3) != 0) {
+    if (memcmp(goesnet_command, "CLR", 3) == 0) {
+        // Clear the command output
+        remove(goesoutputfile);
+    }
+    else {
         ch = fopen(goesoutputfile, "wb");
 
         if (ch != nullptr) {
@@ -538,8 +542,6 @@ void run_goesnet_module() {
         strcpy(command_prepended, dir);
         strcat(command_prepended, goesnet_command);
         system(command_prepended);
-    } else {
-        remove(goesoutputfile);
     }
 
     // Free space allocated for command.
