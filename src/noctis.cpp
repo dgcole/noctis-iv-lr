@@ -348,46 +348,60 @@ void clear_onboard_screen() { memset(ctb, 0, 512); }
 
 /* On-board operating system management group. */
 
+constexpr size_t OSSCREEN_WIDTH  = 21;
+constexpr size_t OSSCREEN_HEIGHT =  7;
+
 uint8_t reset_signal         = 55;     // Reset signal (=55)
-int8_t force_update          = 0;      // Force screen to refresh
-int8_t active_screen         = -1;     // Screen currently active
+int8_t  force_update         =  0;     // Force screen to refresh
+int8_t  active_screen        = -1;     // Screen currently active
 int16_t osscreen_cursor_x[2] = {0, 0}; // Cursor position (x)
 int16_t osscreen_cursor_y[2] = {0, 0}; // Cursor position (y)
-uint8_t osscreen[2][7 * 21 + 1];       // Array of GOES screens
+uint8_t osscreen[2][OSSCREEN_HEIGHT * OSSCREEN_WIDTH + 1]; // Array of GOES screens
 
+// Set a screen's cursor position
 void mslocate(int16_t screen_id, int16_t cursor_x, int16_t cursor_y) {
-    // Rilocazione cursore (multischermo).
     osscreen_cursor_x[screen_id] = cursor_x;
     osscreen_cursor_y[screen_id] = cursor_y;
 }
 
+// Move cursor to beginning of next line
+inline void msnewline(int16_t screen_id)
+{
+    osscreen_cursor_x[screen_id] = 0;
+    ++osscreen_cursor_y[screen_id];
+}
+
+// Write text to the specified screen, with text wrapping
 void mswrite(int16_t screen_id, const char *text) {
-    // Scrittura caratteri (multischermo).
     int16_t i, j = 0;
     int8_t symbol;
 
     while ((symbol = text[j]) != 0) {
         if (symbol >= 32 && symbol <= 96) {
+            // Handle the printible characters 
+            //  excluding lowercase letters, curly braces, vertical bar, tilde, and delete.
+
+            // Calculate position in screen array
             i = 21 * osscreen_cursor_y[screen_id];
             i += osscreen_cursor_x[screen_id];
+            
             osscreen[screen_id][i] = symbol;
             osscreen_cursor_x[screen_id]++;
 
+            // Wrap text
             if (osscreen_cursor_x[screen_id] >= 21) {
-                osscreen_cursor_x[screen_id] = 0;
-                osscreen_cursor_y[screen_id]++;
+                msnewline(screen_id);
             }
-        } else if (symbol == 13) {
-            osscreen_cursor_x[screen_id] = 0;
-            osscreen_cursor_y[screen_id]++;
-        } else if (symbol == 9) {
+        } else if (symbol == '\r') {
+            msnewline(screen_id);
+        } else if (symbol == '\t') {
             osscreen_cursor_x[screen_id] /= (3 * 4);
             osscreen_cursor_x[screen_id]++;
             osscreen_cursor_x[screen_id] *= (3 * 4);
 
+            // Wrap text
             if (osscreen_cursor_x[screen_id] >= 21) {
-                osscreen_cursor_x[screen_id] = 0;
-                osscreen_cursor_y[screen_id]++;
+                msnewline(screen_id);
             }
         }
 
