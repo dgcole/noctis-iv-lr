@@ -1,0 +1,8 @@
+[configuration]
+entry_symbol = "nivlr_library_init"
+compatibility_minimum = 4.1
+
+[libraries]
+linux.64 = "../bin/linux64/libnivlr.so"
+windows.64 = "../bin/win64/nivlr.dll"
+macos.64 = "../bin/macos64/nivlr.dylib"

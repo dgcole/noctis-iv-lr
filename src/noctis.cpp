@@ -7,7 +7,7 @@
 #include "noctis-0.h"
 #include "noctis-d.h"
 #include <chrono>
-#include <raylib.h>
+#include <godot_cpp/classes/immediate_mesh.hpp>
 #include <thread>
 
 #ifdef __EMSCRIPTEN__
@@ -2549,8 +2549,6 @@ float starmass_correction[star_classes] = {
     15000.00 // Class 11
 };
 
-Texture2D screen_texture;
-
 // Actual noctis stuff starts here.
 float satur, DfCoS;
 
@@ -2582,12 +2580,72 @@ int16_t resolve = 64;
 
 void loop();
 
-int main(int argc, char **argv) {
-    InitWindow(1280, 720, "Noctis IV LR");
-    DisableCursor();
-    auto image     = GenImageColor(adapted_width, adapted_height, {});
-    screen_texture = LoadTextureFromImage(image);
+godot::ImmediateMesh *immediate_mesh = nullptr;
 
+bool init() {
+    for (ir = 0; ir < 200; ir++) {
+        m200[ir] = ir * 200;
+    }
+
+    n_offsets_map = (uint8_t *) malloc(om_bytes);
+    n_globes_map  = (int8_t *) malloc((uint16_t) gl_bytes + (uint16_t) gl_brest);
+    s_background  = (uint8_t *) malloc(st_bytes);
+    p_background  = (uint8_t *) malloc(pl_bytes);
+    /* NOTE: This is set to at least 65k because polymap keeps running over the
+     * end. It happens in the original source too, and somehow isn't a problem
+     * there, but we can't have it running over into random memory. The bug is
+     * present in the original source.
+     */
+    p_surfacemap = (uint8_t *) malloc(ps_bytes | 65536);
+    objectschart = (quadrant *) malloc(oc_bytes);
+    ruinschart   = (uint8_t *) objectschart; // oc alias
+    pvfile       = (uint8_t *) malloc(pv_bytes);
+    adapted      = (uint8_t *) malloc(sc_bytes);
+    txtr         = (uint8_t *) p_background;             // txtr alias
+    digimap2     = (uint32_t *) &n_globes_map[gl_bytes]; // font alias
+
+    if (pvfile && adapted && n_offsets_map && n_globes_map && p_background && s_background && p_surfacemap &&
+        objectschart && lens_flares_init()) {
+        lrv = loadpv(vehicle_handle, vehicle_ncc, 15, 15, 15, 0, 0, 0, 0, 1);
+
+        if (lrv < 1) {
+            printf("\nLoad error.\n");
+            return false;
+        }
+
+        load_QVRmaps();
+        load_starface();
+        load_digimap2();
+    } else {
+        /* NOTE: The 2nd line is not helpful on modern systems */
+        printf("\nNot enough free memory to run.");
+        return false;
+    }
+
+    unfreeze();
+    memset(adapted, 0, QUADWORDS * 4);
+    QUADWORDS -= 1440;
+    pqw = QUADWORDS;
+    handle_input();
+    mpul = 0;
+    dpp  = 210;
+    change_camera_lens();
+    //   0..64  Vehicle, computer selections, artifacts. Cobalt Blue, depending
+    //   on the color from the star.
+    //  64..128 cosmos, galactic background, clear skies and "suplucsi effect".
+    //  from the white electric blue.
+    // 128..192 Stars (Continuous cyclic shaders) or moons (non-constant)
+    // 192..256 Planets (Non constant)
+    tavola_colori(range8088, 0, 64, 16, 32, 63);
+    tavola_colori(tmppal, 0, 256, 64, 64, 64);
+    // causa il recupero dell'eventuale contenuto dello schermo
+    // di output della GOES command net
+    force_update = 1;
+
+    return true;
+}
+
+int main(int argc, char **argv) {
     for (ir = 0; ir < 200; ir++) {
         m200[ir] = ir * 200;
     }
@@ -2704,43 +2762,7 @@ int main(int argc, char **argv) {
     freeze();
 }
 
-void swapBuffers() {
-    BeginDrawing();
-    ClearBackground(BLACK);
-
-    uint32_t *pixels = (uint32_t *) malloc(adapted_width * adapted_height * sizeof(uint32_t));
-    for (int i = 0; i < (adapted_width * adapted_height); i++) {
-        uint8_t color_index = adapted[i];
-        uint32_t color_r    = currpal[color_index * 3] * 4;
-        uint32_t color_g    = currpal[color_index * 3 + 1] * 4;
-        uint32_t color_b    = currpal[color_index * 3 + 2] * 4;
-
-        uint32_t color = (255 << 24u) + (color_b << 16u) + (color_g << 8u) + color_r;
-        pixels[i]      = color;
-    }
-
-    UpdateTexture(screen_texture, pixels);
-    DrawTextureNPatch(screen_texture,
-                      {.source = {.x = 0, .y = 0, .width = (float) adapted_width, .height = (float) adapted_height}},
-                      {.x = 0, .y = 0, .width = 1280, .height = 720}, {}, 0.0f, WHITE);
-    free(pixels);
-
-    // Frame limiter (18 FPS)
-    static const auto goal = std::chrono::milliseconds(FRAME_TIME_MILLIS);
-    static auto last       = std::chrono::high_resolution_clock::now();
-
-    auto now = std::chrono::high_resolution_clock::now();
-
-    if ((now - last) < goal) {
-        std::this_thread::sleep_for(goal - (now - last));
-    }
-
-    last = now;
-    EndDrawing();
-}
-
 void loop() {
-    sync_start();
     // Check the flag that indicates when you are on the "observation deck",
     // the roof of the Stardrifter.
     pos_y += lifter;
@@ -2754,7 +2776,7 @@ void loop() {
             user_alfa -= 0.25 * user_alfa;
         }
 
-        step = 0.5 * lifter;
+        dist_step = 0.5 * lifter;
     }
 
     if (lifter < 0) {
@@ -2765,7 +2787,7 @@ void loop() {
         }
 
         if (pos_y < -325 && pos_y > -715) {
-            step = -pos_y;
+            dist_step = -pos_y;
         }
     }
 
@@ -2789,7 +2811,7 @@ void loop() {
         DfCoS = pos_z + 3100;
         DfCoS = sqrt(pos_x * pos_x + DfCoS * DfCoS);
 
-        if (DfCoS + step < 1100) {
+        if (DfCoS + dist_step < 1100) {
             lifter = +75;
         }
     }
@@ -2947,8 +2969,8 @@ void loop() {
         int8_t z_dir = ((int8_t) key_move_dir.forward) - ((int8_t) key_move_dir.backward);
 
         if (x_dir || z_dir) {
-            step += z_dir * WASD_speed;
-            shift += x_dir * WASD_speed;
+            dist_step += z_dir * WASD_speed;
+            dist_shift += x_dir * WASD_speed;
         }
     }
 
@@ -3091,20 +3113,20 @@ nop:
     alfa = user_alfa;
     beta = user_beta - 90;
     change_angle_of_view();
-    p_forward(shift);
+    p_forward(dist_shift);
     beta = user_beta;
     change_angle_of_view();
-    p_forward(step);
-    shift /= 1.5;
+    p_forward(dist_step);
+    dist_shift /= 1.5;
 
-    if (fabs(shift) < 0.5) {
-        shift = 0;
+    if (fabs(dist_shift) < 0.5) {
+        dist_shift = 0;
     }
 
-    step /= 1.25;
+    dist_step /= 1.25;
 
-    if (fabs(step) < 0.5) {
-        step = 0;
+    if (fabs(dist_step) < 0.5) {
+        dist_step = 0;
     }
 
     if (pos_x < -3100) {
@@ -4587,9 +4609,7 @@ resynctoplanet:
         _delay = 0;
     }
 
-    if (!_delay) {
-        swapBuffers();
-    } else if (_delay > 0 && _delay < 10) {
+    if (_delay > 0 && _delay < 10) {
         _delay--;
     }
 
@@ -4821,9 +4841,6 @@ resynctoplanet:
             s_background[ir] = ig + ib;
         }
     }
-
-    //
-    sync_stop();
 
     /* Hook for managing the motion characteristics of planet surface features
      *

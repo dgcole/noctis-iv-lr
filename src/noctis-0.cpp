@@ -34,11 +34,12 @@
 */
 
 #include <iostream>
-#include <raylib.h>
 #include <stack>
 
 #include "brtl.h"
+#include "noctis-0.h"
 #include "noctis-d.h"
+#include "noctis.h"
 
 // Date and specific functions imported from ASSEMBLY.H
 
@@ -147,100 +148,100 @@ void handle_input() {
     mdlty = 0;
     mpul  = 0;
 
-    key_move_dir.forward  = IsKeyDown(KEY_W);
-    key_move_dir.left     = IsKeyDown(KEY_A);
-    key_move_dir.backward = IsKeyDown(KEY_S);
-    key_move_dir.right    = IsKeyDown(KEY_D);
+    // key_move_dir.forward  = IsKeyDown(KEY_W);
+    // key_move_dir.left     = IsKeyDown(KEY_A);
+    // key_move_dir.backward = IsKeyDown(KEY_S);
+    // key_move_dir.right    = IsKeyDown(KEY_D);
 
-    if (IsKeyDown(KEY_ESCAPE)) {
-        keys.push(27);
-    }
+    // if (IsKeyDown(KEY_ESCAPE)) {
+    //     keys.push(27);
+    // }
 
-    ldown = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
-    rdown = IsMouseButtonDown(MOUSE_BUTTON_RIGHT);
+    // ldown = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+    // rdown = IsMouseButtonDown(MOUSE_BUTTON_RIGHT);
 
-    mdltx = GetMouseDelta().x / 5.0;
-    mdlty = GetMouseDelta().y / 5.0;
+    // mdltx = GetMouseDelta().x / 5.0;
+    // mdlty = GetMouseDelta().y / 5.0;
 
-    mouse_x += mdltx;
-    mouse_y += mdlty;
+    // mouse_x += mdltx;
+    // mouse_y += mdlty;
 
-    int32_t key;
-    while ((key = GetCharPressed()) != 0) {
-        char key_char = (char) key;
-        if (key >= '0' && key <= '9') {
-            keys.push(key_char);
-        }
-        if (key >= 'a' && key <= 'z') {
-            keys.push(key_char);
-        }
-    }
+    // int32_t key;
+    // while ((key = GetCharPressed()) != 0) {
+    //     char key_char = (char) key;
+    //     if (key >= '0' && key <= '9') {
+    //         keys.push(key_char);
+    //     }
+    //     if (key >= 'a' && key <= 'z') {
+    //         keys.push(key_char);
+    //     }
+    // }
 
-    if (IsKeyPressed(KEY_UP)) {
-        keys.push(72);
-        keys.push(0);
-    }
+    // if (IsKeyPressed(KEY_UP)) {
+    //     keys.push(72);
+    //     keys.push(0);
+    // }
 
-    if (IsKeyPressed(KEY_DOWN)) {
-        keys.push(80);
-        keys.push(0);
-    }
+    // if (IsKeyPressed(KEY_DOWN)) {
+    //     keys.push(80);
+    //     keys.push(0);
+    // }
 
-    if (IsKeyPressed(KEY_LEFT)) {
-        keys.push(75);
-        keys.push(0);
-    }
+    // if (IsKeyPressed(KEY_LEFT)) {
+    //     keys.push(75);
+    //     keys.push(0);
+    // }
 
-    if (IsKeyPressed(KEY_RIGHT)) {
-        keys.push(77);
-        keys.push(0);
-    }
+    // if (IsKeyPressed(KEY_RIGHT)) {
+    //     keys.push(77);
+    //     keys.push(0);
+    // }
 
-    if (IsKeyPressed(KEY_BACKSPACE)) {
-        keys.push(8);
-    }
+    // if (IsKeyPressed(KEY_BACKSPACE)) {
+    //     keys.push(8);
+    // }
 
-    if (IsKeyPressed(KEY_ENTER)) {
-        keys.push(13);
-    }
+    // if (IsKeyPressed(KEY_ENTER)) {
+    //     keys.push(13);
+    // }
 
-    if (IsKeyPressed(KEY_APOSTROPHE)) {
-        keys.push(39);
-    }
+    // if (IsKeyPressed(KEY_APOSTROPHE)) {
+    //     keys.push(39);
+    // }
 
-    if (IsKeyPressed(KEY_SPACE)) {
-        keys.push(' ');
-    }
+    // if (IsKeyPressed(KEY_SPACE)) {
+    //     keys.push(' ');
+    // }
 
-    if (IsKeyPressed(KEY_DELETE)) {
-        keys.push('*');
-    }
+    // if (IsKeyPressed(KEY_DELETE)) {
+    //     keys.push('*');
+    // }
 
-    if (IsKeyPressed(KEY_MINUS)) {
-        keys.push('-');
-    }
+    // if (IsKeyPressed(KEY_MINUS)) {
+    //     keys.push('-');
+    // }
 
-    if (IsKeyPressed(KEY_COMMA)) {
-        keys.push(',');
-    }
+    // if (IsKeyPressed(KEY_COMMA)) {
+    //     keys.push(',');
+    // }
 
-    if (IsKeyPressed(KEY_SLASH)) {
-        keys.push('/');
-    }
+    // if (IsKeyPressed(KEY_SLASH)) {
+    //     keys.push('/');
+    // }
 
-    if (IsKeyPressed(KEY_SEMICOLON)) {
-        keys.push(':');
-    }
+    // if (IsKeyPressed(KEY_SEMICOLON)) {
+    //     keys.push(':');
+    // }
 
-    if (IsKeyPressed(KEY_F1)) {
-        static bool captured = false;
-        captured             = !captured;
-        if (captured) {
-            DisableCursor();
-        } else {
-            EnableCursor();
-        }
-    }
+    // if (IsKeyPressed(KEY_F1)) {
+    //     static bool captured = false;
+    //     captured             = !captured;
+    //     if (captured) {
+    //         DisableCursor();
+    //     } else {
+    //         EnableCursor();
+    //     }
+    // }
 
     if (ldown)
         mpul |= 1u;
@@ -616,7 +617,7 @@ double ip_target_initial_d            = 1E8;       // 151
 double requested_approach_coefficient = 1;         // 159
 double current_approach_coefficient   = 1;         // 167
 double reaction_time                  = 0.01;      // 175
-int8_t fcs_status[11]                 = "STANDBY"; // 183
+char fcs_status[11]                   = "STANDBY"; // 183
 int16_t fcs_status_delay              = 0;         // 194
 int16_t psys                          = 4;         // 196
 double ap_target_initial_d            = 1E8;       // 198
@@ -645,7 +646,7 @@ int16_t sun_x_factor;
 // Global data that isn't saved.
 int16_t epoc = 6011;
 
-int8_t ctb[512];
+char ctb[512];
 char dec[20];
 
 int8_t _delay     = 12;
@@ -664,8 +665,8 @@ int16_t fps        = 1;
 float dlt_alfa     = 0;
 float dlt_beta     = 0;
 float dlt_nav_beta = 0;
-float step         = 0;
-float shift        = 0;
+float dist_step    = 0;
+float dist_shift   = 0;
 double s_m         = 1000;
 double plx, ply, plz;
 double pxx, pyy;
@@ -2017,6 +2018,7 @@ void drawpv(int16_t handle, int16_t mode, int16_t rm_iterations, float center_x,
     cam_y -= center_y;
     cam_z -= center_z;
 
+    immediate_mesh->surface_begin(godot::Mesh::PRIMITIVE_TRIANGLES);
     uint16_t mask;
     if (use_depth_sort && pv_mid_x[handle]) {
         // Tracking with depth sorting.
@@ -2121,6 +2123,7 @@ void drawpv(int16_t handle, int16_t mode, int16_t rm_iterations, float center_x,
     cam_x += center_x;
     cam_y += center_y;
     cam_z += center_z;
+    immediate_mesh->surface_end();
 }
 
 /*  Replica una forma poligonale, copiandola da un'handle gi� definito
@@ -5634,17 +5637,6 @@ void polycupola(float y_or, int8_t textured) {
     }
 
     resetfx();
-}
-
-// Synchronizer: up to 18 frames per second on any PC.
-
-clock_t gtime;
-
-void sync_start() { gtime = clock(); }
-
-void sync_stop() {
-    while (clock() == gtime)
-        ;
 }
 
 int32_t global_surface_seed;

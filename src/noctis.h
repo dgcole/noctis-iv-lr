@@ -1,8 +1,11 @@
 #pragma once
 
+#include <godot_cpp/classes/immediate_mesh.hpp>
+
 #include "noctis-d.h"
-#include <raylib.h>
+
+extern godot::ImmediateMesh *immediate_mesh;
 
 // Definitions for noctis.cpp
-extern RenderTexture2D temp_texture;
-extern void swapBuffers();
+bool init();
+void loop();

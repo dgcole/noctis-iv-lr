@@ -682,7 +682,7 @@ void live_animal(int16_t n) {
         }
 
         if (ani_lcount[n] < -1) {
-            step += 2 * ani_lcount[n];
+            dist_step += 2 * ani_lcount[n];
             ani_lcount[n]++;
         }
 
@@ -927,11 +927,11 @@ inactive:
         // e saltargli addosso da molto vicino.
         // praticamente ? piuttosto difficile...
         if (ani_lcount[n] >= 0) {
-            if (animal_distance < 5000 && step > 250) {
+            if (animal_distance < 5000 && dist_step > 250) {
                 tgt_quote[n] += 2500;
             }
 
-            if (animal_distance < 3000 && step > 100) {
+            if (animal_distance < 3000 && dist_step > 100) {
                 tgt_quote[n] += 2000;
             }
 
@@ -4026,7 +4026,7 @@ void planetary_main() {
     for (w = 64; w >= 0; w -= 4) {
         tavola_colori((const uint8_t *) return_palette, 0, 256, w, w, w);
 
-        swapBuffers();
+        // swapBuffers();
     }
 
     // regolazione della forza di gravit?.
@@ -4417,13 +4417,12 @@ nosecondarysun:
         opencapdelta = -1;
     }
 
-    shift            = 0;
-    step             = 0;
+    dist_shift       = 0;
+    dist_step        = 0;
     directional_beta = user_beta;
 
     do {
         // Start of synchronization and resolution from the blank frame.
-        sync_start();
         getsecs();
         fast_srand(secs / 2);
 
@@ -4454,10 +4453,10 @@ nosecondarysun:
         }
 
         // avanzamento fisso (tasti da 0 a 9)
-        step += fixed_step;
+        dist_step += fixed_step;
         // reazione ai movimenti del mouse.
-        bkshift = shift;
-        bkstep  = step;
+        bkshift = dist_shift;
+        bkstep  = dist_step;
         mpul    = 0;
         handle_input();
 
@@ -4536,10 +4535,10 @@ nosecondarysun:
                 }
             }
 
-            step += surface_speed_multiplier * z_dir * WASD_speed * landed;
-            shift += surface_speed_multiplier * x_dir * WASD_speed * landed;
+            dist_step += surface_speed_multiplier * z_dir * WASD_speed * landed;
+            dist_shift += surface_speed_multiplier * x_dir * WASD_speed * landed;
 
-            tiredness += fabs(step) * 0.000001;
+            tiredness += fabs(dist_step) * 0.000001;
         }
 
         // causa una scivolata su pareti ripide discese rapidamente,
@@ -4548,16 +4547,16 @@ nosecondarysun:
         // guarda, appunto durante le scivolate o per brevi voli su
         // pianeti con scarsa gravit?).
         if (pos_y < crcy) {
-            shift = bkshift;
-            step  = bkstep;
+            dist_shift = bkshift;
+            dist_step  = bkstep;
         } else {
             directional_beta = user_beta;
         }
 
         // nella capsula non pu? muoversi autonomamente.
         if (opencapdelta) {
-            shift = 0;
-            step  = 0;
+            dist_shift = 0;
+            dist_step  = 0;
         }
 
         // normalizzazione degli angoli visuali.
@@ -4608,25 +4607,25 @@ nosecondarysun:
         alfa = 0;
         beta = directional_beta - 90;
         change_angle_of_view();
-        p_forward(shift);
+        p_forward(dist_shift);
         // moto diretto.
         alfa = 0;
         beta = directional_beta;
         change_angle_of_view();
-        p_forward(step);
+        p_forward(dist_step);
 
         // attrito.
         if (pos_y >= crcy) {
-            shift /= 1.5;
+            dist_shift /= 1.5;
 
-            if (fabs(shift) < 0.5) {
-                shift = 0;
+            if (fabs(dist_shift) < 0.5) {
+                dist_shift = 0;
             }
 
-            step /= 1.25;
+            dist_step /= 1.25;
 
-            if (fabs(step) < 0.5) {
-                step = 0;
+            if (fabs(dist_step) < 0.5) {
+                dist_step = 0;
             }
         }
 
@@ -4643,18 +4642,18 @@ nosecondarysun:
                     drop_x *= drop_x;
                 }
 
-                shift *= 1 - drop_x;
-                step *= 1 - drop_x;
+                dist_shift *= 1 - drop_x;
+                dist_step *= 1 - drop_x;
                 pos_x = refx;
                 pos_z = refz;
                 alfa  = 0;
                 beta  = directional_beta - 90;
                 change_angle_of_view();
-                p_forward(shift);
+                p_forward(dist_shift);
                 alfa = 0;
                 beta = directional_beta;
                 change_angle_of_view();
-                p_forward(step);
+                p_forward(dist_step);
             }
 
             if (pos_y > crcy - 1200) {
@@ -5185,7 +5184,7 @@ nosecondarysun:
 
             // e costruisci le sagome degli spruzzi,
             // quando si nuota rapidamente...
-            if (fabs(step) > 200 && pos_y > -50) {
+            if (fabs(dist_step) > 200 && pos_y > -50) {
                 for (ptr = 20480; ptr < 20480 + 256; ptr++) {
                     n_globes_map[ptr] = fast_random(63);
                 }
@@ -5358,7 +5357,7 @@ nosecondarysun:
                     goto ends; // non c'? acqua su deserti e prati.
                 }
 
-                waveratio = 10 - fabs(step) / 5;
+                waveratio = 10 - fabs(dist_step) / 5;
 
                 if (waveratio < 4) {
                     waveratio = 4;
@@ -5368,12 +5367,12 @@ nosecondarysun:
                     proj_from_user();
                     brtl_srand(clock());
                     wr[lw] = 200;
-                    wh[lw] = brtl_random(100) + fabs(3 * step);
-                    wy[lw] = 50 + fabs(3 * step);
-                    wd[lw] = brtl_random(5) + 12 + fabs(2 * step);
-                    wl[lw] = brtl_random(50) + fabs(2 * step);
-                    wx[lw] = pos_x - step * opt_tsinbeta * opt_tcosalfa;
-                    wz[lw] = pos_z + step * opt_tcosbeta * opt_tcosalfa;
+                    wh[lw] = brtl_random(100) + fabs(3 * dist_step);
+                    wy[lw] = 50 + fabs(3 * dist_step);
+                    wd[lw] = brtl_random(5) + 12 + fabs(2 * dist_step);
+                    wl[lw] = brtl_random(50) + fabs(2 * dist_step);
+                    wx[lw] = pos_x - dist_step * opt_tsinbeta * opt_tcosalfa;
+                    wz[lw] = pos_z + dist_step * opt_tcosbeta * opt_tcosalfa;
                     lw++;
 
                     if (lw > 24) {
@@ -5408,7 +5407,7 @@ nosecondarysun:
         QUADWORDS = 16000;
 
         if (!widesnapping) {
-            swapBuffers();
+            // swapBuffers();
         }
 
         QUADWORDS = pqw;
@@ -5466,8 +5465,6 @@ nosecondarysun:
         additional_consumes();
         // aggiornamento coordinate di stepping.
         add_height(pos_x, pos_z, 300);
-        // fine sincronizzazione fotogrammi.
-        sync_stop();
 
         // controllo funzione widesnapping.
         if (widesnapping) {
@@ -5763,7 +5760,7 @@ nosecondarysun:
     for (w = 64; w >= 0; w -= 4) {
         tavola_colori((const uint8_t *) surface_palette, 0, 256, w, w, w);
 
-        swapBuffers();
+        // swapBuffers();
     }
 
 nodissolve:
@@ -5779,8 +5776,8 @@ nodissolve:
     user_beta          = 0;
     dlt_alfa           = 0;
     dlt_beta           = 0;
-    step               = 100;
-    shift              = 0;
+    dist_step          = 100;
+    dist_shift         = 0;
     unloadallpv();
     loadpv(vehicle_handle, vehicle_ncc, 15, 15, 15, 0, 0, 0, 0, 1);
     load_QVRmaps();

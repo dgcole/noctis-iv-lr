@@ -342,6 +342,26 @@ void change_txm_repeating_mode() {
     vi accorgerete della sua enorme agilit�. */
 
 void poly3d(const float *x, const float *y, const float *z, uint16_t nrv, uint8_t colore) {
+    uint32_t color_r = currpal[colore * 3] * 4;
+    uint32_t color_g = currpal[colore * 3 + 1] * 4;
+    uint32_t color_b = currpal[colore * 3 + 2] * 4;
+
+    immediate_mesh->surface_set_color(
+        godot::Color((float) color_r / 255.0, (float) color_g / 255.0, (float) color_b / 255.0));
+    if (nrv == 3) {
+        immediate_mesh->surface_add_vertex(godot::Vector3(x[0] / 100.0, y[0] / 100.0, z[0] / 100.0));
+        immediate_mesh->surface_add_vertex(godot::Vector3(x[1] / 100.0, y[1] / 100.0, z[1] / 100.0));
+        immediate_mesh->surface_add_vertex(godot::Vector3(x[2] / 100.0, y[2] / 100.0, z[2] / 100.0));
+    } else {
+        immediate_mesh->surface_add_vertex(godot::Vector3(x[0] / 100.0, y[0] / 100.0, z[0] / 100.0));
+        immediate_mesh->surface_add_vertex(godot::Vector3(x[1] / 100.0, y[1] / 100.0, z[1] / 100.0));
+        immediate_mesh->surface_add_vertex(godot::Vector3(x[2] / 100.0, y[2] / 100.0, z[2] / 100.0));
+
+        immediate_mesh->surface_add_vertex(godot::Vector3(x[2] / 100.0, y[2] / 100.0, z[2] / 100.0));
+        immediate_mesh->surface_add_vertex(godot::Vector3(x[3] / 100.0, y[3] / 100.0, z[3] / 100.0));
+        immediate_mesh->surface_add_vertex(godot::Vector3(x[0] / 100.0, y[0] / 100.0, z[0] / 100.0));
+    }
+    return;
     uint16_t _8n;
     uint8_t ent = entity;
     // 3D Matrices: Everything on the stack

@@ -1,0 +1,25 @@
+[gd_scene load_steps=3 format=3 uid="uid://0pj1ihft67ik"]
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_lreny"]
+
+[sub_resource type="Environment" id="Environment_wllji"]
+ambient_light_color = Color(1, 1, 1, 1)
+
+[node name="Node3D" type="Node3D"]
+
+[node name="Space" type="Space" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1)
+
+[node name="OmniLight3D" type="OmniLight3D" parent="Camera3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1)
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.45705)
+texture = SubResource("NoiseTexture2D_lreny")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_wllji")
