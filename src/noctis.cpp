@@ -7,7 +7,9 @@
 #include "noctis-0.h"
 #include "noctis-d.h"
 #include <chrono>
+#include <fstream>
 #include <raylib.h>
+#include <string>
 #include <thread>
 
 #ifdef __EMSCRIPTEN__
@@ -636,22 +638,20 @@ void digit_at(int8_t digit, float x, float y, float size, uint8_t color, int8_t 
     }
 
     if (digit > 32 && digit <= 96) {
-        txtr = p_surfacemap;
         d    = (digit - 32) * 36;
 
         // TODO; Valgrind said there was a big bad invalid write happening here,
         //  so I just blindly changed this loop to start at one. It probably
         //  breaks things...
-        for (n = 1; n < 36; n++) {
+        for (n = 0; n < 36; n++) {
 
             i           = 256 * n - 5;
-            txtr[i - 1] = 0; // Avoid aliasing at the end of the scanline.
 
             for (m = 0; m < 32; m++) {
                 if (digimap2[n + d] & pp[m]) {
-                    txtr[i] = pixel_color;
+                    adapted[n * adapted_width + (31 - m)] = pixel_color;
                 } else {
-                    txtr[i] = 0;
+                    adapted[n * adapted_width + (31 - m)] = 0;
                 }
 
                 i++;
@@ -661,24 +661,6 @@ void digit_at(int8_t digit, float x, float y, float size, uint8_t color, int8_t 
                 pixel_color--;
             }
         }
-
-        txtr[256 * 36 - 6] = 0; // Avoids aliasing at the end of the matrix.
-        vx[3]              = x + size_x_left;
-        vx[0]              = x + size_x_right;
-        vx[1]              = x + size_x_right;
-        vx[2]              = x + size_x_left;
-        vy[3]              = y + size_y_left;
-        vy[0]              = y + size_y_left;
-        vy[1]              = y + size_y_right;
-        vy[2]              = y + size_y_right;
-        setfx(2);
-        XSIZE = 512;
-        YSIZE = 576;
-        polymap(vx, vy, vz, 4, map_base);
-        XSIZE = prev_xs;
-        YSIZE = prev_ys;
-        txtr  = prev_txtr;
-        resetfx();
     }
 }
 
@@ -2708,6 +2690,25 @@ void swapBuffers() {
     BeginDrawing();
     ClearBackground(BLACK);
 
+    Image bm_image = GenImageColor(32 * (96 - 32), 36, WHITE);
+    for (int8_t digit = 33; digit <= 96; digit++) {
+        memset(adapted, 0, adapted_width * adapted_height);
+        digit_at(digit, -6, -15, 6, 120, 1);
+        for (int y = 0; y < 36; y++) {
+            for (int x = 0; x < 32; x++) {
+                uint8_t color_index = adapted[y * adapted_width + x];
+
+                uint32_t color_r    = currpal[color_index * 3] * 4;
+                uint32_t color_g    = currpal[color_index * 3 + 1] * 4;
+                uint32_t color_b    = currpal[color_index * 3 + 2] * 4;
+
+                ImageDrawPixel(&bm_image, (digit - 33) * 32 + x, y, {.r = (uint8_t) color_r, .g = (uint8_t) color_g, .b = (uint8_t) color_b, .a = 255});
+            }
+        }
+    }
+    ExportImage(bm_image, "font.png");
+    exit(0);
+    
     uint32_t *pixels = (uint32_t *) malloc(adapted_width * adapted_height * sizeof(uint32_t));
     for (int i = 0; i < (adapted_width * adapted_height); i++) {
         uint8_t color_index = adapted[i];
