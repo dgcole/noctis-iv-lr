@@ -555,10 +555,11 @@ void run_goesnet_module() {
         exit(0xFF);
     } else {
         // It reacts to the presence of data in the communication file.
-        ch = fopen(comm, "wb");
+        ch = fopen(comm, "rb");
 
         if (ch != nullptr) {
-            uint32_t len = fseek(ch, 0, SEEK_END);
+            fseek(ch, 0, SEEK_END);
+            uint32_t len = ftell(ch);
             fseek(ch, 0, SEEK_SET);
             if (len == 2) {
                 if (ap_reached) {
